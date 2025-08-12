@@ -13,7 +13,7 @@
     <ImageView
         android:id="@+id/itemImage"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
+        android:layout_height="match_parent"
         android:layout_weight="1"
         android:background="#4545"
         android:scaleType="centerCrop" />
@@ -22,10 +22,12 @@
         android:id="@+id/itemText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingTop="4dp"
-        android:textSize="14sp"
-        android:textColor="@android:color/white"
-        android:singleLine="true"
         android:ellipsize="end"
-        android:gravity="center"/>
+        android:gravity="center"
+        android:padding="8dp"
+        android:singleLine="true"
+        android:textColor="@android:color/white"
+        android:textSize="14sp" />
+
+
 </LinearLayout>

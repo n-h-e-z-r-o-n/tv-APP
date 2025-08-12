@@ -23,7 +23,7 @@ class MainActivity : AppCompatActivity() {
         recyclerView.layoutManager = GridLayoutManager(this, 2) // 2 columns
 
         val data = listOf(
-            "Movie 1" to "https://raw.githubusercontent.com/programmercloud/movies-website/main/img/movie-1.jpg",
+            "Movie EFSDFDFDFD DFDFDFDFD 1" to "https://raw.githubusercontent.com/programmercloud/movies-website/main/img/movie-1.jpg",
             "Movie 2" to "https://raw.githubusercontent.com/programmercloud/movies-website/main/img/movie-2.jpg",
             "Movie 3" to "https://raw.githubusercontent.com/programmercloud/movies-website/main/img/movie-3.jpg",
             "Movie 3" to "https://raw.githubusercontent.com/programmercloud/movies-website/main/img/movie-3.jpg",
@@ -40,12 +40,23 @@ class MainActivity : AppCompatActivity() {
         recyclerView.adapter = GridAdapter(data)
     }
 }
+
+
 class GridAdapter(private val items: List<Pair<String, String>>) :
     RecyclerView.Adapter<GridAdapter.ViewHolder>() {
 
     inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val image: ImageView = view.findViewById(R.id.itemImage)
         val text: TextView = view.findViewById(R.id.itemText)
+
+        init {
+            itemView.setOnFocusChangeListener { v, hasFocus ->
+                v.animate().scaleX(if (hasFocus) 1.1f else 1f)
+                    .scaleY(if (hasFocus) 1.1f else 1f)
+                    .setDuration(150)
+                    .start()
+            }
+        }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {

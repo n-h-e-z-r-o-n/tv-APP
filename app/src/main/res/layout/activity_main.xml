@@ -11,8 +11,10 @@
         android:id="@+id/recyclerView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:padding="8dp"
+        android:padding="10dp"
         android:clipToPadding="false"
-        android:scrollbars="vertical" />
+        android:scrollbars="none"
+        android:paddingHorizontal="32dp"
+        android:overScrollMode="never"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
