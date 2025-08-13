@@ -13,14 +13,23 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 
+
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import org.json.JSONArray
+import java.net.HttpURLConnection
+import java.net.URL
+
+import android.util.Log
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
 
-        val recyclerView = findViewById<RecyclerView>(R.id.recyclerView)
-        recyclerView.layoutManager = GridLayoutManager(this, 2) // 2 columns
+
 
         val data = listOf(
             "Movie EFSDFDFDFD DFDFDFDFD 1" to "https://raw.githubusercontent.com/programmercloud/movies-website/main/img/movie-1.jpg",
@@ -36,10 +45,48 @@ class MainActivity : AppCompatActivity() {
             "Movie 3" to "https://raw.githubusercontent.com/programmercloud/movies-website/main/img/movie-3.jpg"
         )
 
-        recyclerView.layoutManager = GridLayoutManager(this, 2)
+        val recyclerView = findViewById<RecyclerView>(R.id.recyclerView)
+        recyclerView.layoutManager = GridLayoutManager(this, 2) // 2 columns
         recyclerView.adapter = GridAdapter(data)
         val spacing = (19 * resources.displayMetrics.density).toInt() // 16dp to px
         recyclerView.addItemDecoration(EqualSpaceItemDecoration(spacing))
+
+        //fetchData()
+    }
+
+    private fun fetchData() {
+        CoroutineScope(Dispatchers.IO).launch {
+            val url = "https://yts.mx/api/v2/list_movies.json?page=${1}&limit=50&sort_by=year"
+            val connection = URL(url).openConnection() as HttpURLConnection
+            connection.requestMethod = "GET"
+
+            val response = connection.inputStream.bufferedReader().use { it.readText() }
+
+            val jsonObject = JSONArray(response)
+            Log.d("DEBUG_TAG", "jsonObject")
+
+            /*
+            val jsonArray = jsonObject.getJSONArray("data")
+
+            val movies = mutableListOf<Pair<String, String>>()
+
+            for (i in 0 until jsonArray.length()) {
+                val item = jsonArray.getJSONObject(i)
+                val title = item.getString("title_english")
+                val imgUrl = item.getString("large_cover_image")
+                movies.add(title to imgUrl)
+            }
+
+            //recyclerView.layoutManager = GridLayoutManager(this, 2)
+            //recyclerView.adapter = GridAdapter(data.results)
+            withContext(Dispatchers.Main) {
+                val recyclerView = findViewById<RecyclerView>(R.id.recyclerView)
+                recyclerView.layoutManager = GridLayoutManager(this, 2)
+                recyclerView.adapter = GridAdapter(movies)
+            }
+
+             */
+        }
     }
 }
 
