@@ -29,7 +29,7 @@
             android:layout_height="48dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_home"
-            android:contentDescription="@string/home"
+            android:contentDescription="home"
             android:tint="@android:color/white"
             android:focusable="true"
             android:clickable="true"
@@ -41,7 +41,7 @@
             android:layout_height="48dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_search"
-            android:contentDescription="@string/search"
+            android:contentDescription="search"
             android:tint="@android:color/white"
             android:layout_marginBottom="24dp" />
 
@@ -51,7 +51,7 @@
             android:layout_height="48dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_category"
-            android:contentDescription="@string/categories"
+            android:contentDescription="categories"
             android:tint="@android:color/white"
             android:layout_marginBottom="24dp" />
 
@@ -61,7 +61,7 @@
             android:layout_height="48dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_bookmark"
-            android:contentDescription="@string/watchlist"
+            android:contentDescription="watchlist"
             android:tint="@android:color/white"
             android:layout_marginBottom="24dp" />
 
@@ -71,7 +71,7 @@
             android:layout_height="48dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_person"
-            android:contentDescription="@string/profile"
+            android:contentDescription="profile"
             android:tint="@android:color/white" />
 
     </LinearLayout>
