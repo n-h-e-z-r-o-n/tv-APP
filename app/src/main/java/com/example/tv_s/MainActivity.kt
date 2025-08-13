@@ -38,6 +38,8 @@ class MainActivity : AppCompatActivity() {
 
         recyclerView.layoutManager = GridLayoutManager(this, 2)
         recyclerView.adapter = GridAdapter(data)
+        val spacing = (19 * resources.displayMetrics.density).toInt() // 16dp to px
+        recyclerView.addItemDecoration(EqualSpaceItemDecoration(spacing))
     }
 }
 
@@ -78,4 +80,30 @@ class GridAdapter(private val items: List<Pair<String, String>>) :
     }
 
     override fun getItemCount() = items.size
+}
+
+class EqualSpaceItemDecoration(private val space: Int) : RecyclerView.ItemDecoration() {
+    override fun getItemOffsets(
+        outRect: android.graphics.Rect,
+        view: View,
+        parent: RecyclerView,
+        state: RecyclerView.State
+    ) {
+        val position = parent.getChildAdapterPosition(view)
+        val spanCount = (parent.layoutManager as? GridLayoutManager)?.spanCount ?: 1
+
+        // Apply equal spacing on all sides
+        outRect.left = space / 2
+        outRect.right = space / 2
+        outRect.top = space / 2
+        outRect.bottom = space / 2
+
+        // Optional: extra space for first/last rows & columns so edges are even
+        if (position < spanCount) {
+            outRect.top = space // first row
+        }
+        if (position % spanCount == 0) {
+            outRect.left = space // first column
+        }
+    }
 }

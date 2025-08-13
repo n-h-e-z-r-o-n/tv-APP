@@ -7,14 +7,99 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerView"
-        android:layout_width="match_parent"
+    <!-- Side bar -->
+
+    <LinearLayout
+        android:id="@+id/sideBar"
+        android:layout_width="80dp"
         android:layout_height="match_parent"
-        android:padding="10dp"
-        android:clipToPadding="false"
-        android:scrollbars="none"
-        android:paddingHorizontal="32dp"
-        android:overScrollMode="never"/>
+        android:background="#5E1914"
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+        android:paddingTop="24dp"
+        android:paddingBottom="24dp"
+        android:layout_marginTop="0dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <ImageButton
+            android:id="@+id/btnHome"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_home"
+            android:contentDescription="@string/home"
+            android:tint="@android:color/white"
+            android:focusable="true"
+            android:clickable="true"
+            android:layout_marginBottom="24dp" />
+
+        <ImageButton
+            android:id="@+id/btnSearch"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_search"
+            android:contentDescription="@string/search"
+            android:tint="@android:color/white"
+            android:layout_marginBottom="24dp" />
+
+        <ImageButton
+            android:id="@+id/btnCategories"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_category"
+            android:contentDescription="@string/categories"
+            android:tint="@android:color/white"
+            android:layout_marginBottom="24dp" />
+
+        <ImageButton
+            android:id="@+id/btnWatchlist"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_bookmark"
+            android:contentDescription="@string/watchlist"
+            android:tint="@android:color/white"
+            android:layout_marginBottom="24dp" />
+
+        <ImageButton
+            android:id="@+id/btnProfile"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_person"
+            android:contentDescription="@string/profile"
+            android:tint="@android:color/white" />
+
+    </LinearLayout>
+
+
+    <FrameLayout
+        android:id="@+id/frameLayout"
+        android:layout_width="333dp"
+        android:layout_height="match_parent"
+        android:background="#5564"
+
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:overScrollMode="never"
+            android:padding="10dp"
+            android:paddingHorizontal="32dp"
+            android:scrollbars="none"
+            tools:layout_editor_absoluteY="8dp" />
+
+
+    </FrameLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
