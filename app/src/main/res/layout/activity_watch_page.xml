@@ -7,21 +7,136 @@
     android:layout_height="match_parent"
     tools:context=".Watch_Page">
 
-    <LinearLayout
-        android:orientation="vertical"
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#453232">
+        android:fillViewport="true"
+        android:background="#101010">
 
-
-
-        <ImageView
-            android:id="@+id/imageView"
+        <LinearLayout
+            android:orientation="vertical"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            tools:srcCompat="@tools:sample/avatars" />
+            android:layout_height="wrap_content">
 
-    </LinearLayout>
+
+
+            <!-- Poster + title block -->
+            <FrameLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="500dp"
+                >
+
+                <!-- Backdrop image -->
+                <ImageView
+                    android:id="@+id/backdropImageView"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="centerCrop"
+                    android:background="#534" />
+                <!-- Poster -->
+
+
+                <LinearLayout
+                    android:layout_width="281dp"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:padding="20dp"
+                    android:paddingLeft="10dp">
+
+                    <TextView
+                        android:id="@+id/title_widget"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="end"
+                        android:maxLines="2"
+
+                        android:text="Movie Title"
+                        android:textColor="@android:color/white"
+                        android:textSize="40sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/year_widget"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="2025"
+                        android:textColor="#AAAAAA"
+                        android:textSize="14sp" />
+
+                    <TextView
+                        android:id="@+id/Rating_widget"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:text="⭐ 8.5/10"
+                        android:textColor="#FFD700"
+                        android:textSize="14sp" />
+
+                    <TextView
+                        android:id="@+id/overview_widget"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:padding="16dp"
+                        android:text="This is the movie overview/description. It will be loaded dynamically."
+                        android:textColor="@android:color/white"
+                        android:textSize="15sp"
+                        android:lineSpacingExtra="4dp" />
+
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:orientation="horizontal"
+                        android:padding="2dp"
+                        android:layout_gravity="bottom">
+
+                        <Button
+                            android:id="@+id/watchNowButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:backgroundTint="#E50914"
+                            android:padding="12dp"
+                            android:text="▶ Watch Now"
+                            android:textSize="23sp"
+                            android:textColor="@android:color/white" />
+
+                        <Button
+                            android:id="@+id/favoriteButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="16dp"
+                            android:backgroundTint="#444"
+                            android:padding="0dp"
+                            android:text="+"
+                            android:textSize="40dp"
+                            android:textColor="@android:color/white"
+                            />
+                    </LinearLayout>
+
+                </LinearLayout>
+
+
+            </FrameLayout>
+
+            <ImageView
+                android:id="@+id/posterImageView"
+                android:layout_width="120dp"
+                android:layout_height="180dp"
+                android:layout_marginEnd="16dp"
+                android:background="#222"
+                android:elevation="4dp"
+                android:scaleType="fitXY" />
+
+            <!-- Overview -->
+
+
+            <!-- Buttons -->
+
+        </LinearLayout>
+    </ScrollView>
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
