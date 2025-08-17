@@ -50,11 +50,11 @@
                         android:layout_height="wrap_content"
                         android:ellipsize="end"
                         android:maxLines="2"
-
+                        android:textStyle="bold|italic"
                         android:text="Movie Title"
                         android:textColor="@android:color/white"
                         android:textSize="40sp"
-                        android:textStyle="bold" />
+                        android:fontFamily=""/>
 
                     <TextView
                         android:id="@+id/year_widget"
@@ -69,29 +69,34 @@
                         android:id="@+id/Rating_widget"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="6dp"
+                        android:layout_marginTop="16dp"
+                        android:layout_marginBottom="16dp"
                         android:text="⭐ 8.5/10"
                         android:textColor="#FFD700"
                         android:textSize="14sp" />
 
+
                     <TextView
                         android:id="@+id/overview_widget"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:padding="16dp"
-                        android:text="This is the movie overview/description. It will be loaded dynamically."
+                        android:layout_height="255dp"
+                        android:ellipsize="end"
+                        android:lineSpacingExtra="2dp"
+                        android:maxHeight="239dp"
+                        android:maxLines="6"
+                        android:singleLine="false"
+                        android:text="Loading . . ."
                         android:textColor="@android:color/white"
-                        android:textSize="15sp"
-                        android:lineSpacingExtra="4dp" />
+                        android:textSize="15sp" />
 
 
                     <LinearLayout
-                        android:layout_width="match_parent"
+                        android:layout_width="242dp"
                         android:layout_height="wrap_content"
+                        android:layout_gravity="bottom"
                         android:gravity="center"
                         android:orientation="horizontal"
-                        android:padding="2dp"
-                        android:layout_gravity="bottom">
+                        android:padding="2dp">
 
                         <Button
                             android:id="@+id/watchNowButton"
@@ -100,8 +105,8 @@
                             android:backgroundTint="#E50914"
                             android:padding="12dp"
                             android:text="▶ Watch Now"
-                            android:textSize="23sp"
-                            android:textColor="@android:color/white" />
+                            android:textColor="@android:color/white"
+                            android:textSize="23sp" />
 
                         <Button
                             android:id="@+id/favoriteButton"
@@ -111,9 +116,8 @@
                             android:backgroundTint="#444"
                             android:padding="0dp"
                             android:text="+"
-                            android:textSize="40dp"
                             android:textColor="@android:color/white"
-                            />
+                            android:textSize="40dp" />
                     </LinearLayout>
 
                 </LinearLayout>

@@ -78,7 +78,7 @@ class Watch_Page : AppCompatActivity() {
 
 
                 val backdrop_Url = "https://image.tmdb.org/t/p/w500${jsonObject.getString("backdrop_path")}"
-                val poster_Url = "https://image.tmdb.org/t/p/w500${jsonObject.getString("backdrop_path")}"
+                val poster_Url = "https://image.tmdb.org/t/p/w500${jsonObject.getString("poster_path")}"
                 val original_title  = jsonObject.getString("original_title")
                 val overview  = jsonObject.getString("overview")
                 val poster_path  = jsonObject.getString("poster_path")
