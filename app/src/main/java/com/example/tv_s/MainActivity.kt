@@ -13,90 +13,84 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 
-
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.json.JSONArray
+
 import java.net.HttpURLConnection
 import java.net.URL
 
 import android.util.Log
+
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
 
+        //val recyclerView = findViewById<RecyclerView>(R.id.recyclerView)
+        //recyclerView.layoutManager = GridLayoutManager(this, 2) // 2 columns
+        //recyclerView.adapter = GridAdapter(data)
+        //val spacing = (19 * resources.displayMetrics.density).toInt() // 16dp to px
+        //recyclerView.addItemDecoration(EqualSpaceItemDecoration(spacing))
 
-
-        val data = listOf(
-            "Movie EFSDFDFDFD DFDFDFDFD 1" to "https://raw.githubusercontent.com/programmercloud/movies-website/main/img/movie-1.jpg",
-            "Movie 2" to "https://raw.githubusercontent.com/programmercloud/movies-website/main/img/movie-2.jpg",
-            "Movie 3" to "https://raw.githubusercontent.com/programmercloud/movies-website/main/img/movie-3.jpg",
-            "Movie 3" to "https://raw.githubusercontent.com/programmercloud/movies-website/main/img/movie-3.jpg",
-            "Movie 3" to "https://raw.githubusercontent.com/programmercloud/movies-website/main/img/movie-3.jpg",
-            "Movie 3" to "https://raw.githubusercontent.com/programmercloud/movies-website/main/img/movie-3.jpg",
-            "Movie 3" to "https://raw.githubusercontent.com/programmercloud/movies-website/main/img/movie-3.jpg",
-
-            "Movie 3" to "https://raw.githubusercontent.com/programmercloud/movies-website/main/img/movie-3.jpg",
-            "Movie 3" to "https://raw.githubusercontent.com/programmercloud/movies-website/main/img/movie-3.jpg",
-            "Movie 3" to "https://raw.githubusercontent.com/programmercloud/movies-website/main/img/movie-3.jpg"
-        )
-
-        val recyclerView = findViewById<RecyclerView>(R.id.recyclerView)
-        recyclerView.layoutManager = GridLayoutManager(this, 2) // 2 columns
-        recyclerView.adapter = GridAdapter(data)
-        val spacing = (19 * resources.displayMetrics.density).toInt() // 16dp to px
-        recyclerView.addItemDecoration(EqualSpaceItemDecoration(spacing))
-
-        //fetchData()
+        fetchData()
     }
 
     private fun fetchData() {
         CoroutineScope(Dispatchers.IO).launch {
-            val url = "https://yts.mx/api/v2/list_movies.json?page=${1}&limit=50&sort_by=year"
-            val connection = URL(url).openConnection() as HttpURLConnection
-            connection.requestMethod = "GET"
+            try {
+                val url = "https://yts.mx/api/v2/list_movies.json?page=1&limit=50&sort_by=year"
+                val connection = URL(url).openConnection() as HttpURLConnection
+                connection.requestMethod = "GET"
 
-            val response = connection.inputStream.bufferedReader().use { it.readText() }
+                val response = connection.inputStream.bufferedReader().use { it.readText() }
 
-            val jsonObject = JSONArray(response)
-            Log.d("DEBUG_TAG", "jsonObject")
+                val jsonObject = org.json.JSONObject(response)
+                val dataObject = jsonObject.getJSONObject("data")
+                val moviesArray = dataObject.getJSONArray("movies")
 
-            /*
-            val jsonArray = jsonObject.getJSONArray("data")
 
-            val movies = mutableListOf<Pair<String, String>>()
+                val movies = mutableListOf<MovieItem>()
 
-            for (i in 0 until jsonArray.length()) {
-                val item = jsonArray.getJSONObject(i)
-                val title = item.getString("title_english")
-                val imgUrl = item.getString("large_cover_image")
-                movies.add(title to imgUrl)
+                for (i in 0 until moviesArray.length()) {
+                    val item = moviesArray.getJSONObject(i)
+                    val title = item.getString("title_english")
+                    val imgUrl = item.getString("large_cover_image")
+                    val imdb_code = item.getString("imdb_code")
+                    val type = "movie"
+                    movies.add(MovieItem(title, imgUrl, imdb_code, type))
+                }
+
+                withContext(Dispatchers.Main) {
+                    val recyclerView = findViewById<RecyclerView>(R.id.recyclerView)
+                    recyclerView.layoutManager = GridLayoutManager(this@MainActivity, 2)
+                    recyclerView.adapter = GridAdapter(movies)
+                    val spacing = (19 * resources.displayMetrics.density).toInt() // 16dp to px
+                    recyclerView.addItemDecoration(EqualSpaceItemDecoration(spacing))
+                }
+            } catch (e: Exception) {
+                Log.e("DEBUG_TAG", "Error fetching data", e)
             }
-
-            //recyclerView.layoutManager = GridLayoutManager(this, 2)
-            //recyclerView.adapter = GridAdapter(data.results)
-            withContext(Dispatchers.Main) {
-                val recyclerView = findViewById<RecyclerView>(R.id.recyclerView)
-                recyclerView.layoutManager = GridLayoutManager(this, 2)
-                recyclerView.adapter = GridAdapter(movies)
-            }
-
-             */
         }
     }
+
 }
 
+data class MovieItem(
+    val title: String,
+    val imageUrl: String,
+    val imdbCode: String,
+    val type: String
+)
 
-class GridAdapter(private val items: List<Pair<String, String>>) :
-    RecyclerView.Adapter<GridAdapter.ViewHolder>() {
+class GridAdapter(
+    private val items: List<MovieItem> ) :  RecyclerView.Adapter<GridAdapter.ViewHolder>() {
 
     inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val image: ImageView = view.findViewById(R.id.itemImage)
-        val text: TextView = view.findViewById(R.id.itemText)
+        val Movie_image: ImageView = view.findViewById(R.id.itemImage)
+        val Movie_title: TextView = view.findViewById(R.id.itemText)
 
         init {
             itemView.setOnFocusChangeListener { v, hasFocus ->
@@ -115,15 +109,33 @@ class GridAdapter(private val items: List<Pair<String, String>>) :
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val (title, imageUrl) = items[position]
+        Log.e("DEBUG_TAG", items[position].toString())
 
-        holder.text.text = title
+
+        val currentItem = items[position]
+
+        val title = currentItem.title
+        val imageUrl = currentItem.imageUrl
+        val imdbCode = currentItem.imdbCode
+        val type = currentItem.type
+
+
+
+        holder.Movie_title.text = title
 
         Picasso.get()
             .load(imageUrl)
-            .resize(200, 200) // resize for performance
-            .centerCrop()
-            .into(holder.image)
+            .fit()
+            .centerInside()
+            .into(holder.Movie_image)
+
+        holder.itemView.setOnClickListener {
+            val context = holder.itemView.context
+            val intent = android.content.Intent(context, Watch_Page::class.java)
+            intent.putExtra("imdb_code", currentItem.imdbCode)
+            intent.putExtra("type", currentItem.type)
+            context.startActivity(intent)
+        }
     }
 
     override fun getItemCount() = items.size
