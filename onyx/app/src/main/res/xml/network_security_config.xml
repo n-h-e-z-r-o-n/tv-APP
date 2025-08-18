@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- Applies to all connections in your app -->
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <!-- Trust all system CAs -->
+            <certificates src="system" />
+            <!-- Trust user-installed CAs -->
+            <certificates src="user" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>
