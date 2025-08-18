@@ -38,6 +38,8 @@ class MainActivity : ComponentActivity() {
             .build()
         Picasso.setSingletonInstance(picasso)
 
+        setupSidebar()
+
         fetchData()
     }
 
@@ -98,15 +100,15 @@ class MainActivity : ComponentActivity() {
         val recyclerSettings = findViewById<RecyclerView>(R.id.Setting)
 
         val buttons = listOf(btnHome, btnSearch, btnCategories, btnWatchlist, btnProfile)
-        val activeColor = getColor(android.R.color.holo_blue_light) // active
-        val inactiveColor = getColor(android.R.color.white)         // inactive
+        val activeColor = "#4545" // active
+        val inactiveColor = "#0000"       // inactive
 
         fun activate(button: ImageButton, target: RecyclerView) {
             // Reset all icons
-            buttons.forEach { it.setColorFilter(inactiveColor) }
+            //buttons.forEach { it.inactiveColor }
 
             // Highlight current
-            button.setColorFilter(activeColor)
+            //button.activeColor
 
             // Hide all recyclers
             recyclerHome.visibility = View.GONE
