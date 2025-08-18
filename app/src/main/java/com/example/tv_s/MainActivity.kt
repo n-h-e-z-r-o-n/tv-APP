@@ -30,12 +30,6 @@ class MainActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
 
-        //val recyclerView = findViewById<RecyclerView>(R.id.recyclerView)
-        //recyclerView.layoutManager = GridLayoutManager(this, 2) // 2 columns
-        //recyclerView.adapter = GridAdapter(data)
-        //val spacing = (19 * resources.displayMetrics.density).toInt() // 16dp to px
-        //recyclerView.addItemDecoration(EqualSpaceItemDecoration(spacing))
-
         fetchData()
     }
 
@@ -48,6 +42,7 @@ class MainActivity : AppCompatActivity() {
                     connection.requestMethod = "GET"
 
                     val response = connection.inputStream.bufferedReader().use { it.readText() }
+                    Log.e("DEBUG_TAG", response.toString() )
 
                     val jsonObject = org.json.JSONObject(response)
                     val dataObject = jsonObject.getJSONObject("data")
