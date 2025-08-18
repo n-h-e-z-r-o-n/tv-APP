@@ -22,6 +22,10 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 
+
+import android.graphics.Color
+
+
 class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalTvMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -100,15 +104,17 @@ class MainActivity : ComponentActivity() {
         val recyclerSettings = findViewById<RecyclerView>(R.id.Setting)
 
         val buttons = listOf(btnHome, btnSearch, btnCategories, btnWatchlist, btnProfile)
-        val activeColor = "#4545" // active
-        val inactiveColor = "#0000"       // inactive
+
+        // Convert hex color strings to integer color values
+        val activeColor = Color.parseColor("#4545FF")
+        val inactiveColor = Color.parseColor("#FFFFFF")
 
         fun activate(button: ImageButton, target: RecyclerView) {
             // Reset all icons
-            //buttons.forEach { it.inactiveColor }
+            buttons.forEach { it.setColorFilter(inactiveColor) }
 
             // Highlight current
-            //button.activeColor
+            button.setColorFilter(activeColor)
 
             // Hide all recyclers
             recyclerHome.visibility = View.GONE

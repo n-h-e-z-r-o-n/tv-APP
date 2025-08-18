@@ -25,49 +25,49 @@
 
         <ImageButton
             android:id="@+id/btnHome"
-            android:layout_width="48dp"
+            android:layout_width="match_parent"
             android:layout_height="48dp"
             android:layout_marginBottom="24dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:clickable="true"
             android:focusable="true"
             android:src="@drawable/ic_home"
-            android:tint="@android:color/white" />
+            app:tint="@color/nav_icon_color_selector" />
 
         <ImageButton
             android:id="@+id/btnSearch"
-            android:layout_width="48dp"
+            android:layout_width="match_parent"
             android:layout_height="48dp"
             android:layout_marginBottom="24dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_search"
-            android:tint="@android:color/white" />
+            app:tint="@color/nav_icon_color_selector" />
 
         <ImageButton
             android:id="@+id/btnCategories"
-            android:layout_width="48dp"
+            android:layout_width="match_parent"
             android:layout_height="48dp"
             android:layout_marginBottom="24dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_category"
-            android:tint="@android:color/white" />
+            app:tint="@color/nav_icon_color_selector" />
 
         <ImageButton
             android:id="@+id/btnWatchlist"
-            android:layout_width="48dp"
+            android:layout_width="match_parent"
             android:layout_height="48dp"
             android:layout_marginBottom="24dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_bookmark"
-            android:tint="@android:color/white" />
+            app:tint="@color/nav_icon_color_selector" />
 
         <ImageButton
             android:id="@+id/btnProfile"
-            android:layout_width="48dp"
+            android:layout_width="match_parent"
             android:layout_height="48dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_person"
-            android:tint="@android:color/white" />
+            app:tint="@color/nav_icon_color_selector" />
 
     </LinearLayout>
 

@@ -93,7 +93,7 @@ class Watch_Page : AppCompatActivity() {
                 withContext(Dispatchers.Main) {
 
                     val  backdrop_Widget = findViewById<ImageView>(R.id.backdropImageView)
-                    val  poster_widget = findViewById<ImageView>(R.id.posterImageView)
+                    //val  poster_widget = findViewById<ImageView>(R.id.posterImageView)
                     val  title_widget = findViewById<TextView>(R.id.title_widget)
                     val  year_widget = findViewById<TextView>(R.id.year_widget)
                     val  Rating_widget = findViewById<TextView>(R.id.Rating_widget)
@@ -113,11 +113,14 @@ class Watch_Page : AppCompatActivity() {
                         .centerInside()
                         .into(backdrop_Widget)
 
+                   /*
                     Picasso.get()
                         .load(poster_Url)
                         .fit()
                         .centerInside()
                         .into(poster_widget)
+
+                    */
                 }
 
 
