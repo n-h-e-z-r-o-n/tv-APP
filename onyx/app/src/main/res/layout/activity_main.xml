@@ -15,7 +15,7 @@
         android:id="@+id/sideBar"
         android:layout_width="40dp"
         android:layout_height="543dp"
-        android:gravity="center_horizontal"
+        android:gravity="center"
         android:orientation="vertical"
         android:paddingTop="24dp"
         android:paddingBottom="24dp"
@@ -28,46 +28,57 @@
             android:layout_width="match_parent"
             android:layout_height="48dp"
             android:layout_marginBottom="24dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
+            android:background="@android:color/transparent"
             android:clickable="true"
             android:focusable="true"
             android:src="@drawable/ic_home"
-            app:tint="@color/nav_icon_color_selector" />
+            app:tint="@color/nav_icon_color_selector"
+            android:layout_gravity="bottom"/>
 
         <ImageButton
             android:id="@+id/btnSearch"
             android:layout_width="match_parent"
             android:layout_height="48dp"
             android:layout_marginBottom="24dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
+            android:background="@android:color/transparent"
             android:src="@drawable/ic_search"
-            app:tint="@color/nav_icon_color_selector" />
+            app:tint="@color/nav_icon_color_selector"
+            android:clickable="true"
+            android:focusable="true"/>
 
         <ImageButton
             android:id="@+id/btnCategories"
             android:layout_width="match_parent"
             android:layout_height="48dp"
             android:layout_marginBottom="24dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
+            android:background="@android:color/transparent"
             android:src="@drawable/ic_category"
-            app:tint="@color/nav_icon_color_selector" />
+            app:tint="@color/nav_icon_color_selector"
+            android:clickable="true"
+            android:focusable="true"/>
 
         <ImageButton
             android:id="@+id/btnWatchlist"
             android:layout_width="match_parent"
             android:layout_height="48dp"
             android:layout_marginBottom="24dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
+            android:background="@android:color/transparent"
             android:src="@drawable/ic_bookmark"
-            app:tint="@color/nav_icon_color_selector" />
+            app:tint="@color/nav_icon_color_selector"
+            android:clickable="true"
+            android:focusable="true"/>
 
         <ImageButton
             android:id="@+id/btnProfile"
             android:layout_width="match_parent"
             android:layout_height="48dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
+            android:background="@android:color/transparent"
+            android:contentDescription=""
             android:src="@drawable/ic_person"
-            app:tint="@color/nav_icon_color_selector" />
+            app:tint="@color/nav_icon_color_selector"
+            android:layout_gravity="bottom"
+            android:clickable="true"
+            android:focusable="true"/>
 
     </LinearLayout>
 
@@ -90,7 +101,6 @@
             android:padding="10dp"
             android:paddingHorizontal="32dp"
             android:scrollbars="none"
-
             tools:layout_editor_absoluteY="8dp" />
 
         <androidx.recyclerview.widget.RecyclerView
@@ -116,6 +126,12 @@
             android:scrollbars="none"
             android:visibility="gone"
             tools:layout_editor_absoluteY="8dp" />
+
+        <com.google.android.exoplayer2.ui.PlayerView
+            android:id="@+id/playerView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:keepScreenOn="true" />
 
     </FrameLayout>
 

@@ -8,7 +8,8 @@
     android:gravity="center"
     android:orientation="vertical"
     card_view:cardCornerRadius="12dp"
-    card_view:cardElevation="6dp">
+    card_view:cardElevation="6dp"
+    android:foreground="@drawable/card_focus">
 
 
     <ImageView

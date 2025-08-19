@@ -21,6 +21,9 @@ import java.net.URL
 
 import android.graphics.Color
 
+import com.google.android.exoplayer2.ExoPlayer
+import com.google.android.exoplayer2.MediaItem
+import com.google.android.exoplayer2.ui.PlayerView
 
 class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalTvMaterial3Api::class)
@@ -38,9 +41,27 @@ class MainActivity : ComponentActivity() {
             .build()
         Picasso.setSingletonInstance(picasso)
 
-        setupSidebar()
+        //setupSidebar()
 
-        fetchData()
+        //fetchData()
+
+        val playerView: PlayerView = findViewById(R.id.playerView)
+        player = ExoPlayer.Builder(this).build()
+        playerView.player = player
+
+        lifecycleScope.launch {
+            val embedUrl = "https://thirdparty.com/embed/xyz"  // your iframe embed URL
+            val videoUrl = extractVideoUrl(embedUrl)
+
+            if (videoUrl != null) {
+                val mediaItem = MediaItem.fromUri(videoUrl)
+                player.setMediaItem(mediaItem)
+                player.prepare()
+                player.playWhenReady = true
+            } else {
+                Toast.makeText(this@MainActivity, "Failed to extract video URL", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     private fun fetchData() {
@@ -56,6 +77,7 @@ class MainActivity : ComponentActivity() {
                     val jsonObject = org.json.JSONObject(response)
                     val dataObject = jsonObject.getJSONObject("data")
                     val moviesArray = dataObject.getJSONArray("movies")
+                    Log.e("DEBUG_TAG_moviesArray", moviesArray.toString())
 
 
                     val movies = mutableListOf<MovieItem>()
@@ -77,11 +99,10 @@ class MainActivity : ComponentActivity() {
                         recyclerView.addItemDecoration(EqualSpaceItemDecoration(spacing))
                     }
 
-
                     break
                 } catch (e: Exception) {
                     delay(10_000)
-                    Log.e("DEBUG_TAG", "Error fetching data", e)
+                    Log.e("DEBUG_TAG_Movies", "Error fetching data", e)
                     break
                 }
             }
@@ -107,7 +128,17 @@ class MainActivity : ComponentActivity() {
 
         fun activate(button: ImageButton, target: RecyclerView) {
             // Reset all icons
-            buttons.forEach { it.setColorFilter(inactiveColor) }
+            buttons.forEach {
+                it.setColorFilter(inactiveColor)
+                it.setOnFocusChangeListener { v, hasFocus ->
+                    if (hasFocus) {
+                        v.animate().scaleX(1.25f).scaleY(1.25f).setDuration(150).start()
+                    } else {
+                        v.animate().scaleX(1f).scaleY(1f).setDuration(150).start()
+                    }
+                }
+
+            }
 
             // Highlight current
             button.setColorFilter(activeColor)

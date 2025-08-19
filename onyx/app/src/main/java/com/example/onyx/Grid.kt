@@ -22,8 +22,8 @@ class GridAdapter(
 
         init {
             itemView.setOnFocusChangeListener { v, hasFocus ->
-                v.animate().scaleX(if (hasFocus) 1.1f else 1f)
-                    .scaleY(if (hasFocus) 1.1f else 1f)
+                v.animate().scaleX(if (hasFocus) 1.02f else 1f)
+                    .scaleY(if (hasFocus) 1.02f else 1f)
                     .setDuration(150)
                     .start()
             }
