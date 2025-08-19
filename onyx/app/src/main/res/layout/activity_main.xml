@@ -127,11 +127,13 @@
             android:visibility="gone"
             tools:layout_editor_absoluteY="8dp" />
 
-        <com.google.android.exoplayer2.ui.PlayerView
+        <!-- res/layout/activity_main.xml -->
+        <androidx.media3.ui.PlayerView
             android:id="@+id/playerView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:keepScreenOn="true" />
+
 
     </FrameLayout>
 

@@ -21,9 +21,6 @@ import java.net.URL
 
 import android.graphics.Color
 
-import com.google.android.exoplayer2.ExoPlayer
-import com.google.android.exoplayer2.MediaItem
-import com.google.android.exoplayer2.ui.PlayerView
 
 class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalTvMaterial3Api::class)
@@ -41,32 +38,14 @@ class MainActivity : ComponentActivity() {
             .build()
         Picasso.setSingletonInstance(picasso)
 
-        //setupSidebar()
+        setupSidebar()
 
-        //fetchData()
-
-        val playerView: PlayerView = findViewById(R.id.playerView)
-        player = ExoPlayer.Builder(this).build()
-        playerView.player = player
-
-        lifecycleScope.launch {
-            val embedUrl = "https://thirdparty.com/embed/xyz"  // your iframe embed URL
-            val videoUrl = extractVideoUrl(embedUrl)
-
-            if (videoUrl != null) {
-                val mediaItem = MediaItem.fromUri(videoUrl)
-                player.setMediaItem(mediaItem)
-                player.prepare()
-                player.playWhenReady = true
-            } else {
-                Toast.makeText(this@MainActivity, "Failed to extract video URL", Toast.LENGTH_SHORT).show()
-            }
-        }
+        fetchData()
     }
 
     private fun fetchData() {
         CoroutineScope(Dispatchers.IO).launch {
-            while(true) {
+            while (true) {
                 try {
                     val url = "https://yts.mx/api/v2/list_movies.json?page=1&limit=50&sort_by=year"
 
@@ -94,7 +73,7 @@ class MainActivity : ComponentActivity() {
                     withContext(Dispatchers.Main) {
                         val recyclerView = findViewById<RecyclerView>(R.id.recyclerView)
                         recyclerView.layoutManager = GridLayoutManager(this@MainActivity, 4)
-                        recyclerView.adapter = GridAdapter(movies,  R.layout.item_grid)
+                        recyclerView.adapter = GridAdapter(movies, R.layout.item_grid)
                         val spacing = (19 * resources.displayMetrics.density).toInt() // 16dp to px
                         recyclerView.addItemDecoration(EqualSpaceItemDecoration(spacing))
                     }
@@ -162,12 +141,4 @@ class MainActivity : ComponentActivity() {
         activate(btnHome, recyclerHome)
     }
 
-
 }
-
-data class MovieItem(
-    val title: String,
-    val imageUrl: String,
-    val imdbCode: String,
-    val type: String
-)

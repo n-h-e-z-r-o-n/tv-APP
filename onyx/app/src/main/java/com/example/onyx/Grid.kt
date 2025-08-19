@@ -95,3 +95,10 @@ class EqualSpaceItemDecoration(private val space: Int) : RecyclerView.ItemDecora
         }
     }
 }
+
+data class MovieItem(
+    val title: String,
+    val imageUrl: String,
+    val imdbCode: String,
+    val type: String
+)
