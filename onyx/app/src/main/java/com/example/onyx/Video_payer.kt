@@ -8,6 +8,7 @@ import android.os.Looper
 import android.view.KeyEvent
 import android.view.View
 import android.widget.ImageButton
+import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.SeekBar
 import android.widget.TextView
@@ -19,7 +20,10 @@ import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.PlaybackException
 import com.google.android.exoplayer2.ui.StyledPlayerView
+import com.google.android.exoplayer2.ui.TrackSelectionDialogBuilder
 import com.google.android.exoplayer2.util.Util
+import com.google.android.exoplayer2.C
+import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
 
 class Video_payer : AppCompatActivity() {
 
@@ -29,7 +33,13 @@ class Video_payer : AppCompatActivity() {
     private var errorTextView: TextView? = null
     private var overlayContainer: View? = null
     private var bottomBar: View? = null
+    private var topBar: View? = null
+    private var centerOverlay: View? = null
+    private var centerIcon: ImageView? = null
+    private var skipText: TextView? = null
     private var playPauseButton: ImageButton? = null
+    private var rewindButton: ImageButton? = null
+    private var fastForwardButton: ImageButton? = null
     private var muteButton: ImageButton? = null
     private var fullscreenButton: ImageButton? = null
     private var seekBar: SeekBar? = null
@@ -48,6 +58,7 @@ class Video_payer : AppCompatActivity() {
             uiHandler.postDelayed(this, 500)
         }
     }
+    private var trackSelector: DefaultTrackSelector? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -58,7 +69,13 @@ class Video_payer : AppCompatActivity() {
         errorTextView = findViewById(R.id.error_text)
         overlayContainer = findViewById(R.id.overlay_container)
         bottomBar = findViewById(R.id.bottom_bar)
+        topBar = findViewById(R.id.top_bar)
+        centerOverlay = findViewById(R.id.center_overlay)
+        centerIcon = findViewById(R.id.center_icon)
+        skipText = findViewById(R.id.skip_text)
         playPauseButton = findViewById(R.id.btn_play_pause)
+        rewindButton = findViewById(R.id.btn_rewind)
+        fastForwardButton = findViewById(R.id.btn_fast_forward)
         muteButton = findViewById(R.id.btn_mute)
         fullscreenButton = findViewById(R.id.btn_fullscreen)
         seekBar = findViewById(R.id.seek_bar)
@@ -66,6 +83,7 @@ class Video_payer : AppCompatActivity() {
         durationText = findViewById(R.id.txt_duration)
 
         setupControls()
+        setupDpadNavigation()
 
         // Setup back press handling
         setupBackPressHandler()
@@ -88,8 +106,18 @@ class Video_payer : AppCompatActivity() {
 
     private fun initializePlayer() {
         val videoUrl = intent.getStringExtra("video_url") ?: return
+        // Optional: show title if provided
+        intent.getStringExtra("video_title")?.let { title ->
+            findViewById<TextView?>(R.id.txt_title)?.apply {
+                text = title
+                isVisible = true
+            }
+        }
 
-        player = ExoPlayer.Builder(this).build().apply {
+        trackSelector = DefaultTrackSelector(this)
+        player = ExoPlayer.Builder(this)
+            .setTrackSelector(trackSelector!!)
+            .build().apply {
             playWhenReady = this@Video_payer.playWhenReady
             seekTo(currentWindow, playbackPosition)
 
@@ -155,6 +183,24 @@ class Video_payer : AppCompatActivity() {
         playPauseButton?.setOnClickListener {
             player?.let { p ->
                 if (p.isPlaying) p.pause() else p.play()
+                showCenterFeedback(if (p.isPlaying) android.R.drawable.ic_media_play else android.R.drawable.ic_media_pause, "")
+                resetAutoHide()
+            }
+        }
+
+        rewindButton?.setOnClickListener {
+            player?.let { p ->
+                p.seekTo((p.currentPosition - 10_000L).coerceAtLeast(0L))
+                showCenterFeedback(android.R.drawable.ic_media_rew, "-10s")
+                resetAutoHide()
+            }
+        }
+
+        fastForwardButton?.setOnClickListener {
+            player?.let { p ->
+                val duration = if (p.duration > 0) p.duration else Long.MAX_VALUE
+                p.seekTo((p.currentPosition + 10_000L).coerceAtMost(duration))
+                showCenterFeedback(android.R.drawable.ic_media_ff, "+10s")
                 resetAutoHide()
             }
         }
@@ -168,12 +214,26 @@ class Video_payer : AppCompatActivity() {
                     p.volume = if (previousVolume <= 0f) 1f else previousVolume
                 }
                 updateMuteIcon(p.volume == 0f)
+                showCenterFeedback(
+                    if (p.volume == 0f) android.R.drawable.ic_lock_silent_mode else android.R.drawable.ic_lock_silent_mode_off,
+                    if (p.volume == 0f) "Muted" else "Unmuted"
+                )
                 resetAutoHide()
             }
         }
 
         fullscreenButton?.setOnClickListener {
             toggleFullscreen()
+            resetAutoHide()
+        }
+
+        findViewById<ImageButton?>(R.id.btn_quality)?.setOnClickListener {
+            showQualityDialog()
+            resetAutoHide()
+        }
+
+        findViewById<ImageButton?>(R.id.btn_captions)?.setOnClickListener {
+            showCaptionsDialog()
             resetAutoHide()
         }
 
@@ -203,6 +263,35 @@ class Video_payer : AppCompatActivity() {
         })
     }
 
+    private fun showQualityDialog() {
+        val selector = trackSelector ?: return
+        val player = player ?: return
+        val builder = TrackSelectionDialogBuilder(
+            this,
+            "Video Quality",
+            player,
+            C.TRACK_TYPE_VIDEO
+        )
+        builder.setAllowMultipleOverrides(false)
+            .setShowDisableOption(true)
+            .build()
+            .show()
+    }
+
+    private fun showCaptionsDialog() {
+        val player = player ?: return
+        val builder = TrackSelectionDialogBuilder(
+            this,
+            "Captions",
+            player,
+            C.TRACK_TYPE_TEXT
+        )
+        builder.setAllowMultipleOverrides(false)
+            .setShowDisableOption(true)
+            .build()
+            .show()
+    }
+
     private fun toggleControls() {
         if (controlsVisible) hideControls() else showControls()
     }
@@ -210,12 +299,16 @@ class Video_payer : AppCompatActivity() {
     private fun showControls() {
         controlsVisible = true
         bottomBar?.isVisible = true
+        topBar?.isVisible = true
+        // Move focus to primary control for TV remotes
+        playPauseButton?.requestFocus()
         resetAutoHide()
     }
 
     private fun hideControls() {
         controlsVisible = false
         bottomBar?.isVisible = false
+        topBar?.isVisible = false
         uiHandler.removeCallbacks(controlsAutoHideRunnable)
     }
 
@@ -268,6 +361,47 @@ class Video_payer : AppCompatActivity() {
         }
     }
 
+    private fun setupDpadNavigation() {
+        // Ensure the controls are focusable for TV
+        playPauseButton?.isFocusable = true
+        rewindButton?.isFocusable = true
+        fastForwardButton?.isFocusable = true
+        muteButton?.isFocusable = true
+        fullscreenButton?.isFocusable = true
+        findViewById<ImageButton?>(R.id.btn_quality)?.isFocusable = true
+        findViewById<ImageButton?>(R.id.btn_captions)?.isFocusable = true
+
+        // Provide some basic next focus hints for smoother TV navigation
+        rewindButton?.nextFocusRightId = R.id.btn_play_pause
+        playPauseButton?.nextFocusLeftId = R.id.btn_rewind
+        playPauseButton?.nextFocusRightId = R.id.btn_fast_forward
+        fastForwardButton?.nextFocusLeftId = R.id.btn_play_pause
+        fastForwardButton?.nextFocusRightId = R.id.seek_bar
+        seekBar?.nextFocusLeftId = R.id.btn_play_pause
+        seekBar?.nextFocusRightId = R.id.txt_duration
+        durationText?.nextFocusRightId = R.id.btn_mute
+        muteButton?.nextFocusRightId = R.id.btn_fullscreen
+        fullscreenButton?.nextFocusRightId = R.id.btn_quality
+        findViewById<ImageButton?>(R.id.btn_quality)?.nextFocusRightId = R.id.btn_captions
+        findViewById<ImageButton?>(R.id.btn_captions)?.nextFocusLeftId = R.id.btn_quality
+    }
+
+    private fun showCenterFeedback(iconRes: Int, text: String) {
+        centerIcon?.setImageResource(iconRes)
+        skipText?.text = text
+        centerOverlay?.apply {
+            alpha = 0f
+            isVisible = true
+            animate().alpha(1f).setDuration(100).withEndAction {
+                uiHandler.postDelayed({
+                    centerOverlay?.animate()?.alpha(0f)?.setDuration(150)?.withEndAction {
+                        centerOverlay?.isVisible = false
+                    }?.start()
+                }, 700)
+            }.start()
+        }
+    }
+
     private fun formatTime(millis: Long): String {
         var seconds = millis / 1000
         val hours = seconds / 3600
@@ -313,6 +447,8 @@ class Video_payer : AppCompatActivity() {
             it.release()
         }
         player = null
+        uiHandler.removeCallbacks(progressUpdateRunnable)
+        uiHandler.removeCallbacks(controlsAutoHideRunnable)
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
@@ -326,18 +462,75 @@ class Video_payer : AppCompatActivity() {
                         it.play()
                     }
                 }
+                showControls()
                 true
             }
             KeyEvent.KEYCODE_MEDIA_PLAY -> {
                 player?.play()
+                showControls()
                 true
             }
             KeyEvent.KEYCODE_MEDIA_PAUSE -> {
                 player?.pause()
+                showControls()
                 true
             }
             KeyEvent.KEYCODE_MEDIA_STOP -> {
                 player?.stop()
+                true
+            }
+            // Mute toggle
+            KeyEvent.KEYCODE_VOLUME_MUTE -> {
+                player?.let { p ->
+                    if (p.volume > 0f) {
+                        previousVolume = p.volume
+                        p.volume = 0f
+                    } else {
+                        p.volume = if (previousVolume <= 0f) 1f else previousVolume
+                    }
+                    updateMuteIcon(p.volume == 0f)
+                }
+                showControls()
+                true
+            }
+            // Open captions dialog (often KEYCODE_CAPTIONS on some remotes)
+            KeyEvent.KEYCODE_CAPTIONS -> {
+                showCaptionsDialog()
+                showControls()
+                true
+            }
+            // Use MENU key for Quality dialog on TV remotes
+            KeyEvent.KEYCODE_MENU -> {
+                showQualityDialog()
+                showControls()
+                true
+            }
+            KeyEvent.KEYCODE_DPAD_LEFT -> {
+                val newPos = (player?.currentPosition ?: 0L) - 10_000L
+                player?.seekTo(newPos.coerceAtLeast(0L))
+                showCenterFeedback(android.R.drawable.ic_media_rew, "-10s")
+                showControls()
+                true
+            }
+            KeyEvent.KEYCODE_DPAD_RIGHT -> {
+                val duration = player?.duration ?: Long.MAX_VALUE
+                val newPos = (player?.currentPosition ?: 0L) + 10_000L
+                player?.seekTo(newPos.coerceAtMost(duration))
+                showCenterFeedback(android.R.drawable.ic_media_ff, "+10s")
+                showControls()
+                true
+            }
+            KeyEvent.KEYCODE_DPAD_UP -> {
+                showControls()
+                true
+            }
+            KeyEvent.KEYCODE_DPAD_DOWN -> {
+                hideControls()
+                true
+            }
+            KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER -> {
+                player?.let { p -> if (p.isPlaying) p.pause() else p.play() }
+                toggleControls()
                 true
             }
             else -> super.onKeyDown(keyCode, event)

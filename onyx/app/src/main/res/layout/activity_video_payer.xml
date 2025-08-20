@@ -56,13 +56,26 @@
                 android:layout_width="0dp"
                 android:layout_height="56dp"
                 android:gravity="center_vertical"
+                android:orientation="horizontal"
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp"
                 android:background="@drawable/overlay_top_gradient"
                 android:visibility="gone"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent" />
+                app:layout_constraintEnd_toEndOf="parent">
+
+                <TextView
+                    android:id="@+id/txt_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:textColor="@android:color/white"
+                    android:textSize="18sp"
+                    android:text="" />
+
+            </LinearLayout>
 
             <!-- Bottom controls bar -->
             <LinearLayout
@@ -80,6 +93,15 @@
                 app:layout_constraintEnd_toEndOf="parent">
 
                 <ImageButton
+                    android:id="@+id/btn_rewind"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:background="@android:color/transparent"
+                    android:contentDescription="Rewind"
+                    android:focusable="true"
+                    android:src="@android:drawable/ic_media_rew" />
+
+                <ImageButton
                     android:id="@+id/btn_play_pause"
                     android:layout_width="40dp"
                     android:layout_height="40dp"
@@ -87,6 +109,16 @@
                     android:contentDescription="Play/Pause"
                     android:focusable="true"
                     android:src="@android:drawable/ic_media_play" />
+
+                <ImageButton
+                    android:id="@+id/btn_fast_forward"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginStart="8dp"
+                    android:background="@android:color/transparent"
+                    android:contentDescription="Fast Forward"
+                    android:focusable="true"
+                    android:src="@android:drawable/ic_media_ff" />
 
                 <TextView
                     android:id="@+id/txt_current_time"
@@ -105,6 +137,7 @@
                     android:layout_marginEnd="8dp"
                     android:max="1000"
                     android:progress="0"
+                    android:focusable="true"
                     app:layout_constraintWidth_default="spread"
                     android:layout_weight="1" />
 
@@ -136,7 +169,62 @@
                     android:focusable="true"
                     android:src="@android:drawable/ic_menu_crop" />
 
+                <ImageButton
+                    android:id="@+id/btn_quality"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginStart="8dp"
+                    android:background="@android:color/transparent"
+                    android:contentDescription="Quality"
+                    android:focusable="true"
+                    android:src="@android:drawable/ic_menu_sort_by_size" />
+
+                <ImageButton
+                    android:id="@+id/btn_captions"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginStart="8dp"
+                    android:background="@android:color/transparent"
+                    android:contentDescription="Captions"
+                    android:focusable="true"
+                    android:src="@android:drawable/ic_menu_agenda" />
+
             </LinearLayout>
+
+            <!-- Center overlay for big play/pause or skip hints -->
+            <FrameLayout
+                android:id="@+id/center_overlay"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:gravity="center_horizontal">
+
+                    <ImageView
+                        android:id="@+id/center_icon"
+                        android:layout_width="64dp"
+                        android:layout_height="64dp"
+                        android:tint="@android:color/white"
+                        android:src="@android:drawable/ic_media_play" />
+
+                    <TextView
+                        android:id="@+id/skip_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:textColor="@android:color/white"
+                        android:textSize="16sp"
+                        android:text="" />
+                </LinearLayout>
+            </FrameLayout>
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
