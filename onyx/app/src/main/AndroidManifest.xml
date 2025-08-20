@@ -21,6 +21,13 @@
         android:theme="@style/Theme.Onyx"
         android:usesCleartextTraffic="true">
         <activity
+            android:name=".Video_payer"
+            android:exported="false"
+            android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen" />
+        <activity
+            android:name=".Play"
+            android:exported="false" />
+        <activity
             android:name=".Watch_Page"
             android:exported="false" />
         <activity

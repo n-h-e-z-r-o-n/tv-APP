@@ -125,14 +125,11 @@
             android:paddingHorizontal="32dp"
             android:scrollbars="none"
             android:visibility="gone"
-            tools:layout_editor_absoluteY="8dp" />
+            tools:layout_editor_absoluteY="8dp">
 
-        <!-- res/layout/activity_main.xml -->
-        <androidx.media3.ui.PlayerView
-            android:id="@+id/playerView"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:keepScreenOn="true" />
+
+
+        </androidx.recyclerview.widget.RecyclerView>
 
 
     </FrameLayout>

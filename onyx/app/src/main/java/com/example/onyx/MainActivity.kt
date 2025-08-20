@@ -45,7 +45,7 @@ class MainActivity : ComponentActivity() {
 
     private fun fetchData() {
         CoroutineScope(Dispatchers.IO).launch {
-            while (true) {
+            while(true) {
                 try {
                     val url = "https://yts.mx/api/v2/list_movies.json?page=1&limit=50&sort_by=year"
 
@@ -73,7 +73,7 @@ class MainActivity : ComponentActivity() {
                     withContext(Dispatchers.Main) {
                         val recyclerView = findViewById<RecyclerView>(R.id.recyclerView)
                         recyclerView.layoutManager = GridLayoutManager(this@MainActivity, 4)
-                        recyclerView.adapter = GridAdapter(movies, R.layout.item_grid)
+                        recyclerView.adapter = GridAdapter(movies,  R.layout.item_grid)
                         val spacing = (19 * resources.displayMetrics.density).toInt() // 16dp to px
                         recyclerView.addItemDecoration(EqualSpaceItemDecoration(spacing))
                     }
@@ -141,4 +141,12 @@ class MainActivity : ComponentActivity() {
         activate(btnHome, recyclerHome)
     }
 
+
 }
+
+data class MovieItem(
+    val title: String,
+    val imageUrl: String,
+    val imdbCode: String,
+    val type: String
+)

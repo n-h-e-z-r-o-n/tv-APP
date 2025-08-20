@@ -35,6 +35,7 @@ android {
     }
     buildFeatures {
         compose = true
+        viewBinding = true
     }
 }
 
@@ -55,6 +56,9 @@ dependencies {
     implementation("androidx.recyclerview:recyclerview:1.3.2")
     implementation("com.squareup.picasso:picasso:2.8")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("com.google.android.exoplayer:exoplayer:2.19.1")
+    implementation("com.google.android.exoplayer:exoplayer-ui:2.19.1")
+    implementation("com.google.android.exoplayer:extension-mediasession:2.19.1")
     implementation(libs.material)
     implementation(libs.androidx.activity)
     androidTestImplementation(platform(libs.androidx.compose.bom))

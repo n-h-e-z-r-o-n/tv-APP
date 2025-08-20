@@ -1,5 +1,6 @@
 package com.example.onyx
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.widget.ImageView
@@ -21,7 +22,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.delay
 import org.json.JSONArray
-
+import android.widget.Button
 
 class Watch_Page : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -36,8 +37,16 @@ class Watch_Page : AppCompatActivity() {
         fetchData(imdbCode.toString(), type.toString())
 
 
+        /*
+        val watchButton = findViewById<Button>(R.id.watchNowButton)
+        watchButton.setOnClickListener {
+            val intent = Intent(this, Play::class.java)
+            intent.putExtra("imdb_code", imdbCode)
+            intent.putExtra("type", type)
+            startActivity(intent)
+        }
 
-
+         */
 
         // Show them (for testing)
         //findViewById<TextView>(R.id.watchPage).text =  "IMDB Code: $imdbCode\nType: $type"
@@ -64,9 +73,8 @@ class Watch_Page : AppCompatActivity() {
                     val response = connection.inputStream.bufferedReader().use { it.readText() }
                     val jsonObject = org.json.JSONObject(response)
                     tmdbId = jsonObject.getString("id")
-
-
                 }
+
 
                 val url = "https://api.themoviedb.org/3/$type/$tmdbId?language=en-US"
                 val connection = URL(url).openConnection() as HttpURLConnection
@@ -91,9 +99,6 @@ class Watch_Page : AppCompatActivity() {
                 val release_date  = jsonObject.getString("release_date")
                 val runtime  = jsonObject.getString("runtime")
                 val vote_average  = jsonObject.getString("vote_average")
-
-
-
 
 
 
@@ -129,6 +134,14 @@ class Watch_Page : AppCompatActivity() {
                         .into(poster_widget)
 
                     */
+
+                    val watchButton = findViewById<Button>(R.id.watchNowButton)
+                    watchButton.setOnClickListener {
+                        val intent = Intent(this@Watch_Page, Play::class.java)
+                        intent.putExtra("imdb_code", tmdbId)
+                        intent.putExtra("type", type)
+                        startActivity(intent)
+                    }
                 }
 
                 Cast_Data(tmdbId.toString(), type.toString())
