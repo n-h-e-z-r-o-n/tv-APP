@@ -8,6 +8,7 @@ import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import android.util.Log
+import android.view.MotionEvent
 
 class Play : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -23,6 +24,17 @@ class Play : AppCompatActivity() {
         // Setup WebView
         webView.webChromeClient = WebChromeClient()
         webView.webViewClient = object : WebViewClient() {
+
+            override fun onPageFinished(view: WebView?, url: String?) {
+                super.onPageFinished(view, url)
+                // Wait for page to load completely, then simulate click
+                Log.d("DEBUG_TAG_Load", "Page finished loading: $url")
+
+                // Delay the click simulation to ensure everything is rendered
+                webView.postDelayed({
+                    simulateCenterClick(webView)
+                }, 10) // 2 second delay to ensure page is fully rendered
+            }
 
             override fun shouldInterceptRequest(
                 view: WebView?,
@@ -82,6 +94,45 @@ class Play : AppCompatActivity() {
 
         // Optional: Finish current activity to return to TV interface
         finish()
+    }
+    private fun simulateCenterClick(webView: WebView) {
+        // Get the center coordinates of the WebView
+        val centerX = webView.width / 2
+        val centerY = webView.height / 2
+
+        // Create touch event coordinates
+        val downTime = System.currentTimeMillis()
+        val eventTime = System.currentTimeMillis() + 100
+
+        // Simulate touch down event
+        val downEvent = MotionEvent.obtain(
+            downTime,
+            eventTime,
+            MotionEvent.ACTION_DOWN,
+            centerX.toFloat(),
+            centerY.toFloat(),
+            0
+        )
+
+        // Simulate touch up event (click)
+        val upEvent = MotionEvent.obtain(
+            downTime,
+            eventTime + 50,
+            MotionEvent.ACTION_UP,
+            centerX.toFloat(),
+            centerY.toFloat(),
+            0
+        )
+
+        // Dispatch the events
+        webView.dispatchTouchEvent(downEvent)
+        webView.dispatchTouchEvent(upEvent)
+
+        // Recycle the events to free memory
+        downEvent.recycle()
+        upEvent.recycle()
+
+        Log.d("DEBUG_TAG_Click", "Simulated touch at ($centerX, $centerY)")
     }
 
 }

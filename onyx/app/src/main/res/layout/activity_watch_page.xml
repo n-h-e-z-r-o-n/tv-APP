@@ -24,8 +24,7 @@
             <FrameLayout
                 android:orientation="horizontal"
                 android:layout_width="match_parent"
-                android:layout_height="350dp"
-                android:focusable="true">
+                android:layout_height="350dp">
 
                 <!-- Backdrop image -->
                 <ImageView

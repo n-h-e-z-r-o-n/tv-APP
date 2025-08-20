@@ -16,9 +16,8 @@
             app:show_buffering="when_playing"
             app:show_rewind_button="false"
             app:show_fastforward_button="false"
-            app:controller_layout_id="@layout/exo_styled_player_control_view"
             app:resize_mode="fill"
-            app:use_controller="true"
+            app:use_controller="false"
             />
 
         <ProgressBar
@@ -42,6 +41,104 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
+
+        <!-- Custom overlay controls -->
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/overlay_container"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clickable="false"
+            android:focusable="false">
+
+            <!-- Top gradient bar (optional title area) -->
+            <LinearLayout
+                android:id="@+id/top_bar"
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:gravity="center_vertical"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:background="@drawable/overlay_top_gradient"
+                android:visibility="gone"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
+
+            <!-- Bottom controls bar -->
+            <LinearLayout
+                android:id="@+id/bottom_bar"
+                android:layout_width="0dp"
+                android:layout_height="64dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:background="@drawable/overlay_bottom_gradient"
+                android:visibility="gone"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent">
+
+                <ImageButton
+                    android:id="@+id/btn_play_pause"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:background="@android:color/transparent"
+                    android:contentDescription="Play/Pause"
+                    android:focusable="true"
+                    android:src="@android:drawable/ic_media_play" />
+
+                <TextView
+                    android:id="@+id/txt_current_time"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:textColor="@android:color/white"
+                    android:textSize="14sp"
+                    android:text="00:00" />
+
+                <SeekBar
+                    android:id="@+id/seek_bar"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginEnd="8dp"
+                    android:max="1000"
+                    android:progress="0"
+                    app:layout_constraintWidth_default="spread"
+                    android:layout_weight="1" />
+
+                <TextView
+                    android:id="@+id/txt_duration"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@android:color/white"
+                    android:textSize="14sp"
+                    android:text="00:00" />
+
+                <ImageButton
+                    android:id="@+id/btn_mute"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginStart="8dp"
+                    android:background="@android:color/transparent"
+                    android:contentDescription="Mute"
+                    android:focusable="true"
+                    android:src="@android:drawable/ic_lock_silent_mode_off" />
+
+                <ImageButton
+                    android:id="@+id/btn_fullscreen"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginStart="8dp"
+                    android:background="@android:color/transparent"
+                    android:contentDescription="Fullscreen"
+                    android:focusable="true"
+                    android:src="@android:drawable/ic_menu_crop" />
+
+            </LinearLayout>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
