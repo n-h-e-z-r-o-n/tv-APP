@@ -1,6 +1,8 @@
 package com.example.onyx
 
+import android.content.Context
 import android.content.Intent
+import android.graphics.Typeface
 import android.os.Bundle
 import android.util.Log
 import android.widget.ImageView
@@ -95,10 +97,21 @@ class Watch_Page : AppCompatActivity() {
                 val poster_Url = "https://image.tmdb.org/t/p/w500${jsonObject.getString("poster_path")}"
                 val original_title  = jsonObject.getString("original_title")
                 val overview  = jsonObject.getString("overview")
-                val poster_path  = jsonObject.getString("poster_path")
                 val release_date  = jsonObject.getString("release_date")
                 val runtime  = jsonObject.getString("runtime")
                 val vote_average  = jsonObject.getString("vote_average")
+
+                val genresArray  = jsonObject.getJSONArray("genres") //[{"id":80,"name":"Crime"},{"id":99,"name":"Documentary"}]
+                val genresList = mutableListOf<String>()
+                for (i in 0 until genresArray.length()) {
+                    val genreObject = genresArray.getJSONObject(i)
+                    val genreName = genreObject.getString("name")
+                    genresList.add(genreName)
+                }
+
+                val genres = genresList.joinToString("   ⬤ ")
+
+
 
 
 
@@ -106,17 +119,25 @@ class Watch_Page : AppCompatActivity() {
                 withContext(Dispatchers.Main) {
 
                     val  backdrop_Widget = findViewById<ImageView>(R.id.backdropImageView)
-                    //val  poster_widget = findViewById<ImageView>(R.id.posterImageView)
+                    val  poster_widget = findViewById<ImageView>(R.id.posterImageView)
                     val  title_widget = findViewById<TextView>(R.id.title_widget)
                     val  year_widget = findViewById<TextView>(R.id.year_widget)
                     val  Rating_widget = findViewById<TextView>(R.id.Rating_widget)
                     val  Overview_widget = findViewById<TextView>(R.id.overview_widget)
+                    val  Runtime_widget = findViewById<TextView>(R.id.Runtime_widget)
+                    val  Genres_widget = findViewById<TextView>(R.id.Genres_widget)
+
+
+
 
 
 
                     title_widget.text = original_title
                     year_widget.text = release_date
-                    Rating_widget.text  = "⭐ ${vote_average}/10"
+                    Genres_widget.text = genres
+                    Rating_widget.text  = "${vote_average}/10"
+                    //Rating_widget.setTypeface(null, Typeface.BOLD)
+                    Runtime_widget.text = "${runtime} min"
                     Overview_widget.text = overview
 
 
@@ -126,22 +147,32 @@ class Watch_Page : AppCompatActivity() {
                         .centerInside()
                         .into(backdrop_Widget)
 
-                   /*
+
                     Picasso.get()
                         .load(poster_Url)
                         .fit()
                         .centerInside()
                         .into(poster_widget)
 
-                    */
+
 
                     val watchButton = findViewById<Button>(R.id.watchNowButton)
+                    val FaveButton = findViewById<Button>(R.id.favoriteButton)
+                    val TrailerButton = findViewById<Button>(R.id.TrailerButton)
+
+
+
                     watchButton.setOnClickListener {
                         val intent = Intent(this@Watch_Page, Play::class.java)
                         intent.putExtra("imdb_code", tmdbId)
                         intent.putExtra("type", type)
                         startActivity(intent)
                     }
+
+                    setupExpandableButton(watchButton, 105, 40, "▶ Play", "▶")
+                    setupExpandableButton(FaveButton, 130, 40, "\uD83E\uDD0D Favourite", "\uD83E\uDD0D")
+                    setupExpandableButton(TrailerButton, 130, 40, "\uD83C\uDFAC Trailer", "\uD83C\uDFAC")
+
                 }
 
                 Cast_Data(tmdbId.toString(), type.toString())
@@ -288,6 +319,31 @@ class Watch_Page : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    fun setupExpandableButton(
+        button: Button,
+        expandedWidthDp: Int,
+        collapsedWidthDp: Int,
+        expandedText: String,
+        collapsedText: String
+    ) {
+        button.setOnFocusChangeListener { _, hasFocus ->
+            val params = button.layoutParams
+            if (hasFocus) {
+                button.text = expandedText
+                params.width = expandedWidthDp.dpToPx(button.context)
+            } else {
+                button.text = collapsedText
+                params.width = collapsedWidthDp.dpToPx(button.context)
+            }
+            button.layoutParams = params
+        }
+    }
+
+    // dp → px converter
+    fun Int.dpToPx(context: Context): Int {
+        return (this * context.resources.displayMetrics.density).toInt()
     }
 
 }

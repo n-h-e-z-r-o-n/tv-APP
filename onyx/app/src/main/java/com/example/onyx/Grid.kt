@@ -70,6 +70,7 @@ class GridAdapter(
     override fun getItemCount() = items.size
 }
 
+
 class EqualSpaceItemDecoration(private val space: Int) : RecyclerView.ItemDecoration() {
     override fun getItemOffsets(
         outRect: android.graphics.Rect,
