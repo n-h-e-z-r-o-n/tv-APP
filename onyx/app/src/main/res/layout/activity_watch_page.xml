@@ -111,9 +111,10 @@
                             android:layout_height="wrap_content"
                             android:layout_gravity="bottom"
                             android:gravity="start"
-                            android:orientation="horizontal"
+                            android:orientation="vertical"
                             android:padding="5dp"
-                            android:paddingEnd="0dp" >
+                            android:paddingEnd="0dp"
+                            >
 
                             <TextView
                                 android:id="@+id/Genres_widget"
@@ -121,7 +122,20 @@
                                 android:layout_height="wrap_content"
                                 android:text="- Science fiction    - drama   - action"
                                 android:textColor="#FFFFFF"
-                                android:textSize="11sp" />
+                                android:textSize="11sp"
+                                android:textStyle="italic"
+                                />
+
+                            <TextView
+                                android:id="@+id/Production_widget"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="- Marvel    - DC   - action"
+                                android:textColor="#AAAAAA"
+                                android:textSize="9sp"
+                                android:textStyle="italic"
+                                android:layout_marginTop="5dp"
+                                />
 
                         </LinearLayout>
 <!-- ========================================================================================    -->
@@ -155,7 +169,7 @@
                                     android:layout_height="wrap_content"
                                     android:text="8.5/10"
                                     android:textColor="#FFFFFF"
-                                    android:textFontWeight="700"
+                                    android:textStyle="bold"
                                     android:textSize="11sp" />
                             </LinearLayout>
 
@@ -166,7 +180,7 @@
                                 android:layout_gravity="center"
                                 android:gravity="start"
                                 android:orientation="horizontal"
-                                android:layout_marginLeft="15dp"
+                                android:layout_marginStart="15dp"
                                 >
 
                                 <TextView
@@ -185,6 +199,32 @@
                                     android:textSize="11sp" />
                             </LinearLayout>
 
+                            <!-- Pg -->
+                            <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center"
+                                android:gravity="start"
+                                android:orientation="horizontal"
+                                android:layout_marginStart="15dp"
+                                >
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="⬤ PG : "
+                                    android:textColor="#FFFFFF"
+                                    android:textSize="11sp" />
+                                <TextView
+                                    android:id="@+id/PG_widget"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="13"
+                                    android:textColor="#FFFFFF"
+                                    android:textStyle="bold"
+                                    android:textSize="11sp" />
+                            </LinearLayout>
+
                             <!-- Rating -->
                             <LinearLayout
                                 android:layout_width="wrap_content"
@@ -192,7 +232,7 @@
                                 android:layout_gravity="center"
                                 android:gravity="start"
                                 android:orientation="horizontal"
-                                android:layout_marginLeft="15dp"
+                                android:layout_marginStart="15dp"
                                 >
 
                                 <TextView
@@ -207,7 +247,7 @@
                                     android:layout_height="wrap_content"
                                     android:text="8.5/10"
                                     android:textColor="#FFFFFF"
-                                    android:textFontWeight="700"
+                                    android:textStyle="bold"
                                     android:textSize="11sp" />
                             </LinearLayout>
 
@@ -302,6 +342,15 @@
                 android:paddingTop="8dp"
                 android:paddingBottom="24dp"
                 android:scrollbars="none">
+
+                <LinearLayout
+                    android:id="@+id/Season_widget"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="horizontal">
+
+
+                </LinearLayout>
 
 
             </FrameLayout>

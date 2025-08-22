@@ -104,6 +104,7 @@ class Watch_Page : AppCompatActivity() {
                     val runtime: String
                     val vote_average: String
                     val genres: String
+                    val production_C:String
                     val PG: String
 
 
@@ -113,10 +114,11 @@ class Watch_Page : AppCompatActivity() {
                         jsonObject.optString("title")
                     }
 
-                    PG = if (jsonObject.getString("adult").isNotEmpty()) {
-                        "18"
+                    val adult = jsonObject.getString("adult")
+                    if(adult == "true"){
+                        PG = "18 +"
                     } else {
-                        "18"
+                        PG = "13"
                     }
 
                     release_date = if (jsonObject.optString("release_date").isNotEmpty()) {
@@ -135,16 +137,24 @@ class Watch_Page : AppCompatActivity() {
 
                     vote_average = jsonObject.getString("vote_average")
 
-                    val genresArray =
-                        jsonObject.getJSONArray("genres") //[{"id":80,"name":"Crime"},{"id":99,"name":"Documentary"}]
+                    val genresArray = jsonObject.getJSONArray("genres") //[{"id":80,"name":"Crime"},{"id":99,"name":"Documentary"}]
                     val genresList = mutableListOf<String>()
                     for (i in 0 until genresArray.length()) {
                         val genreObject = genresArray.getJSONObject(i)
                         val genreName = genreObject.getString("name")
                         genresList.add(genreName)
                     }
-
                     genres = genresList.joinToString("   ⬤ ")
+
+
+                    val production_companies = jsonObject.getJSONArray("production_companies") //[{"id":80,"name":"Crime"},{"id":99,"name":"Documentary"}]
+                    val productionList = mutableListOf<String>()
+                    for (i in 0 until production_companies.length()) {
+                        val productionObject = production_companies.getJSONObject(i)
+                        val genreName = productionObject.getString("name")
+                        productionList.add(genreName)
+                    }
+                    production_C = productionList.joinToString("  - ")
 
 
 
@@ -160,6 +170,11 @@ class Watch_Page : AppCompatActivity() {
                         val Overview_widget = findViewById<TextView>(R.id.overview_widget)
                         val Runtime_widget = findViewById<TextView>(R.id.Runtime_widget)
                         val Genres_widget = findViewById<TextView>(R.id.Genres_widget)
+                        val Production_widget = findViewById<TextView>(R.id.Production_widget)
+                        val PG_widget = findViewById<TextView>(R.id.PG_widget)
+
+
+
 
 
 
@@ -168,10 +183,15 @@ class Watch_Page : AppCompatActivity() {
 
                         title_widget.text = original_title
                         year_widget.text = release_date
+
                         Genres_widget.text = genres
+                        Production_widget.text = production_C
+
+
                         Rating_widget.text = "${vote_average}/10"
-                        //Rating_widget.setTypeface(null, Typeface.BOLD)
                         Runtime_widget.text = "${runtime} min"
+                        PG_widget.text = PG
+
                         Overview_widget.text = overview
 
 
@@ -282,7 +302,7 @@ class Watch_Page : AppCompatActivity() {
                             false
                         )
                         recyclerView.adapter = GridAdapter(movies,  R.layout.round_grid)
-                        val spacing = (19 * resources.displayMetrics.density).toInt() // 16dp to px
+                        val spacing = (9 * resources.displayMetrics.density).toInt() // 16dp to px
                         recyclerView.addItemDecoration(EqualSpaceItemDecoration(spacing))
                     }
 
@@ -335,7 +355,13 @@ class Watch_Page : AppCompatActivity() {
 
                     for (i in 0 until dmoviesArray.length()) {
                         val item = dmoviesArray.getJSONObject(i)
-                        val title = item.getString("original_title")
+                        //val title = item.getString("original_title")
+
+                        val title = if (item.optString("name").isNotEmpty()) {
+                            jsonObject.optString("name")
+                        } else {
+                            jsonObject.optString("title")
+                        }
                         val imgUrl = "https://image.tmdb.org/t/p/w500" + item.getString("poster_path")
                         val imdb_code = item.getString("id")
                         val type = item.getString("media_type")
