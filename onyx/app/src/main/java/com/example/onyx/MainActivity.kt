@@ -22,6 +22,7 @@ import java.net.URL
 import android.graphics.Color
 import android.widget.LinearLayout
 import androidx.recyclerview.widget.LinearLayoutManager
+import org.json.JSONObject
 
 
 class MainActivity : ComponentActivity() {
@@ -42,9 +43,10 @@ class MainActivity : ComponentActivity() {
 
         setupSidebar()
         //SliderData()
-        TrendingData()
-        PopularData()
-        fetchData()
+        //TrendingData()
+        //PopularData()
+        //fetchData()
+        TvShows()
     }
 
     private fun fetchData() {
@@ -92,19 +94,89 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private fun TvShows() {
+        CoroutineScope(Dispatchers.IO).launch {
+            while(true) {
+                try {
+                    val url = "https://vidsrc.xyz/episodes/latest/page-1.json"
+
+                    val connection = URL(url).openConnection() as HttpURLConnection
+                    connection.requestMethod = "GET"
+
+                    val response = connection.inputStream.bufferedReader().use { it.readText() }
+                    val jsonObject = JSONObject(response)
+                    val moviesArray = jsonObject.getJSONArray("results")
+                    Log.e("DEBUG_TAG_TvShows 1", moviesArray.toString())
+
+                    val movies = mutableListOf<MovieItem>()
+
+                    val movies_temp = mutableListOf<String>()
+
+                    for (i in 0 until moviesArray.length()) {
+                        val item = moviesArray.getJSONObject(i)
+                        val imdb_code = item.getString("tmdb_id")
+                        if(imdb_code == null) continue
+                        movies_temp.add(imdb_code)
+                    }
+
+                    Log.e("DEBUG_TAG_TvShows 2", movies_temp.toString())
+
+
+                    for (i in 0 until movies_temp.size) {
+                        val imdb_code = movies_temp[i]
+                        val url = "https://api.themoviedb.org/3/tv/$imdb_code?"
+                        val connection = URL(url).openConnection() as HttpURLConnection
+                        connection.requestMethod = "GET"
+                        connection.setRequestProperty("accept", "application/json")
+                        connection.setRequestProperty(
+                            "Authorization",
+                            "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJhZjliMmUyN2MxYTZiYzMyMzNhZjE4MzJmNGFjYzg1MCIsIm5iZiI6MTcxOTY3NDUxNy4xOTYsInN1YiI6IjY2ODAyNjk1ZWZhYTI1ZjBhOGE4NGE3MyIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.RTms-g8dzOl3WwCeJ7WNLq3i2kXxl3T7gOTa8POcxcw"
+                        )
+                        val response = connection.inputStream.bufferedReader().use { it.readText() }
+                        val jsonObject = org.json.JSONObject(response)
+
+                        Log.e("DEBUG_TAG_TvShows 3", jsonObject.toString())
+
+                        val title = jsonObject.getString("name")
+                        val imgUrl = jsonObject.getString("poster_path")
+                        val id = jsonObject.getString("id")
+                        val type = "tv"
+                        movies.add(MovieItem(title, imgUrl, id, type))
+                    }
+
+                    withContext(Dispatchers.Main) {
+                        val recyclerView = findViewById<RecyclerView>(R.id.TvShows)
+                        recyclerView.layoutManager = GridLayoutManager(this@MainActivity, 5)
+                        recyclerView.adapter = GridAdapter(movies,  R.layout.item_grid)
+                        val spacing = (19 * resources.displayMetrics.density).toInt() // 16dp to px
+                        recyclerView.addItemDecoration(EqualSpaceItemDecoration(spacing))
+                    }
+
+                    break
+                } catch (e: Exception) {
+                    delay(10_000)
+                    Log.e("DEBUG_TAG_TvShows", "Error fetching data", e)
+                    break
+                }
+            }
+        }
+    }
+
     private fun setupSidebar() {
         val btnHome = findViewById<ImageButton>(R.id.btnHome)
-        val btnSearch = findViewById<ImageButton>(R.id.btnSearch)
-        val btnCategories = findViewById<ImageButton>(R.id.btnCategories)
-        val btnWatchlist = findViewById<ImageButton>(R.id.btnWatchlist)
+        val btnMovies = findViewById<ImageButton>(R.id.btnSearch)
+        val btnTvShows = findViewById<ImageButton>(R.id.btnCategories)
+        val btnFave = findViewById<ImageButton>(R.id.btnWatchlist)
         val btnProfile = findViewById<ImageButton>(R.id.btnProfile)
 
         val recyclerHome = findViewById<LinearLayout>(R.id.Home)
         val recyclerMovies = findViewById<RecyclerView>(R.id.Movies)
-        val recyclerTv = findViewById<RecyclerView>(R.id.Movies)
+        val recyclerTv = findViewById<RecyclerView>(R.id.TvShows)
+        val recyclerFave = findViewById<RecyclerView>(R.id.FavShow)
+
         val recyclerSettings = findViewById<RecyclerView>(R.id.Setting)
 
-        val buttons = listOf(btnHome, btnSearch, btnCategories, btnWatchlist, btnProfile)
+        val buttons = listOf(btnHome, btnMovies, btnTvShows, btnFave, btnProfile)
 
         // Convert hex color strings to integer color values
         val activeColor = Color.parseColor("#4545FF")
@@ -129,7 +201,9 @@ class MainActivity : ComponentActivity() {
 
             // Hide all recyclers
             recyclerHome.visibility = View.GONE
+            recyclerMovies.visibility = View.GONE
             recyclerTv.visibility = View.GONE
+            recyclerFave.visibility = View.GONE
             recyclerSettings.visibility = View.GONE
 
             // Show selected
@@ -137,9 +211,9 @@ class MainActivity : ComponentActivity() {
         }
 
         btnHome.setOnClickListener { activate(btnHome, recyclerHome) }
-        btnSearch.setOnClickListener { activate(btnSearch, recyclerTv) }  // example
-        btnCategories.setOnClickListener { activate(btnCategories, recyclerTv) }
-        btnWatchlist.setOnClickListener { activate(btnWatchlist, recyclerSettings) }
+        btnMovies.setOnClickListener { activate(btnMovies, recyclerMovies ) }  // example
+        btnTvShows.setOnClickListener { activate(btnTvShows, recyclerTv) }
+        btnFave.setOnClickListener { activate(btnFave, recyclerFave) }
         btnProfile.setOnClickListener { activate(btnProfile, recyclerSettings) }
 
         // default view

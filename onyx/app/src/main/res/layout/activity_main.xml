@@ -201,6 +201,30 @@
             tools:layout_editor_absoluteY="8dp" />
 
         <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/TvShows"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:overScrollMode="never"
+            android:padding="10dp"
+            android:paddingHorizontal="32dp"
+            android:scrollbars="none"
+            android:visibility="gone"
+            tools:layout_editor_absoluteY="8dp"/>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/FavShow"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:overScrollMode="never"
+            android:padding="10dp"
+            android:paddingHorizontal="32dp"
+            android:scrollbars="none"
+            android:visibility="gone"
+            tools:layout_editor_absoluteY="8dp"/>
+
+        <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/Setting"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -210,11 +234,10 @@
             android:paddingHorizontal="32dp"
             android:scrollbars="none"
             android:visibility="gone"
-            tools:layout_editor_absoluteY="8dp">
+            tools:layout_editor_absoluteY="8dp"/>
 
 
 
-        </androidx.recyclerview.widget.RecyclerView>
 
 
     </FrameLayout>
