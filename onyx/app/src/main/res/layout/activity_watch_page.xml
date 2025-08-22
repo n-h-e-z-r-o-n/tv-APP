@@ -346,9 +346,409 @@
                 <LinearLayout
                     android:id="@+id/Season_widget"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:orientation="horizontal">
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp"
+                    android:background="#1A1D2A">
 
+                    <!-- Season Header -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:paddingBottom="16dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/seasons_episodes"
+                            android:textColor="#FFFFFF"
+                            android:textSize="20sp"
+                            android:textStyle="bold" />
+
+                        <View
+                            android:layout_width="0dp"
+                            android:layout_height="1dp"
+                            android:layout_weight="1"
+                            android:layout_marginStart="16dp"
+                            android:background="#333333" />
+
+                        <TextView
+                            android:id="@+id/season_count_text"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="3 Seasons"
+                            android:textColor="#AAAAAA"
+                            android:textSize="14sp" />
+                    </LinearLayout>
+
+                    <!-- Season Selector -->
+                    <HorizontalScrollView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:scrollbars="none"
+                        android:clipToPadding="false"
+                        android:paddingHorizontal="8dp">
+
+                        <LinearLayout
+                            android:id="@+id/season_selector_container"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:spacing="8dp">
+
+                            <!-- Season 1 Button -->
+                            <Button
+                                android:id="@+id/season_1_btn"
+                                android:layout_width="120dp"
+                                android:layout_height="48dp"
+                                android:layout_marginEnd="8dp"
+                                android:text="Season 1"
+                                android:textColor="#FFFFFF"
+                                android:textSize="14sp"
+                                android:textStyle="bold"
+                                android:background="@drawable/tv_button_selector"
+                                android:focusable="true"
+                                android:focusableInTouchMode="true"
+                                android:stateListAnimator="@null" />
+
+                            <!-- Season 2 Button -->
+                            <Button
+                                android:id="@+id/season_2_btn"
+                                android:layout_width="120dp"
+                                android:layout_height="48dp"
+                                android:layout_marginEnd="8dp"
+                                android:text="Season 2"
+                                android:textColor="#AAAAAA"
+                                android:textSize="14sp"
+                                android:background="@drawable/tv_button_selector"
+                                android:focusable="true"
+                                android:focusableInTouchMode="true"
+                                android:stateListAnimator="@null" />
+
+                            <!-- Season 3 Button -->
+                            <Button
+                                android:id="@+id/season_3_btn"
+                                android:layout_width="120dp"
+                                android:layout_height="48dp"
+                                android:layout_marginEnd="8dp"
+                                android:text="Season 3"
+                                android:textColor="#AAAAAA"
+                                android:textSize="14sp"
+                                android:background="@drawable/tv_button_selector"
+                                android:focusable="true"
+                                android:focusableInTouchMode="true"
+                                android:stateListAnimator="@null" />
+
+                        </LinearLayout>
+                    </HorizontalScrollView>
+
+                    <!-- Season Info -->
+                    <LinearLayout
+                        android:id="@+id/season_info_container"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:paddingTop="16dp"
+                        android:paddingBottom="8dp"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:id="@+id/current_season_title"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Season 1"
+                            android:textColor="#FFFFFF"
+                            android:textSize="18sp"
+                            android:textStyle="bold" />
+
+                        <View
+                            android:layout_width="1dp"
+                            android:layout_height="16dp"
+                            android:layout_marginStart="12dp"
+                            android:layout_marginEnd="12dp"
+                            android:background="#333333" />
+
+                        <TextView
+                            android:id="@+id/episode_count_text"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="8 Episodes"
+                            android:textColor="#AAAAAA"
+                            android:textSize="14sp" />
+
+                        <View
+                            android:layout_width="1dp"
+                            android:layout_height="16dp"
+                            android:layout_marginStart="12dp"
+                            android:layout_marginEnd="12dp"
+                            android:background="#333333" />
+
+                        <TextView
+                            android:id="@+id/season_year_text"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="2024"
+                            android:textColor="#AAAAAA"
+                            android:textSize="14sp" />
+
+                    </LinearLayout>
+
+                    <!-- Episodes List -->
+                    <LinearLayout
+                        android:id="@+id/episodes_container"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:paddingTop="8dp">
+
+                        <!-- Episode 1 -->
+                        <LinearLayout
+                            android:id="@+id/episode_1_container"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:padding="12dp"
+                            android:layout_marginBottom="8dp"
+                            android:background="#252836"
+                            android:focusable="true"
+                            android:focusableInTouchMode="true"
+                            android:foreground="@drawable/card_focus"
+                            android:clickable="true">
+
+                            <ImageView
+                                android:id="@+id/episode_1_thumbnail"
+                                android:layout_width="120dp"
+                                android:layout_height="68dp"
+                                android:background="#333333"
+                                android:scaleType="centerCrop"
+                                android:src="@drawable/ic_android_black_24dp" />
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical"
+                                android:paddingStart="16dp"
+                                android:gravity="center_vertical">
+
+                                <TextView
+                                    android:id="@+id/episode_1_title"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Episode 1: Pilot"
+                                    android:textColor="#FFFFFF"
+                                    android:textSize="16sp"
+                                    android:textStyle="bold"
+                                    android:maxLines="1"
+                                    android:ellipsize="end" />
+
+                                <TextView
+                                    android:id="@+id/episode_1_duration"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="42 min"
+                                    android:textColor="#AAAAAA"
+                                    android:textSize="12sp"
+                                    android:layout_marginTop="4dp" />
+
+                                <TextView
+                                    android:id="@+id/episode_1_description"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="The story begins with our protagonist discovering..."
+                                    android:textColor="#CCCCCC"
+                                    android:textSize="12sp"
+                                    android:maxLines="2"
+                                    android:ellipsize="end"
+                                    android:layout_marginTop="4dp" />
+
+                            </LinearLayout>
+
+                            <Button
+                                android:id="@+id/episode_1_play_btn"
+                                android:layout_width="44dp"
+                                android:layout_height="44dp"
+                                android:text="▶"
+                                android:textColor="#FFFFFF"
+                                android:textSize="16sp"
+                                android:background="@drawable/tv_button_selector"
+                                android:focusable="true"
+                                android:focusableInTouchMode="true"
+                                android:stateListAnimator="@null" />
+
+                        </LinearLayout>
+
+                        <!-- Episode 2 -->
+                        <LinearLayout
+                            android:id="@+id/episode_2_container"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:padding="12dp"
+                            android:layout_marginBottom="8dp"
+                            android:background="#252836"
+                            android:focusable="true"
+                            android:focusableInTouchMode="true"
+                            android:foreground="@drawable/card_focus"
+                            android:clickable="true">
+
+                            <ImageView
+                                android:id="@+id/episode_2_thumbnail"
+                                android:layout_width="120dp"
+                                android:layout_height="68dp"
+                                android:background="#333333"
+                                android:scaleType="centerCrop"
+                                android:src="@drawable/ic_android_black_24dp" />
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical"
+                                android:paddingStart="16dp"
+                                android:gravity="center_vertical">
+
+                                <TextView
+                                    android:id="@+id/episode_2_title"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Episode 2: The Journey Begins"
+                                    android:textColor="#FFFFFF"
+                                    android:textSize="16sp"
+                                    android:textStyle="bold"
+                                    android:maxLines="1"
+                                    android:ellipsize="end" />
+
+                                <TextView
+                                    android:id="@+id/episode_2_duration"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="45 min"
+                                    android:textColor="#AAAAAA"
+                                    android:textSize="12sp"
+                                    android:layout_marginTop="4dp" />
+
+                                <TextView
+                                    android:id="@+id/episode_2_description"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Our hero embarks on an epic journey..."
+                                    android:textColor="#CCCCCC"
+                                    android:textSize="12sp"
+                                    android:maxLines="2"
+                                    android:ellipsize="end"
+                                    android:layout_marginTop="4dp" />
+
+                            </LinearLayout>
+
+                            <Button
+                                android:id="@+id/episode_2_play_btn"
+                                android:layout_width="44dp"
+                                android:layout_height="44dp"
+                                android:text="▶"
+                                android:textColor="#FFFFFF"
+                                android:textSize="16sp"
+                                android:background="@drawable/tv_button_selector"
+                                android:focusable="true"
+                                android:focusableInTouchMode="true"
+                                android:stateListAnimator="@null" />
+
+                        </LinearLayout>
+
+                        <!-- Episode 3 -->
+                        <LinearLayout
+                            android:id="@+id/episode_3_container"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:padding="12dp"
+                            android:layout_marginBottom="8dp"
+                            android:background="#252836"
+                            android:focusable="true"
+                            android:focusableInTouchMode="true"
+                            android:foreground="@drawable/card_focus"
+                            android:clickable="true">
+
+                            <ImageView
+                                android:id="@+id/episode_3_thumbnail"
+                                android:layout_width="120dp"
+                                android:layout_height="68dp"
+                                android:background="#333333"
+                                android:scaleType="centerCrop"
+                                android:src="@drawable/ic_android_black_24dp" />
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical"
+                                android:paddingStart="16dp"
+                                android:gravity="center_vertical">
+
+                                <TextView
+                                    android:id="@+id/episode_3_title"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Episode 3: The Challenge"
+                                    android:textColor="#FFFFFF"
+                                    android:textSize="16sp"
+                                    android:textStyle="bold"
+                                    android:maxLines="1"
+                                    android:ellipsize="end" />
+
+                                <TextView
+                                    android:id="@+id/episode_3_duration"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="43 min"
+                                    android:textColor="#AAAAAA"
+                                    android:textSize="12sp"
+                                    android:layout_marginTop="4dp" />
+
+                                <TextView
+                                    android:id="@+id/episode_3_description"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="A new challenge emerges that tests..."
+                                    android:textColor="#CCCCCC"
+                                    android:textSize="12sp"
+                                    android:maxLines="2"
+                                    android:ellipsize="end"
+                                    android:layout_marginTop="4dp" />
+
+                            </LinearLayout>
+
+                            <Button
+                                android:id="@+id/episode_3_play_btn"
+                                android:layout_width="44dp"
+                                android:layout_height="44dp"
+                                android:text="▶"
+                                android:textColor="#FFFFFF"
+                                android:textSize="16sp"
+                                android:background="@drawable/tv_button_selector"
+                                android:focusable="true"
+                                android:focusableInTouchMode="true"
+                                android:stateListAnimator="@null" />
+
+                        </LinearLayout>
+
+                        <!-- Load More Episodes Button -->
+                        <Button
+                            android:id="@+id/load_more_episodes_btn"
+                            android:layout_width="match_parent"
+                            android:layout_height="48dp"
+                            android:text="Load More Episodes"
+                            android:textColor="#FFFFFF"
+                            android:textSize="14sp"
+                            android:background="#333333"
+                            android:focusable="true"
+                            android:focusableInTouchMode="true"
+                            android:stateListAnimator="@null"
+                            android:layout_marginTop="16dp" />
+
+                    </LinearLayout>
 
                 </LinearLayout>
 

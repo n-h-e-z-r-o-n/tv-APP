@@ -2,4 +2,5 @@
     <string name="app_name">onyx</string>
     <string name="trending">Trending</string>
     <string name="Popular">Populor</string>
+    <string name="seasons_episodes">Seasons / Episodes</string>
 </resources>

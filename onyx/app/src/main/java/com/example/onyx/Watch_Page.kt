@@ -107,6 +107,8 @@ class Watch_Page : AppCompatActivity() {
                     val production_C:String
                     val PG: String
 
+                    val numberOfSeasons: String
+
 
                     original_title = if (jsonObject.optString("name").isNotEmpty()) {
                         jsonObject.optString("name")
@@ -159,9 +161,10 @@ class Watch_Page : AppCompatActivity() {
 
 
 
+                   if(type=="tv"){
 
+                   }
                     withContext(Dispatchers.Main) {
-
                         val backdrop_Widget = findViewById<ImageView>(R.id.backdropImageView)
                         val poster_widget = findViewById<ImageView>(R.id.posterImageView)
                         val title_widget = findViewById<TextView>(R.id.title_widget)
