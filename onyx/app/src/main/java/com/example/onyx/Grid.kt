@@ -12,7 +12,7 @@ import com.squareup.picasso.Picasso
 
 
 class GridAdapter(
-      private val items: List<MovieItem>,
+      private val  items: MutableList<MovieItem>,   // ✅ mutable now,
       private val layoutResId: Int   // 👈 pass in the layout resource
     ) :  RecyclerView.Adapter<GridAdapter.ViewHolder>() {
 
@@ -68,6 +68,12 @@ class GridAdapter(
     }
 
     override fun getItemCount() = items.size
+
+    // 👇 helper to add items one by one
+    fun addItem(item: MovieItem) {
+        items.add(item)
+        notifyItemInserted(items.size - 1)
+    }
 }
 
 

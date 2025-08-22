@@ -61,10 +61,25 @@ class Watch_Page : AppCompatActivity() {
     private fun fetchData(id:String, type: String) {
         CoroutineScope(Dispatchers.IO).launch {
             var tmdbId = id // mutable copy
-            try {
-                if (id.startsWith("tt")){
+            while (true) {
+                try {
+                    if (id.startsWith("tt")) {
 
-                    val url = "https://api.themoviedb.org/3/movie/$id/external_ids"
+                        val url = "https://api.themoviedb.org/3/movie/$id/external_ids"
+                        val connection = URL(url).openConnection() as HttpURLConnection
+                        connection.requestMethod = "GET"
+                        connection.setRequestProperty("accept", "application/json")
+                        connection.setRequestProperty(
+                            "Authorization",
+                            "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJhZjliMmUyN2MxYTZiYzMyMzNhZjE4MzJmNGFjYzg1MCIsIm5iZiI6MTcxOTY3NDUxNy4xOTYsInN1YiI6IjY2ODAyNjk1ZWZhYTI1ZjBhOGE4NGE3MyIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.RTms-g8dzOl3WwCeJ7WNLq3i2kXxl3T7gOTa8POcxcw"
+                        )
+                        val response = connection.inputStream.bufferedReader().use { it.readText() }
+                        val jsonObject = org.json.JSONObject(response)
+                        tmdbId = jsonObject.getString("id")
+                    }
+
+
+                    val url = "https://api.themoviedb.org/3/$type/$tmdbId?language=en-US"
                     val connection = URL(url).openConnection() as HttpURLConnection
                     connection.requestMethod = "GET"
                     connection.setRequestProperty("accept", "application/json")
@@ -72,114 +87,146 @@ class Watch_Page : AppCompatActivity() {
                         "Authorization",
                         "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJhZjliMmUyN2MxYTZiYzMyMzNhZjE4MzJmNGFjYzg1MCIsIm5iZiI6MTcxOTY3NDUxNy4xOTYsInN1YiI6IjY2ODAyNjk1ZWZhYTI1ZjBhOGE4NGE3MyIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.RTms-g8dzOl3WwCeJ7WNLq3i2kXxl3T7gOTa8POcxcw"
                     )
+
                     val response = connection.inputStream.bufferedReader().use { it.readText() }
                     val jsonObject = org.json.JSONObject(response)
-                    tmdbId = jsonObject.getString("id")
-                }
+                    Log.e("DEBUG_Watch", jsonObject.toString())
 
 
-                val url = "https://api.themoviedb.org/3/$type/$tmdbId?language=en-US"
-                val connection = URL(url).openConnection() as HttpURLConnection
-                connection.requestMethod = "GET"
-                connection.setRequestProperty("accept", "application/json")
-                connection.setRequestProperty(
-                    "Authorization",
-                    "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJhZjliMmUyN2MxYTZiYzMyMzNhZjE4MzJmNGFjYzg1MCIsIm5iZiI6MTcxOTY3NDUxNy4xOTYsInN1YiI6IjY2ODAyNjk1ZWZhYTI1ZjBhOGE4NGE3MyIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.RTms-g8dzOl3WwCeJ7WNLq3i2kXxl3T7gOTa8POcxcw"
-                )
+                    val backdrop_Url =
+                        "https://image.tmdb.org/t/p/w500${jsonObject.getString("backdrop_path")}"
+                    val poster_Url =
+                        "https://image.tmdb.org/t/p/w500${jsonObject.getString("poster_path")}"
 
-                val response = connection.inputStream.bufferedReader().use { it.readText() }
-                Log.e("DEBUG_Watch", response)
-                val jsonObject = org.json.JSONObject(response)
-                Log.e("DEBUG_Watch", jsonObject.toString())
-
-
-                val backdrop_Url = "https://image.tmdb.org/t/p/w500${jsonObject.getString("backdrop_path")}"
-                val poster_Url = "https://image.tmdb.org/t/p/w500${jsonObject.getString("poster_path")}"
-                val original_title  = jsonObject.getString("original_title")
-                val overview  = jsonObject.getString("overview")
-                val release_date  = jsonObject.getString("release_date")
-                val runtime  = jsonObject.getString("runtime")
-                val vote_average  = jsonObject.getString("vote_average")
-
-                val genresArray  = jsonObject.getJSONArray("genres") //[{"id":80,"name":"Crime"},{"id":99,"name":"Documentary"}]
-                val genresList = mutableListOf<String>()
-                for (i in 0 until genresArray.length()) {
-                    val genreObject = genresArray.getJSONObject(i)
-                    val genreName = genreObject.getString("name")
-                    genresList.add(genreName)
-                }
-
-                val genres = genresList.joinToString("   ⬤ ")
+                    val original_title: String
+                    val overview: String
+                    val release_date: String
+                    val runtime: String
+                    val vote_average: String
+                    val genres: String
+                    val PG: String
 
 
-
-
-
-
-                withContext(Dispatchers.Main) {
-
-                    val  backdrop_Widget = findViewById<ImageView>(R.id.backdropImageView)
-                    val  poster_widget = findViewById<ImageView>(R.id.posterImageView)
-                    val  title_widget = findViewById<TextView>(R.id.title_widget)
-                    val  year_widget = findViewById<TextView>(R.id.year_widget)
-                    val  Rating_widget = findViewById<TextView>(R.id.Rating_widget)
-                    val  Overview_widget = findViewById<TextView>(R.id.overview_widget)
-                    val  Runtime_widget = findViewById<TextView>(R.id.Runtime_widget)
-                    val  Genres_widget = findViewById<TextView>(R.id.Genres_widget)
-
-
-
-
-
-
-                    title_widget.text = original_title
-                    year_widget.text = release_date
-                    Genres_widget.text = genres
-                    Rating_widget.text  = "${vote_average}/10"
-                    //Rating_widget.setTypeface(null, Typeface.BOLD)
-                    Runtime_widget.text = "${runtime} min"
-                    Overview_widget.text = overview
-
-
-                    Picasso.get()
-                        .load(backdrop_Url)
-                        .fit()
-                        .centerInside()
-                        .into(backdrop_Widget)
-
-
-                    Picasso.get()
-                        .load(poster_Url)
-                        .fit()
-                        .centerInside()
-                        .into(poster_widget)
-
-
-
-                    val watchButton = findViewById<Button>(R.id.watchNowButton)
-                    val FaveButton = findViewById<Button>(R.id.favoriteButton)
-                    val TrailerButton = findViewById<Button>(R.id.TrailerButton)
-
-
-
-                    watchButton.setOnClickListener {
-                        val intent = Intent(this@Watch_Page, Play::class.java)
-                        intent.putExtra("imdb_code", tmdbId)
-                        intent.putExtra("type", type)
-                        startActivity(intent)
+                    original_title = if (jsonObject.optString("name").isNotEmpty()) {
+                        jsonObject.optString("name")
+                    } else {
+                        jsonObject.optString("title")
                     }
 
-                    setupExpandableButton(watchButton, 105, 40, "▶ Play", "▶")
-                    setupExpandableButton(FaveButton, 130, 40, "\uD83E\uDD0D Favourite", "\uD83E\uDD0D")
-                    setupExpandableButton(TrailerButton, 130, 40, "\uD83C\uDFAC Trailer", "\uD83C\uDFAC")
+                    PG = if (jsonObject.getString("adult").isNotEmpty()) {
+                        "18"
+                    } else {
+                        "18"
+                    }
 
+                    release_date = if (jsonObject.optString("release_date").isNotEmpty()) {
+                        jsonObject.optString("release_date")
+                    } else {
+                        jsonObject.optString("first_air_date")
+                    }
+
+                    runtime = if (jsonObject.optString("runtime").isNotEmpty()) {
+                        jsonObject.optString("runtime")
+                    } else {
+                        jsonObject.optString("episode_run_time")
+                    }
+
+                    overview = jsonObject.getString("overview")
+
+                    vote_average = jsonObject.getString("vote_average")
+
+                    val genresArray =
+                        jsonObject.getJSONArray("genres") //[{"id":80,"name":"Crime"},{"id":99,"name":"Documentary"}]
+                    val genresList = mutableListOf<String>()
+                    for (i in 0 until genresArray.length()) {
+                        val genreObject = genresArray.getJSONObject(i)
+                        val genreName = genreObject.getString("name")
+                        genresList.add(genreName)
+                    }
+
+                    genres = genresList.joinToString("   ⬤ ")
+
+
+
+
+
+                    withContext(Dispatchers.Main) {
+
+                        val backdrop_Widget = findViewById<ImageView>(R.id.backdropImageView)
+                        val poster_widget = findViewById<ImageView>(R.id.posterImageView)
+                        val title_widget = findViewById<TextView>(R.id.title_widget)
+                        val year_widget = findViewById<TextView>(R.id.year_widget)
+                        val Rating_widget = findViewById<TextView>(R.id.Rating_widget)
+                        val Overview_widget = findViewById<TextView>(R.id.overview_widget)
+                        val Runtime_widget = findViewById<TextView>(R.id.Runtime_widget)
+                        val Genres_widget = findViewById<TextView>(R.id.Genres_widget)
+
+
+
+
+
+
+                        title_widget.text = original_title
+                        year_widget.text = release_date
+                        Genres_widget.text = genres
+                        Rating_widget.text = "${vote_average}/10"
+                        //Rating_widget.setTypeface(null, Typeface.BOLD)
+                        Runtime_widget.text = "${runtime} min"
+                        Overview_widget.text = overview
+
+
+                        Picasso.get()
+                            .load(backdrop_Url)
+                            .fit()
+                            .centerInside()
+                            .into(backdrop_Widget)
+
+
+                        Picasso.get()
+                            .load(poster_Url)
+                            .fit()
+                            .centerInside()
+                            .into(poster_widget)
+
+
+                        val watchButton = findViewById<Button>(R.id.watchNowButton)
+                        val FaveButton = findViewById<Button>(R.id.favoriteButton)
+                        val TrailerButton = findViewById<Button>(R.id.TrailerButton)
+
+
+
+                        watchButton.setOnClickListener {
+                            val intent = Intent(this@Watch_Page, Play::class.java)
+                            intent.putExtra("imdb_code", tmdbId)
+                            intent.putExtra("type", type)
+                            startActivity(intent)
+                        }
+
+                        setupExpandableButton(watchButton, 105, 40, "▶ Play", "▶")
+                        setupExpandableButton(
+                            FaveButton,
+                            130,
+                            40,
+                            "\uD83E\uDD0D Favourite",
+                            "\uD83E\uDD0D"
+                        )
+                        setupExpandableButton(
+                            TrailerButton,
+                            130,
+                            40,
+                            "\uD83C\uDFAC Trailer",
+                            "\uD83C\uDFAC"
+                        )
+
+                    }
+
+                    Cast_Data(tmdbId.toString(), type.toString())
+                    Watch_Recomendation_Data(tmdbId.toString(), type.toString())
+                    break
+
+                } catch (e: Exception) {
+                    Log.e("DEBUG_WATCH", "Error fetching data", e)
                 }
-
-                Cast_Data(tmdbId.toString(), type.toString())
-                Watch_Recomendation_Data(tmdbId.toString(), type.toString())
-
-            } catch (e: Exception) {
-                Log.e("DEBUG_WATCH", "Error fetching data", e)
             }
         }
     }
@@ -305,7 +352,7 @@ class Watch_Page : AppCompatActivity() {
                             LinearLayoutManager.HORIZONTAL, // 👈 makes it horizontal
                             false
                         )
-                        recyclerView.adapter = GridAdapter(movies,  R.layout.item_grid)
+                        recyclerView.adapter = GridAdapter(movies,  R.layout.square_card)
                         val spacing = (19 * resources.displayMetrics.density).toInt() // 16dp to px
                         recyclerView.addItemDecoration(EqualSpaceItemDecoration(spacing))
                     }

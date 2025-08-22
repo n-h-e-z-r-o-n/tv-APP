@@ -36,18 +36,7 @@
             android:layout_gravity="bottom"/>
 
         <ImageButton
-            android:id="@+id/btnSearch"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_marginBottom="24dp"
-            android:background="@android:color/transparent"
-            android:src="@drawable/ic_search"
-            app:tint="@color/nav_icon_color_selector"
-            android:clickable="true"
-            android:focusable="true"/>
-
-        <ImageButton
-            android:id="@+id/btnCategories"
+            android:id="@+id/btnMovies"
             android:layout_width="match_parent"
             android:layout_height="48dp"
             android:layout_marginBottom="24dp"
@@ -58,12 +47,23 @@
             android:focusable="true"/>
 
         <ImageButton
-            android:id="@+id/btnWatchlist"
+            android:id="@+id/btnTvShow"
             android:layout_width="match_parent"
             android:layout_height="48dp"
             android:layout_marginBottom="24dp"
             android:background="@android:color/transparent"
-            android:src="@drawable/ic_bookmark"
+            android:src="@drawable/ic_category"
+            app:tint="@color/nav_icon_color_selector"
+            android:clickable="true"
+            android:focusable="true"/>
+
+        <ImageButton
+            android:id="@+id/btnSearch"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginBottom="24dp"
+            android:background="@android:color/transparent"
+            android:src="@drawable/ic_search"
             app:tint="@color/nav_icon_color_selector"
             android:clickable="true"
             android:focusable="true"/>
@@ -212,17 +212,24 @@
             android:visibility="gone"
             tools:layout_editor_absoluteY="8dp"/>
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/FavShow"
+
+
+        <LinearLayout
+            android:id="@+id/SearchShow"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:clipToPadding="false"
+            android:orientation="vertical"
             android:overScrollMode="never"
-            android:padding="10dp"
-            android:paddingHorizontal="32dp"
             android:scrollbars="none"
-            android:visibility="gone"
-            tools:layout_editor_absoluteY="8dp"/>
+            tools:layout_editor_absoluteY="8dp">
+
+            <include layout="@layout/search_page" />
+
+
+        </LinearLayout>
+
+
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/Setting"
