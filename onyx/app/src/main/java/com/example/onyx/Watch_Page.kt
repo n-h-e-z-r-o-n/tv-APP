@@ -42,8 +42,8 @@ class Watch_Page : AppCompatActivity() {
         val imdbCode = intent.getStringExtra("imdb_code")
         val type = intent.getStringExtra("type")
 
-        fetchData(imdbCode.toString(), type.toString())
-        //fetchData("95557", "tv")
+        //fetchData(imdbCode.toString(), type.toString())
+        fetchData("95557", "tv")
 
 
         /*
@@ -375,13 +375,20 @@ class Watch_Page : AppCompatActivity() {
                         val jsonObject = JSONObject(response)
 
 
-                        Log.e("DEBUG_Each ", jsonObject.toString())
-                        episodes.add(JSONObject(response))
+
+                        jsonObject.put("episode_number", i)
+                        jsonObject.remove("crew")
+                        jsonObject.remove("guest_stars")
+                        jsonObject.remove("cast")
+
+
+                        Log.e("DEBUG_Each Updated ", jsonObject.toString())
+                        episodes.add(jsonObject)
                     }
 
 
                     withContext(Dispatchers.Main) {
-                        recyclerView.adapter = EpisodesAdapter(episodes)
+                        recyclerView.adapter = EpisodesAdapter(episodes,seriesId, "tv" )
                     }
                 }
         }catch (e :Exception){

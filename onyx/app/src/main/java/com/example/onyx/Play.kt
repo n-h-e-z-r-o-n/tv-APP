@@ -9,6 +9,10 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import android.util.Log
 import android.view.MotionEvent
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class Play : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -18,6 +22,16 @@ class Play : AppCompatActivity() {
 
         val imdbCode = intent.getStringExtra("imdb_code")
         val type = intent.getStringExtra("type")
+        val seasonNo = intent.getStringExtra("seasonNo")
+        val episodeNo = intent.getStringExtra("episodeNo")
+
+        Log.e("Play Data 1", imdbCode.toString())
+        Log.e("Play Data 2", type.toString())
+        Log.e("Play Data 3", seasonNo.toString())
+        Log.e("Play Data 4", episodeNo.toString())
+
+
+
 
         val webView = findViewById<WebView>(R.id.webView)
 
@@ -32,7 +46,8 @@ class Play : AppCompatActivity() {
 
                 // Delay the click simulation to ensure everything is rendered
                 webView.postDelayed({
-                    simulateCenterClick(webView)
+                    //simulateCenterClick(webView)
+                    simulateRepeatedCenterClicks(webView, repeatCount = 500, intervalMs = 1000L)
                 }, 10) // 2 second delay to ensure page is fully rendered
             }
 
@@ -77,7 +92,13 @@ class Play : AppCompatActivity() {
         settings.setSupportMultipleWindows(false) // block popups
 
         // Load movie embed URL
-        webView.loadUrl("https://vidsrc.to/embed/${type}/${imdbCode}")
+        if(type=="movie") {
+            webView.loadUrl("https://vidsrc.to/embed/${type}/${imdbCode}")
+            Log.e("Play Data 5M", "https://vidsrc.to/embed/${type}/${imdbCode}")
+        } else{
+            webView.loadUrl("https://vidsrc.to/embed/tv/${imdbCode}/${seasonNo}/${episodeNo}")
+            Log.e("Play Data 5M","https://vidsrc.to/embed/tv/${imdbCode}/${seasonNo}/${episodeNo}")
+        }
     }
 
 
@@ -95,44 +116,49 @@ class Play : AppCompatActivity() {
         // Optional: Finish current activity to return to TV interface
         finish()
     }
-    private fun simulateCenterClick(webView: WebView) {
-        // Get the center coordinates of the WebView
-        val centerX = webView.width / 2
-        val centerY = webView.height / 2
 
-        // Create touch event coordinates
-        val downTime = System.currentTimeMillis()
-        val eventTime = System.currentTimeMillis() + 100
+    private fun simulateRepeatedCenterClicks(
+        webView: WebView,
+        repeatCount: Int,
+        intervalMs: Long = 500L // delay between clicks
+    ) {
+        CoroutineScope(Dispatchers.Main).launch {
+            val centerX = webView.width / 2
+            val centerY = webView.height / 2
 
-        // Simulate touch down event
-        val downEvent = MotionEvent.obtain(
-            downTime,
-            eventTime,
-            MotionEvent.ACTION_DOWN,
-            centerX.toFloat(),
-            centerY.toFloat(),
-            0
-        )
+            repeat(repeatCount) { index ->
+                val downTime = System.currentTimeMillis()
+                val eventTime = downTime + 100
 
-        // Simulate touch up event (click)
-        val upEvent = MotionEvent.obtain(
-            downTime,
-            eventTime + 50,
-            MotionEvent.ACTION_UP,
-            centerX.toFloat(),
-            centerY.toFloat(),
-            0
-        )
+                val downEvent = MotionEvent.obtain(
+                    downTime,
+                    eventTime,
+                    MotionEvent.ACTION_DOWN,
+                    centerX.toFloat(),
+                    centerY.toFloat(),
+                    0
+                )
+                val upEvent = MotionEvent.obtain(
+                    downTime,
+                    eventTime + 50,
+                    MotionEvent.ACTION_UP,
+                    centerX.toFloat(),
+                    centerY.toFloat(),
+                    0
+                )
 
-        // Dispatch the events
-        webView.dispatchTouchEvent(downEvent)
-        webView.dispatchTouchEvent(upEvent)
+                webView.dispatchTouchEvent(downEvent)
+                webView.dispatchTouchEvent(upEvent)
 
-        // Recycle the events to free memory
-        downEvent.recycle()
-        upEvent.recycle()
+                downEvent.recycle()
+                upEvent.recycle()
 
-        Log.d("DEBUG_TAG_Click", "Simulated touch at ($centerX, $centerY)")
+                Log.d("DEBUG_TAG_Click", "Simulated click #${index + 1} at ($centerX, $centerY)")
+
+                delay(intervalMs) // wait before next click
+            }
+        }
     }
+
 
 }

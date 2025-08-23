@@ -1,5 +1,6 @@
 package com.example.onyx
 
+import android.content.Intent
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -107,7 +108,9 @@ class EqualSpaceItemDecoration(private val space: Int) : RecyclerView.ItemDecora
 
 
 class EpisodesAdapter(
-    private val episodes: List<JSONObject>
+    private val episodes: List<JSONObject>,
+    private val seriesId: String,
+    private val type: String
 ) : RecyclerView.Adapter<EpisodesAdapter.EpisodeViewHolder>() {
 
     inner class EpisodeViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -145,6 +148,27 @@ class EpisodesAdapter(
                 .centerCrop()
                 .into(holder.epsImg)
         }
+
+        val seasonNo = episode.optInt("season_number")
+        val episodeNo = episode.optInt("episode_number")
+
+        holder.itemView.setOnClickListener {
+            val context = holder.itemView.context
+            val intent = android.content.Intent(context, Play::class.java)
+
+
+            intent.putExtra("imdb_code", seriesId) // assuming you have it in scope
+            intent.putExtra("type", type) // movie/tv show type
+            intent.putExtra("seasonNo", seasonNo.toString())
+            intent.putExtra("episodeNo", episodeNo.toString())
+            context.startActivity(intent)
+
+
+
+        }
+
+
+
     }
 
     override fun getItemCount(): Int = episodes.size
