@@ -8,6 +8,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.squareup.picasso.Picasso
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -22,9 +23,20 @@ class Home_Page : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.activity_home_page)
 
-        SliderData()
-        TrendingData()
-        PopularData()
+        SSLHelper.trustAllCertificates() // <-- add this line
+
+
+        val client = UnsafeOkHttpClient.getUnsafeOkHttpClient()
+        val picasso = Picasso.Builder(this)
+            .downloader(com.squareup.picasso.OkHttp3Downloader(client))
+            .build()
+        Picasso.setSingletonInstance(picasso)
+
+        NavAction.setupSidebar(this)
+
+        //SliderData()
+        //TrendingData()
+        //PopularData()
     }
 
     private fun SliderData() {

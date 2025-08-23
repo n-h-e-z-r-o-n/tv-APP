@@ -32,7 +32,10 @@ class Tv_Page : AppCompatActivity() {
             .build()
         Picasso.setSingletonInstance(picasso)
 
-        TvShows()
+        NavAction.setupSidebar(this)
+
+
+        //TvShows()
     }
 
     private fun TvShows() {

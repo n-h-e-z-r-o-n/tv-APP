@@ -6,13 +6,12 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".Home_Page"
-    android:background="@color/BG_color">
+    android:background="#288354">
 
     <include layout="@layout/side_bar"/>
 
 
     <LinearLayout
-        android:id="@+id/Home"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:clipToPadding="false"

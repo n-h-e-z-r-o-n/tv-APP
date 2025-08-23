@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
         <color name="BG_color">#191C27</color>
-        <string name="FG_color">#FFFFFF</string>
-    <string name="Nav_color">#C154C1</string>
+        <color name="FG_color">#FFFFFF</color>
+        <color name="Nav_color">#C154C1</color>
 
   >
 </resources>

@@ -7,7 +7,7 @@ import androidx.appcompat.app.AppCompatActivity
 
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.onyx.MainActivity.MovieItem
+import com.squareup.picasso.Picasso
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -21,6 +21,19 @@ class Movie_Page : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_movie_page)
+
+        NavAction.setupSidebar(this)
+
+        SSLHelper.trustAllCertificates() // <-- add this line
+
+
+        val client = UnsafeOkHttpClient.getUnsafeOkHttpClient()
+        val picasso = Picasso.Builder(this)
+            .downloader(com.squareup.picasso.OkHttp3Downloader(client))
+            .build()
+        Picasso.setSingletonInstance(picasso)
+
+        //Movies()
 
     }
 

@@ -1,43 +1,40 @@
 package com.example.onyx
 
-class SidbarAction {
+import android.app.Activity
+import android.content.Intent
+import android.widget.ImageButton
 
-    protected fun setupSidebar() {
-        val btnHome = findViewById<ImageButton>(R.id.btnHome)
-        val btnMovies = findViewById<ImageButton>(R.id.btnMovies)
-        val btnTvShows = findViewById<ImageButton>(R.id.btnTvShow)
-        val btnSearch = findViewById<ImageButton>(R.id.btnSearch)
-        val btnProfile = findViewById<ImageButton>(R.id.btnProfile)
+object NavAction {
+    fun setupSidebar(activity: Activity) {
+        val btnHome = activity.findViewById<ImageButton>(R.id.btnHome)
+        val btnMovies = activity.findViewById<ImageButton>(R.id.btnMovies)
+        val btnTvShows = activity.findViewById<ImageButton>(R.id.btnTvShow)
+        val btnSearch = activity.findViewById<ImageButton>(R.id.btnSearch)
+        val btnProfile = activity.findViewById<ImageButton>(R.id.btnProfile)
 
         btnHome?.setOnClickListener {
-            if (this !is MainActivity) {
-                startActivity(Intent(this, MainActivity::class.java))
+            if (activity !is Home_Page) {
+                activity.startActivity(Intent(activity, MainActivity::class.java))
             }
         }
 
         btnMovies?.setOnClickListener {
-            if (this !is Movie_Page) {
-                startActivity(Intent(this, Movie_Page::class.java))
+            if (activity !is Movie_Page) {
+                activity.startActivity(Intent(activity, Movie_Page::class.java))
             }
         }
 
         btnTvShows?.setOnClickListener {
-            if (this !is Tv_Page) {
-                startActivity(Intent(this, Tv_Page::class.java))
+            if (activity !is Tv_Page) {
+                activity.startActivity(Intent(activity, Tv_Page::class.java))
             }
         }
 
         btnSearch?.setOnClickListener {
-            if (this !is Search_Page) {
-                startActivity(Intent(this, Search_Page::class.java))
+            if (activity !is Search_Page) {
+                activity.startActivity(Intent(activity, Search_Page::class.java))
             }
         }
 
-        btnProfile?.setOnClickListener {
-            if (this !is Profile_Page) {
-                startActivity(Intent(this, Profile_Page::class.java))
-            }
-        }
     }
-
 }

@@ -25,40 +25,11 @@ class MainActivity : ComponentActivity() {
             .build()
         Picasso.setSingletonInstance(picasso)
 
-        setupSidebar()
+        NavAction.setupSidebar(this)
 
     }
 
 
-    private fun setupSidebar() {
-        val btnHome = findViewById<ImageButton>(R.id.btnHome)
-        val btnMovies = findViewById<ImageButton>(R.id.btnMovies)
-        val btnTvShows = findViewById<ImageButton>(R.id.btnTvShow)
-        val btnSearch = findViewById<ImageButton>(R.id.btnSearch)
-        val btnProfile = findViewById<ImageButton>(R.id.btnProfile)
-
-        btnHome.setOnClickListener {
-            startActivity(Intent(this, MainActivity::class.java))
-        }
-
-        btnMovies.setOnClickListener {
-            startActivity(Intent(this, Movie_Page::class.java))
-        }
-
-        btnTvShows.setOnClickListener {
-            startActivity(Intent(this, Tv_Page::class.java))
-        }
-
-        btnSearch.setOnClickListener {
-            startActivity(Intent(this, Search_Page::class.java))
-        }
-
-    }
 }
 
-data class MovieItem(
-    val title: String,
-    val imageUrl: String,
-    val imdbCode: String,
-    val type: String
-)
+
