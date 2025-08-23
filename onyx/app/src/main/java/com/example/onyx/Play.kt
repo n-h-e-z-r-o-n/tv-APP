@@ -25,10 +25,7 @@ class Play : AppCompatActivity() {
         val seasonNo = intent.getStringExtra("seasonNo")
         val episodeNo = intent.getStringExtra("episodeNo")
 
-        Log.e("Play Data 1", imdbCode.toString())
-        Log.e("Play Data 2", type.toString())
-        Log.e("Play Data 3", seasonNo.toString())
-        Log.e("Play Data 4", episodeNo.toString())
+
 
 
 

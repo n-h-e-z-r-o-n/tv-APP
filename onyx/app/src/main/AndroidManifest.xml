@@ -21,9 +21,20 @@
         android:theme="@style/Theme.Onyx"
         android:usesCleartextTraffic="true">
         <activity
+            android:name=".Search_Page"
+            android:exported="false" />
+        <activity
+            android:name=".Tv_Page"
+            android:exported="false" />
+        <activity
+            android:name=".Movie_Page"
+            android:exported="false" />
+        <activity
+            android:name=".Home_Page"
+            android:exported="false" />
+        <activity
             android:name=".Video_payer"
-            android:exported="false"
-            />
+            android:exported="false" />
         <activity
             android:name=".Play"
             android:exported="false" />

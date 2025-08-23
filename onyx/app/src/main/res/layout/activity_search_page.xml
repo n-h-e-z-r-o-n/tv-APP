@@ -5,10 +5,6 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#191C27"
-    tools:context=".MainActivity"
-    >
-
-    <include layout="@layout/side_bar"/>
+    tools:context=".Search_Page">
 
 </androidx.constraintlayout.widget.ConstraintLayout>

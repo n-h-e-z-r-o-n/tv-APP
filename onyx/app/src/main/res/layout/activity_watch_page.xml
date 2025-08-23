@@ -5,6 +5,7 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:keepScreenOn="true"
     tools:context=".Watch_Page">
 
     <ScrollView
@@ -497,7 +498,9 @@
                     android:padding="10dp"
                     android:paddingHorizontal="32dp"
                     android:scrollbars="none"
-                    tools:layout_editor_absoluteY="8dp" />
+                    tools:layout_editor_absoluteY="8dp"
+                    android:gravity="center"
+                    />
             </FrameLayout>
 
             <TextView

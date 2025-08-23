@@ -42,8 +42,8 @@ class Watch_Page : AppCompatActivity() {
         val imdbCode = intent.getStringExtra("imdb_code")
         val type = intent.getStringExtra("type")
 
-        //fetchData(imdbCode.toString(), type.toString())
-        fetchData("95557", "tv")
+        fetchData(imdbCode.toString(), type.toString())
+        //fetchData("95557", "tv")
 
 
         /*
