@@ -1,5 +1,6 @@
 package com.example.onyx
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.graphics.Typeface
@@ -25,6 +26,11 @@ import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.delay
 import org.json.JSONArray
 import android.widget.Button
+import android.widget.LinearLayout
+import android.widget.Toast
+import androidx.core.content.ContextCompat
+import androidx.core.view.marginEnd
+import org.json.JSONObject
 
 class Watch_Page : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -37,6 +43,7 @@ class Watch_Page : AppCompatActivity() {
         val type = intent.getStringExtra("type")
 
         fetchData(imdbCode.toString(), type.toString())
+        //fetchData("95557", "tv")
 
 
         /*
@@ -74,7 +81,7 @@ class Watch_Page : AppCompatActivity() {
                             "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJhZjliMmUyN2MxYTZiYzMyMzNhZjE4MzJmNGFjYzg1MCIsIm5iZiI6MTcxOTY3NDUxNy4xOTYsInN1YiI6IjY2ODAyNjk1ZWZhYTI1ZjBhOGE4NGE3MyIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.RTms-g8dzOl3WwCeJ7WNLq3i2kXxl3T7gOTa8POcxcw"
                         )
                         val response = connection.inputStream.bufferedReader().use { it.readText() }
-                        val jsonObject = org.json.JSONObject(response)
+                        val jsonObject = JSONObject(response)
                         tmdbId = jsonObject.getString("id")
                     }
 
@@ -89,7 +96,7 @@ class Watch_Page : AppCompatActivity() {
                     )
 
                     val response = connection.inputStream.bufferedReader().use { it.readText() }
-                    val jsonObject = org.json.JSONObject(response)
+                    val jsonObject = JSONObject(response)
                     Log.e("DEBUG_Watch", jsonObject.toString())
 
 
@@ -106,8 +113,8 @@ class Watch_Page : AppCompatActivity() {
                     val genres: String
                     val production_C:String
                     val PG: String
-
-                    val numberOfSeasons: String
+                    var no_of_season: Int = 1
+                    val validSeasons = mutableListOf<JSONObject>()
 
 
                     original_title = if (jsonObject.optString("name").isNotEmpty()) {
@@ -161,9 +168,27 @@ class Watch_Page : AppCompatActivity() {
 
 
 
-                   if(type=="tv"){
 
-                   }
+
+                    if (type == "tv") {
+
+                        val seasonsArray = jsonObject.getJSONArray("seasons")
+
+
+                        for (i in 0 until seasonsArray.length()) {
+                            val season = seasonsArray.getJSONObject(i)
+                            val airDate = season.optString("air_date", "")
+
+                            if (airDate.isNotEmpty()) {
+                                validSeasons.add(season)
+                            }
+                        }
+                        no_of_season = validSeasons.size
+                        Log.e("DEBUG_Watch Seasons", validSeasons.toString())
+                        Log.e("DEBUG_Watch Seasons no", no_of_season.toString())
+
+                    }
+
                     withContext(Dispatchers.Main) {
                         val backdrop_Widget = findViewById<ImageView>(R.id.backdropImageView)
                         val poster_widget = findViewById<ImageView>(R.id.posterImageView)
@@ -175,11 +200,6 @@ class Watch_Page : AppCompatActivity() {
                         val Genres_widget = findViewById<TextView>(R.id.Genres_widget)
                         val Production_widget = findViewById<TextView>(R.id.Production_widget)
                         val PG_widget = findViewById<TextView>(R.id.PG_widget)
-
-
-
-
-
 
 
 
@@ -241,7 +261,19 @@ class Watch_Page : AppCompatActivity() {
                             "\uD83C\uDFAC"
                         )
 
+                        if(type=="tv"){
+                            watchButton.visibility = View.GONE
+                            val Season_widget = findViewById<LinearLayout>(R.id.Season_widget)
+                            Season_widget.visibility = View.VISIBLE
+
+                            val season_count_widget = findViewById<TextView>(R.id.season_count_text)
+                            season_count_widget.text = "$no_of_season Seasons"
+                            createSeasonButtons( no_of_season, validSeasons, tmdbId)
+                        }
+
                     }
+
+
 
                     Cast_Data(tmdbId.toString(), type.toString())
                     Watch_Recomendation_Data(tmdbId.toString(), type.toString())
@@ -254,11 +286,121 @@ class Watch_Page : AppCompatActivity() {
         }
     }
 
+    private fun createSeasonButtons(noOfSeasons: Int, seasonData : MutableList<JSONObject> , seasonID: String) {
+        val container = findViewById<LinearLayout>(R.id.season_selector_container)
+        container.removeAllViews() // Clear old buttons if any
+        var track = 0
+        while (track < noOfSeasons){
+
+            val selectedSeason = seasonData[track]
+            val season_no = selectedSeason.optInt("season_number")
+            val s_name: String
+
+
+            if(season_no==0){
+                s_name = selectedSeason.getString("name")
+            } else{
+                s_name = "Season $season_no"
+            }
+
+            val SeasonButton = Button(this).apply {
+                text = s_name
+                textSize = 14f
+                isFocusable = true
+                isFocusableInTouchMode = true
+                isClickable = true
+                setTypeface(typeface, Typeface.BOLD) //textStyle =  bold
+                stateListAnimator = null
+
+                background = ContextCompat.getDrawable(context, R.drawable.tv_button_selector)
+
+                layoutParams = LinearLayout.LayoutParams(
+                    dpToPx(120), // 120dp converted to pixels
+                    dpToPx(48)   // 48dp converted to pixels
+                ).apply {
+                    marginEnd = dpToPx(8) // 8dp margin at the end
+                }
+
+                setTextColor(ContextCompat.getColor(context, android.R.color.white))
+                //setBackgroundColor(Color.parseColor("#3D5AFE"))
+            }
+
+            SeasonButton.setOnClickListener {
+                ShowSeasonEpisodes(season_no,  seasonData, seasonID)
+            }
+
+            container.addView(SeasonButton)
+            track++
+        }
+
+    }
+
+    private fun dpToPx(dp: Int): Int {
+        return (dp * resources.displayMetrics.density).toInt()
+    }
+
+    @SuppressLint("MissingInflatedId", "SetTextI18n")
+    private fun ShowSeasonEpisodes(SelectedSeasons: Int, seasonData : MutableList<JSONObject>, seriesId: String){
+
+        val recyclerView = findViewById<RecyclerView>(R.id.episodes_recycler)
+        recyclerView.layoutManager = GridLayoutManager(this@Watch_Page, 5)
+        recyclerView.removeAllViews()
+        try {
+                val selectedSeason = seasonData[SelectedSeasons]
+                val episodeCount =  selectedSeason.optInt("episode_count", 0) // selectedSeason.getString("episode_count")
+                val current_season_title = findViewById<TextView>(R.id.current_season_title)
+
+                Log.e("DEBUG_Episodes", selectedSeason.toString())
+
+
+                current_season_title.text = "Season $SelectedSeasons"
+                findViewById<TextView>(R.id.episode_count_text).text = "$episodeCount Episodes"
+                findViewById<TextView>(R.id.season_year_text).text =  selectedSeason.getString("air_date").substring(0, 4)
+
+
+                CoroutineScope(Dispatchers.IO).launch {
+                    val episodes = mutableListOf<JSONObject>()
+
+                    for (i in 1..episodeCount) {
+                        val url =
+                            "https://api.themoviedb.org/3/tv/$seriesId/season/${SelectedSeasons}/episode/$i?language=en-US"
+                        val connection = URL(url).openConnection() as HttpURLConnection
+                        connection.requestMethod = "GET"
+                        connection.setRequestProperty("accept", "application/json")
+                        connection.setRequestProperty(
+                            "Authorization",
+                            "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJhZjliMmUyN2MxYTZiYzMyMzNhZjE4MzJmNGFjYzg1MCIsIm5iZiI6MTcxOTY3NDUxNy4xOTYsInN1YiI6IjY2ODAyNjk1ZWZhYTI1ZjBhOGE4NGE3MyIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.RTms-g8dzOl3WwCeJ7WNLq3i2kXxl3T7gOTa8POcxcw"
+                        )
+                        val response = connection.inputStream.bufferedReader().use { it.readText() }
+                        val jsonObject = JSONObject(response)
+
+
+                        Log.e("DEBUG_Each ", jsonObject.toString())
+                        episodes.add(JSONObject(response))
+                    }
+
+
+                    withContext(Dispatchers.Main) {
+                        recyclerView.adapter = EpisodesAdapter(episodes)
+                    }
+                }
+        }catch (e :Exception){
+
+            Log.e("DEBUG_Each Error ", "", e)
+            Log.e("DEBUG_Each E--- S", SelectedSeasons.toString())
+            Log.e("DEBUG_Each E--- Data", seasonData.toString())
+            Log.e("DEBUG_Each E--- id", seriesId)
+
+        }
+
+
+    }
+
+
     private fun Cast_Data(show_id: String, type: String) {
         CoroutineScope(Dispatchers.IO).launch {
             while(true) {
                 try {
-
                     val url = if (type == "movie") {
                         "https://api.themoviedb.org/3/movie/${show_id}/credits?language=en-US"
                     } else {
@@ -274,7 +416,7 @@ class Watch_Page : AppCompatActivity() {
                     )
 
                     val response = connection.inputStream.bufferedReader().use { it.readText() }
-                    val jsonObject = org.json.JSONObject(response)
+                    val jsonObject = JSONObject(response)
 
                     Log.e("DEBUG_WATCH_RECO", jsonObject.toString())
                     val moviesArray = jsonObject.getJSONArray("cast")
@@ -340,7 +482,7 @@ class Watch_Page : AppCompatActivity() {
                     )
 
                     val response = connection.inputStream.bufferedReader().use { it.readText() }
-                    val jsonObject = org.json.JSONObject(response)
+                    val jsonObject = JSONObject(response)
 
                     Log.e("DEBUG_WATCH_RECO", jsonObject.toString())
                     val moviesArray = jsonObject.getJSONArray("results")
@@ -350,9 +492,9 @@ class Watch_Page : AppCompatActivity() {
                             JSONArray(fallback)
                     }else{
                          moviesArray
-                        }
+                    }
 
-                    Log.e("DEBUG_WATCH_Results", jsonObject.toString())
+                    //Log.e("DEBUG_WATCH_Results", jsonObject.toString())
 
                     val movies = mutableListOf<MovieItem>()
 

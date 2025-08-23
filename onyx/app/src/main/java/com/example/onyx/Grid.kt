@@ -9,6 +9,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.squareup.picasso.Picasso
+import org.json.JSONObject
 
 
 class GridAdapter(
@@ -101,5 +102,51 @@ class EqualSpaceItemDecoration(private val space: Int) : RecyclerView.ItemDecora
             outRect.left = space // first column
         }
     }
+}
+
+
+
+class EpisodesAdapter(
+    private val episodes: List<JSONObject>
+) : RecyclerView.Adapter<EpisodesAdapter.EpisodeViewHolder>() {
+
+    inner class EpisodeViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+
+
+        val titleView: TextView = view.findViewById(R.id.episode_title)
+        val durationView: TextView = view.findViewById(R.id.episode_duration)
+        val episode_Rating: TextView = view.findViewById(R.id.episode_Rating)
+        val descView: TextView = view.findViewById(R.id.episode_description)
+        val epsImg: ImageView = view.findViewById(R.id.Ep_IMG)
+
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): EpisodeViewHolder {
+        val view = LayoutInflater.from(parent.context)
+            .inflate(R.layout.item_episode, parent, false)
+        return EpisodeViewHolder(view)
+    }
+
+    override fun onBindViewHolder(holder: EpisodeViewHolder, position: Int) {
+        val episode = episodes[position]
+
+        holder.titleView.text = "Eps ${episode.optInt("episode_number")}: ${episode.optString("name")} "
+        holder.durationView.text = "⏱ ${episode.optInt("runtime", 0)} min"
+        holder.episode_Rating.text = "⬤ Imdb ${episode.optInt("vote_average", 0)}"
+
+        holder.descView.text = episode.optString("overview")
+
+        val stillPath = episode.optString("still_path", null)
+        if (!stillPath.isNullOrEmpty()) {
+            val url = "https://image.tmdb.org/t/p/w500$stillPath"
+            Picasso.get()
+                .load(url)
+                .fit()
+                .centerCrop()
+                .into(holder.epsImg)
+        }
+    }
+
+    override fun getItemCount(): Int = episodes.size
 }
 

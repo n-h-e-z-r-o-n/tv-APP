@@ -124,7 +124,8 @@ class MainActivity : ComponentActivity() {
             while(true) {
                 try {
                     val url = "https://vidsrc.xyz/episodes/latest/page-1.json"
-                    val url2 = "https://vidsrc.xyz/episodes/latest/page-3.json"
+                    val url2 = "https://vidsrc.xyz/episodes/latest/page-2.json"
+                    val url3 = "https://vidsrc.xyz/episodes/latest/page-3.json"
 
                     val connection = URL(url).openConnection() as HttpURLConnection
                     connection.requestMethod = "GET"
@@ -138,6 +139,12 @@ class MainActivity : ComponentActivity() {
                     val jsonObject2 = JSONObject(response2)
                     val moviesArray2 = jsonObject2.getJSONArray("result")
 
+                    val connection3 = URL(url3).openConnection() as HttpURLConnection
+                    connection3.requestMethod = "GET"
+                    val response3 = connection3.inputStream.bufferedReader().use { it.readText() }
+                    val jsonObject3 = JSONObject(response3)
+                    val moviesArray3 = jsonObject3.getJSONArray("result")
+
                     val finalArray = JSONArray()
 
                     for (i in 0 until moviesArray.length()) {
@@ -146,6 +153,10 @@ class MainActivity : ComponentActivity() {
 
                     for (i in 0 until moviesArray2.length()) {
                         finalArray.put(moviesArray2.getJSONObject(i))
+                    }
+
+                    for (i in 0 until moviesArray3.length()) {
+                        finalArray.put(moviesArray3.getJSONObject(i))
                     }
 
                     Log.e("DEBUG_TAG_TvShows 1", finalArray.toString())
@@ -160,6 +171,7 @@ class MainActivity : ComponentActivity() {
                         val imdb_code = item.getString("tmdb_id")
                         if (imdb_code == "null" || imdb_code.isEmpty()) continue
                         movies_temp.add(imdb_code)
+                        break
                     }
                     val uniqueMovies = movies_temp.toSet().toList()
 
