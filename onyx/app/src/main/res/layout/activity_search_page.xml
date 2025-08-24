@@ -2,9 +2,82 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".Search_Page">
+    tools:context=".Search_Page"
+    android:background="@color/BG_color">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal">
+
+        <include layout="@layout/side_bar"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent" />
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+        <!-- Top Search Bar -->
+                    <LinearLayout
+                        android:id="@+id/searchBarContainer"
+                        android:layout_width="match_parent"
+                        android:layout_height="64dp"
+                        android:layout_marginStart="24dp"
+                        android:layout_marginEnd="24dp"
+                        android:layout_marginTop="24dp"
+                        android:background="#1A1F2B"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:focusableInTouchMode="true"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent">
+
+                        <ImageView
+                            android:id="@+id/iconSearch"
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
+                            android:layout_marginEnd="12dp"
+                            android:src="@drawable/ic_search"
+                            android:tint="#C7CAD3" />
+
+                        <EditText
+                            android:id="@+id/searchInput"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:hint="Search movies, shows, people"
+                            android:textColor="#FFFFFF"
+                            android:textColorHint="#8C94A7"
+                            android:singleLine="true"
+                            android:background="@android:color/transparent"
+                            android:imeOptions="actionSearch"
+                            android:inputType="text"
+                            android:padding="8dp"
+                            android:focusable="true"
+                            android:focusableInTouchMode="true"
+                            android:foreground="@drawable/card_focus"
+                            android:clickable="true"/>
+
+
+                    </LinearLayout>
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/SearchResults"
+                        android:layout_height="0dp"
+                        android:layout_width="match_parent"
+                        android:clipToPadding="false"
+                        android:overScrollMode="never"
+                        android:padding="10dp"
+                        android:scrollbars="none"
+                        android:layout_weight="1" />
+        </LinearLayout>
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

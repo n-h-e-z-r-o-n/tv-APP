@@ -25,17 +25,9 @@ class Tv_Page : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.activity_tv_page)
 
-        SSLHelper.trustAllCertificates()
-        val client = UnsafeOkHttpClient.getUnsafeOkHttpClient()
-        val picasso = Picasso.Builder(this)
-            .downloader(com.squareup.picasso.OkHttp3Downloader(client))
-            .build()
-        Picasso.setSingletonInstance(picasso)
+        NavAction.setupSidebar(this@Tv_Page)
 
-        NavAction.setupSidebar(this)
-
-
-        //TvShows()
+        TvShows()
     }
 
     private fun TvShows() {
@@ -99,7 +91,6 @@ class Tv_Page : AppCompatActivity() {
                         val imdb_code = item.getString("tmdb_id")
                         if (imdb_code == "null" || imdb_code.isEmpty()) continue
                         movies_temp.add(imdb_code)
-
                     }
                     val uniqueMovies = movies_temp.toSet().toList()
 

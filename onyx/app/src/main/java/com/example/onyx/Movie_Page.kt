@@ -24,16 +24,7 @@ class Movie_Page : AppCompatActivity() {
 
         NavAction.setupSidebar(this)
 
-        SSLHelper.trustAllCertificates() // <-- add this line
-
-
-        val client = UnsafeOkHttpClient.getUnsafeOkHttpClient()
-        val picasso = Picasso.Builder(this)
-            .downloader(com.squareup.picasso.OkHttp3Downloader(client))
-            .build()
-        Picasso.setSingletonInstance(picasso)
-
-        //Movies()
+        Movies()
 
     }
 
@@ -60,7 +51,7 @@ class Movie_Page : AppCompatActivity() {
                     val jsonObject = org.json.JSONObject(response)
                     val dataObject = jsonObject.getJSONObject("data")
                     val moviesArray = dataObject.getJSONArray("movies")
-                    Log.e("DEBUG_TAG_moviesArray", moviesArray.toString())
+                    Log.e("DEBUG_TAG_Movies 1", moviesArray.toString())
 
 
                     val movies = mutableListOf<MovieItem>()
@@ -91,7 +82,7 @@ class Movie_Page : AppCompatActivity() {
                     break
                 } catch (e: Exception) {
                     delay(10_000)
-                    Log.e("DEBUG_TAG_Movies", "Error fetching data", e)
+                    Log.e("DEBUG_TAG_Movies 2", "Error fetching data", e)
                     break
                 }
             }

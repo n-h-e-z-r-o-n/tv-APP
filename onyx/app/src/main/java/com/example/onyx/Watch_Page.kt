@@ -101,9 +101,9 @@ class Watch_Page : AppCompatActivity() {
 
 
                     val backdrop_Url =
-                        "https://image.tmdb.org/t/p/w500${jsonObject.getString("backdrop_path")}"
+                        "https://image.tmdb.org/t/p/w1280${jsonObject.getString("backdrop_path")}"
                     val poster_Url =
-                        "https://image.tmdb.org/t/p/w500${jsonObject.getString("poster_path")}"
+                        "https://image.tmdb.org/t/p/w780${jsonObject.getString("poster_path")}"
 
                     val original_title: String
                     val overview: String
@@ -437,7 +437,7 @@ class Watch_Page : AppCompatActivity() {
                     for (i in 0 until moviesArray.length()) {
                         val item = moviesArray.getJSONObject(i)
                         val title = item.getString("original_name")
-                        val imgUrl = "https://image.tmdb.org/t/p/w500" + item.getString("profile_path")
+                        val imgUrl = "https://image.tmdb.org/t/p/h632" + item.getString("profile_path")
                         val cast_id = item.getString("id")
                         val type = ""
                         movies.add(MovieItem(title, imgUrl, cast_id, type))

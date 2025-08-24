@@ -62,7 +62,7 @@
                         android:gravity="center"
                         android:orientation="vertical"
                         card_view:cardCornerRadius="14dp"
-                        card_view:cardElevation="6dp"
+                        card_view:cardElevation="1dp"
                         android:foreground="@drawable/card_focus">
                         <ImageView
                             android:id="@+id/posterImageView"
@@ -433,30 +433,26 @@
                             android:id="@+id/current_season_title"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:textColor="#FFFFFF"
+                            android:textColor="@color/gray"
                             android:textSize="18sp"
                             android:textStyle="bold" />
 
                         <View
-                            android:layout_width="1dp"
-                            android:layout_height="16dp"
-                            android:layout_marginStart="12dp"
-                            android:layout_marginEnd="12dp"
-                            android:background="#333333" />
+                            android:layout_width="50dp"
+                            android:layout_height="0dp"
+                            />
 
                         <TextView
                             android:id="@+id/episode_count_text"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:textColor="#AAAAAA"
+                            android:textColor="@color/gray"
                             android:textSize="14sp" />
 
                         <View
-                            android:layout_width="1dp"
-                            android:layout_height="16dp"
-                            android:layout_marginStart="12dp"
-                            android:layout_marginEnd="12dp"
-                            android:background="#333333" />
+                            android:layout_width="50dp"
+                            android:layout_height="0dp"
+                             />
 
                         <TextView
                             android:id="@+id/season_year_text"
@@ -484,13 +480,15 @@
             </FrameLayout>
 
             <!-- Cast -->
-            <FrameLayout
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:scrollbars="none">
+                android:scrollbars="none"
+                android:gravity="center_horizontal">
+
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/Cast_widget"
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:clipToPadding="false"
                     android:orientation="horizontal"
@@ -501,7 +499,7 @@
                     tools:layout_editor_absoluteY="8dp"
                     android:gravity="center"
                     />
-            </FrameLayout>
+            </LinearLayout>
 
             <TextView
                 android:layout_width="match_parent"

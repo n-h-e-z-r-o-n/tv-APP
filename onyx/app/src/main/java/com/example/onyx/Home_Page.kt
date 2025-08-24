@@ -2,10 +2,10 @@ package com.example.onyx
 
 import android.os.Bundle
 import android.util.Log
+import androidx.activity.ComponentActivity
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
+
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.squareup.picasso.Picasso
@@ -23,24 +23,16 @@ class Home_Page : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.activity_home_page)
 
-        SSLHelper.trustAllCertificates() // <-- add this line
-
-
-        val client = UnsafeOkHttpClient.getUnsafeOkHttpClient()
-        val picasso = Picasso.Builder(this)
-            .downloader(com.squareup.picasso.OkHttp3Downloader(client))
-            .build()
-        Picasso.setSingletonInstance(picasso)
-
         NavAction.setupSidebar(this)
 
-        //SliderData()
-        //TrendingData()
-        //PopularData()
+       SliderData()
+       TrendingData()
+       //PopularData()
     }
 
     private fun SliderData() {
         CoroutineScope(Dispatchers.IO).launch {
+
             while(true) {
                 try {
 
@@ -67,7 +59,7 @@ class Home_Page : AppCompatActivity() {
                     for (i in 0 until moviesArray.length()) {
                         val item = moviesArray.getJSONObject(i)
                         val title = item.getString("original_title")
-                        val imgUrl = "https://image.tmdb.org/t/p/w500" + item.getString("backdrop_path")
+                        val imgUrl = "https://image.tmdb.org/t/p/w1280" + item.getString("backdrop_path")
                         val cast_id = item.getString("id")
                         val release_date  = item.getString("release_date")
                         val type = "movie"
@@ -95,18 +87,17 @@ class Home_Page : AppCompatActivity() {
                 } catch (e: Exception) {
                     delay(10_000)
                     Log.e("DEBUG_MAIN_Slider 4", "Error fetching data", e)
-
                 }
             }
         }
     }
+
     private fun TrendingData() {
         CoroutineScope(Dispatchers.IO).launch {
             while(true) {
                 try {
 
                     val url ="https://api.themoviedb.org/3/trending/all/day?primary_release_year=2025";
-
                     val connection = URL(url).openConnection() as HttpURLConnection
                     connection.requestMethod = "GET"
                     connection.setRequestProperty("accept", "application/json")
