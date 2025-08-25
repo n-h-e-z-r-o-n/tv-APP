@@ -10,9 +10,13 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.squareup.picasso.Picasso
 import org.json.JSONObject
 
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class GridAdapter(
       private val  items: MutableList<MovieItem>,   // ✅ mutable now,
@@ -52,20 +56,39 @@ class GridAdapter(
 
         holder.Movie_title.text = title
 
+        /*
         Picasso.get()
             .load(imageUrl)
             .fit()
             .centerInside()
             .into(holder.Movie_image)
 
+         */
 
-        holder.itemView.setOnClickListener {
-            val context = holder.itemView.context
-            val intent = android.content.Intent(context, Watch_Page::class.java)
-            intent.putExtra("imdb_code", currentItem.imdbCode)
-            intent.putExtra("type", currentItem.type)
-            context.startActivity(intent)
+        Glide.with(holder.itemView.context)
+            .load(imageUrl)
+            .centerInside()
+            .into(holder.Movie_image)
+
+        if(currentItem.type == "Actor"){
+            holder.itemView.setOnClickListener {
+                val context = holder.itemView.context
+                val intent = android.content.Intent(context, Actor_Page::class.java)
+                intent.putExtra("imdb_code", currentItem.imdbCode)
+                intent.putExtra("type", currentItem.type)
+                context.startActivity(intent)
+            }
+        }else {
+            holder.itemView.setOnClickListener {
+                val context = holder.itemView.context
+                val intent = android.content.Intent(context, Watch_Page::class.java)
+                intent.putExtra("imdb_code", currentItem.imdbCode)
+                intent.putExtra("type", currentItem.type)
+                context.startActivity(intent)
+            }
         }
+
+
 
 
     }
@@ -76,9 +99,14 @@ class GridAdapter(
     fun addItem(item: MovieItem) {
         items.add(item)
         notifyItemInserted(items.size - 1)
+
     }
 }
 
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class EqualSpaceItemDecoration(private val space: Int) : RecyclerView.ItemDecoration() {
     override fun getItemOffsets(
@@ -106,6 +134,9 @@ class EqualSpaceItemDecoration(private val space: Int) : RecyclerView.ItemDecora
     }
 }
 
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 class EpisodesAdapter(
@@ -143,11 +174,21 @@ class EpisodesAdapter(
         val stillPath = episode.optString("still_path", null)
         if (!stillPath.isNullOrEmpty()) {
             val url = "https://image.tmdb.org/t/p/w500$stillPath"
+            /*
             Picasso.get()
                 .load(url)
                 .fit()
                 .centerCrop()
                 .into(holder.epsImg)
+
+             */
+
+            Glide.with(holder.itemView.context)
+                .load(url)
+                .centerInside()
+                .into(holder.epsImg)
+
+
         }
 
         val seasonNo = episode.optInt("season_number")
@@ -175,9 +216,18 @@ class EpisodesAdapter(
     override fun getItemCount(): Int = episodes.size
 }
 
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 data class MovieItem(
     val title: String,
     val imageUrl: String,
     val imdbCode: String,
     val type: String
 )
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

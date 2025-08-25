@@ -14,13 +14,12 @@
         android:layout_height="match_parent"
         android:gravity="center"
         android:orientation="vertical"
-        android:background="@color/Nav_color"
         android:paddingTop="24dp"
         android:paddingBottom="24dp"
-
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toTopOf="parent"
+        android:background="@drawable/sidbar_focus">
 
         <ImageButton
             android:id="@+id/btnHome"

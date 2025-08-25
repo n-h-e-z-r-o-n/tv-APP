@@ -439,7 +439,7 @@ class Watch_Page : AppCompatActivity() {
                         val title = item.getString("original_name")
                         val imgUrl = "https://image.tmdb.org/t/p/h632" + item.getString("profile_path")
                         val cast_id = item.getString("id")
-                        val type = ""
+                        val type = "Actor"
                         movies.add(MovieItem(title, imgUrl, cast_id, type))
                     }
 

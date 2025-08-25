@@ -1,6 +1,7 @@
 package com.example.onyx
 
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.view.View
@@ -19,13 +20,6 @@ object NavAction {
 
         val sidebar = activity.findViewById<LinearLayout>(R.id.sideBar)
 
-        sidebar?.setOnFocusChangeListener { _, hasFocus ->
-            if (hasFocus) {
-                sidebar.visibility = View.VISIBLE
-            } else {
-                sidebar.visibility = View.GONE
-            }
-        }
 
 
         btnHome?.setOnClickListener {
@@ -63,6 +57,18 @@ object NavAction {
             //is Profile_Page -> highlightActive(btnProfile, buttons, activity)
         }
 
+        // ✅ Add focus scaling effect to each button
+        buttons.forEach { btn ->
+            btn?.setOnFocusChangeListener { v, hasFocus ->
+                if (hasFocus) {
+                    v.animate().scaleX(1.2f).scaleY(1.2f).setDuration(150).start()
+                } else {
+                    v.animate().scaleX(1f).scaleY(1f).setDuration(150).start()
+                }
+            }
+        }
+
+
     }
 
 
@@ -72,6 +78,10 @@ object NavAction {
     ) {
         allButtons.forEach { it?.isSelected = false }
         activeBtn?.isSelected = true
+    }
+
+    fun Int.dpToPx(context: Context): Int {
+        return (this * context.resources.displayMetrics.density).toInt()
     }
 
 

@@ -12,13 +12,15 @@ class MainActivity : ComponentActivity() {
         setContentView(R.layout.activity_main)
 
 
-        NavAction.setupSidebar(this@MainActivity)
+        //NavAction.setupSidebar(this@MainActivity)
 
         this.startActivity(Intent(this, Home_Page::class.java))
+        finish()
 
     }
 
 
 }
+
 
 

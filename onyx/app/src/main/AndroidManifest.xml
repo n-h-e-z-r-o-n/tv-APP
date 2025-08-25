@@ -25,6 +25,15 @@
             android:name=".Search_Page"
             android:exported="false" />
         <activity
+            android:name=".Search_Page.kt"
+            android:exported="false" />
+        <activity
+            android:name=".Actor_Page"
+            android:exported="false" />
+        <activity
+            android:name=".test"
+            android:exported="false" />
+        <activity
             android:name=".Tv_Page"
             android:exported="false" />
         <activity

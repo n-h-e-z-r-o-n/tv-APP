@@ -35,7 +35,19 @@ class Movie_Page : AppCompatActivity() {
             val adapter = GridAdapter(mutableListOf(), R.layout.item_grid)
             withContext(Dispatchers.Main) {
                 val recyclerView = findViewById<RecyclerView>(R.id.Movies)
-                recyclerView.layoutManager = GridLayoutManager(this@Movie_Page, 5)
+
+
+                // Calculate span count dynamically
+                val widthInPixels = this@Movie_Page.resources.getDimension(R.dimen.grid_item_width)
+                val density = this@Movie_Page.resources.displayMetrics.density
+                val widthInDp = widthInPixels / density
+                val displayMetrics = resources.displayMetrics
+                val screenWidthPx = displayMetrics.widthPixels
+                val itemMinWidthPx = ((widthInDp + 15) * displayMetrics.density).toInt() // 160dp per item
+                val spanCount = maxOf(1, screenWidthPx / itemMinWidthPx)
+
+                recyclerView.layoutManager = GridLayoutManager(this@Movie_Page, spanCount)
+
                 recyclerView.adapter = adapter
                 val spacing = (19 * resources.displayMetrics.density).toInt()
                 recyclerView.addItemDecoration(EqualSpaceItemDecoration(spacing))

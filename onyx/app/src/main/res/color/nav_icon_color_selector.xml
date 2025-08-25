@@ -1,8 +1,8 @@
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- Focused state -->
-    <item android:color="@color/NavBtnFocus" android:state_focused="true"/>
+    <item android:color="@color/FG_color" android:state_focused="true"/>
     <!-- Pressed (optional) -->
     <item android:color="@color/NavBtnActive" android:state_selected="true"/>
     <!-- Default -->
-    <item android:color="@color/FG_color"/>
+    <item android:color="@color/gray"/>
 </selector>

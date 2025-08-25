@@ -36,7 +36,17 @@ class Tv_Page : AppCompatActivity() {
             val adapter = GridAdapter(mutableListOf(), R.layout.item_grid)
             withContext(Dispatchers.Main) {
                 val recyclerView = findViewById<RecyclerView>(R.id.TvShows)
-                recyclerView.layoutManager = GridLayoutManager(this@Tv_Page, 5)
+
+                // Calculate span count dynamically
+                val widthInPixels = this@Tv_Page.resources.getDimension(R.dimen.grid_item_width)
+                val density = this@Tv_Page.resources.displayMetrics.density
+                val widthInDp = widthInPixels / density
+                val displayMetrics = resources.displayMetrics
+                val screenWidthPx = displayMetrics.widthPixels
+                val itemMinWidthPx = ((widthInDp + 15) * displayMetrics.density).toInt() // 160dp per item
+                val spanCount = maxOf(1, screenWidthPx / itemMinWidthPx)
+
+                recyclerView.layoutManager = GridLayoutManager(this@Tv_Page, spanCount)
                 recyclerView.adapter = adapter
                 val spacing = (19 * resources.displayMetrics.density).toInt()
                 recyclerView.addItemDecoration(EqualSpaceItemDecoration(spacing))

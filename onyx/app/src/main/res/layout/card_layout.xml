@@ -3,15 +3,14 @@
     xmlns:card_view="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="400dp"
+    android:layout_height="match_parent"
     android:minWidth="800dp"
     android:clickable="true"
-    android:focusable="true"
-    card_view:cardCornerRadius="12dp"
+    card_view:cardCornerRadius="0dp"
     card_view:cardElevation="6dp"
     >
 
-    <LinearLayout
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="horizontal">
@@ -22,15 +21,17 @@
         <!-- Movie Title -->
         <TextView
             android:id="@+id/itemText"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:background="#AA000000"
             android:ellipsize="end"
-            android:padding="8dp"
+            android:paddingStart="10dp"
             android:singleLine="true"
             android:textColor="@android:color/white"
             android:textSize="16sp"
-            tools:ignore="Suspicious0dp" />
+            tools:ignore="Suspicious0dp"
+            android:layout_gravity="bottom"
+            />
 
         <ImageView
             android:id="@+id/itemImage"
@@ -39,5 +40,15 @@
             android:layout_weight="1"
             android:adjustViewBounds="true"
             android:scaleType="centerCrop" />
-    </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:background="@drawable/overlay_bottom_gradient"/>
+
+    </FrameLayout>
+
+
+
 </androidx.cardview.widget.CardView>
