@@ -100,19 +100,26 @@ class Play : AppCompatActivity() {
 
 
 
+    private var isVideoLaunching = false
+
     private fun playVideoExternally(videoUrl: String) {
+        if (isVideoLaunching) {
+            Log.d("DEBUG_TAG_PlayActivity", "playVideoExternally ignored: already launching.")
+            return
+        }
+        isVideoLaunching = true
+
         Log.d("DEBUG_TAG_PlayActivity", "Video URL detected: $videoUrl")
 
-        // Launch custom video player activity
         val intent = Intent(this, Video_payer::class.java).apply {
             putExtra("video_url", videoUrl)
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
         startActivity(intent)
 
-        // Optional: Finish current activity to return to TV interface
-        finish()
+        finish() // optional
     }
+
 
     private fun simulateRepeatedCenterClicks(
         webView: WebView,

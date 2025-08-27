@@ -296,14 +296,13 @@
                             <Button
                                 android:id="@+id/watchNowButton"
                                 android:layout_width="44dp"
-                                android:layout_height="40dp"
+                                android:layout_height="30dp"
                                 android:background="@drawable/tv_button_selector"
                                 android:focusable="true"
                                 android:focusableInTouchMode="true"
-                                android:textColor="@android:color/white"
-                                android:textSize="15sp"
                                 android:text="▶"
-                                />
+                                android:textColor="@android:color/white"
+                                android:textSize="15sp" />
 
                             <Button
                                 android:id="@+id/TrailerButton"

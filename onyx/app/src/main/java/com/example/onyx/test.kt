@@ -26,7 +26,7 @@ class test : AppCompatActivity() {
 
         NavAction.setupSidebar(this)
 
-        SliderData()
+        //SliderData()
 
     }
 
@@ -95,7 +95,7 @@ class test : AppCompatActivity() {
         }
     }
 
-
+/*
     private fun SliderData() {
         CoroutineScope(Dispatchers.IO).launch {
             while (true) {
@@ -119,9 +119,15 @@ class test : AppCompatActivity() {
                         val item = moviesArray.getJSONObject(i)
                         val title = item.getString("original_title")
                         val imgUrl = "https://image.tmdb.org/t/p/w1280" + item.getString("backdrop_path")
+
                         val id = item.getString("id")
                         val type = "movie"
-                        movies.add(MovieItem(title, imgUrl, id, type))
+
+
+
+
+
+                        //movies.add(MovieItem(title, imgUrl, id, type))
                     }
 
                     withContext(Dispatchers.Main) {
@@ -146,25 +152,6 @@ class test : AppCompatActivity() {
 
                          */
 
-                        // 👉 Handle DPAD left/right for card swipe
-                        recyclerView.isFocusableInTouchMode = true
-                        recyclerView.requestFocus()
-
-                        recyclerView.setOnKeyListener { _, keyCode, event ->
-                            if (event.action == KeyEvent.ACTION_DOWN) {
-                                when (keyCode) {
-                                    KeyEvent.KEYCODE_DPAD_LEFT -> {
-                                        adapter.moveTopToBack(recyclerView)
-
-                                    }
-                                    KeyEvent.KEYCODE_DPAD_RIGHT -> {
-                                        adapter.moveTopToBackRight(recyclerView)
-
-                                    }
-                                }
-                            }
-                            false
-                        }
                     }
 
                     break
@@ -178,4 +165,6 @@ class test : AppCompatActivity() {
 
 
 
+
+ */
 }

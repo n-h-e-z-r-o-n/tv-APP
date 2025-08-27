@@ -52,19 +52,27 @@ class Home_Page : AppCompatActivity() {
                     val jsonObject = org.json.JSONObject(response)
                     val moviesArray = jsonObject.getJSONArray("results")
 
-                    val movies = mutableListOf<MovieItem>()
+                    val movies = mutableListOf<SliderItem>()
                     for (i in 0 until moviesArray.length()) {
+
                         val item = moviesArray.getJSONObject(i)
+                        Log.e("DEBUG_MAIN_Slider", item.toString())
                         val title = item.getString("original_title")
-                        val imgUrl = "https://image.tmdb.org/t/p/w1280" + item.getString("backdrop_path")
+                        val backdrop_path = "https://image.tmdb.org/t/p/w1280" + item.getString("backdrop_path")
                         val id = item.getString("id")
                         val type = "movie"
-                        movies.add(MovieItem(title, imgUrl, id, type))
+                        val overview = item.getString("overview")
+                        val release_date = item.getString("release_date")
+                        val vote_average = item.getString("vote_average")
+                        val poster_path = item.getString("poster_path")
+                        val genre_ids = item.getString("genre_ids")
+
+                        movies.add(SliderItem(title, backdrop_path, id, type, overview, release_date, vote_average, poster_path, genre_ids ))
                     }
 
                     withContext(Dispatchers.Main) {
                         val recyclerView = findViewById<RecyclerView>(R.id.Slider_widget)
-                        val adapter = GridAdapter(movies, R.layout.card_layout)
+                        val adapter = CardSwiper(movies, R.layout.card_layout)
 
 
                         recyclerView.layoutManager = LinearLayoutManager(
@@ -91,15 +99,12 @@ class Home_Page : AppCompatActivity() {
 
                          */
 
-
-
-
                     }
 
                     break
                 } catch (e: Exception) {
                     delay(10_000)
-                    Log.e("DEBUG_MAIN_Slider", "Error fetching data", e)
+                    Log.e("DEBUG_MAIN_Slider Error", "Error fetching data", e)
                 }
             }
         }

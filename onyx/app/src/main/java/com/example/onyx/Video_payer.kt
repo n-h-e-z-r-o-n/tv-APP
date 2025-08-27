@@ -116,17 +116,10 @@ class Video_payer : AppCompatActivity() {
     }
 
     private fun setupBackPressHandler() {
-        // Handle back navigation properly
+        // Handle back navigation - simply finish the activity
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                if (controlsVisible) {
-                    hideControls()
-                } else {
-                    if (player?.isPlaying == true) {
-                        player?.pause()
-                    }
-                    finish()
-                }
+                finish()
             }
         })
     }
