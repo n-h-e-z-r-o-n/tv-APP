@@ -127,69 +127,45 @@ class Video_payer : AppCompatActivity() {
     private fun initializePlayer() {
         val videoUrl = intent.getStringExtra("video_url") ?: return
 
-        // Check if there's already an active player from another instance
-        val existingPlayer = PlayerManager.getActivePlayer()
-        if (existingPlayer != null && existingPlayer != player) {
-            // Release the existing player to prevent multiple active players
-            existingPlayer.release()
-            PlayerManager.clearActivePlayer()
-        }
-
-        trackSelector = DefaultTrackSelector(this).apply {
-            // Configure to prefer highest quality
-            setParameters(
-                parameters
-                    .buildUpon()
-                    .setForceHighestSupportedBitrate(true)
-                    .setMaxVideoSizeSd()
-                    .setPreferredVideoMimeTypes("video/avc", "video/hevc", "video/av1")
-                    .build()
-            )
-        }
-
-        player = ExoPlayer.Builder(this)
-            .setTrackSelector(trackSelector!!)
-            .build().apply {
-                // Register this player as the active one
-                PlayerManager.setActivePlayer(this)
-
-                playWhenReady = this@Video_payer.playWhenReady
-                seekTo(currentWindow, playbackPosition)
-
-                val mediaItem = MediaItem.fromUri(Uri.parse(videoUrl))
-                setMediaItem(mediaItem)
-                prepare()
-
-                addListener(object : Player.Listener {
-                    override fun onPlaybackStateChanged(playbackState: Int) {
-                        when (playbackState) {
-                            Player.STATE_BUFFERING -> showLoading()
-                            Player.STATE_READY -> hideLoading()
-                            Player.STATE_ENDED -> finish()
-                            Player.STATE_IDLE -> showError("Video not available")
-                        }
-                    }
-
-                    override fun onPlayerError(error: PlaybackException) {
-                        showError("Playback error: ${error.message}")
-                    }
-
-                    override fun onIsPlayingChanged(isPlaying: Boolean) {
-                        updatePlayPauseIcon(isPlaying)
-                        // If this player stops playing, clear it from active manager
-                        if (!isPlaying && PlayerManager.getActivePlayer() == this@apply) {
-                            PlayerManager.clearActivePlayer()
-                        }
-                    }
-                })
+        if (trackSelector == null) {
+            trackSelector = DefaultTrackSelector(this).apply {
+                setParameters(
+                    parameters
+                        .buildUpon()
+                        .setForceHighestSupportedBitrate(true)
+                        .setPreferredVideoMimeTypes("video/avc", "video/hevc", "video/av1")
+                        .build()
+                )
             }
+        }
+
+        // Reuse the existing global player if available
+        player = PlayerManager.getActivePlayer()
+        if (player == null) {
+            player = ExoPlayer.Builder(this)
+                .setTrackSelector(trackSelector!!)
+                .build().apply {
+                    PlayerManager.setActivePlayer(this)
+                }
+        }
+
+        // Attach media item (replace the source if new video is requested)
+        val mediaItem = MediaItem.fromUri(Uri.parse(videoUrl))
+        player?.apply {
+            setMediaItem(mediaItem)
+            playWhenReady = this@Video_payer.playWhenReady
+            seekTo(currentWindow, playbackPosition)
+            prepare()
+        }
 
         playerView?.player = player
         playerView?.setOnClickListener { toggleControls() }
+
         uiHandler.post(progressUpdateRunnable)
         updatePlayPauseIcon(player?.isPlaying == true)
         updateDuration()
     }
+
 
     @SuppressLint("InlinedApi")
     private fun hideSystemUi() {
