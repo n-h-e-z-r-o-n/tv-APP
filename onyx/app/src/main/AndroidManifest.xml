@@ -44,7 +44,9 @@
             android:exported="false" />
         <activity
             android:name=".Video_payer"
-            android:exported="false" />
+            android:exported="false"
+            android:launchMode="singleTask"
+            />
         <activity
             android:name=".Play"
             android:exported="false" />

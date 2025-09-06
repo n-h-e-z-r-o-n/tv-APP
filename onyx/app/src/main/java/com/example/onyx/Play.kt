@@ -113,7 +113,8 @@ class Play : AppCompatActivity() {
 
         val intent = Intent(this, Video_payer::class.java).apply {
             putExtra("video_url", videoUrl)
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            //addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
         startActivity(intent)
 

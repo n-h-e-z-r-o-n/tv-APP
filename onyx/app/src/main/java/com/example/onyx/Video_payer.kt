@@ -3,6 +3,7 @@ package com.example.onyx
 import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.content.Context
+import android.media.AudioManager
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
@@ -36,14 +37,22 @@ object PlayerManager {
     private var activeContext: Context? = null
 
     fun setActivePlayer(player: ExoPlayer, context: Context) {
-        // Release any previously active player
-        activePlayer?.release()
+        // Stop and release any previously active player
+        activePlayer?.let { existingPlayer ->
+            existingPlayer.stop()
+            existingPlayer.clearMediaItems()
+            existingPlayer.release()
+        }
         activePlayer = player
         activeContext = context
     }
 
     fun clearActivePlayer() {
-        activePlayer?.release()
+        activePlayer?.let { existingPlayer ->
+            existingPlayer.stop()
+            existingPlayer.clearMediaItems()
+            existingPlayer.release()
+        }
         activePlayer = null
         activeContext = null
     }
@@ -92,6 +101,7 @@ class Video_payer : AppCompatActivity() {
     private var currentQuality = "Auto"
     private var isMuted = false
     private var subtitlesEnabled = false
+    private var audioManager: AudioManager? = null
 
     // Speed options
     private val speedOptions = listOf(0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 2.0f)
@@ -103,6 +113,9 @@ class Video_payer : AppCompatActivity() {
         
         // Prevent screen from sleeping while this Activity is visible
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        
+        // Initialize audio manager for focus management
+        audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
 
         initializeViews()
         setupControls()
@@ -147,63 +160,33 @@ class Video_payer : AppCompatActivity() {
     private fun initializePlayer() {
         val videoUrl = intent.getStringExtra("video_url") ?: return
 
+        // Reuse if already active
+        val existingPlayer = PlayerManager.getActivePlayer()
+        if (existingPlayer != null) {
+            player = existingPlayer
+            playerView?.player = player
+            return
+        }
+
         if (trackSelector == null) {
             trackSelector = DefaultTrackSelector(this).apply {
                 setParameters(
                     parameters
                         .buildUpon()
                         .setForceHighestSupportedBitrate(true)
-                        .setPreferredVideoMimeTypes("video/avc", "video/hevc", "video/av1")
                         .build()
                 )
             }
         }
 
-        // Check if there's already an active player
-        val existingPlayer = PlayerManager.getActivePlayer()
-        if (existingPlayer != null && PlayerManager.getActiveContext() != this) {
-            // Another activity has the player, release it first
-            PlayerManager.clearActivePlayer()
-        }
-
-        // Create new player if none exists
-        if (player == null) {
-            player = ExoPlayer.Builder(this)
-                .setTrackSelector(trackSelector!!)
-                .build()
-            PlayerManager.setActivePlayer(player!!, this)
-        }
-
-        // Set up player listener
-        player?.addListener(object : Player.Listener {
-            override fun onPlaybackStateChanged(playbackState: Int) {
-                when (playbackState) {
-                    Player.STATE_BUFFERING -> showLoading()
-                    Player.STATE_READY -> {
-                        hideLoading()
-                        updateDuration()
-                        updateQualityButton()
-                    }
-                    Player.STATE_ENDED -> {
-                        hideLoading()
-                        player?.seekTo(0)
-                        player?.pause()
-                    }
-                    Player.STATE_IDLE -> hideLoading()
-                }
+        // Create new player only if none exists
+        player = ExoPlayer.Builder(this)
+            .setTrackSelector(trackSelector!!)
+            .build()
+            .also {
+                PlayerManager.setActivePlayer(it, this)
             }
 
-            override fun onIsPlayingChanged(isPlaying: Boolean) {
-                updatePlayPauseIcon(isPlaying)
-            }
-
-            override fun onPlayerError(error: PlaybackException) {
-                hideLoading()
-                showError("Playback error: ${error.message}")
-            }
-        })
-
-        // Attach media item
         val mediaItem = MediaItem.fromUri(Uri.parse(videoUrl))
         player?.apply {
             setMediaItem(mediaItem)
@@ -213,11 +196,8 @@ class Video_payer : AppCompatActivity() {
         }
 
         playerView?.player = player
-        playerView?.setOnClickListener { toggleControls() }
-
-        uiHandler.post(progressUpdateRunnable)
-        updatePlayPauseIcon(player?.isPlaying == true)
     }
+
 
     @SuppressLint("InlinedApi")
     private fun hideSystemUi() {
@@ -537,8 +517,8 @@ class Video_payer : AppCompatActivity() {
         // Add focus change listeners
         val focusChangeListener = View.OnFocusChangeListener { v, hasFocus ->
             if (v is ImageButton || v is TextView) {
-                v.scaleX = if (hasFocus) 1.2f else 1.0f
-                v.scaleY = if (hasFocus) 1.2f else 1.0f
+                v.scaleX = if (hasFocus) 1.01f else 1.0f
+                v.scaleY = if (hasFocus) 1.01f else 1.0f
             }
         }
 
@@ -636,12 +616,20 @@ class Video_payer : AppCompatActivity() {
             currentWindow = it.currentMediaItemIndex
             playWhenReady = it.playWhenReady
 
+            // Stop the player before releasing
+            it.stop()
+            it.clearMediaItems()
+            
             if (PlayerManager.getActivePlayer() == it) {
                 PlayerManager.clearActivePlayer()
             }
 
             it.release()
         }
+        
+        // Abandon audio focus when releasing player
+        audioManager?.abandonAudioFocus(null)
+        
         player = null
         uiHandler.removeCallbacks(progressUpdateRunnable)
         uiHandler.removeCallbacks(controlsAutoHideRunnable)
