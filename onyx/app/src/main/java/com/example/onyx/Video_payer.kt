@@ -56,9 +56,14 @@ class Video_payer : AppCompatActivity() {
     private var playPauseButton: ImageButton? = null
     private var rewindButton: ImageButton? = null
     private var fastForwardButton: ImageButton? = null
-    private var muteButton: ImageButton? = null
-    private var qualityButton: ImageButton? = null
-    private var captionsButton: ImageButton? = null
+    private var favoriteButton: ImageButton? = null
+    private var speedButton: ImageButton? = null
+    private var volumeButton: ImageButton? = null
+    private var subtitlesButton: ImageButton? = null
+    private var autoButton: android.widget.Button? = null
+    private var refreshButton: ImageButton? = null
+    private var settingsButton: ImageButton? = null
+    private var closeButton: ImageButton? = null
     private var seekBar: SeekBar? = null
     private var currentTimeText: TextView? = null
     private var durationText: TextView? = null
@@ -92,9 +97,14 @@ class Video_payer : AppCompatActivity() {
         playPauseButton = findViewById(R.id.btn_play_pause)
         rewindButton = findViewById(R.id.btn_rewind)
         fastForwardButton = findViewById(R.id.btn_fast_forward)
-        muteButton = findViewById(R.id.btn_mute)
-        qualityButton = findViewById(R.id.btn_quality)
-        captionsButton = findViewById(R.id.btn_captions)
+        favoriteButton = findViewById(R.id.btn_favorite)
+        speedButton = findViewById(R.id.btn_speed)
+        volumeButton = findViewById(R.id.btn_volume)
+        subtitlesButton = findViewById(R.id.btn_subtitles)
+        autoButton = findViewById(R.id.btn_auto)
+        refreshButton = findViewById(R.id.btn_refresh)
+        settingsButton = findViewById(R.id.btn_settings)
+        closeButton = findViewById(R.id.btn_close)
         seekBar = findViewById(R.id.seek_bar)
         currentTimeText = findViewById(R.id.txt_current_time)
         durationText = findViewById(R.id.txt_duration)
@@ -209,7 +219,18 @@ class Video_payer : AppCompatActivity() {
             }
         }
 
-        muteButton?.setOnClickListener {
+        favoriteButton?.setOnClickListener {
+            // Toggle favorite status
+            showCenterFeedback(android.R.drawable.btn_star_big_on, "Added to Favorites")
+            resetAutoHide()
+        }
+
+        speedButton?.setOnClickListener {
+            showQualityDialog()
+            resetAutoHide()
+        }
+
+        volumeButton?.setOnClickListener {
             player?.let { p ->
                 if (p.volume > 0f) {
                     previousVolume = p.volume
@@ -217,7 +238,7 @@ class Video_payer : AppCompatActivity() {
                 } else {
                     p.volume = if (previousVolume <= 0f) 1f else previousVolume
                 }
-                updateMuteIcon(p.volume == 0f)
+                updateVolumeIcon(p.volume == 0f)
                 showCenterFeedback(
                     if (p.volume == 0f) android.R.drawable.ic_lock_silent_mode else android.R.drawable.ic_lock_silent_mode_off,
                     if (p.volume == 0f) "Muted" else "Unmuted"
@@ -226,15 +247,31 @@ class Video_payer : AppCompatActivity() {
             }
         }
 
+        subtitlesButton?.setOnClickListener {
+            showCaptionsDialog()
+            resetAutoHide()
+        }
 
-        qualityButton?.setOnClickListener {
+        autoButton?.setOnClickListener {
+            // Toggle auto mode
+            showCenterFeedback(android.R.drawable.ic_popup_sync, "Auto Mode")
+            resetAutoHide()
+        }
+
+        refreshButton?.setOnClickListener {
+            // Refresh/reload video
+            player?.prepare()
+            showCenterFeedback(android.R.drawable.ic_popup_sync, "Refreshed")
+            resetAutoHide()
+        }
+
+        settingsButton?.setOnClickListener {
             showQualityDialog()
             resetAutoHide()
         }
 
-        captionsButton?.setOnClickListener {
-            showCaptionsDialog()
-            resetAutoHide()
+        closeButton?.setOnClickListener {
+            finish()
         }
 
         seekBar?.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
@@ -349,8 +386,8 @@ class Video_payer : AppCompatActivity() {
         )
     }
 
-    private fun updateMuteIcon(isMuted: Boolean) {
-        muteButton?.setImageResource(
+    private fun updateVolumeIcon(isMuted: Boolean) {
+        volumeButton?.setImageResource(
             if (isMuted) android.R.drawable.ic_lock_silent_mode else android.R.drawable.ic_lock_silent_mode_off
         )
     }
@@ -370,44 +407,56 @@ class Video_payer : AppCompatActivity() {
         playPauseButton?.isFocusable = true
         rewindButton?.isFocusable = true
         fastForwardButton?.isFocusable = true
-        muteButton?.isFocusable = true
-        qualityButton?.isFocusable = true
-        captionsButton?.isFocusable = true
+        favoriteButton?.isFocusable = true
+        speedButton?.isFocusable = true
+        volumeButton?.isFocusable = true
+        subtitlesButton?.isFocusable = true
+        autoButton?.isFocusable = true
+        refreshButton?.isFocusable = true
+        settingsButton?.isFocusable = true
+        closeButton?.isFocusable = true
         seekBar?.isFocusable = true
 
         // Set up a complete focus chain for TV navigation
-        rewindButton?.nextFocusRightId = R.id.btn_play_pause
-        rewindButton?.nextFocusDownId = R.id.seek_bar
+        favoriteButton?.nextFocusRightId = R.id.btn_speed
+        favoriteButton?.nextFocusDownId = R.id.seek_bar
 
-        playPauseButton?.nextFocusLeftId = R.id.btn_rewind
-        playPauseButton?.nextFocusRightId = R.id.btn_fast_forward
-        playPauseButton?.nextFocusDownId = R.id.seek_bar
+        speedButton?.nextFocusLeftId = R.id.btn_favorite
+        speedButton?.nextFocusRightId = R.id.btn_volume
+        speedButton?.nextFocusDownId = R.id.seek_bar
 
-        fastForwardButton?.nextFocusLeftId = R.id.btn_play_pause
-        fastForwardButton?.nextFocusRightId = R.id.btn_mute
-        fastForwardButton?.nextFocusDownId = R.id.seek_bar
+        volumeButton?.nextFocusLeftId = R.id.btn_speed
+        volumeButton?.nextFocusRightId = R.id.btn_subtitles
+        volumeButton?.nextFocusDownId = R.id.seek_bar
 
-        muteButton?.nextFocusLeftId = R.id.btn_fast_forward
-        muteButton?.nextFocusRightId = R.id.btn_fullscreen
-        muteButton?.nextFocusDownId = R.id.seek_bar
+        subtitlesButton?.nextFocusLeftId = R.id.btn_volume
+        subtitlesButton?.nextFocusRightId = R.id.btn_auto
+        subtitlesButton?.nextFocusDownId = R.id.seek_bar
 
+        autoButton?.nextFocusLeftId = R.id.btn_subtitles
+        autoButton?.nextFocusRightId = R.id.btn_refresh
+        autoButton?.nextFocusDownId = R.id.seek_bar
 
-        qualityButton?.nextFocusLeftId = R.id.btn_fullscreen
-        qualityButton?.nextFocusRightId = R.id.btn_captions
-        qualityButton?.nextFocusDownId = R.id.seek_bar
+        refreshButton?.nextFocusLeftId = R.id.btn_auto
+        refreshButton?.nextFocusRightId = R.id.btn_settings
+        refreshButton?.nextFocusDownId = R.id.seek_bar
 
-        captionsButton?.nextFocusLeftId = R.id.btn_quality
-        captionsButton?.nextFocusDownId = R.id.seek_bar
+        settingsButton?.nextFocusLeftId = R.id.btn_refresh
+        settingsButton?.nextFocusRightId = R.id.btn_close
+        settingsButton?.nextFocusDownId = R.id.seek_bar
 
-        seekBar?.nextFocusUpId = R.id.btn_rewind
+        closeButton?.nextFocusLeftId = R.id.btn_settings
+        closeButton?.nextFocusDownId = R.id.seek_bar
+
+        seekBar?.nextFocusUpId = R.id.btn_favorite
         seekBar?.nextFocusRightId = R.id.txt_duration
 
         durationText?.nextFocusLeftId = R.id.seek_bar
-        durationText?.nextFocusUpId = R.id.btn_rewind
+        durationText?.nextFocusUpId = R.id.btn_favorite
 
         // Add focus change listeners to show visual feedback
         val focusChangeListener = View.OnFocusChangeListener { v, hasFocus ->
-            if (v is ImageButton) {
+            if (v is ImageButton || v is android.widget.Button) {
                 v.scaleX = if (hasFocus) 1.2f else 1.0f
                 v.scaleY = if (hasFocus) 1.2f else 1.0f
             }
@@ -416,9 +465,14 @@ class Video_payer : AppCompatActivity() {
         playPauseButton?.setOnFocusChangeListener(focusChangeListener)
         rewindButton?.setOnFocusChangeListener(focusChangeListener)
         fastForwardButton?.setOnFocusChangeListener(focusChangeListener)
-        muteButton?.setOnFocusChangeListener(focusChangeListener)
-        qualityButton?.setOnFocusChangeListener(focusChangeListener)
-        captionsButton?.setOnFocusChangeListener(focusChangeListener)
+        favoriteButton?.setOnFocusChangeListener(focusChangeListener)
+        speedButton?.setOnFocusChangeListener(focusChangeListener)
+        volumeButton?.setOnFocusChangeListener(focusChangeListener)
+        subtitlesButton?.setOnFocusChangeListener(focusChangeListener)
+        autoButton?.setOnFocusChangeListener(focusChangeListener)
+        refreshButton?.setOnFocusChangeListener(focusChangeListener)
+        settingsButton?.setOnFocusChangeListener(focusChangeListener)
+        closeButton?.setOnFocusChangeListener(focusChangeListener)
         seekBar?.setOnFocusChangeListener { v, hasFocus ->
             v.scaleX = if (hasFocus) 1.05f else 1.0f
             v.scaleY = if (hasFocus) 1.05f else 1.0f
@@ -565,7 +619,7 @@ class Video_payer : AppCompatActivity() {
                     } else {
                         p.volume = if (previousVolume <= 0f) 1f else previousVolume
                     }
-                    updateMuteIcon(p.volume == 0f)
+                    updateVolumeIcon(p.volume == 0f)
                 }
                 true
             }
@@ -594,11 +648,9 @@ class Video_payer : AppCompatActivity() {
 
                 // If not seeking, check if we're on the first control in a row
                 when (getCurrentFocusId()) {
-                    R.id.btn_rewind -> {
-                        // Already at leftmost control, do rewind action
-                        val newPos = (player?.currentPosition ?: 0L) - 10_000L
-                        player?.seekTo(newPos.coerceAtLeast(0L))
-                        showCenterFeedback(android.R.drawable.ic_media_rew, "-10s")
+                    R.id.btn_favorite -> {
+                        // Already at leftmost control, do favorite action
+                        showCenterFeedback(android.R.drawable.btn_star_big_on, "Added to Favorites")
                     }
                     else -> {
                         // Let the system handle focus navigation
@@ -622,12 +674,9 @@ class Video_payer : AppCompatActivity() {
 
                 // If not seeking, check if we're on the last control in a row
                 when (getCurrentFocusId()) {
-                    R.id.btn_captions -> {
-                        // Already at rightmost control, do fast forward action
-                        val duration = player?.duration ?: Long.MAX_VALUE
-                        val newPos = (player?.currentPosition ?: 0L) + 10_000L
-                        player?.seekTo(newPos.coerceAtMost(duration))
-                        showCenterFeedback(android.R.drawable.ic_media_ff, "+10s")
+                    R.id.btn_close -> {
+                        // Already at rightmost control, do close action
+                        finish()
                     }
                     else -> {
                         // Let the system handle focus navigation
@@ -647,7 +696,7 @@ class Video_payer : AppCompatActivity() {
                 // If focus is on bottom row, move to top row
                 when (getCurrentFocusId()) {
                     R.id.seek_bar, R.id.txt_duration -> {
-                        playPauseButton?.requestFocus()
+                        favoriteButton?.requestFocus()
                         return true
                     }
                     else -> {
@@ -679,7 +728,13 @@ class Video_payer : AppCompatActivity() {
                             showCenterFeedback(android.R.drawable.ic_media_ff, "+10s")
                         }
                     }
-                    R.id.btn_mute -> {
+                    R.id.btn_favorite -> {
+                        showCenterFeedback(android.R.drawable.btn_star_big_on, "Added to Favorites")
+                    }
+                    R.id.btn_speed -> {
+                        showQualityDialog()
+                    }
+                    R.id.btn_volume -> {
                         player?.let { p ->
                             if (p.volume > 0f) {
                                 previousVolume = p.volume
@@ -687,17 +742,24 @@ class Video_payer : AppCompatActivity() {
                             } else {
                                 p.volume = if (previousVolume <= 0f) 1f else previousVolume
                             }
-                            updateMuteIcon(p.volume == 0f)
+                            updateVolumeIcon(p.volume == 0f)
                         }
                     }
-                    R.id.btn_fullscreen -> {
-                        toggleFullscreen()
+                    R.id.btn_subtitles -> {
+                        showCaptionsDialog()
                     }
-                    R.id.btn_quality -> {
+                    R.id.btn_auto -> {
+                        showCenterFeedback(android.R.drawable.ic_popup_sync, "Auto Mode")
+                    }
+                    R.id.btn_refresh -> {
+                        player?.prepare()
+                        showCenterFeedback(android.R.drawable.ic_popup_sync, "Refreshed")
+                    }
+                    R.id.btn_settings -> {
                         showQualityDialog()
                     }
-                    R.id.btn_captions -> {
-                        showCaptionsDialog()
+                    R.id.btn_close -> {
+                        finish()
                     }
                     R.id.seek_bar -> {
                         isSeeking = !isSeeking
