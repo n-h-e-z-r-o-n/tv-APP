@@ -49,13 +49,10 @@ class Video_payer : AppCompatActivity() {
     private var player: ExoPlayer? = null
     private var playerView: StyledPlayerView? = null
     private var progressBar: ProgressBar? = null
-    private var errorTextView: TextView? = null
     private var overlayContainer: View? = null
     private var bottomBar: View? = null
     private var topBar: View? = null
     private var centerOverlay: View? = null
-    private var centerIcon: ImageView? = null
-    private var skipText: TextView? = null
     private var playPauseButton: ImageButton? = null
     private var rewindButton: ImageButton? = null
     private var fastForwardButton: ImageButton? = null
@@ -89,12 +86,9 @@ class Video_payer : AppCompatActivity() {
 
         playerView = findViewById(R.id.player_view)
         progressBar = findViewById(R.id.progress_bar)
-        errorTextView = findViewById(R.id.error_text)
         overlayContainer = findViewById(R.id.overlay_container)
         bottomBar = findViewById(R.id.bottom_bar)
         centerOverlay = findViewById(R.id.center_overlay)
-        centerIcon = findViewById(R.id.center_icon)
-        skipText = findViewById(R.id.skip_text)
         playPauseButton = findViewById(R.id.btn_play_pause)
         rewindButton = findViewById(R.id.btn_rewind)
         fastForwardButton = findViewById(R.id.btn_fast_forward)
@@ -179,20 +173,14 @@ class Video_payer : AppCompatActivity() {
 
     private fun showLoading() {
         progressBar?.isVisible = true
-        errorTextView?.isVisible = false
     }
 
     private fun hideLoading() {
         progressBar?.isVisible = false
-        errorTextView?.isVisible = false
     }
 
     private fun showError(message: String) {
         progressBar?.isVisible = false
-        errorTextView?.apply {
-            text = message
-            isVisible = true
-        }
     }
 
     private fun setupControls() {
@@ -438,8 +426,6 @@ class Video_payer : AppCompatActivity() {
     }
 
     private fun showCenterFeedback(iconRes: Int, text: String) {
-        centerIcon?.setImageResource(iconRes)
-        skipText?.text = text
         centerOverlay?.apply {
             alpha = 0f
             isVisible = true

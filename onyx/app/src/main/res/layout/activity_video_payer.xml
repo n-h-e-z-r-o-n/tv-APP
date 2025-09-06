@@ -15,14 +15,14 @@
             android:id="@+id/player_view"
             android:layout_width="match_parent"
             android:layout_height="0dp"
+            android:background="@color/BG_color"
             app:show_buffering="when_playing"
             app:show_rewind_button="false"
             app:show_fastforward_button="false"
 
             app:resize_mode="fill"
             app:use_controller="false"
-
-            />
+            tools:ignore="MissingConstraints" />
 
         <ProgressBar
             android:id="@+id/progress_bar"
@@ -34,17 +34,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <TextView
-            android:id="@+id/error_text"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="@android:color/white"
-            android:textSize="18sp"
-            android:visibility="gone"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+
 
         <!-- Custom overlay controls -->
         <androidx.constraintlayout.widget.ConstraintLayout
@@ -82,7 +72,6 @@
                         android:layout_height="40dp"
                         android:layout_marginStart="8dp"
                         android:background="@android:color/transparent"
-                        android:contentDescription="Mute"
                         android:focusable="true"
                         android:focusableInTouchMode="true"
                         android:clickable="true"
@@ -95,12 +84,11 @@
                         android:layout_height="40dp"
                         android:layout_marginStart="8dp"
                         android:background="@android:color/transparent"
-                        android:contentDescription="Fullscreen"
                         android:focusable="true"
                         android:focusableInTouchMode="true"
                         android:clickable="true"
 
-                        android:src="@android:drawable/ic_menu_crop"
+                        android:src="@drawable/setting"
                         app:tint="@color/nav_icon_color_selector"/>
 
                     <ImageButton
@@ -109,7 +97,6 @@
                         android:layout_height="40dp"
                         android:layout_marginStart="8dp"
                         android:background="@android:color/transparent"
-                        android:contentDescription="Quality"
                         android:focusable="true"
                         android:src="@android:drawable/ic_menu_sort_by_size"
                         app:tint="@color/nav_icon_color_selector"/>
@@ -214,28 +201,6 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent">
 
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:gravity="center_horizontal">
-
-                    <ImageView
-                        android:id="@+id/center_icon"
-                        android:layout_width="64dp"
-                        android:layout_height="64dp"
-                        android:tint="@android:color/white"
-                        android:src="@android:drawable/ic_media_play" />
-
-                    <TextView
-                        android:id="@+id/skip_text"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:textColor="@android:color/white"
-                        android:textSize="16sp"
-                        android:text="" />
-                </LinearLayout>
             </FrameLayout>
 
         </androidx.constraintlayout.widget.ConstraintLayout>
