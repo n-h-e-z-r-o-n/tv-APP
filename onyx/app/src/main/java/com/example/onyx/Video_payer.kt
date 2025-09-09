@@ -3,6 +3,7 @@ package com.example.onyx
 import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.content.Context
+import android.content.Intent
 import android.media.AudioManager
 import android.net.Uri
 import android.os.Bundle
@@ -46,6 +47,14 @@ object PlayerManager {
         activePlayer = player
         activeContext = context
     }
+    
+    fun forceStopAllAudio() {
+        // Force stop any existing player
+        activePlayer?.let { existingPlayer ->
+            existingPlayer.stop()
+            existingPlayer.clearMediaItems()
+        }
+    }
 
     fun clearActivePlayer() {
         activePlayer?.let { existingPlayer ->
@@ -59,6 +68,18 @@ object PlayerManager {
 
     fun getActivePlayer(): ExoPlayer? = activePlayer
     fun getActiveContext(): Context? = activeContext
+    
+    // Helper method to launch video player with Netflix/YouTube style behavior
+    fun playVideoExternally(context: Context, videoUrl: String) {
+        // Force stop any existing audio before launching new video
+        forceStopAllAudio()
+        
+        val intent = Intent(context, Video_payer::class.java).apply {
+            putExtra("video_url", videoUrl)
+            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
+        context.startActivity(intent)
+    }
 }
 
 class Video_payer : AppCompatActivity() {
@@ -122,6 +143,21 @@ class Video_payer : AppCompatActivity() {
         setupDpadNavigation()
         setupBackPressHandler()
         hideSystemUi()
+        
+        // Initialize player on first creation
+        initializePlayer()
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        
+        // Handle new video URL when activity is reused
+        if (intent.getStringExtra("video_url") != null) {
+            // Force stop any existing audio first
+            PlayerManager.forceStopAllAudio()
+            loadNewVideo(intent.getStringExtra("video_url")!!)
+        }
     }
 
     private fun initializeViews() {
@@ -160,14 +196,16 @@ class Video_payer : AppCompatActivity() {
     private fun initializePlayer() {
         val videoUrl = intent.getStringExtra("video_url") ?: return
 
-        // Reuse if already active
-        val existingPlayer = PlayerManager.getActivePlayer()
-        if (existingPlayer != null) {
-            player = existingPlayer
-            playerView?.player = player
-            return
-        }
-
+        // ALWAYS clear any existing player first to prevent background audio
+        PlayerManager.clearActivePlayer()
+        
+        // Request audio focus to ensure we have exclusive audio
+        audioManager?.requestAudioFocus(
+            null,
+            AudioManager.STREAM_MUSIC,
+            AudioManager.AUDIOFOCUS_GAIN
+        )
+        
         if (trackSelector == null) {
             trackSelector = DefaultTrackSelector(this).apply {
                 setParameters(
@@ -179,14 +217,52 @@ class Video_payer : AppCompatActivity() {
             }
         }
 
-        // Create new player only if none exists
+        // Create new singleton player
         player = ExoPlayer.Builder(this)
             .setTrackSelector(trackSelector!!)
             .build()
             .also {
                 PlayerManager.setActivePlayer(it, this)
             }
+        
+        // Set up player listener
+        setupPlayerListener()
 
+        // Load the video
+        loadVideo(videoUrl)
+    }
+
+    private fun setupPlayerListener() {
+        player?.addListener(object : Player.Listener {
+            override fun onPlaybackStateChanged(playbackState: Int) {
+                when (playbackState) {
+                    Player.STATE_BUFFERING -> showLoading()
+                    Player.STATE_READY -> {
+                        hideLoading()
+                        updateDuration()
+                        updateQualityButton()
+                    }
+                    Player.STATE_ENDED -> {
+                        hideLoading()
+                        player?.seekTo(0)
+                        player?.pause()
+                    }
+                    Player.STATE_IDLE -> hideLoading()
+                }
+            }
+
+            override fun onIsPlayingChanged(isPlaying: Boolean) {
+                updatePlayPauseIcon(isPlaying)
+            }
+
+            override fun onPlayerError(error: PlaybackException) {
+                hideLoading()
+                showError("Playback error: ${error.message}")
+            }
+        })
+    }
+
+    private fun loadVideo(videoUrl: String) {
         val mediaItem = MediaItem.fromUri(Uri.parse(videoUrl))
         player?.apply {
             setMediaItem(mediaItem)
@@ -196,6 +272,37 @@ class Video_payer : AppCompatActivity() {
         }
 
         playerView?.player = player
+        playerView?.setOnClickListener { toggleControls() }
+
+        uiHandler.post(progressUpdateRunnable)
+        updatePlayPauseIcon(player?.isPlaying == true)
+    }
+
+    private fun loadNewVideo(videoUrl: String) {
+        // Stop current video completely before loading new one
+        player?.let { currentPlayer ->
+            currentPlayer.stop()
+            currentPlayer.clearMediaItems()
+        }
+        
+        // Request audio focus to ensure we have exclusive audio
+        audioManager?.requestAudioFocus(
+            null,
+            AudioManager.STREAM_MUSIC,
+            AudioManager.AUDIOFOCUS_GAIN
+        )
+        
+        // Reset playback state for new video
+        playbackPosition = 0L
+        currentWindow = 0
+        playWhenReady = true
+        
+        // Load the new video
+        loadVideo(videoUrl)
+        
+        // Show controls briefly to indicate new video loaded
+        showControls()
+        resetAutoHide()
     }
 
 
@@ -563,8 +670,10 @@ class Video_payer : AppCompatActivity() {
 
     public override fun onStart() {
         super.onStart()
-        if (Util.SDK_INT >= 24) {
-            initializePlayer()
+        // Player is already initialized in onCreate for singleTask mode
+        if (player != null) {
+            playerView?.player = player
+            uiHandler.post(progressUpdateRunnable)
         }
     }
 
@@ -575,9 +684,6 @@ class Video_payer : AppCompatActivity() {
             player?.pause()
             playWhenReady = true
         }
-        if (Util.SDK_INT < 24) {
-            releasePlayer()
-        }
     }
 
     public override fun onStop() {
@@ -586,16 +692,19 @@ class Video_payer : AppCompatActivity() {
             player?.pause()
             playWhenReady = true
         }
-        if (Util.SDK_INT >= 24) {
-            releasePlayer()
-        }
     }
 
     public override fun onResume() {
         super.onResume()
-        if (Util.SDK_INT < 24 || player == null) {
-            initializePlayer()
-        } else {
+        
+        // Ensure we have audio focus when resuming
+        audioManager?.requestAudioFocus(
+            null,
+            AudioManager.STREAM_MUSIC,
+            AudioManager.AUDIOFOCUS_GAIN
+        )
+        
+        if (player != null) {
             if (playWhenReady) {
                 player?.play()
             }
@@ -611,24 +720,24 @@ class Video_payer : AppCompatActivity() {
     }
 
     private fun releasePlayer() {
-        player?.let {
-            playbackPosition = it.currentPosition
-            currentWindow = it.currentMediaItemIndex
-            playWhenReady = it.playWhenReady
+        // Only release if this is the active player context
+        if (PlayerManager.getActiveContext() == this) {
+            player?.let {
+                playbackPosition = it.currentPosition
+                currentWindow = it.currentMediaItemIndex
+                playWhenReady = it.playWhenReady
 
-            // Stop the player before releasing
-            it.stop()
-            it.clearMediaItems()
-            
-            if (PlayerManager.getActivePlayer() == it) {
+                // Stop the player before releasing
+                it.stop()
+                it.clearMediaItems()
+                
                 PlayerManager.clearActivePlayer()
+                it.release()
             }
-
-            it.release()
+            
+            // Abandon audio focus when releasing player
+            audioManager?.abandonAudioFocus(null)
         }
-        
-        // Abandon audio focus when releasing player
-        audioManager?.abandonAudioFocus(null)
         
         player = null
         uiHandler.removeCallbacks(progressUpdateRunnable)
@@ -731,6 +840,8 @@ class Video_payer : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        // Only release player when activity is actually destroyed
+        // For singleTask mode, this only happens when the app is killed
         releasePlayer()
     }
 }

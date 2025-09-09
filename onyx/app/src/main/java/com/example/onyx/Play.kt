@@ -111,12 +111,18 @@ class Play : AppCompatActivity() {
 
         Log.d("DEBUG_TAG_PlayActivity", "Video URL detected: $videoUrl")
 
+        /*
         val intent = Intent(this, Video_payer::class.java).apply {
             putExtra("video_url", videoUrl)
             addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
             //addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
         startActivity(intent)
+
+         */
+
+        // Use the PlayerManager to handle video playback
+        PlayerManager.playVideoExternally(this, videoUrl)
 
         finish() // optional
     }
