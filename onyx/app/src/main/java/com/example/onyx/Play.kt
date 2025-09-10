@@ -1,20 +1,22 @@
 package com.example.onyx
 
-import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
+import android.util.Log
+import android.view.MotionEvent
 import android.webkit.*
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
+import androidx.annotation.OptIn
 import androidx.appcompat.app.AppCompatActivity
-import android.util.Log
-import android.view.MotionEvent
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import androidx.lifecycle.lifecycleScope
+import androidx.media3.common.util.UnstableApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class Play : AppCompatActivity() {
+
+    private var isVideoLaunching = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -25,8 +27,6 @@ class Play : AppCompatActivity() {
         val seasonNo = intent.getStringExtra("seasonNo")
         val episodeNo = intent.getStringExtra("episodeNo")
 
-
-
         val webView = findViewById<WebView>(R.id.webView)
 
         // Setup WebView
@@ -35,13 +35,10 @@ class Play : AppCompatActivity() {
 
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
-                // Wait for page to load completely, then simulate click
-
-                // Delay the click simulation to ensure everything is rendered
+                // Wait for page to render, then simulate a few center clicks
                 webView.postDelayed({
-                    //simulateCenterClick(webView)
-                    simulateRepeatedCenterClicks(webView, repeatCount = 500, intervalMs = 1000L)
-                }, 10) // 2 second delay to ensure page is fully rendered
+                    simulateRepeatedCenterClicks(webView, repeatCount = 3, intervalMs = 1200L)
+                }, 1500)
             }
 
             override fun shouldInterceptRequest(
@@ -50,15 +47,12 @@ class Play : AppCompatActivity() {
             ): WebResourceResponse? {
                 val url = request?.url.toString()
 
-                // Detect video URLs
-                if (url.endsWith(".mp4") || url.endsWith(".m3u8") ||
-                    url.endsWith(".webm") || url.endsWith(".mov")) {
-
+                if (url.endsWith(".mp4") || url.endsWith(".m3u8")
+                    || url.endsWith(".webm") || url.endsWith(".mov")
+                ) {
                     runOnUiThread {
                         playVideoExternally(url)
                     }
-                    // Block inside WebView (prevent duplicate load)
-                    //return WebResourceResponse("text/plain", "utf-8", null)
                 }
 
                 return super.shouldInterceptRequest(view, request)
@@ -82,46 +76,51 @@ class Play : AppCompatActivity() {
         settings.javaScriptEnabled = true
         settings.domStorageEnabled = true
         settings.mediaPlaybackRequiresUserGesture = false
-        settings.setSupportMultipleWindows(false) // block popups
+        settings.setSupportMultipleWindows(false)
+        settings.userAgentString = WebSettings.getDefaultUserAgent(this)
 
-        // Load movie embed URL
-        if(type=="movie") {
-            webView.loadUrl("https://vidsrc.to/embed/${type}/${imdbCode}")
-            Log.e("Play Data 5M", "https://vidsrc.to/embed/${type}/${imdbCode}")
-        } else{
-            webView.loadUrl("https://vidsrc.to/embed/tv/${imdbCode}/${seasonNo}/${episodeNo}")
-            Log.e("Play Data 5M","https://vidsrc.to/embed/tv/${imdbCode}/${seasonNo}/${episodeNo}")
+        // Load movie or episode URL
+        if (type == "movie") {
+            val url = "https://vidsrc.to/embed/$type/$imdbCode"
+            webView.loadUrl(url)
+            Log.e("Play Data 5M", url)
+        } else {
+            val url = "https://vidsrc.to/embed/tv/$imdbCode/$seasonNo/$episodeNo"
+            webView.loadUrl(url)
+            Log.e("Play Data 5M", url)
         }
     }
 
-
-
-    private var isVideoLaunching = false
-
+    @OptIn(UnstableApi::class)
     private fun playVideoExternally(videoUrl: String) {
-
         if (isVideoLaunching) {
             Log.d("DEBUG_TAG_PlayActivity", "Video launch ignored: already launching.")
             return
         }
         isVideoLaunching = true
+        Log.d("DEBUG_TAG_PlayActivity", "Launching external video: $videoUrl")
 
-        Log.d("DEBUG_TAG_PlayActivity", "Video URL detected: $videoUrl")
+        try {
+            PlayerManager.playVideoExternally(this, videoUrl)
 
-        // Use singleton PlayerManager to launch video player
-        PlayerManager.playVideoExternally(this, videoUrl)
-
-        // Finish this activity to prevent multiple instances
-        finish()
+            // Finish safely after short delay
+            lifecycleScope.launch {
+                delay(500)
+                finish()
+            }
+        } catch (e: Exception) {
+            isVideoLaunching = false
+            Toast.makeText(this, "Failed to launch player", Toast.LENGTH_SHORT).show()
+            Log.e("DEBUG_TAG_PlayActivity", "Error launching video", e)
+        }
     }
-
 
     private fun simulateRepeatedCenterClicks(
         webView: WebView,
         repeatCount: Int,
-        intervalMs: Long = 500L // delay between clicks
+        intervalMs: Long = 500L
     ) {
-        CoroutineScope(Dispatchers.Main).launch {
+        lifecycleScope.launch {
             val centerX = webView.width / 2
             val centerY = webView.height / 2
 
@@ -130,20 +129,12 @@ class Play : AppCompatActivity() {
                 val eventTime = downTime + 100
 
                 val downEvent = MotionEvent.obtain(
-                    downTime,
-                    eventTime,
-                    MotionEvent.ACTION_DOWN,
-                    centerX.toFloat(),
-                    centerY.toFloat(),
-                    0
+                    downTime, eventTime,
+                    MotionEvent.ACTION_DOWN, centerX.toFloat(), centerY.toFloat(), 0
                 )
                 val upEvent = MotionEvent.obtain(
-                    downTime,
-                    eventTime + 50,
-                    MotionEvent.ACTION_UP,
-                    centerX.toFloat(),
-                    centerY.toFloat(),
-                    0
+                    downTime, eventTime + 50,
+                    MotionEvent.ACTION_UP, centerX.toFloat(), centerY.toFloat(), 0
                 )
 
                 webView.dispatchTouchEvent(downEvent)
@@ -154,10 +145,8 @@ class Play : AppCompatActivity() {
 
                 Log.d("DEBUG_TAG_Click", "Simulated click #${index + 1} at ($centerX, $centerY)")
 
-                delay(intervalMs) // wait before next click
+                delay(intervalMs)
             }
         }
     }
-
-
 }
