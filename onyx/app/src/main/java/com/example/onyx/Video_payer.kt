@@ -1,847 +1,499 @@
 package com.example.onyx
 
 import android.annotation.SuppressLint
-import android.app.AlertDialog
-import android.content.Context
-import android.content.Intent
-import android.media.AudioManager
-import android.net.Uri
+import android.content.pm.ActivityInfo
+import android.graphics.Color
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.view.KeyEvent
+import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
-import android.widget.ArrayAdapter
-import android.widget.ImageButton
-import android.widget.ListView
-import android.widget.ProgressBar
-import android.widget.SeekBar
-import android.widget.TextView
-import androidx.activity.OnBackPressedCallback
+import android.view.animation.AlphaAnimation
+import android.view.animation.Animation
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.isVisible
-import com.google.android.exoplayer2.ExoPlayer
-import com.google.android.exoplayer2.MediaItem
-import com.google.android.exoplayer2.Player
-import com.google.android.exoplayer2.PlaybackException
-import com.google.android.exoplayer2.ui.StyledPlayerView
-import com.google.android.exoplayer2.ui.TrackSelectionDialogBuilder
-import com.google.android.exoplayer2.util.Util
-import com.google.android.exoplayer2.C
-import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
-import com.google.android.exoplayer2.trackselection.TrackSelectionParameters
+import androidx.media3.common.MediaItem
+import androidx.media3.common.Player
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.ui.PlayerView
+import androidx.media3.common.util.UnstableApi
+import java.text.SimpleDateFormat
+import java.util.*
 
-// Singleton to manage active player instance
-object PlayerManager {
-    private var activePlayer: ExoPlayer? = null
-    private var activeContext: Context? = null
-
-    fun setActivePlayer(player: ExoPlayer, context: Context) {
-        // Stop and release any previously active player
-        activePlayer?.let { existingPlayer ->
-            existingPlayer.stop()
-            existingPlayer.clearMediaItems()
-            existingPlayer.release()
-        }
-        activePlayer = player
-        activeContext = context
-    }
+@UnstableApi
+class Video_payer : AppCompatActivity(), Player.Listener {
     
-    fun forceStopAllAudio() {
-        // Force stop any existing player
-        activePlayer?.let { existingPlayer ->
-            existingPlayer.stop()
-            existingPlayer.clearMediaItems()
-        }
-    }
-
-    fun clearActivePlayer() {
-        activePlayer?.let { existingPlayer ->
-            existingPlayer.stop()
-            existingPlayer.clearMediaItems()
-            existingPlayer.release()
-        }
-        activePlayer = null
-        activeContext = null
-    }
-
-    fun getActivePlayer(): ExoPlayer? = activePlayer
-    fun getActiveContext(): Context? = activeContext
+    private lateinit var playerView: PlayerView
+    private lateinit var progressBar: ProgressBar
+    private lateinit var overlayContainer: View
+    private lateinit var topBar: LinearLayout
+    private lateinit var bottomBar: LinearLayout
+    private lateinit var centerOverlay: FrameLayout
     
-    // Helper method to launch video player with Netflix/YouTube style behavior
-    fun playVideoExternally(context: Context, videoUrl: String) {
-        // Force stop any existing audio before launching new video
-        forceStopAllAudio()
-        
-        val intent = Intent(context, Video_payer::class.java).apply {
-            putExtra("video_url", videoUrl)
-            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
-        }
-        context.startActivity(intent)
-    }
-}
-
-class Video_payer : AppCompatActivity() {
-
-    private var player: ExoPlayer? = null
-    private var playerView: StyledPlayerView? = null
-    private var progressBar: ProgressBar? = null
-    private var overlayContainer: View? = null
-    private var bottomBar: View? = null
-    private var centerOverlay: View? = null
-    private var playPauseButton: ImageButton? = null
-    private var rewindButton: ImageButton? = null
-    private var fastForwardButton: ImageButton? = null
-    private var speedButton: ImageButton? = null
-    private var muteButton: ImageButton? = null
-    private var subtitlesButton: ImageButton? = null
-    private var qualityButton: TextView? = null
-    private var refreshButton: ImageButton? = null
-    private var settingsButton: ImageButton? = null
-    private var closeButton: ImageButton? = null
-    private var seekBar: SeekBar? = null
-    private var currentTimeText: TextView? = null
-    private var durationText: TextView? = null
-    private var playWhenReady = true
-    private var currentWindow = 0
-    private var playbackPosition = 0L
-    private var previousVolume = 1f
-    private var controlsVisible = false
-    private var isSeeking = false
-    private val uiHandler = Handler(Looper.getMainLooper())
-    private val controlsAutoHideRunnable = Runnable { hideControls() }
-    private val progressUpdateRunnable = object : Runnable {
-        override fun run() {
-            updateProgress()
-            uiHandler.postDelayed(this, 500)
-        }
-    }
-    private var trackSelector: DefaultTrackSelector? = null
-    private var currentSpeed = 1.0f
-    private var currentQuality = "Auto"
+    // Control buttons
+    private lateinit var btnPlayPause: ImageButton
+    private lateinit var btnRewind: ImageButton
+    private lateinit var btnFastForward: ImageButton
+    private lateinit var btnMute: ImageButton
+    private lateinit var btnSpeed: ImageButton
+    private lateinit var btnSubtitles: ImageButton
+    private lateinit var btnQuality: TextView
+    private lateinit var btnRefresh: ImageButton
+    private lateinit var btnSettings: ImageButton
+    private lateinit var btnClose: ImageButton
+    private lateinit var btnFullscreen: ImageButton
+    
+    // Text views
+    private lateinit var txtVideoTitle: TextView
+    
+    // Seek bar and time displays
+    private lateinit var seekBar: SeekBar
+    private lateinit var txtCurrentTime: TextView
+    private lateinit var txtDuration: TextView
+    
+    private var exoPlayer: ExoPlayer? = null
+    private var isControlsVisible = true
+    private var isFullscreen = false
     private var isMuted = false
-    private var subtitlesEnabled = false
-    private var audioManager: AudioManager? = null
-
-    // Speed options
-    private val speedOptions = listOf(0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 2.0f)
-    private val speedLabels = listOf("0.5x", "0.75x", "1x", "1.25x", "1.5x", "2x")
+    private var currentSpeed = 1.0f
+    private var controlsHandler = Handler(Looper.getMainLooper())
+    private var controlsRunnable: Runnable? = null
+    private var lastTapTime = 0L
+    private var tapCount = 0
+    
+    // Playback speeds
+    private val playbackSpeeds = listOf(0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 2.0f)
+    private var currentSpeedIndex = 2 // Default to 1.0x
+    
+    // Quality options
+    private val qualityOptions = listOf("Auto", "1080p", "720p", "480p", "360p", "240p")
+    private var currentQualityIndex = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_video_payer)
-        
+
         // Prevent screen from sleeping while this Activity is visible
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        
-        // Initialize audio manager for focus management
-        audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
 
         initializeViews()
+        setupPlayer()
         setupControls()
-        setupDpadNavigation()
-        setupBackPressHandler()
-        hideSystemUi()
-        
-        // Initialize player on first creation
-        initializePlayer()
+        setupGestures()
     }
-
-    override fun onNewIntent(intent: Intent) {
-        super.onNewIntent(intent)
-        setIntent(intent)
-        
-        // Handle new video URL when activity is reused
-        if (intent.getStringExtra("video_url") != null) {
-            // Force stop any existing audio first
-            PlayerManager.forceStopAllAudio()
-            loadNewVideo(intent.getStringExtra("video_url")!!)
-        }
-    }
-
+    
     private fun initializeViews() {
         playerView = findViewById(R.id.player_view)
         progressBar = findViewById(R.id.progress_bar)
         overlayContainer = findViewById(R.id.overlay_container)
+        topBar = findViewById(R.id.top_bar)
         bottomBar = findViewById(R.id.bottom_bar)
         centerOverlay = findViewById(R.id.center_overlay)
-        playPauseButton = findViewById(R.id.btn_play_pause)
-        rewindButton = findViewById(R.id.btn_rewind)
-        fastForwardButton = findViewById(R.id.btn_fast_forward)
-        speedButton = findViewById(R.id.btn_speed)
-        muteButton = findViewById(R.id.btn_mute)
-        subtitlesButton = findViewById(R.id.btn_subtitles)
-        qualityButton = findViewById(R.id.btn_quality)
-        refreshButton = findViewById(R.id.btn_refresh)
-        settingsButton = findViewById(R.id.btn_settings)
-        closeButton = findViewById(R.id.btn_close)
+        
+        // Control buttons
+        btnPlayPause = findViewById(R.id.btn_play_pause)
+        btnRewind = findViewById(R.id.btn_rewind)
+        btnFastForward = findViewById(R.id.btn_fast_forward)
+        btnMute = findViewById(R.id.btn_mute)
+        btnSpeed = findViewById(R.id.btn_speed)
+        btnSubtitles = findViewById(R.id.btn_subtitles)
+        btnQuality = findViewById(R.id.btn_quality)
+        btnRefresh = findViewById(R.id.btn_refresh)
+        btnSettings = findViewById(R.id.btn_settings)
+        btnClose = findViewById(R.id.btn_close)
+        btnFullscreen = findViewById(R.id.btn_fullscreen)
+        
+        // Text views
+        txtVideoTitle = findViewById(R.id.txt_video_title)
+        
+        // Seek bar and time displays
         seekBar = findViewById(R.id.seek_bar)
-        currentTimeText = findViewById(R.id.txt_current_time)
-        durationText = findViewById(R.id.txt_duration)
+        txtCurrentTime = findViewById(R.id.txt_current_time)
+        txtDuration = findViewById(R.id.txt_duration)
     }
-
-    private fun setupBackPressHandler() {
-        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                if (controlsVisible) {
-                    hideControls()
-                } else {
-                finish()
-                }
+    
+    private fun setupPlayer() {
+        val videoUrl = intent.getStringExtra("video_url")
+        if (videoUrl != null) {
+            exoPlayer = PlayerManager.initializePlayer(this, videoUrl)
+            exoPlayer?.let { player ->
+                playerView.player = player
+                player.addListener(this)
+                updatePlayPauseButton()
+                updateMuteButton()
+                updateSpeedButton()
+                updateQualityButton()
             }
-        })
-    }
-
-    private fun initializePlayer() {
-        val videoUrl = intent.getStringExtra("video_url") ?: return
-
-        // ALWAYS clear any existing player first to prevent background audio
-        PlayerManager.clearActivePlayer()
-        
-        // Request audio focus to ensure we have exclusive audio
-        audioManager?.requestAudioFocus(
-            null,
-            AudioManager.STREAM_MUSIC,
-            AudioManager.AUDIOFOCUS_GAIN
-        )
-        
-        if (trackSelector == null) {
-            trackSelector = DefaultTrackSelector(this).apply {
-                setParameters(
-                    parameters
-                        .buildUpon()
-                        .setForceHighestSupportedBitrate(true)
-                        .build()
-                )
-            }
-        }
-
-        // Create new singleton player
-        player = ExoPlayer.Builder(this)
-            .setTrackSelector(trackSelector!!)
-            .build()
-            .also {
-                PlayerManager.setActivePlayer(it, this)
-            }
-        
-        // Set up player listener
-        setupPlayerListener()
-
-        // Load the video
-        loadVideo(videoUrl)
-    }
-
-    private fun setupPlayerListener() {
-        player?.addListener(object : Player.Listener {
-            override fun onPlaybackStateChanged(playbackState: Int) {
-                when (playbackState) {
-                    Player.STATE_BUFFERING -> showLoading()
-                    Player.STATE_READY -> {
-                        hideLoading()
-                        updateDuration()
-                        updateQualityButton()
-                    }
-                    Player.STATE_ENDED -> {
-                        hideLoading()
-                        player?.seekTo(0)
-                        player?.pause()
-                    }
-                    Player.STATE_IDLE -> hideLoading()
-                }
-            }
-
-            override fun onIsPlayingChanged(isPlaying: Boolean) {
-                updatePlayPauseIcon(isPlaying)
-            }
-
-            override fun onPlayerError(error: PlaybackException) {
-                hideLoading()
-                showError("Playback error: ${error.message}")
-            }
-        })
-    }
-
-    private fun loadVideo(videoUrl: String) {
-        val mediaItem = MediaItem.fromUri(Uri.parse(videoUrl))
-        player?.apply {
-            setMediaItem(mediaItem)
-            playWhenReady = this@Video_payer.playWhenReady
-            seekTo(currentWindow, playbackPosition)
-            prepare()
-        }
-
-        playerView?.player = player
-        playerView?.setOnClickListener { toggleControls() }
-
-        uiHandler.post(progressUpdateRunnable)
-        updatePlayPauseIcon(player?.isPlaying == true)
-    }
-
-    private fun loadNewVideo(videoUrl: String) {
-        // Stop current video completely before loading new one
-        player?.let { currentPlayer ->
-            currentPlayer.stop()
-            currentPlayer.clearMediaItems()
-        }
-        
-        // Request audio focus to ensure we have exclusive audio
-        audioManager?.requestAudioFocus(
-            null,
-            AudioManager.STREAM_MUSIC,
-            AudioManager.AUDIOFOCUS_GAIN
-        )
-        
-        // Reset playback state for new video
-        playbackPosition = 0L
-        currentWindow = 0
-        playWhenReady = true
-        
-        // Load the new video
-        loadVideo(videoUrl)
-        
-        // Show controls briefly to indicate new video loaded
-        showControls()
-        resetAutoHide()
-    }
-
-
-    @SuppressLint("InlinedApi")
-    private fun hideSystemUi() {
-        playerView?.systemUiVisibility = (View.SYSTEM_UI_FLAG_LOW_PROFILE
-                or View.SYSTEM_UI_FLAG_FULLSCREEN
-                or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION)
-    }
-
-    private fun showLoading() {
-        progressBar?.isVisible = true
-    }
-
-    private fun hideLoading() {
-        progressBar?.isVisible = false
-    }
-
-    private fun showError(message: String) {
-        progressBar?.isVisible = false
-        // You could show a toast or error dialog here
-    }
-
-    private fun setupControls() {
-        playPauseButton?.setOnClickListener {
-            player?.let { p ->
-                if (p.isPlaying) p.pause() else p.play()
-                showCenterFeedback(if (p.isPlaying) android.R.drawable.ic_media_play else android.R.drawable.ic_media_pause, "")
-                resetAutoHide()
-            }
-        }
-
-        rewindButton?.setOnClickListener {
-            player?.let { p ->
-                p.seekTo((p.currentPosition - 10_000L).coerceAtLeast(0L))
-                showCenterFeedback(android.R.drawable.ic_media_rew, "-10s")
-                resetAutoHide()
-            }
-        }
-
-        fastForwardButton?.setOnClickListener {
-            player?.let { p ->
-                val duration = if (p.duration > 0) p.duration else Long.MAX_VALUE
-                p.seekTo((p.currentPosition + 10_000L).coerceAtMost(duration))
-                showCenterFeedback(android.R.drawable.ic_media_ff, "+10s")
-                resetAutoHide()
-            }
-        }
-
-        speedButton?.setOnClickListener {
-            showSpeedDialog()
-            resetAutoHide()
-        }
-
-        muteButton?.setOnClickListener {
-            toggleMute()
-            resetAutoHide()
-        }
-
-        subtitlesButton?.setOnClickListener {
-            toggleSubtitles()
-            resetAutoHide()
-        }
-
-        qualityButton?.setOnClickListener {
-            showQualityDialog()
-            resetAutoHide()
-        }
-
-        refreshButton?.setOnClickListener {
-            refreshVideo()
-            resetAutoHide()
-        }
-
-        settingsButton?.setOnClickListener {
-            showSettingsDialog()
-            resetAutoHide()
-        }
-
-        closeButton?.setOnClickListener {
+        } else {
+            Toast.makeText(this, "No video URL provided", Toast.LENGTH_SHORT).show()
             finish()
         }
-
-        seekBar?.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+    }
+    
+    private fun setupControls() {
+        // Play/Pause button
+        btnPlayPause.setOnClickListener {
+            togglePlayPause()
+        }
+        
+        // Rewind button (10 seconds)
+        btnRewind.setOnClickListener {
+            seekRelative(-10000)
+        }
+        
+        // Fast forward button (10 seconds)
+        btnFastForward.setOnClickListener {
+            seekRelative(10000)
+        }
+        
+        // Mute button
+        btnMute.setOnClickListener {
+            toggleMute()
+        }
+        
+        // Speed button
+        btnSpeed.setOnClickListener {
+            showSpeedDialog()
+        }
+        
+        // Quality button
+        btnQuality.setOnClickListener {
+            showQualityDialog()
+        }
+        
+        // Refresh button
+        btnRefresh.setOnClickListener {
+            refreshVideo()
+        }
+        
+        // Settings button
+        btnSettings.setOnClickListener {
+            showSettingsDialog()
+        }
+        
+        // Close button
+        btnClose.setOnClickListener {
+            finish()
+        }
+        
+        // Fullscreen button
+        btnFullscreen.setOnClickListener {
+            toggleFullscreen()
+        }
+        
+        // Seek bar
+        seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 if (fromUser) {
-                    val duration = player?.duration ?: 0L
-                    if (duration > 0L) {
-                        val position = duration * progress / 1000L
-                        currentTimeText?.text = formatTime(position)
-                    }
+                    val duration = exoPlayer?.duration ?: 0L
+                    val position = (progress * duration / 1000).toLong()
+                    txtCurrentTime.text = formatTime(position)
                 }
             }
-
+            
             override fun onStartTrackingTouch(seekBar: SeekBar?) {
-                isSeeking = true
-                resetAutoHide()
+                controlsHandler.removeCallbacks(controlsRunnable!!)
             }
-
+            
             override fun onStopTrackingTouch(seekBar: SeekBar?) {
-                isSeeking = false
-                val duration = player?.duration ?: 0L
-                if (duration > 0L && seekBar != null) {
-                    val position = duration * seekBar.progress / 1000L
-                    player?.seekTo(position)
-                }
-                resetAutoHide()
+                val duration = exoPlayer?.duration ?: 0L
+                val position = (seekBar?.progress ?: 0) * duration / 1000
+                exoPlayer?.seekTo(position)
+                showControlsTemporarily()
             }
         })
     }
-
-    private fun showSpeedDialog() {
-        val builder = AlertDialog.Builder(this)
-        builder.setTitle("Playback Speed")
-        
-        val adapter = ArrayAdapter(this, android.R.layout.simple_list_item_single_choice, speedLabels)
-        val listView = ListView(this)
-        listView.adapter = adapter
-        listView.choiceMode = ListView.CHOICE_MODE_SINGLE
-        
-        // Set current selection
-        val currentIndex = speedOptions.indexOf(currentSpeed)
-        if (currentIndex >= 0) {
-            listView.setItemChecked(currentIndex, true)
-        }
-        
-        builder.setView(listView)
-        builder.setPositiveButton("OK") { _, _ ->
-            val selectedIndex = listView.checkedItemPosition
-            if (selectedIndex >= 0 && selectedIndex < speedOptions.size) {
-                setPlaybackSpeed(speedOptions[selectedIndex])
+    
+    private fun setupGestures() {
+        playerView.setOnTouchListener { _, event ->
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    val currentTime = System.currentTimeMillis()
+                    if (currentTime - lastTapTime < 300) {
+                        tapCount++
+                        if (tapCount == 2) {
+                            // Double tap - seek forward/backward
+                            val x = event.x
+                            val width = playerView.width
+                            if (x < width / 2) {
+                                seekRelative(-10000) // Seek back 10 seconds
+                                showSeekFeedback("-10s")
+                            } else {
+                                seekRelative(10000) // Seek forward 10 seconds
+                                showSeekFeedback("+10s")
+                            }
+                            tapCount = 0
+                        }
+                    } else {
+                        tapCount = 1
+                    }
+                    lastTapTime = currentTime
+                }
+                MotionEvent.ACTION_UP -> {
+                    if (tapCount == 1) {
+                        // Single tap - toggle controls
+                        toggleControls()
+                    }
+                }
             }
+            true
         }
-        builder.setNegativeButton("Cancel", null)
-        builder.show()
     }
-
-    private fun setPlaybackSpeed(speed: Float) {
-        currentSpeed = speed
-        player?.setPlaybackSpeed(speed)
-        speedButton?.contentDescription = "${speed}x"
-        showCenterFeedback(android.R.drawable.ic_popup_sync, "${speed}x Speed")
-    }
-
-    private fun toggleMute() {
-        player?.let { p ->
-            if (isMuted) {
-                p.volume = if (previousVolume <= 0f) 1f else previousVolume
-                isMuted = false
-                muteButton?.setImageResource(android.R.drawable.ic_lock_silent_mode_off)
-                showCenterFeedback(android.R.drawable.ic_lock_silent_mode_off, "Unmuted")
+    
+    private fun togglePlayPause() {
+        exoPlayer?.let { player ->
+            if (player.isPlaying) {
+                player.pause()
             } else {
-                previousVolume = p.volume
-                p.volume = 0f
-                isMuted = true
-                muteButton?.setImageResource(android.R.drawable.ic_lock_silent_mode)
-                showCenterFeedback(android.R.drawable.ic_lock_silent_mode, "Muted")
+                player.play()
             }
         }
     }
-
-    private fun toggleSubtitles() {
-        subtitlesEnabled = !subtitlesEnabled
-        if (subtitlesEnabled) {
-            showCaptionsDialog()
-        } else {
-            // Disable subtitles
-            trackSelector?.parameters?.buildUpon()
-                ?.setTrackTypeDisabled(C.TRACK_TYPE_TEXT, true)
-                ?.build()?.let {
-                    trackSelector?.setParameters(
-                        it
-                    )
-                }
-            subtitlesButton?.setImageResource(android.R.drawable.ic_menu_agenda)
-            showCenterFeedback(android.R.drawable.ic_menu_agenda, "Subtitles Off")
+    
+    private fun seekRelative(offsetMs: Long) {
+        exoPlayer?.let { player ->
+            val currentPosition = player.currentPosition
+            val newPosition = (currentPosition + offsetMs).coerceAtLeast(0)
+            player.seekTo(newPosition)
         }
     }
-
-    private fun showCaptionsDialog() {
-        val player = player ?: return
-        val builder = TrackSelectionDialogBuilder(
-            this,
-            "Subtitles",
-            player,
-            C.TRACK_TYPE_TEXT
-        )
-        builder.setAllowMultipleOverrides(false)
-            .setShowDisableOption(true)
-            .build()
+    
+    private fun toggleMute() {
+        exoPlayer?.let { player ->
+            isMuted = !isMuted
+            player.volume = if (isMuted) 0f else 1f
+            updateMuteButton()
+        }
+    }
+    
+    private fun showSpeedDialog() {
+        val speedOptions = arrayOf("0.5x", "0.75x", "1.0x", "1.25x", "1.5x", "2.0x")
+        val builder = android.app.AlertDialog.Builder(this)
+        builder.setTitle("Playback Speed")
+            .setSingleChoiceItems(speedOptions, currentSpeedIndex) { _, which ->
+                currentSpeedIndex = which
+                currentSpeed = playbackSpeeds[which]
+                exoPlayer?.setPlaybackSpeed(currentSpeed)
+                updateSpeedButton()
+            }
+            .setPositiveButton("OK", null)
             .show()
     }
-
+    
     private fun showQualityDialog() {
-        val selector = trackSelector ?: return
-        val player = player ?: return
-        
-        // Use TrackSelectionDialogBuilder for quality selection
-        val builder = TrackSelectionDialogBuilder(
-            this,
-            "Video Quality",
-            player,
-            C.TRACK_TYPE_VIDEO
-        )
-        builder.setAllowMultipleOverrides(false)
-            .setShowDisableOption(true)
-            .build()
+        val builder = android.app.AlertDialog.Builder(this)
+        builder.setTitle("Video Quality")
+            .setSingleChoiceItems(qualityOptions.toTypedArray(), currentQualityIndex) { _, which ->
+                currentQualityIndex = which
+                updateQualityButton()
+                // Note: Quality change would require reinitializing the player with different track selection
+            }
+            .setPositiveButton("OK", null)
             .show()
     }
-
-    private fun setVideoQuality(quality: String) {
-        currentQuality = quality
-        qualityButton?.text = quality
-        showCenterFeedback(android.R.drawable.ic_popup_sync, "Quality: $quality")
-    }
-
-    private fun updateQualityButton() {
-        qualityButton?.text = currentQuality
-    }
-
-    private fun refreshVideo() {
-        player?.prepare()
-        showCenterFeedback(android.R.drawable.ic_popup_sync, "Refreshed")
-    }
-
+    
     private fun showSettingsDialog() {
-        val builder = AlertDialog.Builder(this)
+        val settings = arrayOf("Subtitles", "Audio Track", "Video Info")
+        val builder = android.app.AlertDialog.Builder(this)
         builder.setTitle("Settings")
-        builder.setMessage("Additional playback settings will be available here.")
-        builder.setPositiveButton("OK", null)
-        builder.show()
+            .setItems(settings) { _, which ->
+                when (which) {
+                    0 -> Toast.makeText(this, "Subtitles not available", Toast.LENGTH_SHORT).show()
+                    1 -> Toast.makeText(this, "Audio track selection not available", Toast.LENGTH_SHORT).show()
+                    2 -> showVideoInfo()
+                }
+            }
+            .show()
     }
-
+    
+    private fun showVideoInfo() {
+        exoPlayer?.let { player ->
+            val duration = formatTime(player.duration)
+            val currentPos = formatTime(player.currentPosition)
+            val info = "Duration: $duration\nCurrent: $currentPos\nSpeed: ${currentSpeed}x"
+            Toast.makeText(this, info, Toast.LENGTH_LONG).show()
+        }
+    }
+    
+    private fun refreshVideo() {
+        val videoUrl = intent.getStringExtra("video_url")
+        if (videoUrl != null) {
+            exoPlayer?.let { player ->
+                player.stop()
+                player.clearMediaItems()
+                player.setMediaItem(MediaItem.fromUri(videoUrl))
+                player.prepare()
+                player.play()
+            }
+        }
+    }
+    
     private fun toggleControls() {
-        if (controlsVisible) hideControls() else showControls()
-    }
-
-    private fun showControls() {
-        controlsVisible = true
-        bottomBar?.isVisible = true
-        playPauseButton?.requestFocus()
-        resetAutoHide()
-    }
-
-    private fun hideControls() {
-        controlsVisible = false
-        bottomBar?.isVisible = false
-        uiHandler.removeCallbacks(controlsAutoHideRunnable)
-    }
-
-    private fun resetAutoHide() {
-        uiHandler.removeCallbacks(controlsAutoHideRunnable)
-        uiHandler.postDelayed(controlsAutoHideRunnable, 3000)
-    }
-
-    private fun updateProgress() {
-        if (isSeeking) return
-
-        val p = player ?: return
-        val duration = p.duration
-        val position = p.currentPosition
-        if (duration > 0L) {
-            val progress = (position * 1000L / duration).toInt().coerceIn(0, 1000)
-            seekBar?.progress = progress
-            currentTimeText?.text = formatTime(position)
-            durationText?.text = formatTime(duration)
+        if (isControlsVisible) {
+            hideControls()
         } else {
-            seekBar?.progress = 0
-            currentTimeText?.text = formatTime(position)
-        }
-    }
-
-    private fun updateDuration() {
-        val duration = player?.duration ?: 0L
-        if (duration > 0L) {
-            durationText?.text = formatTime(duration)
-        }
-    }
-
-    private fun updatePlayPauseIcon(isPlaying: Boolean) {
-        playPauseButton?.setImageResource(
-            if (isPlaying) android.R.drawable.ic_media_pause else android.R.drawable.ic_media_play
-        )
-    }
-
-    private fun setupDpadNavigation() {
-        // Ensure all controls are focusable for TV
-        playPauseButton?.isFocusable = true
-        rewindButton?.isFocusable = true
-        fastForwardButton?.isFocusable = true
-        speedButton?.isFocusable = true
-        muteButton?.isFocusable = true
-        subtitlesButton?.isFocusable = true
-        qualityButton?.isFocusable = true
-        refreshButton?.isFocusable = true
-        settingsButton?.isFocusable = true
-        closeButton?.isFocusable = true
-        seekBar?.isFocusable = true
-
-        // Set up focus chain
-        playPauseButton?.nextFocusRightId = R.id.btn_speed
-        speedButton?.nextFocusLeftId = R.id.btn_play_pause
-        speedButton?.nextFocusRightId = R.id.btn_mute
-        muteButton?.nextFocusLeftId = R.id.btn_speed
-        muteButton?.nextFocusRightId = R.id.btn_subtitles
-        subtitlesButton?.nextFocusLeftId = R.id.btn_mute
-        subtitlesButton?.nextFocusRightId = R.id.btn_quality
-        qualityButton?.nextFocusLeftId = R.id.btn_subtitles
-        qualityButton?.nextFocusRightId = R.id.btn_refresh
-        refreshButton?.nextFocusLeftId = R.id.btn_quality
-        refreshButton?.nextFocusRightId = R.id.btn_settings
-        settingsButton?.nextFocusLeftId = R.id.btn_refresh
-        settingsButton?.nextFocusRightId = R.id.btn_close
-        closeButton?.nextFocusLeftId = R.id.btn_settings
-
-        // Add focus change listeners
-        val focusChangeListener = View.OnFocusChangeListener { v, hasFocus ->
-            if (v is ImageButton || v is TextView) {
-                v.scaleX = if (hasFocus) 1.01f else 1.0f
-                v.scaleY = if (hasFocus) 1.01f else 1.0f
-            }
-        }
-
-        playPauseButton?.setOnFocusChangeListener(focusChangeListener)
-        rewindButton?.setOnFocusChangeListener(focusChangeListener)
-        fastForwardButton?.setOnFocusChangeListener(focusChangeListener)
-        speedButton?.setOnFocusChangeListener(focusChangeListener)
-        muteButton?.setOnFocusChangeListener(focusChangeListener)
-        subtitlesButton?.setOnFocusChangeListener(focusChangeListener)
-        qualityButton?.setOnFocusChangeListener(focusChangeListener)
-        refreshButton?.setOnFocusChangeListener(focusChangeListener)
-        settingsButton?.setOnFocusChangeListener(focusChangeListener)
-        closeButton?.setOnFocusChangeListener(focusChangeListener)
-        seekBar?.setOnFocusChangeListener { v, hasFocus ->
-            v.scaleX = if (hasFocus) 1.05f else 1.0f
-            v.scaleY = if (hasFocus) 1.05f else 1.0f
-        }
-    }
-
-    private fun showCenterFeedback(iconRes: Int, text: String) {
-        centerOverlay?.apply {
-            alpha = 0f
-            isVisible = true
-            animate().alpha(1f).setDuration(100).withEndAction {
-                uiHandler.postDelayed({
-                    centerOverlay?.animate()?.alpha(0f)?.setDuration(150)?.withEndAction {
-                        centerOverlay?.isVisible = false
-                    }?.start()
-                }, 700)
-            }.start()
-        }
-    }
-
-    private fun formatTime(millis: Long): String {
-        var seconds = millis / 1000
-        val hours = seconds / 3600
-        seconds %= 3600
-        val minutes = seconds / 60
-        seconds %= 60
-        return if (hours > 0) String.format("%d:%02d:%02d", hours, minutes, seconds) else String.format("%02d:%02d", minutes, seconds)
-    }
-
-    public override fun onStart() {
-        super.onStart()
-        // Player is already initialized in onCreate for singleTask mode
-        if (player != null) {
-            playerView?.player = player
-            uiHandler.post(progressUpdateRunnable)
-        }
-    }
-
-    public override fun onPause() {
-        super.onPause()
-        // Auto-pause when going to background
-        if (player?.isPlaying == true) {
-            player?.pause()
-            playWhenReady = true
-        }
-    }
-
-    public override fun onStop() {
-        super.onStop()
-        if (player?.isPlaying == true) {
-            player?.pause()
-            playWhenReady = true
-        }
-    }
-
-    public override fun onResume() {
-        super.onResume()
-        
-        // Ensure we have audio focus when resuming
-        audioManager?.requestAudioFocus(
-            null,
-            AudioManager.STREAM_MUSIC,
-            AudioManager.AUDIOFOCUS_GAIN
-        )
-        
-        if (player != null) {
-            if (playWhenReady) {
-                player?.play()
-            }
-        }
-    }
-
-    override fun onWindowFocusChanged(hasFocus: Boolean) {
-        super.onWindowFocusChanged(hasFocus)
-        if (!hasFocus && player?.isPlaying == true) {
-            player?.pause()
-            playWhenReady = true
-        }
-    }
-
-    private fun releasePlayer() {
-        // Only release if this is the active player context
-        if (PlayerManager.getActiveContext() == this) {
-            player?.let {
-                playbackPosition = it.currentPosition
-                currentWindow = it.currentMediaItemIndex
-                playWhenReady = it.playWhenReady
-
-                // Stop the player before releasing
-                it.stop()
-                it.clearMediaItems()
-                
-                PlayerManager.clearActivePlayer()
-                it.release()
-            }
-            
-            // Abandon audio focus when releasing player
-            audioManager?.abandonAudioFocus(null)
-        }
-        
-        player = null
-        uiHandler.removeCallbacks(progressUpdateRunnable)
-        uiHandler.removeCallbacks(controlsAutoHideRunnable)
-    }
-
-    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        if (!controlsVisible) {
             showControls()
+        }
+    }
+    
+    private fun showControls() {
+        isControlsVisible = true
+        topBar.visibility = View.VISIBLE
+        bottomBar.visibility = View.VISIBLE
+        showControlsTemporarily()
+    }
+    
+    private fun hideControls() {
+        isControlsVisible = false
+        topBar.visibility = View.GONE
+        bottomBar.visibility = View.GONE
+        controlsHandler.removeCallbacks(controlsRunnable!!)
+    }
+    
+    private fun toggleFullscreen() {
+        isFullscreen = !isFullscreen
+        if (isFullscreen) {
+            // Enter fullscreen
+            window.decorView.systemUiVisibility = (
+                View.SYSTEM_UI_FLAG_FULLSCREEN
+                or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+            )
+            requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+            btnFullscreen.setImageResource(android.R.drawable.ic_menu_close_clear_cancel)
         } else {
-            resetAutoHide()
-        }
-
-        return when (keyCode) {
-            KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, KeyEvent.KEYCODE_SPACE -> {
-                player?.let {
-                    if (it.isPlaying) it.pause() else it.play()
-                }
-                true
-            }
-            KeyEvent.KEYCODE_MEDIA_PLAY -> {
-                player?.play()
-                true
-            }
-            KeyEvent.KEYCODE_MEDIA_PAUSE -> {
-                player?.pause()
-                true
-            }
-            KeyEvent.KEYCODE_MEDIA_STOP -> {
-                player?.stop()
-                true
-            }
-            KeyEvent.KEYCODE_VOLUME_MUTE -> {
-                toggleMute()
-                true
-            }
-            KeyEvent.KEYCODE_CAPTIONS -> {
-                toggleSubtitles()
-                true
-            }
-            KeyEvent.KEYCODE_MENU -> {
-                showQualityDialog()
-                true
-            }
-            KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER -> {
-                when (getCurrentFocusId()) {
-                    R.id.btn_play_pause -> {
-                        player?.let { p -> if (p.isPlaying) p.pause() else p.play() }
-                    }
-                    R.id.btn_rewind -> {
-                        player?.let { p ->
-                            p.seekTo((p.currentPosition - 10_000L).coerceAtLeast(0L))
-                            showCenterFeedback(android.R.drawable.ic_media_rew, "-10s")
-                        }
-                    }
-                    R.id.btn_fast_forward -> {
-                        player?.let { p ->
-                            val duration = if (p.duration > 0) p.duration else Long.MAX_VALUE
-                            p.seekTo((p.currentPosition + 10_000L).coerceAtMost(duration))
-                            showCenterFeedback(android.R.drawable.ic_media_ff, "+10s")
-                        }
-                    }
-                    R.id.btn_speed -> {
-                        showSpeedDialog()
-                    }
-                    R.id.btn_mute -> {
-                        toggleMute()
-                    }
-                    R.id.btn_subtitles -> {
-                        toggleSubtitles()
-                    }
-                    R.id.btn_quality -> {
-                        showQualityDialog()
-                    }
-                    R.id.btn_refresh -> {
-                        refreshVideo()
-                    }
-                    R.id.btn_settings -> {
-                        showSettingsDialog()
-                    }
-                    R.id.btn_close -> {
-                        finish()
-                    }
-                    R.id.seek_bar -> {
-                        isSeeking = !isSeeking
-                    }
-                    else -> {
-                        player?.let { p -> if (p.isPlaying) p.pause() else p.play() }
-                    }
-                }
-                true
-            }
-            else -> super.onKeyDown(keyCode, event)
+            // Exit fullscreen
+            window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_VISIBLE
+            requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+            btnFullscreen.setImageResource(android.R.drawable.ic_menu_crop)
         }
     }
-
-    private fun getCurrentFocusId(): Int {
-        return currentFocus?.id ?: View.NO_ID
+    
+    private fun showControlsTemporarily() {
+        controlsHandler.removeCallbacks(controlsRunnable!!)
+        controlsRunnable = Runnable { hideControls() }
+        controlsHandler.postDelayed(controlsRunnable!!, 3000) // Hide after 3 seconds
     }
-
+    
+    private fun showSeekFeedback(text: String) {
+        centerOverlay.removeAllViews()
+        val textView = TextView(this).apply {
+            this.text = text
+            setTextColor(Color.WHITE)
+            textSize = 24f
+            setPadding(40, 20, 40, 20)
+            setBackgroundColor(Color.parseColor("#80000000"))
+        }
+        centerOverlay.addView(textView)
+        centerOverlay.visibility = View.VISIBLE
+        
+        val fadeOut = AlphaAnimation(1.0f, 0.0f).apply {
+            duration = 1000
+            setAnimationListener(object : Animation.AnimationListener {
+                override fun onAnimationStart(animation: Animation?) {}
+                override fun onAnimationEnd(animation: Animation?) {
+                    centerOverlay.visibility = View.GONE
+                }
+                override fun onAnimationRepeat(animation: Animation?) {}
+            })
+        }
+        textView.startAnimation(fadeOut)
+    }
+    
+    private fun updatePlayPauseButton() {
+        exoPlayer?.let { player ->
+            btnPlayPause.setImageResource(
+                if (player.isPlaying) android.R.drawable.ic_media_pause else android.R.drawable.ic_media_play
+            )
+        }
+    }
+    
+    private fun updateMuteButton() {
+        btnMute.setImageResource(
+            if (isMuted) android.R.drawable.ic_lock_silent_mode else android.R.drawable.ic_lock_silent_mode_off
+        )
+    }
+    
+    private fun updateSpeedButton() {
+        //btnSpeed.text = "${currentSpeed}x"
+    }
+    
+    private fun updateQualityButton() {
+        btnQuality.text = qualityOptions[currentQualityIndex]
+    }
+    
+    private fun formatTime(timeMs: Long): String {
+        val date = Date(timeMs)
+        val formatter = SimpleDateFormat("mm:ss", Locale.getDefault())
+        return formatter.format(date)
+    }
+    
+    // Player.Listener implementation
+    override fun onIsPlayingChanged(isPlaying: Boolean) {
+        runOnUiThread {
+            updatePlayPauseButton()
+            if (isPlaying) {
+                progressBar.visibility = View.GONE
+            }
+        }
+    }
+    
+    override fun onPlaybackStateChanged(playbackState: Int) {
+        runOnUiThread {
+            when (playbackState) {
+                Player.STATE_BUFFERING -> {
+                    progressBar.visibility = View.VISIBLE
+                }
+                Player.STATE_READY -> {
+                    progressBar.visibility = View.GONE
+                    val duration = exoPlayer?.duration ?: 0L
+                    txtDuration.text = formatTime(duration)
+                    seekBar.max = 1000
+                }
+                Player.STATE_ENDED -> {
+                    // Video ended, could restart or show next video
+                    Toast.makeText(this, "Video ended", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+    
+    override fun onPositionDiscontinuity(
+        oldPosition: Player.PositionInfo,
+        newPosition: Player.PositionInfo,
+        reason: Int
+    ) {
+        runOnUiThread {
+            updateSeekBar()
+        }
+    }
+    
+    private fun updateSeekBar() {
+        exoPlayer?.let { player ->
+            val duration = player.duration
+            if (duration > 0) {
+                val position = player.currentPosition
+                val progress = (position * 1000 / duration).toInt()
+                seekBar.progress = progress
+                txtCurrentTime.text = formatTime(position)
+            }
+        }
+    }
+    
     override fun onDestroy() {
         super.onDestroy()
-        // Only release player when activity is actually destroyed
-        // For singleTask mode, this only happens when the app is killed
-        releasePlayer()
+        controlsHandler.removeCallbacks(controlsRunnable!!)
+        PlayerManager.releasePlayer()
+    }
+    
+    override fun onPause() {
+        super.onPause()
+        exoPlayer?.pause()
+    }
+    
+    override fun onResume() {
+        super.onResume()
+        exoPlayer?.play()
     }
 }

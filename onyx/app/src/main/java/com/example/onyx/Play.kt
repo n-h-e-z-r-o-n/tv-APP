@@ -27,9 +27,6 @@ class Play : AppCompatActivity() {
 
 
 
-
-
-
         val webView = findViewById<WebView>(R.id.webView)
 
         // Setup WebView
@@ -39,7 +36,6 @@ class Play : AppCompatActivity() {
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
                 // Wait for page to load completely, then simulate click
-                Log.d("DEBUG_TAG_Load", "Page finished loading: $url")
 
                 // Delay the click simulation to ensure everything is rendered
                 webView.postDelayed({
@@ -103,28 +99,20 @@ class Play : AppCompatActivity() {
     private var isVideoLaunching = false
 
     private fun playVideoExternally(videoUrl: String) {
+
         if (isVideoLaunching) {
-            Log.d("DEBUG_TAG_PlayActivity", "playVideoExternally ignored: already launching.")
+            Log.d("DEBUG_TAG_PlayActivity", "Video launch ignored: already launching.")
             return
         }
         isVideoLaunching = true
 
         Log.d("DEBUG_TAG_PlayActivity", "Video URL detected: $videoUrl")
 
-        /*
-        val intent = Intent(this, Video_payer::class.java).apply {
-            putExtra("video_url", videoUrl)
-            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
-            //addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        }
-        startActivity(intent)
-
-         */
-
-        // Use the PlayerManager to handle video playback
+        // Use singleton PlayerManager to launch video player
         PlayerManager.playVideoExternally(this, videoUrl)
 
-        finish() // optional
+        // Finish this activity to prevent multiple instances
+        finish()
     }
 
 
