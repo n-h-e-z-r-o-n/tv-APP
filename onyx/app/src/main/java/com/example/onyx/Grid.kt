@@ -140,7 +140,7 @@ class EqualSpaceItemDecoration(private val space: Int) : RecyclerView.ItemDecora
 
 
 class EpisodesAdapter(
-    private val episodes: List<JSONObject>,
+    private val episodes: MutableList<JSONObject>,
     private val seriesId: String,
     private val type: String
 ) : RecyclerView.Adapter<EpisodesAdapter.EpisodeViewHolder>() {
@@ -174,14 +174,7 @@ class EpisodesAdapter(
         val stillPath = episode.optString("still_path", null)
         if (!stillPath.isNullOrEmpty()) {
             val url = "https://image.tmdb.org/t/p/w500$stillPath"
-            /*
-            Picasso.get()
-                .load(url)
-                .fit()
-                .centerCrop()
-                .into(holder.epsImg)
 
-             */
 
             Glide.with(holder.itemView.context)
                 .load(url)
@@ -205,12 +198,12 @@ class EpisodesAdapter(
             intent.putExtra("episodeNo", episodeNo.toString())
             context.startActivity(intent)
 
-
-
         }
 
-
-
+        fun addEpisode(episode: JSONObject) {
+            episodes.add(episode)
+            notifyItemInserted(episodes.size - 1)
+        }
     }
 
     override fun getItemCount(): Int = episodes.size

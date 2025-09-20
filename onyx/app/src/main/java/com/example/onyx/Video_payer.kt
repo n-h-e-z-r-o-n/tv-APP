@@ -58,6 +58,8 @@ class Video_payer : AppCompatActivity(), Player.Listener {
     private var currentSpeed = 1.0f
     private var lastTapTime = 0L
     private var tapCount = 0
+    private var progressHandler = Handler(Looper.getMainLooper())
+    private var progressRunnable: Runnable? = null
     
     // Playback speeds
     private val playbackSpeeds = listOf(0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 2.0f)
@@ -440,6 +442,9 @@ class Video_payer : AppCompatActivity(), Player.Listener {
             updatePlayPauseButton()
             if (isPlaying) {
                 progressBar.visibility = View.GONE
+                startProgressTracking()
+            } else {
+                stopProgressTracking()
             }
         }
     }
@@ -449,6 +454,7 @@ class Video_payer : AppCompatActivity(), Player.Listener {
             when (playbackState) {
                 Player.STATE_BUFFERING -> {
                     progressBar.visibility = View.VISIBLE
+                    stopProgressTracking()
                 }
                 Player.STATE_READY -> {
                     progressBar.visibility = View.GONE
@@ -457,9 +463,14 @@ class Video_payer : AppCompatActivity(), Player.Listener {
                     seekBar.max = 1000
                     // Update quality display when video is ready
                     updateQualityButton()
+                    // Start progress tracking if playing
+                    if (exoPlayer?.isPlaying == true) {
+                        startProgressTracking()
+                    }
                 }
                 Player.STATE_ENDED -> {
                     // Video ended, could restart or show next video
+                    stopProgressTracking()
                     Toast.makeText(this, "Video ended", Toast.LENGTH_SHORT).show()
                 }
             }
@@ -483,6 +494,22 @@ class Video_payer : AppCompatActivity(), Player.Listener {
         }
     }
     
+    private fun startProgressTracking() {
+        stopProgressTracking() // Stop any existing tracking
+        progressRunnable = object : Runnable {
+            override fun run() {
+                updateSeekBar()
+                progressHandler.postDelayed(this, 1000) // Update every second
+            }
+        }
+        progressHandler.post(progressRunnable!!)
+    }
+    
+    private fun stopProgressTracking() {
+        progressRunnable?.let { progressHandler.removeCallbacks(it) }
+        progressRunnable = null
+    }
+    
     private fun updateSeekBar() {
         exoPlayer?.let { player ->
             val duration = player.duration
@@ -497,17 +524,20 @@ class Video_payer : AppCompatActivity(), Player.Listener {
     
     override fun onDestroy() {
         super.onDestroy()
+        stopProgressTracking()
         PlayerManager.releasePlayer()
     }
     
     override fun onPause() {
         super.onPause()
         exoPlayer?.pause()
+        stopProgressTracking()
     }
     
     override fun onResume() {
         super.onResume()
         exoPlayer?.play()
+        // Progress tracking will start automatically when onIsPlayingChanged is called
     }
     
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {

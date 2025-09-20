@@ -42,8 +42,8 @@ class Watch_Page : AppCompatActivity() {
         val imdbCode = intent.getStringExtra("imdb_code")
         val type = intent.getStringExtra("type")
 
-        fetchData(imdbCode.toString(), type.toString())
-        //fetchData("95557", "tv")
+        //fetchData(imdbCode.toString(), type.toString())
+        fetchData("10160", "tv")
 
 
         /*
@@ -130,15 +130,11 @@ class Watch_Page : AppCompatActivity() {
                         PG = "13"
                     }
 
-                    release_date = if (jsonObject.optString("release_date").isNotEmpty()) {
-                        jsonObject.optString("release_date")
-                    } else {
+                    release_date = jsonObject.optString("release_date").ifEmpty {
                         jsonObject.optString("first_air_date")
                     }
 
-                    runtime = if (jsonObject.optString("runtime").isNotEmpty()) {
-                        jsonObject.optString("runtime")
-                    } else {
+                    runtime = jsonObject.optString("runtime").ifEmpty {
                         jsonObject.optString("episode_run_time")
                     }
 
@@ -388,7 +384,10 @@ class Watch_Page : AppCompatActivity() {
 
 
                     withContext(Dispatchers.Main) {
-                        recyclerView.adapter = EpisodesAdapter(episodes,seriesId, "tv" )
+                        //recyclerView.adapter = EpisodesAdapter(episodes,seriesId, "tv" )
+
+                        val adapter = EpisodesAdapter(episodes, seriesId, "tv")
+                        recyclerView.adapter = adapter
                     }
                 }
         }catch (e :Exception){
