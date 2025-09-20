@@ -26,6 +26,7 @@ class Play : AppCompatActivity() {
         val type = intent.getStringExtra("type")
         val seasonNo = intent.getStringExtra("seasonNo")
         val episodeNo = intent.getStringExtra("episodeNo")
+        val server = intent.getStringExtra("server") ?: "VidSrc.to"
 
         val webView = findViewById<WebView>(R.id.webView)
 
@@ -63,8 +64,13 @@ class Play : AppCompatActivity() {
                 request: WebResourceRequest?
             ): Boolean {
                 val url = request?.url.toString()
-                return if (url.startsWith("https://vidsrc.to/")) {
-                    false // allow vidsrc navigation
+                return if (url.startsWith("https://vidsrc.to/") || 
+                          url.startsWith("https://player.embed-api.stream/") ||
+                          url.startsWith("https://www.2embed.skin/") ||
+                          url.startsWith("https://www.2embed.cc/") ||
+                          url.startsWith("https://embed.su/") ||
+                          url.startsWith("https://www.primewire.tf/")) {
+                    false // allow server navigation
                 } else {
                     Toast.makeText(this@Play, "Blocked $url", Toast.LENGTH_SHORT).show()
                     true
@@ -79,16 +85,12 @@ class Play : AppCompatActivity() {
         settings.setSupportMultipleWindows(false)
         settings.userAgentString = WebSettings.getDefaultUserAgent(this)
 
-        // Load movie or episode URL
-        if (type == "movie") {
-            val url = "https://vidsrc.to/embed/$type/$imdbCode"
-            webView.loadUrl(url)
-            Log.e("Play Data 5M", url)
-        } else {
-            val url = "https://vidsrc.to/embed/tv/$imdbCode/$seasonNo/$episodeNo"
-            webView.loadUrl(url)
-            Log.e("Play Data 5M", url)
-        }
+        // Get complete URL based on server selection and content type
+        val url = getServerUrl(server, type, imdbCode, seasonNo, episodeNo)
+        
+        // Load the URL
+        webView.loadUrl(url)
+        Log.e("Play Data 5M", "Loading from server '$server': $url")
     }
 
     @OptIn(UnstableApi::class)
@@ -101,13 +103,13 @@ class Play : AppCompatActivity() {
         Log.d("DEBUG_TAG_PlayActivity", "Launching external video: $videoUrl")
 
         try {
-            PlayerManager.playVideoExternally(this, videoUrl)
+        PlayerManager.playVideoExternally(this, videoUrl)
 
             // Finish safely after short delay
             lifecycleScope.launch {
                 delay(500)
-                finish()
-            }
+        finish()
+    }
         } catch (e: Exception) {
             isVideoLaunching = false
             Toast.makeText(this, "Failed to launch player", Toast.LENGTH_SHORT).show()
@@ -147,6 +149,41 @@ class Play : AppCompatActivity() {
 
                 delay(intervalMs)
             }
+        }
+    }
+
+    private fun getServerUrl(server: String, urlType: String?, showId: String?, seasonNo: String?, episodeNo: String?): String {
+        val serverIndex = getServerIndex(server)
+        
+        return if (urlType == "movie") {
+            when (serverIndex) {
+                1 -> "https://vidsrc.to/embed/movie/$showId"
+                2 -> "https://player.embed-api.stream/?id=$showId&type=movie"
+                3 -> "https://www.2embed.skin/embed/$showId"
+                4 -> "https://embed.su/embed/movie/$showId"
+                5 -> "https://www.primewire.tf/embed/movie?tmdb=$showId"
+                else -> "https://vidsrc.to/embed/movie/$showId"
+            }
+        } else {
+            when (serverIndex) {
+                1 -> "https://vidsrc.to/embed/tv/$showId/$seasonNo/$episodeNo"
+                2 -> "https://player.embed-api.stream/?id=$showId&s=$seasonNo&e=$episodeNo"
+                3 -> "https://www.2embed.cc/embedtv/$showId&s=$seasonNo&e=$episodeNo"
+                4 -> "https://embed.su/embed/tv/$showId/$seasonNo/$episodeNo"
+                5 -> "https://www.primewire.tf/embed/tv?tmdb=$showId&season=$seasonNo&episode=$episodeNo"
+                else -> "https://vidsrc.to/embed/tv/$showId/$seasonNo/$episodeNo"
+            }
+        }
+    }
+    
+    private fun getServerIndex(server: String): Int {
+        return when (server) {
+            "VidSrc.to" -> 1
+            "Embed API Stream" -> 2
+            "2Embed" -> 3
+            "Embed.su" -> 4
+            "PrimeWire" -> 5
+            else -> 1 // Default to VidSrc.to
         }
     }
 }

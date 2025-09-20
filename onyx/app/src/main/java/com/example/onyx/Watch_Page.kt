@@ -33,6 +33,16 @@ import androidx.core.view.marginEnd
 import org.json.JSONObject
 
 class Watch_Page : AppCompatActivity() {
+    
+    private var currentServerIndex = 0
+    private val servers = listOf(
+        "VidSrc.to",
+        "Embed API Stream",
+        "2Embed",
+        "Embed.su",
+        "PrimeWire"
+    )
+    
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -42,8 +52,8 @@ class Watch_Page : AppCompatActivity() {
         val imdbCode = intent.getStringExtra("imdb_code")
         val type = intent.getStringExtra("type")
 
-        //fetchData(imdbCode.toString(), type.toString())
-        fetchData("10160", "tv")
+        fetchData(imdbCode.toString(), type.toString())
+        //fetchData("10160", "tv")
 
 
         /*
@@ -231,6 +241,7 @@ class Watch_Page : AppCompatActivity() {
                         val watchButton = findViewById<Button>(R.id.watchNowButton)
                         val FaveButton = findViewById<Button>(R.id.favoriteButton)
                         val TrailerButton = findViewById<Button>(R.id.TrailerButton)
+                        val serverButton = findViewById<Button>(R.id.serverButton)
 
 
 
@@ -238,7 +249,12 @@ class Watch_Page : AppCompatActivity() {
                             val intent = Intent(this@Watch_Page, Play::class.java)
                             intent.putExtra("imdb_code", tmdbId)
                             intent.putExtra("type", type)
+                            intent.putExtra("server", servers[currentServerIndex])
                             startActivity(intent)
+                        }
+
+                        serverButton.setOnClickListener {
+                            showServerDialog()
                         }
 
                         setupExpandableButton(watchButton, 105, 40, "▶ Play", "▶")
@@ -255,6 +271,13 @@ class Watch_Page : AppCompatActivity() {
                             40,
                             "\uD83C\uDFAC Trailer",
                             "\uD83C\uDFAC"
+                        )
+                        setupExpandableButton(
+                            serverButton,
+                            120,
+                            44,
+                            "🌐 ${servers[currentServerIndex]}",
+                            "🌐"
                         )
 
                         if(type=="tv"){
@@ -568,6 +591,27 @@ class Watch_Page : AppCompatActivity() {
     // dp → px converter
     fun Int.dpToPx(context: Context): Int {
         return (this * context.resources.displayMetrics.density).toInt()
+    }
+
+    private fun showServerDialog() {
+        val builder = android.app.AlertDialog.Builder(this, R.style.CustomDialogTheme)
+        builder.setTitle("Select Server")
+            .setSingleChoiceItems(servers.toTypedArray(), currentServerIndex) { dialog, which ->
+                currentServerIndex = which
+                // Update server button display
+                val serverButton = findViewById<Button>(R.id.serverButton)
+                setupExpandableButton(
+                    serverButton,
+                    120,
+                    44,
+                    "🌐 ${servers[currentServerIndex]}",
+                    "🌐"
+                )
+                Toast.makeText(this, "Server changed to: ${servers[currentServerIndex]}", Toast.LENGTH_SHORT).show()
+                dialog.dismiss() // Auto-close dialog when option is selected
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
     }
 
 }

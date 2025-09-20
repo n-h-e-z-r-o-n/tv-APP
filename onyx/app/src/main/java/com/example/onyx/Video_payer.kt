@@ -280,42 +280,46 @@ class Video_payer : AppCompatActivity(), Player.Listener {
     
     private fun showSpeedDialog() {
         val speedOptions = arrayOf("0.5x", "0.75x", "1.0x", "1.25x", "1.5x", "2.0x")
-        val builder = android.app.AlertDialog.Builder(this)
+        val builder = android.app.AlertDialog.Builder(this, R.style.CustomDialogTheme)
         builder.setTitle("Playback Speed")
-            .setSingleChoiceItems(speedOptions, currentSpeedIndex) { _, which ->
+            .setSingleChoiceItems(speedOptions, currentSpeedIndex) { dialog, which ->
                 currentSpeedIndex = which
                 currentSpeed = playbackSpeeds[which]
                 exoPlayer?.setPlaybackSpeed(currentSpeed)
                 updateSpeedButton()
+                dialog.dismiss() // Auto-close dialog when option is selected
             }
-            .setPositiveButton("OK", null)
+            .setNegativeButton("Cancel", null)
             .show()
     }
     
     private fun showQualityDialog() {
-        val builder = android.app.AlertDialog.Builder(this)
+        val builder = android.app.AlertDialog.Builder(this, R.style.CustomDialogTheme)
         builder.setTitle("Video Quality")
-            .setSingleChoiceItems(qualityOptions.toTypedArray(), currentQualityIndex) { _, which ->
+            .setSingleChoiceItems(qualityOptions.toTypedArray(), currentQualityIndex) { dialog, which ->
                 currentQualityIndex = which
                 PlayerManager.setVideoQuality(which)
                 updateQualityButton()
                 Toast.makeText(this, "Quality changed to ${qualityOptions[which]}", Toast.LENGTH_SHORT).show()
+                dialog.dismiss() // Auto-close dialog when option is selected
             }
-            .setPositiveButton("OK", null)
+            .setNegativeButton("Cancel", null)
             .show()
     }
     
     private fun showSettingsDialog() {
         val settings = arrayOf("Subtitles", "Audio Track", "Video Info")
-        val builder = android.app.AlertDialog.Builder(this)
+        val builder = android.app.AlertDialog.Builder(this, R.style.CustomDialogTheme)
         builder.setTitle("Settings")
-            .setItems(settings) { _, which ->
+            .setItems(settings) { dialog, which ->
                 when (which) {
                     0 -> Toast.makeText(this, "Subtitles not available", Toast.LENGTH_SHORT).show()
                     1 -> Toast.makeText(this, "Audio track selection not available", Toast.LENGTH_SHORT).show()
                     2 -> showVideoInfo()
                 }
+                dialog.dismiss() // Auto-close dialog when option is selected
             }
+            .setNegativeButton("Cancel", null)
             .show()
     }
     
