@@ -5,7 +5,8 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".Play">
+    tools:context=".Play"
+    tools:ignore="ExtraText">
 
 >
 
@@ -20,6 +21,15 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:overScrollMode="never" />
+
+            <ImageView
+                android:id="@+id/customCursor"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+
+                android:src="@drawable/cursor"
+            android:visibility="gone"
+            android:scaleType="centerInside" />
 
         </LinearLayout>
 

@@ -18,7 +18,7 @@ object PlayerManager {
     
     private var exoPlayer: ExoPlayer? = null
     private var currentVideoUrl: String? = null
-    
+
     fun playVideoExternally(context: Context, videoUrl: String) {
         Log.d("PlayerManager", "Playing video: $videoUrl")
         
@@ -35,8 +35,12 @@ object PlayerManager {
         val trackSelector = DefaultTrackSelector(context).apply {
             setParameters(
                 buildUponParameters()
-                    .setMaxVideoSizeSd()
+                    .setMaxVideoSize(1920, 1080) // Allow up to 1080p by default
                     .setPreferredVideoMimeType("video/mp4")
+                    .setAllowVideoMixedMimeTypeAdaptiveness(true)
+                    .setAllowAudioMixedMimeTypeAdaptiveness(true)
+                    .setAllowVideoNonSeamlessAdaptiveness(true)
+                    .setAllowAudioNonSeamlessAdaptiveness(true)
             )
         }
         
@@ -107,4 +111,110 @@ object PlayerManager {
     }
     
     fun getCurrentVideoUrl(): String? = currentVideoUrl
+    
+    fun setVideoQuality(qualityIndex: Int) {
+        exoPlayer?.let { player ->
+            val trackSelector = player.trackSelector as? DefaultTrackSelector ?: return
+            
+            Log.d("PlayerManager", "Setting video quality to index: $qualityIndex")
+            
+            when (qualityIndex) {
+                0 -> { // Auto
+                    trackSelector.setParameters(
+                        trackSelector.buildUponParameters()
+                            .clearVideoSizeConstraints()
+                            .setMaxVideoSize(1920, 1080)
+                            .setAllowVideoMixedMimeTypeAdaptiveness(true)
+                            .setAllowVideoNonSeamlessAdaptiveness(true)
+                    )
+                }
+                1 -> { // 1080p
+                    trackSelector.setParameters(
+                        trackSelector.buildUponParameters()
+                            .setMaxVideoSize(1920, 1080)
+                            .setMinVideoSize(1920, 1080)
+                            .setAllowVideoMixedMimeTypeAdaptiveness(false)
+                            .setAllowVideoNonSeamlessAdaptiveness(false)
+                    )
+                }
+                2 -> { // 720p
+                    trackSelector.setParameters(
+                        trackSelector.buildUponParameters()
+                            .setMaxVideoSize(1280, 720)
+                            .setMinVideoSize(1280, 720)
+                            .setAllowVideoMixedMimeTypeAdaptiveness(false)
+                            .setAllowVideoNonSeamlessAdaptiveness(false)
+                    )
+                }
+                3 -> { // 480p
+                    trackSelector.setParameters(
+                        trackSelector.buildUponParameters()
+                            .setMaxVideoSize(854, 480)
+                            .setMinVideoSize(854, 480)
+                            .setAllowVideoMixedMimeTypeAdaptiveness(false)
+                            .setAllowVideoNonSeamlessAdaptiveness(false)
+                    )
+                }
+                4 -> { // 360p
+                    trackSelector.setParameters(
+                        trackSelector.buildUponParameters()
+                            .setMaxVideoSize(640, 360)
+                            .setMinVideoSize(640, 360)
+                            .setAllowVideoMixedMimeTypeAdaptiveness(false)
+                            .setAllowVideoNonSeamlessAdaptiveness(false)
+                    )
+                }
+                5 -> { // 240p
+                    trackSelector.setParameters(
+                        trackSelector.buildUponParameters()
+                            .setMaxVideoSize(426, 240)
+                            .setMinVideoSize(426, 240)
+                            .setAllowVideoMixedMimeTypeAdaptiveness(false)
+                            .setAllowVideoNonSeamlessAdaptiveness(false)
+                    )
+                }
+            }
+            
+            Log.d("PlayerManager", "Quality parameters applied successfully")
+        }
+    }
+    
+    fun getCurrentVideoQuality(): String {
+        exoPlayer?.let { player ->
+            val videoFormat = player.videoFormat
+            if (videoFormat != null) {
+                val width = videoFormat.width
+                val height = videoFormat.height
+                
+                return when {
+                    width >= 1920 && height >= 1080 -> "1080p"
+                    width >= 1280 && height >= 720 -> "720p"
+                    width >= 854 && height >= 480 -> "480p"
+                    width >= 640 && height >= 360 -> "360p"
+                    width >= 426 && height >= 240 -> "240p"
+                    else -> "Auto"
+                }
+            }
+        }
+        return "Auto"
+    }
+    
+    fun getVideoInfo(): String {
+        exoPlayer?.let { player ->
+            val videoFormat = player.videoFormat
+            if (videoFormat != null) {
+                return "Resolution: ${videoFormat.width}x${videoFormat.height}\n" +
+                       "Codec: ${videoFormat.codecs}\n" +
+                       "Bitrate: ${videoFormat.bitrate / 1000} kbps\n" +
+                       "Frame Rate: ${videoFormat.frameRate} fps"
+            }
+        }
+        return "Video info not available"
+    }
+    
+    fun getAvailableQualities(): List<String> {
+        // This would ideally get the actual available qualities from the media
+        // For now, return the standard options
+        return listOf("Auto", "1080p", "720p", "480p", "360p", "240p")
+    }
 }

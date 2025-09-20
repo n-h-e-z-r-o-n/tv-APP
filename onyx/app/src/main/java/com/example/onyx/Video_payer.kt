@@ -6,12 +6,14 @@ import android.graphics.Color
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
 import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
 import android.widget.*
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
@@ -27,7 +29,6 @@ class Video_payer : AppCompatActivity(), Player.Listener {
     private lateinit var playerView: PlayerView
     private lateinit var progressBar: ProgressBar
     private lateinit var overlayContainer: View
-    private lateinit var topBar: LinearLayout
     private lateinit var bottomBar: LinearLayout
     private lateinit var centerOverlay: FrameLayout
     
@@ -36,7 +37,7 @@ class Video_payer : AppCompatActivity(), Player.Listener {
     private lateinit var btnRewind: ImageButton
     private lateinit var btnFastForward: ImageButton
     private lateinit var btnMute: ImageButton
-    private lateinit var btnSpeed: ImageButton
+    private lateinit var btnSpeed: Button
     private lateinit var btnSubtitles: ImageButton
     private lateinit var btnQuality: TextView
     private lateinit var btnRefresh: ImageButton
@@ -44,8 +45,6 @@ class Video_payer : AppCompatActivity(), Player.Listener {
     private lateinit var btnClose: ImageButton
     private lateinit var btnFullscreen: ImageButton
     
-    // Text views
-    private lateinit var txtVideoTitle: TextView
     
     // Seek bar and time displays
     private lateinit var seekBar: SeekBar
@@ -57,8 +56,6 @@ class Video_payer : AppCompatActivity(), Player.Listener {
     private var isFullscreen = false
     private var isMuted = false
     private var currentSpeed = 1.0f
-    private var controlsHandler = Handler(Looper.getMainLooper())
-    private var controlsRunnable: Runnable? = null
     private var lastTapTime = 0L
     private var tapCount = 0
     
@@ -66,8 +63,8 @@ class Video_payer : AppCompatActivity(), Player.Listener {
     private val playbackSpeeds = listOf(0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 2.0f)
     private var currentSpeedIndex = 2 // Default to 1.0x
     
-    // Quality options
-    private val qualityOptions = listOf("Auto", "1080p", "720p", "480p", "360p", "240p")
+    // Quality options - will be populated from PlayerManager
+    private var qualityOptions = listOf("Auto", "1080p", "720p", "480p", "360p", "240p")
     private var currentQualityIndex = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -81,13 +78,13 @@ class Video_payer : AppCompatActivity(), Player.Listener {
         setupPlayer()
         setupControls()
         setupGestures()
+        setupBackPressedCallback()
     }
     
     private fun initializeViews() {
         playerView = findViewById(R.id.player_view)
         progressBar = findViewById(R.id.progress_bar)
         overlayContainer = findViewById(R.id.overlay_container)
-        topBar = findViewById(R.id.top_bar)
         bottomBar = findViewById(R.id.bottom_bar)
         centerOverlay = findViewById(R.id.center_overlay)
         
@@ -103,9 +100,6 @@ class Video_payer : AppCompatActivity(), Player.Listener {
         btnSettings = findViewById(R.id.btn_settings)
         btnClose = findViewById(R.id.btn_close)
         btnFullscreen = findViewById(R.id.btn_fullscreen)
-        
-        // Text views
-        txtVideoTitle = findViewById(R.id.txt_video_title)
         
         // Seek bar and time displays
         seekBar = findViewById(R.id.seek_bar)
@@ -124,6 +118,8 @@ class Video_payer : AppCompatActivity(), Player.Listener {
                 updateMuteButton()
                 updateSpeedButton()
                 updateQualityButton()
+                // Get available qualities from PlayerManager
+                qualityOptions = PlayerManager.getAvailableQualities()
             }
         } else {
             Toast.makeText(this, "No video URL provided", Toast.LENGTH_SHORT).show()
@@ -193,14 +189,13 @@ class Video_payer : AppCompatActivity(), Player.Listener {
             }
             
             override fun onStartTrackingTouch(seekBar: SeekBar?) {
-                controlsHandler.removeCallbacks(controlsRunnable!!)
+                // No auto-hide during seek
             }
             
             override fun onStopTrackingTouch(seekBar: SeekBar?) {
                 val duration = exoPlayer?.duration ?: 0L
                 val position = (seekBar?.progress ?: 0) * duration / 1000
                 exoPlayer?.seekTo(position)
-                showControlsTemporarily()
             }
         })
     }
@@ -239,6 +234,20 @@ class Video_payer : AppCompatActivity(), Player.Listener {
             }
             true
         }
+    }
+    
+    private fun setupBackPressedCallback() {
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (isControlsVisible) {
+                    // If controls are visible, hide them
+                    hideControls()
+                } else {
+                    // If controls are hidden, exit the video player
+                    finish()
+                }
+            }
+        })
     }
     
     private fun togglePlayPause() {
@@ -286,8 +295,9 @@ class Video_payer : AppCompatActivity(), Player.Listener {
         builder.setTitle("Video Quality")
             .setSingleChoiceItems(qualityOptions.toTypedArray(), currentQualityIndex) { _, which ->
                 currentQualityIndex = which
+                PlayerManager.setVideoQuality(which)
                 updateQualityButton()
-                // Note: Quality change would require reinitializing the player with different track selection
+                Toast.makeText(this, "Quality changed to ${qualityOptions[which]}", Toast.LENGTH_SHORT).show()
             }
             .setPositiveButton("OK", null)
             .show()
@@ -311,7 +321,9 @@ class Video_payer : AppCompatActivity(), Player.Listener {
         exoPlayer?.let { player ->
             val duration = formatTime(player.duration)
             val currentPos = formatTime(player.currentPosition)
-            val info = "Duration: $duration\nCurrent: $currentPos\nSpeed: ${currentSpeed}x"
+            val quality = PlayerManager.getCurrentVideoQuality()
+            val videoInfo = PlayerManager.getVideoInfo()
+            val info = "Duration: $duration\nCurrent: $currentPos\nSpeed: ${currentSpeed}x\nQuality: $quality\n\n$videoInfo"
             Toast.makeText(this, info, Toast.LENGTH_LONG).show()
         }
     }
@@ -339,16 +351,12 @@ class Video_payer : AppCompatActivity(), Player.Listener {
     
     private fun showControls() {
         isControlsVisible = true
-        topBar.visibility = View.VISIBLE
         bottomBar.visibility = View.VISIBLE
-        showControlsTemporarily()
     }
     
     private fun hideControls() {
         isControlsVisible = false
-        topBar.visibility = View.GONE
         bottomBar.visibility = View.GONE
-        controlsHandler.removeCallbacks(controlsRunnable!!)
     }
     
     private fun toggleFullscreen() {
@@ -370,11 +378,6 @@ class Video_payer : AppCompatActivity(), Player.Listener {
         }
     }
     
-    private fun showControlsTemporarily() {
-        controlsHandler.removeCallbacks(controlsRunnable!!)
-        controlsRunnable = Runnable { hideControls() }
-        controlsHandler.postDelayed(controlsRunnable!!, 3000) // Hide after 3 seconds
-    }
     
     private fun showSeekFeedback(text: String) {
         centerOverlay.removeAllViews()
@@ -416,11 +419,13 @@ class Video_payer : AppCompatActivity(), Player.Listener {
     }
     
     private fun updateSpeedButton() {
-        //btnSpeed.text = "${currentSpeed}x"
+        btnSpeed.text = "${currentSpeed}x"
     }
     
     private fun updateQualityButton() {
-        btnQuality.text = qualityOptions[currentQualityIndex]
+        // Get the current quality from the player
+        val currentQuality = PlayerManager.getCurrentVideoQuality()
+        btnQuality.text = currentQuality
     }
     
     private fun formatTime(timeMs: Long): String {
@@ -450,6 +455,8 @@ class Video_payer : AppCompatActivity(), Player.Listener {
                     val duration = exoPlayer?.duration ?: 0L
                     txtDuration.text = formatTime(duration)
                     seekBar.max = 1000
+                    // Update quality display when video is ready
+                    updateQualityButton()
                 }
                 Player.STATE_ENDED -> {
                     // Video ended, could restart or show next video
@@ -469,6 +476,13 @@ class Video_payer : AppCompatActivity(), Player.Listener {
         }
     }
     
+    override fun onVideoSizeChanged(videoSize: androidx.media3.common.VideoSize) {
+        runOnUiThread {
+            // Update quality display when video size changes
+            updateQualityButton()
+        }
+    }
+    
     private fun updateSeekBar() {
         exoPlayer?.let { player ->
             val duration = player.duration
@@ -483,7 +497,6 @@ class Video_payer : AppCompatActivity(), Player.Listener {
     
     override fun onDestroy() {
         super.onDestroy()
-        controlsHandler.removeCallbacks(controlsRunnable!!)
         PlayerManager.releasePlayer()
     }
     
@@ -495,5 +508,18 @@ class Video_payer : AppCompatActivity(), Player.Listener {
     override fun onResume() {
         super.onResume()
         exoPlayer?.play()
+    }
+    
+    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+        when (keyCode) {
+            KeyEvent.KEYCODE_DPAD_UP -> {
+                // Only show controls if they are hidden
+                if (!isControlsVisible) {
+                    showControls()
+                    return true
+                }
+            }
+        }
+        return super.onKeyDown(keyCode, event)
     }
 }
