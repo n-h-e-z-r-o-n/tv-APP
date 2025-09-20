@@ -161,7 +161,7 @@ class Home_Page : AppCompatActivity() {
                             false
                         )
                         recyclerView.adapter = GridAdapter(movies,  R.layout.square_card)
-                        val spacing = (19 * resources.displayMetrics.density).toInt() // 16dp to px
+                        val spacing = (5 * resources.displayMetrics.density).toInt() // 16dp to px
                         recyclerView.addItemDecoration(EqualSpaceItemDecoration(spacing))
                     }
 

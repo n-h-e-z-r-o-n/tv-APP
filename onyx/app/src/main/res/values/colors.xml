@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-        <color name="BG_color">#191C27</color>
+        <color name="BG_color">#0C0404</color>
         <color name="FG_color">#FFFFFF</color>
-        <color name="Nav_color">#191C27</color>
+        <color name="Nav_color">#0C0404</color>
         <color name="gray">#808A87</color>
         <color name="NavBtnFocus">#33B5E5</color>
         <color name="NavBtnActive">#E2C121</color>
