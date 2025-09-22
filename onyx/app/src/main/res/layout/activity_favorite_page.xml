@@ -4,8 +4,9 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".Tv_Page"
-    android:background="@color/BG_color">
+    android:background="@color/BG_color"
+    tools:context=".Favorite_Page">
+
 
     <FrameLayout
         android:layout_width="match_parent"
@@ -15,20 +16,18 @@
 
 
         <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/TvShows"
-            android:layout_width="match_parent"
+            android:id="@+id/Favorites"
             android:layout_height="match_parent"
+            android:layout_width="match_parent"
             android:clipToPadding="false"
             android:overScrollMode="never"
             android:padding="10dp"
-            android:paddingHorizontal="32dp"
             android:scrollbars="none"
-            android:visibility="visible"
             android:paddingStart="41dp"
             tools:ignore="RtlSymmetry" />
 
         <include layout="@layout/side_bar"/>
-    </FrameLayout>
 
+    </FrameLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

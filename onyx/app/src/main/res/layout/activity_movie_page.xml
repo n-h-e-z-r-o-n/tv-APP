@@ -6,23 +6,26 @@
     tools:context=".Movie_Page"
     android:background="@color/BG_color">
 
-    <LinearLayout
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="horizontal">
 
-        <include layout="@layout/side_bar"/>
+
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/Movies"
             android:layout_height="match_parent"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:clipToPadding="false"
             android:overScrollMode="never"
             android:padding="10dp"
             android:scrollbars="none"
-            android:layout_weight="1"
+            android:paddingStart="41dp"
             />
-    </LinearLayout>
+
+        <include layout="@layout/side_bar"/>
+
+    </FrameLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

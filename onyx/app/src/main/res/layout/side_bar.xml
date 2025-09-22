@@ -19,7 +19,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        android:background="@drawable/sidbar_focus">
+        android:background="@drawable/overlay_left_gradient">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -137,7 +137,7 @@
                 android:background="@android:color/transparent"
                 android:contentDescription="Search"
                 android:nextFocusUp="@id/btnTvShow"
-                android:nextFocusDown="@id/btnProfile"
+                android:nextFocusDown="@id/btnFav"
                 android:src="@drawable/ic_search"
                 app:tint="@color/nav_icon_color_selector"
                 android:clickable="true"
@@ -160,6 +160,39 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageButton
+                android:id="@+id/btnFav"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="@android:color/transparent"
+                android:nextFocusUp="@id/btnSearch"
+                android:nextFocusDown="@id/btnProfile"
+                android:src="@drawable/ic_fave"
+                app:tint="@color/nav_icon_color_selector"
+                android:clickable="true"
+                android:focusable="true"/>
+
+            <TextView
+                android:id="@+id/labelFav"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="Favorites"
+                android:textColor="@color/FG_color"
+                android:textSize="14sp"
+                android:visibility="gone"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
@@ -169,7 +202,7 @@
                 android:layout_height="48dp"
                 android:background="@android:color/transparent"
                 android:contentDescription="Profile"
-                android:nextFocusUp="@id/btnSearch"
+                android:nextFocusUp="@id/btnFav"
                 android:nextFocusDown="@id/btnHome"
                 android:src="@drawable/ic_person"
                 app:tint="@color/nav_icon_color_selector"

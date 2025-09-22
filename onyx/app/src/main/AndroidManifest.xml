@@ -22,6 +22,9 @@
         android:theme="@style/Theme.Onyx"
         android:usesCleartextTraffic="true">
         <activity
+            android:name=".Favorite_Page"
+            android:exported="false" />
+        <activity
             android:name=".Search_Page"
             android:exported="false" />
         <activity
@@ -42,8 +45,7 @@
         <activity
             android:name=".Video_payer"
             android:exported="false"
-            android:launchMode="singleTask"
-            />
+            android:launchMode="singleTask" />
         <activity
             android:name=".Play"
             android:exported="false" />

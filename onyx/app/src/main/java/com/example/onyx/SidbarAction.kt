@@ -3,7 +3,6 @@ package com.example.onyx
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import android.os.Build
 import android.view.View
 import android.view.ViewGroup
 import android.animation.ValueAnimator
@@ -11,8 +10,7 @@ import android.view.animation.DecelerateInterpolator
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.TextView
-import androidx.annotation.RequiresApi
-import androidx.core.content.ContextCompat
+
 
 object NavAction {
     fun setupSidebar(activity: Activity) {
@@ -20,7 +18,9 @@ object NavAction {
         val btnMovies = activity.findViewById<ImageButton>(R.id.btnMovies)
         val btnTvShows = activity.findViewById<ImageButton>(R.id.btnTvShow)
         val btnSearch = activity.findViewById<ImageButton>(R.id.btnSearch)
+        val btnFav = activity.findViewById<ImageButton>(R.id.btnFav)
         val btnProfile = activity.findViewById<ImageButton>(R.id.btnProfile)
+
 
         val sidebar = activity.findViewById<LinearLayout>(R.id.sideBar)
         val labelHome = activity.findViewById<TextView>(R.id.labelHome)
@@ -28,7 +28,10 @@ object NavAction {
         val labelTvShow = activity.findViewById<TextView>(R.id.labelTvShow)
         val labelSearch = activity.findViewById<TextView>(R.id.labelSearch)
         val labelProfile = activity.findViewById<TextView>(R.id.labelProfile)
-        val labels = listOf(labelHome, labelMovies, labelTvShow, labelSearch, labelProfile)
+        val labelFav = activity.findViewById<TextView>(R.id.labelFav)
+
+        val buttons = listOf(btnHome, btnMovies, btnTvShows, btnSearch, btnFav, btnProfile)
+        val labels = listOf(labelHome, labelMovies, labelTvShow, labelSearch, labelProfile, labelFav)
 
 
 
@@ -56,20 +59,28 @@ object NavAction {
             }
         }
 
+        btnFav?.setOnClickListener {
+            if (activity !is Favorite_Page) {
+                activity.startActivity(Intent(activity, Favorite_Page::class.java))
+            }
+        }
+
+
+
 
         // Highlight based on current activity
-        val buttons = listOf(btnHome, btnMovies, btnTvShows, btnSearch, btnProfile)
         val activeButton: ImageButton? = when (activity) {
             is Home_Page -> btnHome
             is Movie_Page -> btnMovies
             is Tv_Page -> btnTvShows
             is Search_Page -> btnSearch
+            is Favorite_Page -> btnFav
             else -> btnHome
         }
-        highlightActive(activeButton, buttons)
 
-        // Request focus on the active button for TV D-pad usability
-        activeButton?.post { activeButton.requestFocus() }
+        highlightActive(activeButton, buttons)
+        activeButton?.post { activeButton.requestFocus() }          // Request focus on the active button for TV D-pad usability
+
 
         // ✅ Add focus scaling effect to each button
         buttons.forEach { btn ->
@@ -118,7 +129,7 @@ object NavAction {
 
     private fun expandSidebar(context: Context, sidebar: LinearLayout, expand: Boolean) {
         val collapsed = 40.dpToPx(context)
-        val expanded = 200.dpToPx(context)
+        val expanded = 610.dpToPx(context)
         val start = sidebar.layoutParams.width
         val end = if (expand) expanded else collapsed
         if (start == end) return
