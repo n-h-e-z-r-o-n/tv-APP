@@ -5,8 +5,12 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.view.View
+import android.view.ViewGroup
+import android.animation.ValueAnimator
+import android.view.animation.DecelerateInterpolator
 import android.widget.ImageButton
 import android.widget.LinearLayout
+import android.widget.TextView
 import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 
@@ -19,6 +23,12 @@ object NavAction {
         val btnProfile = activity.findViewById<ImageButton>(R.id.btnProfile)
 
         val sidebar = activity.findViewById<LinearLayout>(R.id.sideBar)
+        val labelHome = activity.findViewById<TextView>(R.id.labelHome)
+        val labelMovies = activity.findViewById<TextView>(R.id.labelMovies)
+        val labelTvShow = activity.findViewById<TextView>(R.id.labelTvShow)
+        val labelSearch = activity.findViewById<TextView>(R.id.labelSearch)
+        val labelProfile = activity.findViewById<TextView>(R.id.labelProfile)
+        val labels = listOf(labelHome, labelMovies, labelTvShow, labelSearch, labelProfile)
 
 
 
@@ -49,13 +59,17 @@ object NavAction {
 
         // Highlight based on current activity
         val buttons = listOf(btnHome, btnMovies, btnTvShows, btnSearch, btnProfile)
-        when (activity) {
-            is Home_Page -> highlightActive(btnHome, buttons)
-            is Movie_Page -> highlightActive(btnMovies, buttons)
-            is Tv_Page -> highlightActive(btnTvShows, buttons)
-            is Search_Page -> highlightActive(btnSearch, buttons)
-            //is Profile_Page -> highlightActive(btnProfile, buttons, activity)
+        val activeButton: ImageButton? = when (activity) {
+            is Home_Page -> btnHome
+            is Movie_Page -> btnMovies
+            is Tv_Page -> btnTvShows
+            is Search_Page -> btnSearch
+            else -> btnHome
         }
+        highlightActive(activeButton, buttons)
+
+        // Request focus on the active button for TV D-pad usability
+        activeButton?.post { activeButton.requestFocus() }
 
         // ✅ Add focus scaling effect to each button
         buttons.forEach { btn ->
@@ -64,6 +78,24 @@ object NavAction {
                     v.animate().scaleX(1.2f).scaleY(1.2f).setDuration(150).start()
                 } else {
                     v.animate().scaleX(1f).scaleY(1f).setDuration(150).start()
+                }
+
+                // Expand/collapse sidebar and toggle labels
+                sidebar?.let { bar ->
+                    val anyFocused = buttons.any { it?.hasFocus() == true }
+                    if (anyFocused) {
+                        expandSidebar(activity, bar, true)
+                        setLabelsVisible(labels, true)
+                    } else {
+                        // Post to ensure focus state has settled
+                        bar.post {
+                            val stillAnyFocused = buttons.any { it?.hasFocus() == true }
+                            if (!stillAnyFocused) {
+                                setLabelsVisible(labels, false)
+                                expandSidebar(activity, bar, false)
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -82,6 +114,31 @@ object NavAction {
 
     fun Int.dpToPx(context: Context): Int {
         return (this * context.resources.displayMetrics.density).toInt()
+    }
+
+    private fun expandSidebar(context: Context, sidebar: LinearLayout, expand: Boolean) {
+        val collapsed = 40.dpToPx(context)
+        val expanded = 200.dpToPx(context)
+        val start = sidebar.layoutParams.width
+        val end = if (expand) expanded else collapsed
+        if (start == end) return
+
+        val animator = ValueAnimator.ofInt(start, end)
+        animator.duration = 180
+        animator.interpolator = DecelerateInterpolator()
+        animator.addUpdateListener { valueAnimator ->
+            val value = valueAnimator.animatedValue as Int
+            val params: ViewGroup.LayoutParams = sidebar.layoutParams
+            params.width = value
+            sidebar.layoutParams = params
+        }
+        animator.start()
+    }
+
+    private fun setLabelsVisible(labels: List<TextView?>, visible: Boolean) {
+        labels.forEach { label ->
+            label?.visibility = if (visible) View.VISIBLE else View.GONE
+        }
     }
 
 

@@ -21,62 +21,174 @@
         app:layout_constraintTop_toTopOf="parent"
         android:background="@drawable/sidbar_focus">
 
-        <ImageButton
-            android:id="@+id/btnHome"
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="48dp"
+            android:layout_height="wrap_content"
             android:layout_marginBottom="24dp"
-            android:background="@android:color/transparent"
-            android:clickable="true"
-            android:focusable="true"
-            android:src="@drawable/ic_home"
-            app:tint="@color/nav_icon_color_selector"
-            android:layout_gravity="bottom"/>
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
-        <ImageButton
-            android:id="@+id/btnMovies"
+            <ImageButton
+                android:id="@+id/btnHome"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="@android:color/transparent"
+                android:clickable="true"
+                android:focusable="true"
+                android:contentDescription="Home"
+                android:nextFocusDown="@id/btnMovies"
+                android:nextFocusUp="@id/btnProfile"
+                android:src="@drawable/ic_home"
+                app:tint="@color/nav_icon_color_selector"/>
+
+            <TextView
+                android:id="@+id/labelHome"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="Home"
+                android:textColor="@color/FG_color"
+                android:textSize="14sp"
+                android:visibility="gone"/>
+        </LinearLayout>
+
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="48dp"
+            android:layout_height="wrap_content"
             android:layout_marginBottom="24dp"
-            android:background="@android:color/transparent"
-            android:src="@drawable/ic_category"
-            app:tint="@color/nav_icon_color_selector"
-            android:clickable="true"
-            android:focusable="true"/>
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
-        <ImageButton
-            android:id="@+id/btnTvShow"
+            <ImageButton
+                android:id="@+id/btnMovies"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="@android:color/transparent"
+                android:contentDescription="Movies"
+                android:nextFocusUp="@id/btnHome"
+                android:nextFocusDown="@id/btnTvShow"
+                android:src="@drawable/ic_category"
+                app:tint="@color/nav_icon_color_selector"
+                android:clickable="true"
+                android:focusable="true"/>
+
+            <TextView
+                android:id="@+id/labelMovies"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="Movies"
+                android:textColor="@color/FG_color"
+                android:textSize="14sp"
+                android:visibility="gone"/>
+        </LinearLayout>
+
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="48dp"
+            android:layout_height="wrap_content"
             android:layout_marginBottom="24dp"
-            android:background="@android:color/transparent"
-            android:src="@drawable/ic_category"
-            app:tint="@color/nav_icon_color_selector"
-            android:clickable="true"
-            android:focusable="true"/>
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
-        <ImageButton
-            android:id="@+id/btnSearch"
+            <ImageButton
+                android:id="@+id/btnTvShow"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="@android:color/transparent"
+                android:contentDescription="TV Shows"
+                android:nextFocusUp="@id/btnMovies"
+                android:nextFocusDown="@id/btnSearch"
+                android:src="@drawable/ic_category"
+                app:tint="@color/nav_icon_color_selector"
+                android:clickable="true"
+                android:focusable="true"/>
+
+            <TextView
+                android:id="@+id/labelTvShow"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="TV Shows"
+                android:textColor="@color/FG_color"
+                android:textSize="14sp"
+                android:visibility="gone"/>
+        </LinearLayout>
+
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="48dp"
+            android:layout_height="wrap_content"
             android:layout_marginBottom="24dp"
-            android:background="@android:color/transparent"
-            android:src="@drawable/ic_search"
-            app:tint="@color/nav_icon_color_selector"
-            android:clickable="true"
-            android:focusable="true"/>
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
-        <ImageButton
-            android:id="@+id/btnProfile"
+            <ImageButton
+                android:id="@+id/btnSearch"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="@android:color/transparent"
+                android:contentDescription="Search"
+                android:nextFocusUp="@id/btnTvShow"
+                android:nextFocusDown="@id/btnProfile"
+                android:src="@drawable/ic_search"
+                app:tint="@color/nav_icon_color_selector"
+                android:clickable="true"
+                android:focusable="true"/>
+
+            <TextView
+                android:id="@+id/labelSearch"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="Search"
+                android:textColor="@color/FG_color"
+                android:textSize="14sp"
+                android:visibility="gone"/>
+        </LinearLayout>
+
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:background="@android:color/transparent"
-            android:contentDescription=""
-            android:src="@drawable/ic_person"
-            app:tint="@color/nav_icon_color_selector"
-            android:layout_gravity="bottom"
-            android:clickable="true"
-            android:focusable="true"/>
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageButton
+                android:id="@+id/btnProfile"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="@android:color/transparent"
+                android:contentDescription="Profile"
+                android:nextFocusUp="@id/btnSearch"
+                android:nextFocusDown="@id/btnHome"
+                android:src="@drawable/ic_person"
+                app:tint="@color/nav_icon_color_selector"
+                android:clickable="true"
+                android:focusable="true"/>
+
+            <TextView
+                android:id="@+id/labelProfile"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="Profile"
+                android:textColor="@color/FG_color"
+                android:textSize="14sp"
+                android:visibility="gone"/>
+        </LinearLayout>
 
     </LinearLayout>
 

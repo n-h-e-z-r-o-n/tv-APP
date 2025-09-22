@@ -142,7 +142,7 @@ class Home_Page : AppCompatActivity() {
                             item.has("title") && !item.isNull("title") -> item.getString("title")
                             else -> "Untitled"
                         }
-                        val imgUrl = "https://image.tmdb.org/t/p/w500" + item.getString("poster_path")
+                        val imgUrl = "https://image.tmdb.org/t/p/w780" + item.getString("poster_path")
                         val cast_id = item.getString("id")
                         val vote_average  = item.getString("vote_average")
 
