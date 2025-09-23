@@ -2,5 +2,5 @@
 <!-- res/values/dimens.xml -->
 <resources>
     <dimen name="grid_item_width">130dp</dimen>
-    <dimen name="grid_item_height">200dp</dimen>
+    <dimen name="grid_item_height">195dp</dimen>
 </resources>

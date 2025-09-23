@@ -1,6 +1,8 @@
 <!-- res/layout/item_grid.xml -->
 <androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:card_view="http://schemas.android.com/apk/res-auto"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="@dimen/grid_item_width"
     android:layout_height="@dimen/grid_item_height"
     android:clickable="true"
@@ -8,31 +10,90 @@
     android:gravity="center"
     android:orientation="vertical"
     card_view:cardCornerRadius="12dp"
-    card_view:cardElevation="6dp"
+    card_view:cardElevation="2dp"
+    card_view:cardBackgroundColor="@android:color/transparent"
     android:foreground="@drawable/card_focus">
 
-
-    <ImageView
-        android:id="@+id/itemImage"
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:background="#4545"
-        android:scaleType="fitXY"
-        />
+        android:layout_height="match_parent">
 
-    <TextView
-        android:id="@+id/itemText"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:background="#7C0A02"
-        android:ellipsize="end"
-        android:gravity="center"
-        android:padding="8dp"
-        android:rotationX="0"
-        android:singleLine="true"
-        android:textColor="#0C0404"
-        android:textSize="14sp" />
 
+        <ImageView
+            android:id="@+id/itemImage"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@android:color/transparent"
+            android:scaleType="fitXY"
+            />
+
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="30dp"
+            android:layout_height="15dp"
+            app:cardCornerRadius="4dp"
+            app:cardElevation="1dp"
+            app:cardBackgroundColor="@android:color/transparent"
+            android:layout_marginStart="5dp"
+            android:layout_marginTop="10dp"
+            >
+            <TextView
+                android:id="@+id/itemText"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/BG_color"
+                android:ellipsize="end"
+                android:text="2015"
+                android:gravity="center"
+                android:padding="1dp"
+                android:rotationX="0"
+                android:singleLine="true"
+                android:textColor="@color/FG_color"
+                android:textSize="9sp" />
+
+        </androidx.cardview.widget.CardView>
+
+        <!-- 🔥 Focus Overlay -->
+        <LinearLayout
+            android:id="@+id/focusOverlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:background="@drawable/item_grid_overlay"
+            android:gravity="bottom"
+            android:visibility="visible"
+            android:padding="8dp"
+            >
+
+            <TextView
+                android:id="@+id/showTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:singleLine="true"
+                android:text="Show Title Here"
+                android:textColor="@android:color/white"
+                android:textSize="7sp"
+                android:fontFamily="sans-serif-medium"
+                tools:ignore="SmallSp"
+                android:layout_gravity="center"
+                android:gravity="center"/>
+            <TextView
+                android:id="@+id/showRating"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:singleLine="true"
+                android:text="Show Title Here"
+                android:textColor="@android:color/white"
+                android:textSize="7sp"
+                android:fontFamily="sans-serif-medium"
+                tools:ignore="SmallSp"
+                android:layout_gravity="center"
+                android:gravity="center"/>
+        </LinearLayout>
+
+    </FrameLayout>
 
 </androidx.cardview.widget.CardView>

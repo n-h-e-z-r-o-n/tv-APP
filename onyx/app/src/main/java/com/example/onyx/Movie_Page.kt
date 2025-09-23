@@ -74,8 +74,13 @@ class Movie_Page : AppCompatActivity() {
                         val imgUrl = item.getString("large_cover_image")
                         val imdb_code = item.getString("imdb_code")
                         val type = "movie"
+                        val year = item.getString("year")
+                        val rating = item.getString("year")
+                        val runtime = item.getString("runtime")
+
+
                         //movies.add(MovieItem(title, imgUrl, imdb_code, type))
-                        val movieItem = MovieItem(title, imgUrl, imdb_code, type)
+                        val movieItem = MovieItem(title=title, imageUrl=imgUrl, imdbCode=imdb_code, type=type, year = year, rating=rating, runtime=runtime)
                         withContext(Dispatchers.Main) {
                             adapter.addItem(movieItem)  // 👈 add one at a time
                         }

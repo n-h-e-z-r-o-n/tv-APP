@@ -25,16 +25,45 @@ class GridAdapter(
 
     inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val Movie_image: ImageView = view.findViewById(R.id.itemImage)
-        val Movie_title: TextView = view.findViewById(R.id.itemText)
+        val showYear: TextView = view.findViewById(R.id.itemText)
+        val showTitle: TextView = view.findViewById(R.id.showTitle)
+
+        val showRating: TextView = view.findViewById(R.id.showRating)
+
+
+
 
         init {
+
             itemView.setOnFocusChangeListener { v, hasFocus ->
-                v.animate().scaleX(if (hasFocus) 1.02f else 1f)
+                // Scale animation
+                v.animate()
+                    .scaleX(if (hasFocus) 1.02f else 1f)
                     .scaleY(if (hasFocus) 1.02f else 1f)
                     .setDuration(150)
                     .start()
+
+                try {
+                    // Overlay fade
+                    val overlay: View = itemView.findViewById(R.id.focusOverlay)
+
+                    if (hasFocus) {
+                        overlay.apply {
+                            alpha = 0f
+                            visibility = View.VISIBLE
+                            animate().alpha(1f).setDuration(150).start()
+                        }
+                    } else {
+                        overlay.animate()
+                            .alpha(0f)
+                            .setDuration(150)
+                            .withEndAction { overlay.visibility = View.GONE }
+                            .start()
+                    }
+                } catch (e : Exception){}
             }
         }
+
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -51,10 +80,17 @@ class GridAdapter(
         val imageUrl = currentItem.imageUrl
         val imdbCode = currentItem.imdbCode
         val type = currentItem.type
+        val year = currentItem.year
+        val rating = currentItem.rating
+        val runtime = currentItem.runtime
 
 
 
-        holder.Movie_title.text = title
+
+
+        holder.showYear.text = year
+        holder.showTitle.text = title
+        holder.showRating.text = rating
 
         /*
         Picasso.get()
@@ -71,7 +107,7 @@ class GridAdapter(
             .into(holder.Movie_image)
 
         if(currentItem.type == "Actor"){
-            holder.itemView.setOnClickListener {
+            holder.Movie_image.setOnClickListener {
                 val context = holder.itemView.context
                 val intent = android.content.Intent(context, Actor_Page::class.java)
                 intent.putExtra("imdb_code", currentItem.imdbCode)
@@ -218,10 +254,15 @@ class EpisodesAdapter(
 
 
 data class MovieItem(
-    val title: String,
-    val imageUrl: String,
-    val imdbCode: String,
-    val type: String
+    val title: String = "null",
+    val imageUrl: String= "null",
+    val imdbCode: String= "null",
+    val type: String = "null",
+    val year: String = "null",
+    val rating: String = "null",
+    val runtime: String = "null"
+
+
 )
 
 

@@ -25,11 +25,12 @@
                 <LinearLayout
                     android:id="@+id/searchBarContainer"
                     android:layout_width="match_parent"
-                    android:layout_height="64dp"
+                    android:layout_height="wrap_content"
+                    android:padding="2dp"
                     android:layout_marginStart="24dp"
                     android:layout_marginEnd="24dp"
                     android:layout_marginTop="24dp"
-                    android:background="#1A1F2B"
+                    android:background="@android:color/transparent"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
                     android:paddingStart="16dp"
@@ -54,7 +55,7 @@
                     <EditText
                         android:id="@+id/searchInput"
                         android:layout_width="0dp"
-                        android:layout_height="56dp"
+                        android:layout_height="50dp"
                         android:layout_weight="1"
                         android:background="@drawable/tv_edittext_background"
                         android:clickable="true"
@@ -72,7 +73,9 @@
                         android:singleLine="true"
                         android:textColor="#FFFFFF"
                         android:textColorHint="#8C94A7"
-                        android:textSize="18sp" />
+                        android:textSize="18sp"
+                        android:layout_gravity="center"
+                        android:foregroundGravity="center"/>
 
                 </LinearLayout>
 

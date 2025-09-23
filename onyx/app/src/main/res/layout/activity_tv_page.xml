@@ -25,7 +25,10 @@
             android:scrollbars="none"
             android:visibility="visible"
             android:paddingStart="41dp"
-            tools:ignore="RtlSymmetry" />
+            tools:ignore="RtlSymmetry"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:descendantFocusability="beforeDescendants"/>
 
         <include layout="@layout/side_bar"/>
     </FrameLayout>

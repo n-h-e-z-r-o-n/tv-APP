@@ -29,7 +29,7 @@ class Home_Page : AppCompatActivity() {
         NavAction.setupSidebar(this)
 
        SliderData()
-       TrendingData()
+       //TrendingData()
        //PopularData()
     }
 

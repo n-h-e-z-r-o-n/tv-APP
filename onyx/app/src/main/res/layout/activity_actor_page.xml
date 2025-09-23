@@ -8,36 +8,42 @@
     android:background="@color/BG_color"
     tools:context=".Actor_Page">
 
-    <LinearLayout
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="horizontal">
 
-        <include layout="@layout/side_bar"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent" />
+
 
         <LinearLayout
             android:layout_height="match_parent"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:overScrollMode="always"
-            android:layout_weight="1"
+            android:paddingStart="41dp"
             android:orientation="vertical"
-            >
+            tools:ignore="RtlSymmetry">
+
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/Actor_Results"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:layout_width="match_parent"
                 android:clipToPadding="false"
                 android:overScrollMode="never"
                 android:scrollbars="none"
                 android:layout_gravity="center_vertical"
-                android:layout_weight="1" />
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:descendantFocusability="beforeDescendants"
+                />
+
+
 
 
         </LinearLayout>
 
-    </LinearLayout>
+        <include layout="@layout/side_bar" />
+
+    </FrameLayout>
 
 
 

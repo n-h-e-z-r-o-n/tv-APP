@@ -6,6 +6,7 @@ import android.content.Intent
 import android.graphics.Typeface
 import android.os.Bundle
 import android.util.Log
+import android.view.KeyEvent
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
@@ -258,13 +259,7 @@ class Watch_Page : AppCompatActivity() {
                         }
 
                         setupExpandableButton(watchButton, 105, 40, "▶ Play", "▶")
-                        setupExpandableButton(
-                            FaveButton,
-                            130,
-                            40,
-                            "\uD83E\uDD0D Favourite",
-                            "\uD83E\uDD0D"
-                        )
+
                         setupExpandableButton(
                             TrailerButton,
                             130,
@@ -278,6 +273,14 @@ class Watch_Page : AppCompatActivity() {
                             44,
                             "🌐 ${servers[currentServerIndex]}",
                             "🌐"
+                        )
+
+                        setupFavoriteButton(
+                            button = FaveButton,
+                            id = tmdbId.toString(),
+                            type = type.toString(),
+                            title = original_title,
+                            imageUrl = poster_Url
                         )
 
                         if(type=="tv"){
@@ -555,6 +558,8 @@ class Watch_Page : AppCompatActivity() {
                         recyclerView.adapter = GridAdapter(movies,  R.layout.square_card)
                         val spacing = (19 * resources.displayMetrics.density).toInt() // 16dp to px
                         recyclerView.addItemDecoration(EqualSpaceItemDecoration(spacing))
+
+
                     }
 
 
@@ -585,6 +590,43 @@ class Watch_Page : AppCompatActivity() {
                 params.width = collapsedWidthDp.dpToPx(button.context)
             }
             button.layoutParams = params
+        }
+    }
+
+    private fun setupFavoriteButton(
+        button: Button,
+        id: String,
+        type: String,
+        title: String,
+        imageUrl: String
+    ) {
+        fun applyLabel() {
+            val fav = FavoritesManager.isFavorite(this@Watch_Page, id, type)
+            val expanded = if (fav) "x Remove from Fav" else "+ Add to Fav"
+            val collapsed = "\uD83E\uDD0D"
+            setupExpandableButton(button, 150, 40, expanded, collapsed)
+            // Also set current text to match state if already focused
+            if (button.isFocused) button.text = expanded else button.text = collapsed
+        }
+
+        applyLabel()
+
+        button.setOnClickListener {
+            val fav = FavoritesManager.isFavorite(this@Watch_Page, id, type)
+            if (fav) {
+                FavoritesManager.removeFavorite(this@Watch_Page, id, type)
+            } else {
+                FavoritesManager.addFavorite(
+                    this@Watch_Page,
+                    FavoritesManager.FavoriteItem(
+                        id = id,
+                        title = title,
+                        imageUrl = imageUrl,
+                        type = type
+                    )
+                )
+            }
+            applyLabel()
         }
     }
 

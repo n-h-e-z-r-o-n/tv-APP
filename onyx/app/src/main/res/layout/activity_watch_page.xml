@@ -78,13 +78,15 @@
                         android:gravity="center"
                         android:orientation="vertical"
                         card_view:cardCornerRadius="14dp"
-                        card_view:cardElevation="1dp"
+                        card_view:cardElevation="3dp"
+                        card_view:cardBackgroundColor="@android:color/transparent"
                         android:foreground="@drawable/card_focus">
                         <ImageView
                             android:id="@+id/posterImageView"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
-                            android:scaleType="fitXY"/>
+                            android:scaleType="fitXY"
+                            android:background="@android:color/transparent"/>
                     </androidx.cardview.widget.CardView>
 
                     <LinearLayout
@@ -276,7 +278,7 @@
 
                         <LinearLayout
                             android:layout_width="460dp"
-                            android:layout_height="92dp"
+                            android:layout_height="100dp"
                             android:layout_gravity="bottom"
                             android:gravity="start"
                             android:maxHeight="145dp"
@@ -290,7 +292,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="8dp"
                                 android:ellipsize="end"
-                                android:maxLines="4"
+                                android:maxLines="5"
                                 android:singleLine="false"
                                 android:text="Loading . . ."
                                 android:textColor="@android:color/white"
@@ -318,7 +320,12 @@
                                 android:focusableInTouchMode="true"
                                 android:text="▶"
                                 android:textColor="@android:color/white"
-                                android:textSize="15sp" />
+                                android:textSize="15sp"
+                                android:textAllCaps="false"
+                                android:nextFocusLeft="@+id/serverButton"
+                                android:nextFocusRight="@+id/TrailerButton"
+                                android:nextFocusDown="@+id/Cast_widget"
+                                android:elevation="4dp"/>
 
                             <Button
                                 android:id="@+id/TrailerButton"
@@ -330,7 +337,12 @@
                                 android:focusableInTouchMode="true"
                                 android:text="🎬"
                                 android:textColor="@android:color/white"
-                                android:textSize="14sp" />
+                                android:textSize="14sp"
+                                android:textAllCaps="false"
+                                android:nextFocusLeft="@+id/watchNowButton"
+                                android:nextFocusRight="@+id/favoriteButton"
+                                android:nextFocusDown="@+id/Cast_widget"
+                                android:elevation="4dp"/>
 
                             <Button
                                 android:id="@+id/favoriteButton"
@@ -342,7 +354,12 @@
                                 android:focusableInTouchMode="true"
                                 android:text="🤍"
                                 android:textColor="@android:color/white"
-                                android:textSize="14sp" />
+                                android:textSize="14sp"
+                                android:textAllCaps="false"
+                                android:nextFocusLeft="@+id/TrailerButton"
+                                android:nextFocusRight="@+id/serverButton"
+                                android:nextFocusDown="@+id/Cast_widget"
+                                android:elevation="4dp"/>
 
                             <Button
                                 android:id="@+id/serverButton"
@@ -354,7 +371,12 @@
                                 android:focusableInTouchMode="true"
                                 android:text="🌐"
                                 android:textColor="@android:color/white"
-                                android:textSize="14sp" />
+                                android:textSize="14sp"
+                                android:textAllCaps="false"
+                                android:nextFocusLeft="@+id/favoriteButton"
+                                android:nextFocusRight="@+id/watchNowButton"
+                                android:nextFocusDown="@+id/Cast_widget"
+                                android:elevation="4dp"/>
                         </LinearLayout>
 
                 </LinearLayout>
@@ -525,6 +547,7 @@
                     android:scrollbars="none"
                     tools:layout_editor_absoluteY="8dp"
                     android:gravity="center"
+
                     />
             </LinearLayout>
 
@@ -557,7 +580,8 @@
                     android:paddingHorizontal="32dp"
                     android:scrollbars="none"
                     android:orientation="horizontal"
-                    tools:layout_editor_absoluteY="8dp" />
+                    tools:layout_editor_absoluteY="8dp"
+                    android:descendantFocusability="afterDescendants"/>
 
 
             </FrameLayout>
