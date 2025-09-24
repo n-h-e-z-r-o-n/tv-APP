@@ -24,9 +24,7 @@ class Tv_Page : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_tv_page)
-
         NavAction.setupSidebar(this@Tv_Page)
-
         TvShows()
     }
 
@@ -123,12 +121,18 @@ class Tv_Page : AppCompatActivity() {
                         Log.e("DEBUG_TAG_TvShows 3", jsonObject.toString())
 
                         val title = jsonObject.getString("name")
+                        val numberOfSeasons = try{jsonObject.getJSONObject("last_episode_to_air").getString("season_number")} catch (e: Exception) {""}
+                        val episodeNumber = try{jsonObject.getJSONObject("last_episode_to_air").getString("episode_number")} catch (e: Exception) {""}
+                        val showD = "SS$numberOfSeasons EPS$episodeNumber"
+                        val firstAirDate = jsonObject.getString("first_air_date").substring(0, 4)
+                        val voteAverage = "☆" + jsonObject.getString("vote_average").substring(0, 3)
+
                         val imgUrl = "https://image.tmdb.org/t/p/w500" + jsonObject.getString("poster_path")
                         val id = jsonObject.getString("id")
                         val type = "tv"
-                        movies.add(MovieItem(title, imgUrl, id, type))
+                        movies.add(MovieItem(title=title, imageUrl=imgUrl, imdbCode=id, type=type, year="", rating="", runtime=""))
 
-                        val movieItem = MovieItem(title, imgUrl, id, type)
+                        val movieItem = MovieItem(title=title, imageUrl=imgUrl, imdbCode=id, type=type, year=firstAirDate, rating=voteAverage, runtime=showD)
 
                         withContext(Dispatchers.Main) {
                             adapter.addItem(movieItem)  // 👈 add one at a time

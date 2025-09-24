@@ -72,15 +72,15 @@ class Movie_Page : AppCompatActivity() {
                         val item = moviesArray.getJSONObject(i)
                         val title = item.getString("title_english")
                         val imgUrl = item.getString("large_cover_image")
-                        val imdb_code = item.getString("imdb_code")
+                        val imdbCode = item.getString("imdb_code")
                         val type = "movie"
                         val year = item.getString("year")
-                        val rating = item.getString("year")
-                        val runtime = item.getString("runtime")
+                        val rating = "☆"+ item.getString("rating").substring(0, 3)
+                        val runtime = item.getString("runtime") + " min"
 
 
                         //movies.add(MovieItem(title, imgUrl, imdb_code, type))
-                        val movieItem = MovieItem(title=title, imageUrl=imgUrl, imdbCode=imdb_code, type=type, year = year, rating=rating, runtime=runtime)
+                        val movieItem = MovieItem(title=title, imageUrl=imgUrl, imdbCode=imdbCode, type=type, year = year, rating=rating, runtime=runtime)
                         withContext(Dispatchers.Main) {
                             adapter.addItem(movieItem)  // 👈 add one at a time
                         }

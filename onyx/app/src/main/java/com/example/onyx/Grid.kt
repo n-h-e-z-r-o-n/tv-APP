@@ -26,9 +26,13 @@ class GridAdapter(
     inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val Movie_image: ImageView = view.findViewById(R.id.itemImage)
         val showYear: TextView = view.findViewById(R.id.itemText)
-        val showTitle: TextView = view.findViewById(R.id.showTitle)
 
-        val showRating: TextView = view.findViewById(R.id.showRating)
+
+            val showTitle: TextView = view.findViewById(R.id.showTitle)
+            val showRating: TextView = view.findViewById(R.id.showRating)
+            val showRS: TextView = view.findViewById(R.id.showRS)
+            val showType: TextView = view.findViewById(R.id.showType)
+
 
 
 
@@ -91,6 +95,208 @@ class GridAdapter(
         holder.showYear.text = year
         holder.showTitle.text = title
         holder.showRating.text = rating
+        holder.showRS.text = runtime
+        holder.showType.text = type
+
+
+
+
+        /*
+        Picasso.get()
+            .load(imageUrl)
+            .fit()
+            .centerInside()
+            .into(holder.Movie_image)
+
+         */
+
+        Glide.with(holder.itemView.context)
+            .load(imageUrl)
+            .centerInside()
+            .into(holder.Movie_image)
+
+        if(currentItem.type == "Actor"){
+            holder.Movie_image.setOnClickListener {
+                val context = holder.itemView.context
+                val intent = android.content.Intent(context, Actor_Page::class.java)
+                intent.putExtra("imdb_code", currentItem.imdbCode)
+                intent.putExtra("type", currentItem.type)
+                context.startActivity(intent)
+            }
+        }else {
+            holder.itemView.setOnClickListener {
+                val context = holder.itemView.context
+                val intent = android.content.Intent(context, Watch_Page::class.java)
+                intent.putExtra("imdb_code", currentItem.imdbCode)
+                intent.putExtra("type", currentItem.type)
+                context.startActivity(intent)
+            }
+        }
+    }
+
+    override fun getItemCount() = items.size
+
+    // 👇 helper to add items one by one
+    fun addItem(item: MovieItem) {
+        items.add(item)
+        notifyItemInserted(items.size - 1)
+
+    }
+}
+
+
+
+class OtherAdapter(
+    private val  items: MutableList<MovieItem>,   // ✅ mutable now,
+    private val layoutResId: Int   // 👈 pass in the layout resource
+) :  RecyclerView.Adapter<OtherAdapter.ViewHolder>() {
+
+    inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        val Movie_image: ImageView = view.findViewById(R.id.itemImage)
+        val itemText: TextView = view.findViewById(R.id.itemText)
+
+
+
+        init {
+
+            itemView.setOnFocusChangeListener { v, hasFocus ->
+                // Scale animation
+                v.animate()
+                    .scaleX(if (hasFocus) 1.02f else 1f)
+                    .scaleY(if (hasFocus) 1.02f else 1f)
+                    .setDuration(150)
+                    .start()
+
+
+            }
+        }
+
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val view = LayoutInflater.from(parent.context)
+            .inflate(layoutResId, parent, false)
+        return ViewHolder(view)
+    }
+
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+
+        val currentItem = items[position]
+
+        val title = currentItem.title
+        val imageUrl = currentItem.imageUrl
+        val imdbCode = currentItem.imdbCode
+        val type = currentItem.type
+
+
+        Glide.with(holder.itemView.context)
+            .load(imageUrl)
+            .centerInside()
+            .into(holder.Movie_image)
+
+
+        holder.itemView.setOnClickListener {
+            val context = holder.itemView.context
+            val intent = android.content.Intent(context, Watch_Page::class.java)
+            intent.putExtra("imdb_code", imdbCode)
+            intent.putExtra("type", type)
+            context.startActivity(intent)
+        }
+
+    }
+
+    override fun getItemCount() = items.size
+
+    // 👇 helper to add items one by one
+    fun addItem(item: MovieItem) {
+        items.add(item)
+        notifyItemInserted(items.size - 1)
+
+    }
+}
+
+
+
+
+class CastAdapter(
+    private val  items: MutableList<MovieItem>,   // ✅ mutable now,
+    private val layoutResId: Int   // 👈 pass in the layout resource
+) :  RecyclerView.Adapter<CastAdapter.ViewHolder>() {
+
+    inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        val Movie_image: ImageView = view.findViewById(R.id.itemImage)
+        val showYear: TextView = view.findViewById(R.id.itemText)
+
+
+        val showTitle: TextView = view.findViewById(R.id.showTitle)
+        val showRating: TextView = view.findViewById(R.id.showRating)
+        val showRS: TextView = view.findViewById(R.id.showRS)
+        val showType: TextView = view.findViewById(R.id.showType)
+
+
+        init {
+
+            itemView.setOnFocusChangeListener { v, hasFocus ->
+                // Scale animation
+                v.animate()
+                    .scaleX(if (hasFocus) 1.02f else 1f)
+                    .scaleY(if (hasFocus) 1.02f else 1f)
+                    .setDuration(150)
+                    .start()
+
+                try {
+                    // Overlay fade
+                    val overlay: View = itemView.findViewById(R.id.focusOverlay)
+
+                    if (hasFocus) {
+                        overlay.apply {
+                            alpha = 0f
+                            visibility = View.VISIBLE
+                            animate().alpha(1f).setDuration(150).start()
+                        }
+                    } else {
+                        overlay.animate()
+                            .alpha(0f)
+                            .setDuration(150)
+                            .withEndAction { overlay.visibility = View.GONE }
+                            .start()
+                    }
+                } catch (e : Exception){}
+            }
+        }
+
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val view = LayoutInflater.from(parent.context)
+            .inflate(layoutResId, parent, false)
+        return ViewHolder(view)
+    }
+
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+
+        val currentItem = items[position]
+
+        val title = currentItem.title
+        val imageUrl = currentItem.imageUrl
+        val imdbCode = currentItem.imdbCode
+        val type = currentItem.type
+        val year = currentItem.year
+        val rating = currentItem.rating
+        val runtime = currentItem.runtime
+
+
+
+
+
+        holder.showYear.text = year
+        holder.showTitle.text = title
+        holder.showRating.text = rating
+        holder.showRS.text = runtime
+        holder.showType.text = type
+
+
+
 
         /*
         Picasso.get()
@@ -125,8 +331,6 @@ class GridAdapter(
         }
 
 
-
-
     }
 
     override fun getItemCount() = items.size
@@ -138,8 +342,6 @@ class GridAdapter(
 
     }
 }
-
-
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -254,13 +456,13 @@ class EpisodesAdapter(
 
 
 data class MovieItem(
-    val title: String = "null",
-    val imageUrl: String= "null",
-    val imdbCode: String= "null",
-    val type: String = "null",
-    val year: String = "null",
-    val rating: String = "null",
-    val runtime: String = "null"
+    val title: String = "",
+    val imageUrl: String= "",
+    val imdbCode: String= "",
+    val type: String = "",
+    val year: String = "",
+    val rating: String = "",
+    val runtime: String = ""
 
 
 )

@@ -16,6 +16,13 @@ class CardSwiper(
     private val layoutResId: Int   // 👈 pass in the layout resource
 ) :  RecyclerView.Adapter<CardSwiper.ViewHolder>() {
 
+    private val genreMap = mapOf(
+        28 to "Action", 12 to "Adventure", 16 to "Animation", 35 to "Comedy",
+        80 to "Crime", 99 to "Documentary", 18 to "Drama", 10751 to "Family",
+        14 to "Fantasy", 36 to "History", 27 to "Horror", 10402 to "Music",
+        9648 to "Mystery", 10749 to "Romance", 878 to "Science Fiction",
+        10770 to "TV Movie", 53 to "Thriller", 10752 to "War", 37 to "Western"
+    )
     inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
 
 
@@ -23,6 +30,16 @@ class CardSwiper(
         val SliderTitle: TextView = view.findViewById(R.id.SliderTitle)
         val SliderOverview: TextView = view.findViewById(R.id.SliderOverview)
         val SliderButton: Button = view.findViewById(R.id.SliderButton)
+
+        val SliderType: TextView = view.findViewById(R.id.SliderType)
+        val SliderRating: TextView = view.findViewById(R.id.SliderRating)
+        val SliderYear: TextView = view.findViewById(R.id.SliderYear)
+        val SliderGenre: TextView = view.findViewById(R.id.SliderGenre)
+
+
+
+
+
 
         /*
         init {
@@ -44,6 +61,8 @@ class CardSwiper(
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        val realPosition = position % items.size      // map to your real data
+
 
         val currentItem = items[position]
 
@@ -64,32 +83,34 @@ class CardSwiper(
         holder.SliderTitle.text = title
         holder.SliderOverview.text = overview
 
+        if(type=="tv"){
+            holder.SliderType.text = "\uD83D\uDCFA Tv"
+        } else{
+            holder.SliderType.text = "\uD83C\uDFAC Movie"
+        }
+
+        holder.SliderRating.text = vote_average+"Imdb"
+        holder.SliderYear.text = release_date
+
+
+        val genreNames = genre_ids.mapNotNull { id -> genreMap[id] }
+        val genreText = genreNames.joinToString(" • ")
+        holder.SliderGenre.text = genreText
+
 
         Glide.with(holder.itemView.context)
             .load(imageUrl)
             .centerInside()
             .into(holder.SliderBackdrop)
 
-        if(currentItem.type == "Actor"){
-            holder.SliderButton.setOnClickListener {
-                val context = holder.itemView.context
-                val intent = android.content.Intent(context, Actor_Page::class.java)
-                intent.putExtra("imdb_code", currentItem.imdbCode)
-                intent.putExtra("type", currentItem.type)
-                context.startActivity(intent)
-            }
-        }else {
+
             holder.SliderButton.setOnClickListener {
                 val context = holder.itemView.context
                 val intent = android.content.Intent(context, Watch_Page::class.java)
-                intent.putExtra("imdb_code", currentItem.imdbCode)
-                intent.putExtra("type", currentItem.type)
+                intent.putExtra("imdb_code", imdbCode)
+                intent.putExtra("type", type)
                 context.startActivity(intent)
             }
-        }
-
-
-
 
     }
 
@@ -112,7 +133,7 @@ data class SliderItem(
     val release_date: String,
     val vote_average: String,
     val poster_path: String,
-    val genre_ids: String
+    val genre_ids: List<Int>
 )
 
 

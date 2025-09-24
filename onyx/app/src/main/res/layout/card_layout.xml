@@ -35,6 +35,8 @@
             android:orientation="horizontal"
             android:layout_gravity="right" />
 
+
+
         <LinearLayout
             android:layout_width="400dp"
             android:layout_height="wrap_content"
@@ -51,22 +53,103 @@
                     android:layout_gravity="bottom"
                     android:ellipsize="end"
                     android:maxLines="3"
+                    android:text="Sakamoto Days Part 2"
                     android:singleLine="false"
                     android:textColor="@android:color/white"
                     android:textSize="25sp"
                     android:textStyle="bold"
-                    android:layout_marginBottom="20dp"
+                    android:layout_marginBottom="5dp"
                     tools:ignore="Suspicious0dp"
+                    android:fontFamily="sans-serif-condensed-medium"
                     />
+                <TextView
+                    android:id="@+id/SliderGenre"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:text="Action"
+                    android:singleLine="false"
+                    android:textColor="@android:color/white"
+                    android:textSize="13sp"
+                    tools:ignore="Suspicious0dp"
+                    android:textStyle="bold"
+                    android:paddingEnd="5dp"
+                    android:paddingStart="0dp"
+                    android:fontFamily="sans-serif"
+                    />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="20dp"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="10dp">
+
+                    <TextView
+                        android:id="@+id/SliderType"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:layout_gravity="bottom"
+                        android:ellipsize="end"
+                        android:maxLines="7"
+                        android:text="Mv"
+                        android:singleLine="false"
+                        android:textColor="@android:color/white"
+                        android:textSize="13sp"
+                        tools:ignore="Suspicious0dp"
+                        android:gravity="center"
+                        android:textStyle="bold"
+                        android:paddingEnd="15dp"
+                        android:paddingStart="0dp"
+                        />
+
+                    <TextView
+                        android:id="@+id/SliderRating"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:layout_gravity="bottom"
+                        android:ellipsize="end"
+                        android:maxLines="7"
+                        android:text="9.7 imdb"
+                        android:singleLine="false"
+                        android:textColor="@android:color/white"
+                        android:textSize="13sp"
+                        tools:ignore="Suspicious0dp"
+                        android:gravity="center"
+                        android:textStyle="bold"
+                        android:paddingEnd="15dp"
+                        android:paddingStart="15dp"
+                        />
+                    <TextView
+                        android:id="@+id/SliderYear"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:layout_gravity="bottom"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:text="2025"
+                        android:singleLine="false"
+                        android:textColor="@android:color/white"
+                        android:textSize="13sp"
+                        tools:ignore="Suspicious0dp"
+                        android:gravity="center"
+                        android:textStyle="bold"
+                        android:paddingEnd="15dp"
+                        android:paddingStart="15dp"
+                        />
+
+
+                </LinearLayout>
+
+
 
 
                 <TextView
                     android:id="@+id/SliderOverview"
                     android:layout_width="match_parent"
-                    android:layout_height="120dp"
+                    android:layout_height="150dp"
                     android:layout_gravity="bottom"
                     android:ellipsize="end"
-                    android:maxLines="7"
+                    android:maxLines="10"
                     android:singleLine="false"
                     android:textColor="@android:color/white"
                     android:textSize="13sp"
