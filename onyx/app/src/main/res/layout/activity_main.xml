@@ -8,6 +8,6 @@
     tools:context=".MainActivity"
     >
 
-    <include layout="@layout/side_bar"/>
+    <include layout="@layout/activity_loading"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -22,6 +22,9 @@
         android:theme="@style/Theme.Onyx"
         android:usesCleartextTraffic="true">
         <activity
+            android:name=".extractors.LoadingActivity"
+            android:exported="false" />
+        <activity
             android:name=".Favorite_Page"
             android:exported="false" />
         <activity
