@@ -37,31 +37,36 @@ object NavAction {
 
         btnHome?.setOnClickListener {
             if (activity !is Home_Page) {
-                activity.startActivity(Intent(activity, Home_Page::class.java))
+                val intent = Intent(activity, Home_Page::class.java).addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
+                activity.startActivity(intent)
             }
         }
 
         btnMovies?.setOnClickListener {
             if (activity !is Movie_Page) {
-                activity.startActivity(Intent(activity, Movie_Page::class.java))
+                val intent = Intent(activity, Movie_Page::class.java).addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
+                activity.startActivity(intent)
             }
         }
 
         btnTvShows?.setOnClickListener {
             if (activity !is Tv_Page) {
-                activity.startActivity(Intent(activity, Tv_Page::class.java))
+                val intent = Intent(activity, Tv_Page::class.java).addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
+                activity.startActivity(intent)
             }
         }
 
         btnSearch?.setOnClickListener {
             if (activity !is Search_Page) {
-                activity.startActivity(Intent(activity, Search_Page::class.java))
+                val intent = Intent(activity, Search_Page::class.java).addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
+                activity.startActivity(intent)
             }
         }
 
         btnFav?.setOnClickListener {
             if (activity !is Favorite_Page) {
-                activity.startActivity(Intent(activity, Favorite_Page::class.java))
+                val intent = Intent(activity, Favorite_Page::class.java).addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
+                activity.startActivity(intent)
             }
         }
 
