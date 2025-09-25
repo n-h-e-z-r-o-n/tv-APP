@@ -8,6 +8,6 @@
     tools:context=".MainActivity"
     >
 
-    <include layout="@layout/activity_loading"/>
+    <include android:id="@+id/showloading" layout="@layout/laod_animation" android:visibility="visible"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
