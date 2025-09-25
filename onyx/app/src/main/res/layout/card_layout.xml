@@ -26,14 +26,14 @@
             android:layout_height="match_parent"
             android:background="@drawable/overlay_bottom_gradient"
             android:orientation="horizontal"
-            android:layout_gravity="right" />
+            android:layout_gravity="end" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:background="@drawable/overlay_left_gradient"
             android:orientation="horizontal"
-            android:layout_gravity="right" />
+            android:layout_gravity="end" />
 
 
 
@@ -72,7 +72,7 @@
                     android:singleLine="false"
                     android:textColor="@android:color/white"
                     android:textSize="13sp"
-                    tools:ignore="Suspicious0dp"
+                    tools:ignore="HardcodedText,Suspicious0dp"
                     android:textStyle="bold"
                     android:paddingEnd="5dp"
                     android:paddingStart="0dp"
@@ -171,7 +171,8 @@
                 android:textColor="@android:color/white"
                 android:textSize="8sp"
                 android:textStyle="bold"
-                tools:ignore="SmallSp" />
+                tools:ignore="SmallSp"
+                android:nextFocusLeft="@+id/sideBar"/>
 
 
 

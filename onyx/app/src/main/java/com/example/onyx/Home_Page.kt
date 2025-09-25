@@ -2,6 +2,7 @@ package com.example.onyx
 
 import android.os.Bundle
 import android.util.Log
+import android.view.WindowManager
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 
@@ -21,7 +22,9 @@ class Home_Page : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_home_page)
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
+        loadingAnimation.setup(this@Home_Page)
         NavAction.setupSidebar(this)
 
         SliderData()
@@ -29,8 +32,11 @@ class Home_Page : AppCompatActivity() {
 
 
     private fun SliderData() {
+        loadingAnimation.show(this@Home_Page)
         CoroutineScope(Dispatchers.IO).launch {
+
             while (true) {
+
                 try {
                     val url = "https://api.themoviedb.org/3/discover/movie?include_adult=true"
                     val connection = URL(url).openConnection() as HttpURLConnection
@@ -198,6 +204,7 @@ class Home_Page : AppCompatActivity() {
                     movies = movies.distinctBy { it.imdbCode }.toMutableList()
 
                     withContext(Dispatchers.Main) {
+                        loadingAnimation.hide(this@Home_Page)
                         val recyclerView = findViewById<RecyclerView>(R.id.Slider_widget)
                         val adapter = CardSwiper(movies, R.layout.card_layout)
 

@@ -90,17 +90,19 @@ class Actor_Page : AppCompatActivity() {
 
                     if ( poster.isBlank() || poster.endsWith("null")) continue
 
-                    val imgUrl  = "https://image.tmdb.org/t/p/w500" + poster
+                    val imgUrl  = "https://image.tmdb.org/t/p/w780" + poster
 
                     val backdrop_path   = "https://image.tmdb.org/t/p/w500" + current.optString("backdrop_path")
                     val overview = current.optString("overview")
-                    val date =  current.optString("release_date")
+                    val date =  current.optString("release_date").substring(0, 4)
                     val info = current.optString("runtime")
-                    val vote_average  = current.optString("vote_average")
+                    val vote_average  = current.optString("vote_average").substring(0, 3)
                     val id = current.getString("id")
 
 
-                    val movieItem = MovieItem(title, imgUrl, id, mediaType)
+
+                    val movieItem = MovieItem(title=title, imageUrl=imgUrl, imdbCode=id, type=mediaType, year = date, rating=vote_average, runtime=info)
+
 
                     withContext(Dispatchers.Main) {
                         adapter.addItem(movieItem)  // 👈 add one at a time
@@ -142,13 +144,14 @@ class Actor_Page : AppCompatActivity() {
 
                         val backdrop_path   = "https://image.tmdb.org/t/p/w500" + current.optString("backdrop_path")
                         val overview = current.optString("overview")
-                        val date =  current.optString("first_air_date")
+                        val date =  current.optString("first_air_date").substring(0, 4)
                         val info = current.optString("runtime")
-                        val vote_average  = current.optString("vote_average")
+                        val vote_average  = current.optString("vote_average").substring(0, 3)
                         val id = current.getString("id")
 
 
-                        val movieItem = MovieItem(title, imgUrl, id, mediaType)
+                        val movieItem =MovieItem(title=title, imageUrl=imgUrl, imdbCode=id, type=mediaType, year = date, rating=vote_average, runtime=info)
+
 
                         withContext(Dispatchers.Main) {
                             adapter.addItem(movieItem)  // 👈 add one at a time

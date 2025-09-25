@@ -214,6 +214,8 @@ class OtherAdapter(
 
     }
 }
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 
@@ -225,13 +227,8 @@ class CastAdapter(
 
     inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val Movie_image: ImageView = view.findViewById(R.id.itemImage)
-        val showYear: TextView = view.findViewById(R.id.itemText)
+        val Actor_Name: TextView = view.findViewById(R.id.itemText)
 
-
-        val showTitle: TextView = view.findViewById(R.id.showTitle)
-        val showRating: TextView = view.findViewById(R.id.showRating)
-        val showRS: TextView = view.findViewById(R.id.showRS)
-        val showType: TextView = view.findViewById(R.id.showType)
 
 
         init {
@@ -244,24 +241,6 @@ class CastAdapter(
                     .setDuration(150)
                     .start()
 
-                try {
-                    // Overlay fade
-                    val overlay: View = itemView.findViewById(R.id.focusOverlay)
-
-                    if (hasFocus) {
-                        overlay.apply {
-                            alpha = 0f
-                            visibility = View.VISIBLE
-                            animate().alpha(1f).setDuration(150).start()
-                        }
-                    } else {
-                        overlay.animate()
-                            .alpha(0f)
-                            .setDuration(150)
-                            .withEndAction { overlay.visibility = View.GONE }
-                            .start()
-                    }
-                } catch (e : Exception){}
             }
         }
 
@@ -287,32 +266,17 @@ class CastAdapter(
 
 
 
-
-
-        holder.showYear.text = year
-        holder.showTitle.text = title
-        holder.showRating.text = rating
-        holder.showRS.text = runtime
-        holder.showType.text = type
+        holder.Actor_Name.text = title
 
 
 
 
-        /*
-        Picasso.get()
-            .load(imageUrl)
-            .fit()
-            .centerInside()
-            .into(holder.Movie_image)
-
-         */
 
         Glide.with(holder.itemView.context)
             .load(imageUrl)
             .centerInside()
             .into(holder.Movie_image)
 
-        if(currentItem.type == "Actor"){
             holder.Movie_image.setOnClickListener {
                 val context = holder.itemView.context
                 val intent = android.content.Intent(context, Actor_Page::class.java)
@@ -320,15 +284,6 @@ class CastAdapter(
                 intent.putExtra("type", currentItem.type)
                 context.startActivity(intent)
             }
-        }else {
-            holder.itemView.setOnClickListener {
-                val context = holder.itemView.context
-                val intent = android.content.Intent(context, Watch_Page::class.java)
-                intent.putExtra("imdb_code", currentItem.imdbCode)
-                intent.putExtra("type", currentItem.type)
-                context.startActivity(intent)
-            }
-        }
 
 
     }

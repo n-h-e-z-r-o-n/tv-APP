@@ -13,6 +13,7 @@ import android.widget.TextView
 
 
 object NavAction {
+
     fun setupSidebar(activity: Activity) {
         val btnHome = activity.findViewById<ImageButton>(R.id.btnHome)
         val btnMovies = activity.findViewById<ImageButton>(R.id.btnMovies)

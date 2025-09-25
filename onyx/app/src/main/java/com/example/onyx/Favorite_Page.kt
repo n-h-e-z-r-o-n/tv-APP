@@ -14,7 +14,6 @@ class Favorite_Page : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_favorite_page)
-
         NavAction.setupSidebar(this@Favorite_Page)
 
         val recyclerView = findViewById<RecyclerView>(R.id.favoritesRecycler)
@@ -45,7 +44,7 @@ class Favorite_Page : AppCompatActivity() {
                 )
             }.toMutableList()
 
-            recyclerView.adapter = GridAdapter(items, R.layout.square_card)
+            recyclerView.adapter = OtherAdapter(items, R.layout.square_card)
         }
     }
 }

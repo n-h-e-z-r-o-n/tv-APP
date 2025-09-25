@@ -56,22 +56,6 @@ class Watch_Page : AppCompatActivity() {
         fetchData(imdbCode.toString(), type.toString())
         //fetchData("10160", "tv")
 
-
-        /*
-        val watchButton = findViewById<Button>(R.id.watchNowButton)
-        watchButton.setOnClickListener {
-            val intent = Intent(this, Play::class.java)
-            intent.putExtra("imdb_code", imdbCode)
-            intent.putExtra("type", type)
-            startActivity(intent)
-        }
-
-         */
-
-        // Show them (for testing)
-        //findViewById<TextView>(R.id.watchPage).text =  "IMDB Code: $imdbCode\nType: $type"
-        //val recyclerView = findViewById<TextView>(R.id.watchPage)
-        //recyclerView.text =  "IMDB Code: $imdbCode\nType: $type"
     }
 
 
@@ -128,9 +112,7 @@ class Watch_Page : AppCompatActivity() {
                     val validSeasons = mutableListOf<JSONObject>()
 
 
-                    original_title = if (jsonObject.optString("name").isNotEmpty()) {
-                        jsonObject.optString("name")
-                    } else {
+                    original_title = jsonObject.optString("name").ifEmpty {
                         jsonObject.optString("title")
                     }
 
@@ -478,7 +460,7 @@ class Watch_Page : AppCompatActivity() {
                             LinearLayoutManager.HORIZONTAL, // 👈 makes it horizontal
                             false
                         )
-                        recyclerView.adapter = GridAdapter(movies,  R.layout.round_grid)
+                        recyclerView.adapter = CastAdapter(movies,  R.layout.round_grid)
                         val spacing = (9 * resources.displayMetrics.density).toInt() // 16dp to px
                         recyclerView.addItemDecoration(EqualSpaceItemDecoration(spacing))
                     }
@@ -555,7 +537,7 @@ class Watch_Page : AppCompatActivity() {
                             LinearLayoutManager.HORIZONTAL, // 👈 makes it horizontal
                             false
                         )
-                        recyclerView.adapter = GridAdapter(movies,  R.layout.square_card)
+                        recyclerView.adapter = OtherAdapter(movies,  R.layout.square_card)
                         val spacing = (19 * resources.displayMetrics.density).toInt() // 16dp to px
                         recyclerView.addItemDecoration(EqualSpaceItemDecoration(spacing))
 
