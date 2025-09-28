@@ -191,8 +191,6 @@ class Watch_Page : AppCompatActivity() {
                         val PG_widget = findViewById<TextView>(R.id.PG_widget)
 
 
-
-
                         title_widget.text = original_title
                         year_widget.text = release_date
 
@@ -259,10 +257,7 @@ class Watch_Page : AppCompatActivity() {
 
                         setupFavoriteButton(
                             button = FaveButton,
-                            id = tmdbId.toString(),
-                            type = type.toString(),
-                            title = original_title,
-                            imageUrl = poster_Url
+                            data = jsonObject
                         )
 
                         if(type=="tv"){
@@ -577,13 +572,14 @@ class Watch_Page : AppCompatActivity() {
 
     private fun setupFavoriteButton(
         button: Button,
-        id: String,
-        type: String,
-        title: String,
-        imageUrl: String
+        data: JSONObject
     ) {
+        val id = data.optString("id")
+        val inferredType = if (data.has("first_air_date")) "tv" else "movie"
+        val title = data.optString("name").ifEmpty { data.optString("title") }
+        val imageUrl = "https://image.tmdb.org/t/p/w780" + data.optString("poster_path")
         fun applyLabel() {
-            val fav = FavoritesManager.isFavorite(this@Watch_Page, id, type)
+            val fav = FavoritesManager.isFavorite(this@Watch_Page, id, inferredType)
             val expanded = if (fav) "x Remove from Fav" else "+ Add to Fav"
             val collapsed = "\uD83E\uDD0D"
             setupExpandableButton(button, 150, 40, expanded, collapsed)
@@ -594,18 +590,13 @@ class Watch_Page : AppCompatActivity() {
         applyLabel()
 
         button.setOnClickListener {
-            val fav = FavoritesManager.isFavorite(this@Watch_Page, id, type)
+            val fav = FavoritesManager.isFavorite(this@Watch_Page, id, inferredType)
             if (fav) {
-                FavoritesManager.removeFavorite(this@Watch_Page, id, type)
+                FavoritesManager.removeFavorite(this@Watch_Page, id, inferredType)
             } else {
                 FavoritesManager.addFavorite(
                     this@Watch_Page,
-                    FavoritesManager.FavoriteItem(
-                        id = id,
-                        title = title,
-                        imageUrl = imageUrl,
-                        type = type
-                    )
+                    data
                 )
             }
             applyLabel()

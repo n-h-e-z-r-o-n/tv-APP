@@ -8,57 +8,53 @@ object FavoritesManager {
     private const val PREFS_NAME = "favorites_prefs"
     private const val KEY_FAVORITES = "favorites_json"
 
-    data class FavoriteItem(
-        val id: String,
-        val title: String,
-        val imageUrl: String,
-        val type: String
-    )
-
-    fun addFavorite(context: Context, item: FavoriteItem) {
+    fun addFavorite(context: Context, item: JSONObject) {
         val list = getFavorites(context).toMutableList()
-        if (list.any { it.id == item.id && it.type == item.type }) return
+        val id = item.optString("id")
+        val type = item.optString("media_type").ifEmpty {
+            if (item.has("first_air_date")) "tv" else "movie"
+        }
+        if (list.any { it.optString("id") == id && (
+                it.optString("media_type").ifEmpty { if (it.has("first_air_date")) "tv" else "movie" } == type
+            )
+        }) return
         list.add(item)
         saveFavorites(context, list)
     }
 
     fun removeFavorite(context: Context, id: String, type: String) {
-        val list = getFavorites(context).filterNot { it.id == id && it.type == type }
+        val list = getFavorites(context).filterNot { o ->
+            val oid = o.optString("id")
+            val otype = o.optString("media_type").ifEmpty { if (o.has("first_air_date")) "tv" else "movie" }
+            oid == id && otype == type
+        }
         saveFavorites(context, list)
     }
 
     fun isFavorite(context: Context, id: String, type: String): Boolean {
-        return getFavorites(context).any { it.id == id && it.type == type }
+        return getFavorites(context).any { o ->
+            val oid = o.optString("id")
+            val otype = o.optString("media_type").ifEmpty { if (o.has("first_air_date")) "tv" else "movie" }
+            oid == id && otype == type
+        }
     }
 
-    fun getFavorites(context: Context): List<FavoriteItem> {
+    fun getFavorites(context: Context): List<JSONObject> {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         val json = prefs.getString(KEY_FAVORITES, "[]") ?: "[]"
         val arr = JSONArray(json)
-        val result = mutableListOf<FavoriteItem>()
+        val result = mutableListOf<JSONObject>()
         for (i in 0 until arr.length()) {
-            val o = arr.getJSONObject(i)
-            result.add(
-                FavoriteItem(
-                    id = o.optString("id"),
-                    title = o.optString("title"),
-                    imageUrl = o.optString("imageUrl"),
-                    type = o.optString("type")
-                )
-            )
+            val o = arr.optJSONObject(i) ?: continue
+            result.add(o)
         }
         return result
     }
 
-    private fun saveFavorites(context: Context, items: List<FavoriteItem>) {
+    private fun saveFavorites(context: Context, items: List<JSONObject>) {
         val arr = JSONArray()
         items.forEach { item ->
-            val o = JSONObject()
-            o.put("id", item.id)
-            o.put("title", item.title)
-            o.put("imageUrl", item.imageUrl)
-            o.put("type", item.type)
-            arr.put(o)
+            arr.put(item)
         }
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         prefs.edit().putString(KEY_FAVORITES, arr.toString()).apply()

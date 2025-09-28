@@ -301,6 +301,120 @@ class CastAdapter(
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+class FavAdapter(
+    private val  items: MutableList<FavItem>,
+    private val layoutResId: Int ,
+    private val backdropView: ImageView,
+    private val favTitleView: TextView,
+    private val favGenreView: TextView,
+    private val favTypeView: TextView,
+    private val favRatingView: TextView,
+    private val favYearView: TextView,
+    private val favOverviewView: TextView,
+
+
+) :  RecyclerView.Adapter<FavAdapter.ViewHolder>() {
+
+    inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        val Movie_image: ImageView = view.findViewById(R.id.itemImage)
+        val itemText: TextView = view.findViewById(R.id.itemText)
+
+
+        init {
+            itemView.setOnFocusChangeListener { _, hasFocus ->
+                // Scale animation
+                itemView.animate()
+                    .scaleX(if (hasFocus) 1.02f else 1f)
+                    .scaleY(if (hasFocus) 1.02f else 1f)
+                    .setDuration(150)
+                    .start()
+
+                if (hasFocus) {
+                    val pos = bindingAdapterPosition
+                    if (pos != RecyclerView.NO_POSITION) {
+                        val item = items[pos]
+
+                        // Backdrop image
+                        Glide.with(backdropView.context)
+                            .load(item.backdropUrl)
+                            .centerCrop()
+                            .into(backdropView)
+
+                        // ✅ Set text properties correctly
+                        favTitleView.text    = item.title
+                        favGenreView.text    = item.genres
+                        favTypeView.text     = item.showType          // ensure you have a `type` field
+                        favRatingView.text   = item.voteAverage.toString()
+                        favYearView.text     = item.releaseDate
+                        favOverviewView.text = item.overview
+                    }
+                }
+            }
+
+
+        }
+
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val view = LayoutInflater.from(parent.context)
+            .inflate(layoutResId, parent, false)
+        return ViewHolder(view)
+    }
+
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+
+        val currentItem = items[position]
+
+        val posterUrl = currentItem.posterUrl
+        val imdbCode = currentItem.imdbCode
+        val type = currentItem.showType
+
+
+
+        Glide.with(holder.itemView.context)
+            .load(posterUrl)
+            .centerInside()
+            .into(holder.Movie_image)
+
+
+        holder.itemView.setOnClickListener {
+            val context = holder.itemView.context
+            val intent = android.content.Intent(context, Watch_Page::class.java)
+            intent.putExtra("imdb_code", imdbCode)
+            intent.putExtra("type", type)
+            context.startActivity(intent)
+        }
+    }
+
+    override fun getItemCount() = items.size
+
+    // 👇 helper to add items one by one
+    fun addItem(item: FavItem) {
+        items.add(item)
+        notifyItemInserted(items.size - 1)
+
+    }
+}
+
+
+data class FavItem(
+    val title: String,
+    val posterUrl: String,
+    val backdropUrl: String,
+    val releaseDate: String,
+    val runtime: String,
+    val overview: String,
+    val voteAverage: String,
+    val genres: String,
+    val production: String,
+    val parentalGuide: String,
+    val imdbCode: String,
+    val showType : String
+)
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 class EqualSpaceItemDecoration(private val space: Int) : RecyclerView.ItemDecoration() {
     override fun getItemOffsets(
         outRect: android.graphics.Rect,
