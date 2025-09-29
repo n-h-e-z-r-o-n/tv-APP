@@ -5,6 +5,7 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="?attr/BG_color"
     tools:context=".Play"
     tools:ignore="ExtraText">
 
@@ -20,7 +21,8 @@
                 android:id="@+id/webView"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:overScrollMode="never" />
+                android:overScrollMode="never"
+                android:background="?attr/BG_color"/>
 
             <ImageView
                 android:id="@+id/customCursor"

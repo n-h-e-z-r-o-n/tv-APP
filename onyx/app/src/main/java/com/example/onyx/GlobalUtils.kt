@@ -1,7 +1,10 @@
 package com.example.onyx
 
+import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.content.SharedPreferences
+import android.os.Process
 import android.util.Log
 
 /**
@@ -41,9 +44,11 @@ object GlobalUtils {
     private const val KEY_AUTO_PLAY = "auto_play"
     private const val KEY_NOTIFICATIONS = "notifications"
     private const val KEY_VIDEO_QUALITY = "video_quality"
+    private const val KEY_APP_THEME  = "app_theme"
     
     // Default values
     private const val DEFAULT_VIDEO_QUALITY = "1080p"
+    private const val DEFAULT_THEME = "dark"
     
     /**
      * Get SharedPreferences instance
@@ -149,45 +154,41 @@ object GlobalUtils {
         return getSharedPreferences(context).getString(KEY_VIDEO_QUALITY, DEFAULT_VIDEO_QUALITY) ?: DEFAULT_VIDEO_QUALITY
     }
     
+    /**
+     * Set app theme
+     */
+
+
+    // List of your theme keys
+    private val availableThemes = listOf(
+        "dark",
+        "light",
+        "purple"
+    )
+    fun getAvailableThemes(): List<String> = availableThemes
+
+    fun getAppTheme(context: Context): String {
+        val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+        return prefs.getString(KEY_APP_THEME, "dark") ?: "dark"
+    }
+
+    fun setAppTheme(context: Context, theme: String) {
+        val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+        prefs.edit().putString(KEY_APP_THEME, theme).apply()
+    }
+
+
+    fun applyTheme(activity: Activity) {
+        when (getAppTheme(activity)) {
+            "light"  -> activity.setTheme(R.style.Theme_Onyx_Light)
+            "purple" -> activity.setTheme(R.style.Theme_Onyx_Purple)
+            else     -> activity.setTheme(R.style.Theme_Onyx_Dark)
+        }
+    }
+    
     // ==================== FAVORITES MANAGEMENT ====================
     
-    /**
-     * Add item to favorites
-     */
-    fun addToFavorites(context: Context, itemId: String, itemType: String, itemTitle: String) {
-        val prefs = getSharedPreferences(context)
-        val favorites = getFavorites(context).toMutableSet()
-        val favoriteItem = "$itemId|$itemType|$itemTitle"
-        favorites.add(favoriteItem)
-        prefs.edit().putStringSet("favorites", favorites).apply()
-        Log.d("GlobalUtils", "Added to favorites: $itemTitle")
-    }
-    
-    /**
-     * Remove item from favorites
-     */
-    fun removeFromFavorites(context: Context, itemId: String) {
-        val prefs = getSharedPreferences(context)
-        val favorites = getFavorites(context).toMutableSet()
-        favorites.removeAll { it.startsWith("$itemId|") }
-        prefs.edit().putStringSet("favorites", favorites).apply()
-        Log.d("GlobalUtils", "Removed from favorites: $itemId")
-    }
-    
-    /**
-     * Check if item is in favorites
-     */
-    fun isFavorite(context: Context, itemId: String): Boolean {
-        val favorites = getFavorites(context)
-        return favorites.any { it.startsWith("$itemId|") }
-    }
-    
-    /**
-     * Get all favorites
-     */
-    fun getFavorites(context: Context): Set<String> {
-        return getSharedPreferences(context).getStringSet("favorites", emptySet()) ?: emptySet()
-    }
+
     
     // ==================== CACHE MANAGEMENT ====================
     
@@ -220,55 +221,43 @@ object GlobalUtils {
     
     /**
      * Get app version name
-
+     */
     fun getAppVersion(context: Context): String {
         return try {
             val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
-            packageInfo.versionName
+            packageInfo.versionName ?: "1.0.0"   // fallback if null
         } catch (e: Exception) {
             "1.0.0"
         }
-    }*/
-    
-    /**
-     * Format time duration in MM:SS format
-     */
-    fun formatDuration(seconds: Int): String {
-        val minutes = seconds / 60
-        val remainingSeconds = seconds % 60
-        return String.format("%02d:%02d", minutes, remainingSeconds)
     }
+
+    // ==================== APP MANAGEMENT ====================
     
     /**
-     * Format file size in human readable format
+     * Restart the application
      */
-    fun formatFileSize(bytes: Long): String {
-        val units = arrayOf("B", "KB", "MB", "GB", "TB")
-        var size = bytes.toDouble()
-        var unitIndex = 0
-        
-        while (size >= 1024 && unitIndex < units.size - 1) {
-            size /= 1024
-            unitIndex++
+    fun restartApp(context: Context) {
+        try {
+            Log.d("GlobalUtils", "Restarting application...")
+            
+            // Get the main activity class
+            val packageManager = context.packageManager
+            val intent = packageManager.getLaunchIntentForPackage(context.packageName)
+            
+            if (intent != null) {
+                // Clear the task stack and start fresh
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+                context.startActivity(intent)
+                
+                // Kill the current process
+                Process.killProcess(Process.myPid())
+            } else {
+                Log.e("GlobalUtils", "Could not get launch intent for package: ${context.packageName}")
+            }
+        } catch (e: Exception) {
+            Log.e("GlobalUtils", "Error restarting app", e)
         }
-        
-        return String.format("%.1f %s", size, units[unitIndex])
     }
     
-    /**
-     * Validate email format
-     */
-    fun isValidEmail(email: String): Boolean {
-        return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
-    }
-    
-    /**
-     * Get device info for debugging
-     */
-    fun getDeviceInfo(context: Context): String {
-        val displayMetrics = context.resources.displayMetrics
-        return "Screen: ${displayMetrics.widthPixels}x${displayMetrics.heightPixels}, " +
-                "Density: ${displayMetrics.density}, " +
-                "Android: ${android.os.Build.VERSION.RELEASE}"
-    }
+
 }

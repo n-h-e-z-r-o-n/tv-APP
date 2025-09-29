@@ -26,6 +26,7 @@ class Search_Page : AppCompatActivity() {
     private lateinit var searchInput: EditText
     private lateinit var searchResults: RecyclerView
     override fun onCreate(savedInstanceState: Bundle?) {
+        GlobalUtils.applyTheme(this)
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_search_page2)

@@ -18,6 +18,7 @@ class Play : AppCompatActivity() {
     private var isVideoLaunching = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        GlobalUtils.applyTheme(this)
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_play)

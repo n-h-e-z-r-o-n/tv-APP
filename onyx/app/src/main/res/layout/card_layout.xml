@@ -22,18 +22,18 @@
             android:scaleType="centerCrop" />
 
         <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
             android:background="@drawable/overlay_bottom_gradient"
             android:orientation="horizontal"
             android:layout_gravity="end" />
 
         <LinearLayout
-            android:layout_width="match_parent"
+            android:layout_width="450dp"
             android:layout_height="match_parent"
             android:background="@drawable/overlay_left_gradient"
             android:orientation="horizontal"
-            android:layout_gravity="end" />
+            android:layout_gravity="start" />
 
 
 
@@ -55,7 +55,7 @@
                     android:maxLines="3"
                     android:text="Sakamoto Days Part 2"
                     android:singleLine="false"
-                    android:textColor="@android:color/white"
+                    android:textColor="?attr/FG_color"
                     android:textSize="25sp"
                     android:textStyle="bold"
                     android:layout_marginBottom="5dp"
@@ -70,7 +70,7 @@
                     android:maxLines="1"
                     android:text="Action"
                     android:singleLine="false"
-                    android:textColor="@android:color/white"
+                    android:textColor="?attr/FG_color"
                     android:textSize="13sp"
                     tools:ignore="HardcodedText,Suspicious0dp"
                     android:textStyle="bold"
@@ -93,7 +93,7 @@
                         android:maxLines="7"
                         android:text="Mv"
                         android:singleLine="false"
-                        android:textColor="@android:color/white"
+                        android:textColor="?attr/FG_color"
                         android:textSize="13sp"
                         tools:ignore="Suspicious0dp"
                         android:gravity="center"
@@ -111,7 +111,7 @@
                         android:maxLines="7"
                         android:text="9.7 imdb"
                         android:singleLine="false"
-                        android:textColor="@android:color/white"
+                        android:textColor="?attr/FG_color"
                         android:textSize="13sp"
                         tools:ignore="Suspicious0dp"
                         android:gravity="center"
@@ -128,7 +128,7 @@
                         android:maxLines="1"
                         android:text="2025"
                         android:singleLine="false"
-                        android:textColor="@android:color/white"
+                        android:textColor="?attr/FG_color"
                         android:textSize="13sp"
                         tools:ignore="Suspicious0dp"
                         android:gravity="center"
@@ -151,7 +151,7 @@
                     android:ellipsize="end"
                     android:maxLines="10"
                     android:singleLine="false"
-                    android:textColor="@android:color/white"
+                    android:textColor="?attr/FG_color"
                     android:textSize="13sp"
                     android:layout_marginBottom="20dp"
                     tools:ignore="Suspicious0dp"
@@ -167,6 +167,7 @@
                 android:focusable="true"
                 android:focusableInTouchMode="true"
                 android:text="▶ Watch Now"
+                android:layout_margin="10dp"
                 android:clickable="true"
                 android:textColor="@android:color/white"
                 android:textSize="8sp"

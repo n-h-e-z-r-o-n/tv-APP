@@ -19,6 +19,7 @@ import java.net.URL
 
 class Actor_Page : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        GlobalUtils.applyTheme(this)
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_actor_page)

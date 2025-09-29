@@ -11,6 +11,7 @@ import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.TextView
 
+import android.graphics.Typeface
 
 object NavAction {
 
@@ -97,25 +98,38 @@ object NavAction {
 
 
         // ✅ Add focus scaling effect to each button
-        buttons.forEach { btn ->
+        // ✅ Focus animations for buttons + labels
+        buttons.forEachIndexed { index, btn ->
+            val label = labels[index]
             btn?.setOnFocusChangeListener { v, hasFocus ->
                 if (hasFocus) {
+                    // Button scaling
                     v.animate().scaleX(1.2f).scaleY(1.2f).setDuration(150).start()
+
+                    // Label visible, bold, and scaled
+                    label?.let {
+                        //it.animate().scaleX(1.2f).scaleY(1.2f).setDuration(150).start()
+                        it.setTypeface(null, Typeface.BOLD)
+                    }
                 } else {
+                    // Reset scaling
                     v.animate().scaleX(1f).scaleY(1f).setDuration(150).start()
+
+                    label?.let {
+                        //it.animate().scaleX(1f).scaleY(1f).setDuration(150).start()
+                        it.setTypeface(null, Typeface.NORMAL)
+                    }
                 }
 
-                // Expand/collapse sidebar and toggle labels
+                // Sidebar expand/collapse
                 sidebar?.let { bar ->
                     val anyFocused = buttons.any { it?.hasFocus() == true }
                     if (anyFocused) {
                         expandSidebar(activity, bar, true)
                         setLabelsVisible(labels, true)
                     } else {
-                        // Post to ensure focus state has settled
                         bar.post {
-                            val stillAnyFocused = buttons.any { it?.hasFocus() == true }
-                            if (!stillAnyFocused) {
+                            if (!buttons.any { it?.hasFocus() == true }) {
                                 setLabelsVisible(labels, false)
                                 expandSidebar(activity, bar, false)
                             }

@@ -18,6 +18,7 @@ import java.net.URL
 
 class Movie_Page : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        GlobalUtils.applyTheme(this)
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_movie_page)

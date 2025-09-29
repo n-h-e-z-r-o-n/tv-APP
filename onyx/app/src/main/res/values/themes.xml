@@ -1,4 +1,38 @@
 <resources>
 
-    <style name="Theme.Onyx" parent="Theme.AppCompat.DayNight.NoActionBar" />
+
+    <style name="Theme.Onyx.Dark" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="BG_color">#0C0404</item>
+        <item name="FG_color">#FFFFFF</item>
+        <item name="BG_color_up">#1A1A1A</item>
+        <item name="AccentColor">#3D5AFE</item>
+        <item name="SidebarFocus">#3D5AFE</item>
+        <item name="SidebarDefault">#FFFFFF</item>
+        <item name="SidebarActive">#DAA520</item>
+
+    </style>
+
+    <style name="Theme.Onyx.Light" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="BG_color">#FFFFFF</item>
+        <item name="FG_color">#0C0404 </item>
+        <item name="BG_color_up">#1A1A1A</item>
+        <item name="AccentColor">#3D5AFE</item>
+        <item name="SidebarFocus">#3D5AFE</item>
+        <item name="SidebarDefault">#0C0404</item>
+        <item name="SidebarActive">#DAA520</item>
+
+
+    </style>
+
+    <style name="Theme.Onyx.Purple" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="BG_color">#9400D3</item>
+        <item name="FG_color">#FFFFFF </item>
+        <item name="BG_color_up">#9932CC</item>
+        <item name="AccentColor">#86608E</item>
+        <item name="SidebarFocus">#512888</item>
+        <item name="SidebarDefault">#FFFFFF</item>
+        <item name="SidebarActive"> #B0306A</item>
+    </style>
+
+
 </resources>

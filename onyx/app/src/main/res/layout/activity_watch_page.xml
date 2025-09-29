@@ -6,14 +6,14 @@
     android:layout_height="match_parent"
     android:keepScreenOn="true"
     tools:context=".Watch_Page"
-    android:background="@color/BG_color"
+    android:background="?attr/BG_color"
     >
 
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:fillViewport="true"
-        android:background="@color/BG_color">
+        android:background="?attr/BG_color">
 
         <LinearLayout
             android:orientation="vertical"
@@ -126,7 +126,7 @@
                             android:fontFamily=""
                             android:maxLines="2"
                             android:text="Movie Title"
-                            android:textColor="@android:color/white"
+                            android:textColor="?attr/FG_color"
                             android:textSize="28sp"
                             android:textStyle="bold" />
 
@@ -303,7 +303,7 @@
                                 android:maxLines="5"
                                 android:singleLine="false"
                                 android:text="Loading . . ."
-                                android:textColor="@android:color/white"
+                                android:textColor="?attr/FG_color"
                                 android:textSize="14sp" />
 
                         </LinearLayout>
@@ -327,7 +327,7 @@
                                 android:focusable="true"
                                 android:focusableInTouchMode="true"
                                 android:text="▶"
-                                android:textColor="@android:color/white"
+                                android:textColor="?attr/FG_color"
                                 android:textSize="15sp"
                                 android:textAllCaps="false"
                                 android:nextFocusLeft="@+id/serverButton"
@@ -344,7 +344,7 @@
                                 android:focusable="true"
                                 android:focusableInTouchMode="true"
                                 android:text="🎬"
-                                android:textColor="@android:color/white"
+                                android:textColor="?attr/FG_color"
                                 android:textSize="14sp"
                                 android:textAllCaps="false"
                                 android:nextFocusLeft="@+id/watchNowButton"
@@ -360,7 +360,7 @@
                                 android:focusable="true"
                                 android:focusableInTouchMode="true"
                                 android:text="🤍"
-                                android:textColor="@android:color/white"
+                                android:textColor="?attr/FG_color"
                                 android:textSize="14sp"
                                 android:textAllCaps="false"
                                 android:nextFocusLeft="@+id/TrailerButton"
@@ -376,7 +376,7 @@
                                 android:focusable="true"
                                 android:focusableInTouchMode="true"
                                 android:text="🌐"
-                                android:textColor="@android:color/white"
+                                android:textColor="?attr/FG_color"
                                 android:textSize="14sp"
                                 android:textAllCaps="false"
                                 android:nextFocusLeft="@+id/favoriteButton"

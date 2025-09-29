@@ -70,6 +70,7 @@ class Video_payer : AppCompatActivity(), Player.Listener {
     private var currentQualityIndex = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        GlobalUtils.applyTheme(this)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_video_payer)
 

@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="wrap_content"
     android:layout_height="match_parent"
     >
@@ -26,7 +25,8 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="24dp"
             android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            >
 
             <ImageButton
                 android:id="@+id/btnHome"
@@ -35,7 +35,6 @@
                 android:background="@android:color/transparent"
                 android:clickable="true"
                 android:focusable="true"
-                android:contentDescription="Home"
                 android:nextFocusDown="@id/btnMovies"
                 android:nextFocusUp="@id/btnProfile"
                 android:src="@drawable/ic_home"
@@ -50,7 +49,7 @@
                 android:ellipsize="end"
                 android:maxLines="1"
                 android:text="Home"
-                android:textColor="@color/FG_color"
+                android:textColor="?attr/FG_color"
                 android:textSize="14sp"
                 android:visibility="gone"/>
         </LinearLayout>
@@ -84,7 +83,7 @@
                 android:ellipsize="end"
                 android:maxLines="1"
                 android:text="Movies"
-                android:textColor="@color/FG_color"
+                android:textColor="?attr/FG_color"
                 android:textSize="14sp"
                 android:visibility="gone"/>
         </LinearLayout>
@@ -101,7 +100,6 @@
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:background="@android:color/transparent"
-                android:contentDescription="TV Shows"
                 android:nextFocusUp="@id/btnMovies"
                 android:nextFocusDown="@id/btnSearch"
                 android:src="@drawable/ic_category"
@@ -118,7 +116,7 @@
                 android:ellipsize="end"
                 android:maxLines="1"
                 android:text="TV Shows"
-                android:textColor="@color/FG_color"
+                android:textColor="?attr/FG_color"
                 android:textSize="14sp"
                 android:visibility="gone"/>
         </LinearLayout>
@@ -135,7 +133,6 @@
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:background="@android:color/transparent"
-                android:contentDescription="Search"
                 android:nextFocusUp="@id/btnTvShow"
                 android:nextFocusDown="@id/btnFav"
                 android:src="@drawable/ic_search"
@@ -152,7 +149,7 @@
                 android:ellipsize="end"
                 android:maxLines="1"
                 android:text="Search"
-                android:textColor="@color/FG_color"
+                android:textColor="?attr/FG_color"
                 android:textSize="14sp"
                 android:visibility="gone"/>
         </LinearLayout>
@@ -185,7 +182,7 @@
                 android:ellipsize="end"
                 android:maxLines="1"
                 android:text="Favorites"
-                android:textColor="@color/FG_color"
+                android:textColor="?attr/FG_color"
                 android:textSize="14sp"
                 android:visibility="gone"/>
         </LinearLayout>
@@ -201,7 +198,6 @@
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:background="@android:color/transparent"
-                android:contentDescription="Profile"
                 android:nextFocusUp="@id/btnFav"
                 android:nextFocusDown="@id/btnHome"
                 android:src="@drawable/ic_person"
@@ -218,7 +214,7 @@
                 android:ellipsize="end"
                 android:maxLines="1"
                 android:text="Profile"
-                android:textColor="@color/FG_color"
+                android:textColor="?attr/FG_color"
                 android:textSize="14sp"
                 android:visibility="gone"/>
         </LinearLayout>

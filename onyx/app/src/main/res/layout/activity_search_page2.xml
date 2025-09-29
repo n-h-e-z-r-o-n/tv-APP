@@ -5,7 +5,7 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/BG_color"
+    android:background="?attr/BG_color"
     tools:context=".Search_Page">
 
         <FrameLayout
@@ -71,7 +71,7 @@
                         android:nextFocusRight="@+id/SearchResults"
                         android:padding="16dp"
                         android:singleLine="true"
-                        android:textColor="#FFFFFF"
+                        android:textColor="?attr/FG_color"
                         android:textColorHint="#8C94A7"
                         android:textSize="18sp"
                         android:layout_gravity="center"

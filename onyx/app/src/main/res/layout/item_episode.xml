@@ -11,7 +11,7 @@
         android:focusable="true"
         android:foreground="@drawable/item_episode_focus"
         android:clickable="true"
-        android:background="#222222"
+        android:background="?attr/BG_color_up"
         android:layout_marginBottom="8dp">
 
         <ImageView
@@ -19,7 +19,7 @@
             android:layout_width="65dp"
             android:layout_height="60dp"
             android:scaleType="fitXY"
-            android:background="@color/gray"
+            android:background="?attr/BG_color_up"
             tools:srcCompat="@tools:sample/avatars" />
 
         <LinearLayout
@@ -36,7 +36,7 @@
                 android:ellipsize="end"
                 android:maxLines="1"
                 android:text="Episode Title"
-                android:textColor="#FFFFFF"
+                android:textColor="?attr/FG_color"
                 android:textSize="11sp"
                 android:textStyle="bold" />
 
@@ -51,7 +51,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="1dp"
                     android:text="45 min"
-                    android:textColor="#AAAAAA"
+                    android:textColor="?attr/FG_color"
                     android:textSize="8sp"
                     tools:ignore="SmallSp" />
 
@@ -61,7 +61,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="1dp"
                     android:text="5/7"
-                    android:textColor="#AAAAAA"
+                    android:textColor="?attr/FG_color"
                     android:textSize="8sp"
                     android:layout_marginStart="7dp"
                     tools:ignore="SmallSp" />
@@ -76,7 +76,7 @@
                 android:ellipsize="end"
                 android:maxLines="4"
                 android:text="Episode description..."
-                android:textColor="#CCCCCC"
+                android:textColor="?attr/FG_color"
                 android:textSize="5sp"
                 android:textStyle="italic" />
 

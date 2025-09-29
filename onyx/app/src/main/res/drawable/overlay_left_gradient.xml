@@ -4,7 +4,9 @@
 		android:type="linear"
 		android:angle="180"
 		android:startColor="#00000000"
-		android:endColor="@color/BG_color" />
+		android:endColor="?attr/BG_color"
+    />
+
 </shape>
 
 

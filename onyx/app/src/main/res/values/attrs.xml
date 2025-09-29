@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <attr name="BG_color" format="color" />
+    <attr name="FG_color" format="color" />
+    <attr name="BG_color_up" format="color" />
+    <attr name="AccentColor" format="color" />
+    <attr name="SidebarFocus" format="color" />
+    <attr name="SidebarDefault" format="color" />
+    <attr name="SidebarActive" format="color" />
+
+
+
+</resources>

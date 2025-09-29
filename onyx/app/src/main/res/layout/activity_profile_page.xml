@@ -5,7 +5,7 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/BG_color"
+    android:background="?attr/BG_color"
     tools:context=".Profile_Page">
     
     <FrameLayout
@@ -19,7 +19,8 @@
             android:fillViewport="true"
             android:scrollbars="none"
             android:overScrollMode="never"
-            android:paddingStart="55dp">
+            android:paddingStart="55dp"
+            tools:ignore="RtlSymmetry">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -59,7 +60,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="User Profile"
-                            android:textColor="@color/FG_color"
+                            android:textColor="?attr/FG_color"
                             android:textSize="24sp"
                             android:textStyle="bold" />
 
@@ -327,6 +328,60 @@
 
                     </LinearLayout>
 
+                    <!-- Theme Setting -->
+                    <LinearLayout
+                        android:id="@+id/themeSetting"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:padding="15dp"
+                        android:background="@drawable/setting_item_background"
+                        android:layout_marginBottom="8dp"
+                        android:focusable="true"
+                        android:clickable="true">
+
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_palette"
+                            android:contentDescription="App Theme"
+                            app:tint="@color/NavBtnActive" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:layout_marginStart="15dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="App Theme"
+                                android:textColor="@color/FG_color"
+                                android:textSize="16sp" />
+
+                            <TextView
+                                android:id="@+id/themeValue"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Dark"
+                                android:textColor="@color/Nav_color"
+                                android:textSize="12sp"
+                                android:layout_marginTop="2dp" />
+
+                        </LinearLayout>
+
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_arrow_forward"
+                            android:contentDescription="Navigate"
+                            app:tint="@color/Nav_color" />
+
+                    </LinearLayout>
+
                 </LinearLayout>
 
                 <!-- About Section -->
@@ -430,6 +485,98 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="Free up storage space"
+                                android:textColor="@color/Nav_color"
+                                android:textSize="12sp"
+                                android:layout_marginTop="2dp" />
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                    <!-- Check for Updates -->
+                    <LinearLayout
+                        android:id="@+id/checkUpdates"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:padding="15dp"
+                        android:background="@drawable/setting_item_background"
+                        android:layout_marginBottom="8dp"
+                        android:focusable="true"
+                        android:clickable="true">
+
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_update"
+                            android:contentDescription="Check for Updates"
+                            app:tint="@color/NavBtnActive" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:layout_marginStart="15dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Check for Updates"
+                                android:textColor="@color/FG_color"
+                                android:textSize="16sp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Check for app updates"
+                                android:textColor="@color/Nav_color"
+                                android:textSize="12sp"
+                                android:layout_marginTop="2dp" />
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                    <!-- Restart App -->
+                    <LinearLayout
+                        android:id="@+id/restartApp"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:padding="15dp"
+                        android:background="@drawable/setting_item_background"
+                        android:layout_marginBottom="8dp"
+                        android:focusable="true"
+                        android:clickable="true">
+
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_restart"
+                            android:contentDescription="Restart App"
+                            app:tint="@color/NavBtnActive" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:layout_marginStart="15dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Restart App"
+                                android:textColor="@color/FG_color"
+                                android:textSize="16sp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Restart the application"
                                 android:textColor="@color/Nav_color"
                                 android:textSize="12sp"
                                 android:layout_marginTop="2dp" />
