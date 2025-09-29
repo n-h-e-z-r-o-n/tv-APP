@@ -21,9 +21,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Onyx"
         android:usesCleartextTraffic="true">
-        <activity
-            android:name=".extractors.LoadingActivity"
-            android:exported="false" />
+
         <activity
             android:name=".Favorite_Page"
             android:exported="false"
@@ -51,6 +49,10 @@
             android:name=".Home_Page"
             android:exported="false"
             android:launchMode="singleTop" />
+        <activity
+            android:name=".Profile_Page"
+            android:exported="false"
+            />
         <activity
             android:name=".Video_payer"
             android:exported="false"

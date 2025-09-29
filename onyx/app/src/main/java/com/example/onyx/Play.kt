@@ -28,6 +28,13 @@ class Play : AppCompatActivity() {
         val episodeNo = intent.getStringExtra("episodeNo")
         val server = intent.getStringExtra("server") ?: "VidSrc.to"
 
+        // Increment watch statistics using GlobalUtils
+        if(type == "movie"){
+            GlobalUtils.incrementMoviesWatched(this)
+        }else{
+            GlobalUtils.incrementSeriesWatched(this)
+        }
+
         val webView = findViewById<WebView>(R.id.webView)
 
         // Setup WebView

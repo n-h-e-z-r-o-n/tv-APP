@@ -1,0 +1,452 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/BG_color"
+    tools:context=".Profile_Page">
+    
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal">
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fillViewport="true"
+            android:scrollbars="none"
+            android:overScrollMode="never"
+            android:paddingStart="55dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingEnd="20dp"
+                android:paddingTop="20dp"
+                android:paddingBottom="20dp"
+                tools:ignore="RtlSymmetry">
+
+                <!-- Profile Header -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:paddingBottom="30dp">
+
+                    <ImageView
+                        android:id="@+id/profileAvatar"
+                        android:layout_width="80dp"
+                        android:layout_height="80dp"
+                        android:background="@drawable/ic_person"
+                        android:scaleType="centerCrop"
+                        android:backgroundTint="@color/NavBtnActive"
+                        android:contentDescription="Profile Avatar" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:layout_marginStart="20dp">
+
+                        <TextView
+                            android:id="@+id/profileName"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="User Profile"
+                            android:textColor="@color/FG_color"
+                            android:textSize="24sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/profileEmail"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="user@example.com"
+                            android:textColor="@color/Nav_color"
+                            android:textSize="16sp"
+                            android:layout_marginTop="4dp" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+                <!-- Statistics Section -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Statistics"
+                    android:textColor="@color/FG_color"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="15dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="30dp">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:background="@drawable/rounded_background"
+                        android:padding="15dp"
+                        android:layout_marginEnd="10dp">
+
+                        <TextView
+                            android:id="@+id/moviesWatched"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0"
+                            android:textColor="@color/NavBtnActive"
+                            android:textSize="24sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Movies Watched"
+                            android:textColor="@color/FG_color"
+                            android:textSize="14sp"
+                            android:layout_marginTop="4dp" />
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:background="@drawable/rounded_background"
+                        android:padding="15dp"
+                        android:layout_marginStart="10dp">
+
+                        <TextView
+                            android:id="@+id/seriesWatched"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0"
+                            android:textColor="@color/NavBtnActive"
+                            android:textSize="24sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Series Watched"
+                            android:textColor="@color/FG_color"
+                            android:textSize="14sp"
+                            android:layout_marginTop="4dp" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+                <!-- Settings Section -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Settings"
+                    android:textColor="@color/FG_color"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="15dp" />
+
+                <!-- Settings Items -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginBottom="30dp">
+
+                    <!-- Auto-play Setting -->
+                    <LinearLayout
+                        android:id="@+id/autoPlaySetting"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:padding="15dp"
+                        android:background="@drawable/setting_item_background"
+                        android:layout_marginBottom="8dp"
+                        android:focusable="true"
+                        android:clickable="true">
+
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_play_arrow"
+                            android:contentDescription="Auto-play"
+                            app:tint="@color/NavBtnActive" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:layout_marginStart="15dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Auto-play"
+                                android:textColor="@color/FG_color"
+                                android:textSize="16sp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Automatically play next episode"
+                                android:textColor="@color/Nav_color"
+                                android:textSize="12sp"
+                                android:layout_marginTop="2dp" />
+
+                        </LinearLayout>
+
+                        <Switch
+                            android:id="@+id/autoPlaySwitch"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:checked="true" />
+
+                    </LinearLayout>
+
+                    <!-- Notifications Setting -->
+                    <LinearLayout
+                        android:id="@+id/notificationsSetting"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:padding="15dp"
+                        android:background="@drawable/setting_item_background"
+                        android:layout_marginBottom="8dp"
+                        android:focusable="true"
+                        android:clickable="true">
+
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_notifications"
+                            android:contentDescription="Notifications"
+                            app:tint="@color/NavBtnActive" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:layout_marginStart="15dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Notifications"
+                                android:textColor="@color/FG_color"
+                                android:textSize="16sp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Get notified about new releases"
+                                android:textColor="@color/Nav_color"
+                                android:textSize="12sp"
+                                android:layout_marginTop="2dp" />
+
+                        </LinearLayout>
+
+                        <Switch
+                            android:id="@+id/notificationsSwitch"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:checked="true" />
+
+                    </LinearLayout>
+
+                    <!-- Quality Setting -->
+                    <LinearLayout
+                        android:id="@+id/qualitySetting"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:padding="15dp"
+                        android:background="@drawable/setting_item_background"
+                        android:layout_marginBottom="8dp"
+                        android:focusable="true"
+                        android:clickable="true">
+
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_hd"
+                            android:contentDescription="Video Quality"
+                            app:tint="@color/NavBtnActive" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:layout_marginStart="15dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Video Quality"
+                                android:textColor="@color/FG_color"
+                                android:textSize="16sp" />
+
+                            <TextView
+                                android:id="@+id/qualityValue"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="1080p"
+                                android:textColor="@color/Nav_color"
+                                android:textSize="12sp"
+                                android:layout_marginTop="2dp" />
+
+                        </LinearLayout>
+
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_arrow_forward"
+                            android:contentDescription="Navigate"
+                            app:tint="@color/Nav_color" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+                <!-- About Section -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="About"
+                    android:textColor="@color/FG_color"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="15dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginBottom="30dp">
+
+                    <!-- App Version -->
+                    <LinearLayout
+                        android:id="@+id/versionInfo"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:padding="15dp"
+                        android:background="@drawable/setting_item_background"
+                        android:layout_marginBottom="8dp"
+                        android:focusable="true"
+                        android:clickable="true">
+
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_info"
+                            android:contentDescription="App Info"
+                            app:tint="@color/NavBtnActive" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:layout_marginStart="15dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="App Version"
+                                android:textColor="@color/FG_color"
+                                android:textSize="16sp" />
+
+                            <TextView
+                                android:id="@+id/appVersion"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="1.0.0"
+                                android:textColor="@color/Nav_color"
+                                android:textSize="12sp"
+                                android:layout_marginTop="2dp" />
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                    <!-- Clear Cache -->
+                    <LinearLayout
+                        android:id="@+id/clearCache"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:padding="15dp"
+                        android:background="@drawable/setting_item_background"
+                        android:layout_marginBottom="8dp"
+                        android:focusable="true"
+                        android:clickable="true">
+
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_delete"
+                            android:contentDescription="Clear Cache"
+                            app:tint="@color/NavBtnActive" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:layout_marginStart="15dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Clear Cache"
+                                android:textColor="@color/FG_color"
+                                android:textSize="16sp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Free up storage space"
+                                android:textColor="@color/Nav_color"
+                                android:textSize="12sp"
+                                android:layout_marginTop="2dp" />
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </ScrollView>
+
+        <include layout="@layout/laod_animation"/>
+        <include layout="@layout/side_bar"/>
+
+    </FrameLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

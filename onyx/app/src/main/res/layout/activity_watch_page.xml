@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
     android:layout_width="match_parent"
@@ -38,7 +37,8 @@
                 <FrameLayout
                     android:layout_width="740dp"
                     android:layout_height="match_parent"
-                    android:layout_gravity="right">
+                    android:layout_gravity="right"
+                    tools:ignore="RtlHardcoded">
 
                     <!-- Backdrop image -->
                     <ImageView
@@ -102,10 +102,18 @@
 
 
                         <TextView
+                            android:id="@+id/season_C"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="0dp"
+                            android:text=""
+                            android:textColor="#AAAAAA"
+                            android:textSize="14sp"  />
+                        <TextView
                             android:id="@+id/year_widget"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="4dp"
+                            android:layout_marginTop="1dp"
                             android:text="2025"
                             android:textColor="#AAAAAA"
                             android:textSize="14sp"  />
@@ -324,7 +332,7 @@
                                 android:textAllCaps="false"
                                 android:nextFocusLeft="@+id/serverButton"
                                 android:nextFocusRight="@+id/TrailerButton"
-                                android:nextFocusDown="@+id/Cast_widget"
+
                                 android:elevation="4dp"/>
 
                             <Button
@@ -341,7 +349,6 @@
                                 android:textAllCaps="false"
                                 android:nextFocusLeft="@+id/watchNowButton"
                                 android:nextFocusRight="@+id/favoriteButton"
-                                android:nextFocusDown="@+id/Cast_widget"
                                 android:elevation="4dp"/>
 
                             <Button
@@ -358,7 +365,6 @@
                                 android:textAllCaps="false"
                                 android:nextFocusLeft="@+id/TrailerButton"
                                 android:nextFocusRight="@+id/serverButton"
-                                android:nextFocusDown="@+id/Cast_widget"
                                 android:elevation="4dp"/>
 
                             <Button
@@ -375,7 +381,6 @@
                                 android:textAllCaps="false"
                                 android:nextFocusLeft="@+id/favoriteButton"
                                 android:nextFocusRight="@+id/watchNowButton"
-                                android:nextFocusDown="@+id/Cast_widget"
                                 android:elevation="4dp"/>
                         </LinearLayout>
 

@@ -446,23 +446,16 @@ class EqualSpaceItemDecoration(private val space: Int) : RecyclerView.ItemDecora
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-
-
 class EpisodesAdapter(
-    private val episodes: MutableList<JSONObject>,
-    private val seriesId: String,
-    private val type: String
+    private val episodes: MutableList<EpisodeItem>
 ) : RecyclerView.Adapter<EpisodesAdapter.EpisodeViewHolder>() {
 
     inner class EpisodeViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-
-
         val titleView: TextView = view.findViewById(R.id.episode_title)
         val durationView: TextView = view.findViewById(R.id.episode_duration)
-        val episode_Rating: TextView = view.findViewById(R.id.episode_Rating)
+        val ratingView: TextView = view.findViewById(R.id.episode_Rating)
         val descView: TextView = view.findViewById(R.id.episode_description)
         val epsImg: ImageView = view.findViewById(R.id.Ep_IMG)
-
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): EpisodeViewHolder {
@@ -472,53 +465,52 @@ class EpisodesAdapter(
     }
 
     override fun onBindViewHolder(holder: EpisodeViewHolder, position: Int) {
-        val episode = episodes[position]
+        val ep = episodes[position]
 
-        holder.titleView.text = "Eps ${episode.optInt("episode_number")}: ${episode.optString("name")} "
-        holder.durationView.text = "⏱ ${episode.optInt("runtime", 0)} min"
-        holder.episode_Rating.text = "⬤ Imdb ${episode.optInt("vote_average", 0)}"
-
-        holder.descView.text = episode.optString("overview")
-
-        val stillPath = episode.optString("still_path", null)
-        if (!stillPath.isNullOrEmpty()) {
-            val url = "https://image.tmdb.org/t/p/w500$stillPath"
+        holder.titleView.text = "Eps ${ep.episodesNumber}: ${ep.episodesName}"
+        holder.durationView.text = "⏱ ${ep.episodesRuntime} min"
+        holder.ratingView.text = "⬤ IMDb ${ep.episodesRating}"
+        holder.descView.text = ep.episodesDescription
 
 
+            val url = "https://image.tmdb.org/t/p/w500${ep.episodesImage}"
             Glide.with(holder.itemView.context)
                 .load(url)
                 .centerInside()
                 .into(holder.epsImg)
 
 
-        }
-
-        val seasonNo = episode.optInt("season_number")
-        val episodeNo = episode.optInt("episode_number")
-
         holder.itemView.setOnClickListener {
             val context = holder.itemView.context
-            val intent = android.content.Intent(context, Play::class.java)
-
-
-            intent.putExtra("imdb_code", seriesId) // assuming you have it in scope
-            intent.putExtra("type", type) // movie/tv show type
-            intent.putExtra("seasonNo", seasonNo.toString())
-            intent.putExtra("episodeNo", episodeNo.toString())
+            val intent = Intent(context, Play::class.java).apply {
+                putExtra("imdb_code", ep.seriesId)
+                putExtra("type", "tv")
+                putExtra("seasonNo", ep.seasonNumber.toString())
+                putExtra("episodeNo", ep.episodesName.toString())
+            }
             context.startActivity(intent)
-
-        }
-
-        fun addEpisode(episode: JSONObject) {
-            episodes.add(episode)
-            notifyItemInserted(episodes.size - 1)
         }
     }
 
     override fun getItemCount(): Int = episodes.size
+
+    fun addEpisode(item: EpisodeItem) {
+        episodes.add(item)
+        notifyItemInserted(episodes.size - 1)
+    }
 }
 
+data class EpisodeItem(
+    val episodesName: String = "",
+    val episodesImage: String= "",
+    val episodesNumber: String= "",
+    val episodesRating: String = "",
+    val episodesRuntime: String = "",
+    val episodesDescription: String = "",
+    val seriesId: String = "",
+    val seasonNumber: String = "",
 
+)
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -532,8 +524,6 @@ data class MovieItem(
     val year: String = "",
     val rating: String = "",
     val runtime: String = ""
-
-
 )
 
 

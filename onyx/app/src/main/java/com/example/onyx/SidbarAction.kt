@@ -28,11 +28,11 @@ object NavAction {
         val labelMovies = activity.findViewById<TextView>(R.id.labelMovies)
         val labelTvShow = activity.findViewById<TextView>(R.id.labelTvShow)
         val labelSearch = activity.findViewById<TextView>(R.id.labelSearch)
-        val labelProfile = activity.findViewById<TextView>(R.id.labelProfile)
         val labelFav = activity.findViewById<TextView>(R.id.labelFav)
+        val labelProfile = activity.findViewById<TextView>(R.id.labelProfile)
 
         val buttons = listOf(btnHome, btnMovies, btnTvShows, btnSearch, btnFav, btnProfile)
-        val labels = listOf(labelHome, labelMovies, labelTvShow, labelSearch, labelProfile, labelFav)
+        val labels = listOf(labelHome, labelMovies, labelTvShow, labelSearch,labelFav, labelProfile )
 
 
 
@@ -71,6 +71,13 @@ object NavAction {
             }
         }
 
+        btnProfile?.setOnClickListener {
+            if (activity !is Profile_Page) {
+                val intent = Intent(activity, Profile_Page::class.java).addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
+                activity.startActivity(intent)
+            }
+        }
+
 
 
 
@@ -81,6 +88,7 @@ object NavAction {
             is Tv_Page -> btnTvShows
             is Search_Page -> btnSearch
             is Favorite_Page -> btnFav
+            is Profile_Page -> btnProfile
             else -> btnHome
         }
 
