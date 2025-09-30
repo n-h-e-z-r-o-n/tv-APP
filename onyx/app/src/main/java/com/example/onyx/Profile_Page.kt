@@ -127,6 +127,12 @@ class Profile_Page : AppCompatActivity() {
         restartApp.setOnClickListener {
             showRestartDialog()
         }
+        
+        // Terms and Conditions click
+        val termsAndConditions = findViewById<LinearLayout>(R.id.termsAndConditions)
+        termsAndConditions.setOnClickListener {
+            startActivity(android.content.Intent(this, TermsAndConditionsActivity::class.java))
+        }
     }
     
     private fun loadStatistics() {
@@ -223,7 +229,8 @@ class Profile_Page : AppCompatActivity() {
             findViewById<LinearLayout>(R.id.versionInfo),
             findViewById<LinearLayout>(R.id.clearCache),
             findViewById<LinearLayout>(R.id.checkUpdates),
-            findViewById<LinearLayout>(R.id.restartApp)
+            findViewById<LinearLayout>(R.id.restartApp),
+            findViewById<LinearLayout>(R.id.termsAndConditions)
         )
         
         focusableViews.forEach { view ->

@@ -54,6 +54,10 @@
             android:exported="false"
             />
         <activity
+            android:name=".TermsAndConditionsActivity"
+            android:exported="false"
+            android:launchMode="singleTop" />
+        <activity
             android:name=".Video_payer"
             android:exported="false"
             android:launchMode="singleTask" />

@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/BG_color"
+    tools:context=".TermsAndConditionsActivity"
+    android:focusable="true"
+    android:focusableInTouchMode="true">
+    
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal">
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fillViewport="true"
+            android:scrollbars="none"
+            android:overScrollMode="never"
+            android:paddingStart="55dp"
+            tools:ignore="RtlSymmetry"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:clickable="true"
+            android:nextFocusRight="@layout/side_bar">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingEnd="20dp"
+                android:paddingTop="20dp"
+                android:paddingBottom="20dp"
+                tools:ignore="RtlSymmetry">
+
+                <!-- Header -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:paddingBottom="30dp">
+
+                    <ImageView
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:src="@drawable/ic_terms"
+                        android:contentDescription="Terms and Conditions"
+                        app:tint="?attr/FG_color" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Terms and Conditions"
+                        android:textColor="?attr/FG_color"
+                        android:textSize="24sp"
+                        android:textStyle="bold"
+                        android:layout_marginStart="15dp"
+                        android:alpha="0.8"/>
+
+                </LinearLayout>
+
+                <!-- Content -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/rounded_background"
+                    android:padding="20dp">
+
+                    <!-- Terms of Service Section -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Terms of Service"
+                        android:textColor="?attr/FG_color"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="15dp"
+                        android:alpha="0.7"/>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="
+1. Scope; No Ownership \n
+
+\n 1.1. The App may display, index, link to, or otherwise present information, metadata, artwork, trailers, ratings, cast lists, synopsis, air dates, and similar content (collectively, “Third-Party Content”) obtained from third-party providers, including but not limited to The Movie Database (TMDB), IMDb, streaming services, social networks, and content providers (“Third-Party Providers”).
+\n 1.2. Unless explicitly stated otherwise, we do not own, license to you, host, or stream copyrighted audiovisual works (full movies or full episodes) via the App. The App only provides metadata, thumbnails, trailers, links, or connectors that may direct you to third-party services that host or stream content.
+\n\n
+\n 2. Licensing, Terms and Attribution
+
+\n 2.1. Use of Third-Party Content is governed by the terms, policies, and license agreements of the relevant Third-Party Providers. Your use of such content may be subject to separate terms (for example, TMDB’s API terms require attribution and restrict certain uses). You agree to comply with those third-party terms when you access or use the related features.
+\n 2.2. The App will display attribution and/or logos required by the provider(s). You shall not remove, obscure, or alter any required attributions, credits, watermarks, or copyright notices. Example attribution to display (customize per provider):
+“Data and artwork provided by The Movie Database (TMDB).”
+\n 2.3. In the event any provider changes its attribution, licensing, or branding requirements, we may update the attribution in the App without prior notice.
+\n\n
+3. No Guarantee of Availability or Accuracy
+\n 3.1. Third-Party Content is provided “as is.” We do not guarantee the completeness, accuracy, currency, or reliability of any third-party metadata, artwork, trailers, links, or availability information. Third-Party Providers may change or remove content, alter their APIs, or restrict access at any time.
+\n 3.2. We are not responsible for any loss, damage, or cost you suffer because of inaccurate or outdated information provided by third parties.
+\n\n
+4. Streaming Links, Embedded Players and Prohibited Conduct
+\n 4.1. The App may provide links to third-party streaming or download services. We do not warrant that such links are legal in your jurisdiction. You are responsible for ensuring that any content you access via such links is lawful where you are located.
+\n 4.2. You must not use the App to:
+\n  • Access, distribute, or link to infringing content;
+\n  • Circumvent geo-restrictions, DRM, technical protection measures, or paywalls;
+\n  • Aggregate, harvest, mirror, or redistribute third-party content for commercial reuse without express permission from the rights holder.
+\n 4.3. We expressly prohibit using automated tools, scrapers, or bots to extract Third-Party Content except where the provider’s API explicitly permits such use under terms you comply with.
+\n\n
+5. API Keys, Rate Limits, Caching and Storage
+\n 5.1. Where the App uses provider APIs (e.g., TMDB), the App will adhere to provider rate limits, caching rules, and data-retention policies. We may cache metadata for performance and API-limit compliance; cached data may be refreshed according to provider guidelines or configuration.
+\n 5.2. We will not expose any secret API keys to end users. If you provide your own API key to the App, you are responsible for its security and for any charges or liabilities arising from its use.
+\n 5.3. We reserve the right to suspend features that exceed API usage thresholds or violate provider terms.
+\n
+\n
+6. DMCA / Rights-Holder Complaints and Takedown Procedure
+\n 6.1. We respect the intellectual property rights of content owners. If you believe the App links to or displays infringing content, send a written takedown notice to our designated agent at:
+[Designated Agent Contact — name, email, mailing address].
+\n 6.2. A compliant notice should include: identification of the allegedly infringing material, location within the App, a statement under penalty of perjury that you are the rights holder or authorized to act on their behalf, contact information, and a physical or electronic signature.
+\n 6.3. Upon receipt of a valid notice we will: (a) remove or disable access to the allegedly infringing content; (b) notify the user who posted or linked the content; and (c) follow the applicable statutory procedure for counter-notifications, if provided. We may reinstate content only after resolving disputes consistent with applicable law.
+\n 6.4. We may preserve information about the user and content for legal and audit purposes.
+\n
+\n
+7. No Warranties; Limited Reliance
+\n 7.1. TO THE FULLEST EXTENT PERMITTED BY APPLICABLE LAW, WE DISCLAIM ALL WARRANTIES REGARDING THIRD-PARTY CONTENT — EXPRESS OR IMPLIED — INCLUDING ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR NON-INFRINGEMENT.
+\n7.2. You acknowledge that any reliance on Third-Party Content is at your own risk.
+\n
+\n
+8. Indemnity
+\n8.1. You agree to indemnify, defend, and hold harmless [Your Company / App Name], its officers, directors, employees, agents, and affiliates from any claim, demand, loss, damage, liability, or expense (including reasonable attorneys’ fees) arising out of or related to: (a) your use of Third-Party Content; (b) your violation of provider terms; (c) your distribution of infringing content; or (d) your violation of these Terms.
+\n
+\n
+9. Limitation of Liability
+\n 9.1. TO THE MAXIMUM EXTENT PERMITTED BY LAW, WE SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, CONSEQUENTIAL, SPECIAL, OR PUNITIVE DAMAGES ARISING FROM THIRD-PARTY CONTENT OR LINKS, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+\n 9.2. Our aggregate liability for claims related to Third-Party Content shall be limited to the amount you paid us in the previous twelve (12) months, or if you paid nothing, to the minimum amount permitted by law.
+\n
+\n
+10. Enforcement, Removal, and Emergency Action
+\n 10.1. We reserve the right, in our sole discretion and without notice, to remove, disable, or refuse to display any Third-Party Content or links that we believe: (a) infringe rights; (b) violate provider terms; (c) are illegal; (d) pose security or privacy risks; or (e) impair the App’s operation.
+\n 10.2. For urgent or legally compelled removals (court order, law enforcement request, serious IP violation), we may take immediate corrective action and disclose user records to comply with legal obligations.
+\n
+\n
+11. Changes to Providers and Migration
+\n 11.1. Third-Party Providers, APIs, data formats, or licensing models may change. We may modify, suspend, or discontinue features reliant on any provider without liability. We will attempt to provide notice where feasible but are not required to do so.
+\n 11.2. If a provider requires new licensing/fees that would materially change the App’s cost or functionality, we reserve the right to modify pricing, provide alternative features, or remove the feature entirely.
+\n
+\n
+12. User Content and Reporting
+\n 12.1. If users submit content (reviews, tags, custom metadata) that reference third-party works, you represent you own or have the right to publish that content and that such content does not infringe any rights.
+\n 12.2. We may moderate, remove, or archive user content at our discretion and may retain logs for legal compliance and audits.
+\n
+\n
+13. Geographic and Export Restrictions
+\n 13.1. Availability of Third-Party Content may be restricted by geography, export control, sanctions, or provider restrictions. You agree not to use the App to access or download content in violation of any applicable export or sanction laws.
+\n
+\n
+14. Survival; Severability
+\n 14.1. The provisions in this Section (including indemnity, limitation of liability, DMCA procedures, and no-warranty clauses) survive termination of these Terms.
+\n 14.2. If any part of this Section is found invalid, the remainder will remain in full force and effect.
+\n
+\n
+15. User Acknowledgment and Consent
+\n 15.1. By continuing to use the App, you acknowledge that you understand: (a) the App relies on third-party data and links that we do not control; (b) third-party content may be removed or become unavailable; and (c) you are responsible for verifying legality of streamed or downloaded material in your jurisdiction
+
+                        "
+                        android:textColor="?attr/FG_color"
+                        android:textSize="14sp"
+                        android:lineSpacingExtra="4dp"
+                        android:layout_marginBottom="30dp"
+                        android:focusable="true"
+                        android:focusableInTouchMode="true"/>
+
+                    <!-- Privacy Policy Section -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Privacy Policy"
+                        android:textColor="?attr/FG_color"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="15dp"
+                        android:alpha="0.7"/>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="We are committed to protecting your privacy:\n\n1. Information Collection: We may collect usage statistics and preferences to improve the application experience.\n\n2. Data Usage: Your personal information will not be shared with third parties without your consent.\n\n3. Data Storage: User preferences and settings are stored locally on your device.\n\n4. Analytics: We may use anonymous analytics to understand how the application is used and to improve its functionality.\n\n5. Updates: This privacy policy may be updated from time to time. Continued use of the application constitutes acceptance of any changes."
+                        android:textColor="?attr/FG_color"
+                        android:textSize="14sp"
+                        android:lineSpacingExtra="4dp"
+                        android:layout_marginBottom="30dp" />
+
+                    <!-- Contact Information -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Third-Party Content and Services"
+                        android:textColor="?attr/FG_color"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="15dp"
+                        android:alpha="0.7"/>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="
+ s
+
+No Hosting of Content \n
+This App/Software does not host, store, or stream full movies, TV episodes, or other audiovisual works. The App only displays metadata, images, trailers, availability information, or links that are retrieved from third-party providers or user submissions. Any full content you access through the App is hosted on external platforms that we do not own or control.
+\n\n
+No Responsibility for Third-Party Content \n
+All third-party content, including but not limited to movie data, artwork, ratings, descriptions, trailers, streaming links, and availability indicators, is provided “as is” by independent third-party services (such as The Movie Database or similar providers). We make no representations or warranties regarding the legality, accuracy, completeness, reliability, or availability of such content. You acknowledge that we are not responsible for, and shall have no liability arising from, any third-party content or services.
+\n\n
+Compliance with Provider Terms \n
+Certain content is supplied under license from third-party providers, and may be subject to their terms of use (e.g., The Movie Database (TMDB)). By using the App, you agree to comply with such third-party terms, including attribution, caching limits, usage restrictions, and logo requirements. We reserve the right to suspend or terminate access to any content or features where continued use would violate a provider’s terms or put [Company/App] at legal or contractual risk.
+\n\n
+User Responsibility for Accessing External Content \n
+If the App provides links, frames, or references to external platforms, you acknowledge that you are leaving our service and accessing third-party services at your own risk. You are solely responsible for ensuring that your access to and use of such external content is lawful in your country or region. We disclaim all responsibility for the content, legality, availability, or safety of any third-party services.
+\n\n
+Takedown and Blocking of Infringing Sources \n
+We may, in our sole discretion, remove or disable access to third-party content or links that (a) are alleged or reasonably suspected to be infringing, unlawful, or unsafe, (b) violate the terms of our content providers, or (c) create potential liability for [Company/App]. Such actions may be taken without prior notice and without liability to you.
+\n\n
+Indemnification \n
+You agree to indemnify and hold harmless [Company/App], its affiliates, and licensors from and against any claims, liabilities, damages, losses, and expenses (including reasonable legal fees) arising out of or connected with (a) your access to or use of any third-party content, (b) your violation of third-party terms, or (c) your infringement of third-party rights.
+        \n\n\n\n
+                        The App may show metadata, thumbnails, trailers, availability indicators, and links provided by third-party APIs or services. We do not host, license, or stream full movies or TV episodes unless explicitly stated. Links or references to third-party hosts are provided for convenience only and may be illegal in your jurisdiction; you are responsible for verifying the legality of any content you access. We disclaim all warranties and make no representations about the legality, accuracy, or availability of third-party content. \n
+                        Certain content is supplied under third-party license terms (for example, The Movie Database (TMDB)). You and the App must comply with those providers’ terms, including attribution, logo use, and caching rules. We will show required attributions in the App as supplied by the provider; you must not remove or alter required attributions. We will never embed or expose any secret API keys in client builds; where keys are required to be secret we will use server-side proxies consistent with provider rules.
+                        "
+                        android:textColor="?attr/FG_color"
+                        android:textSize="14sp"
+                        android:lineSpacingExtra="4dp" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </ScrollView>
+
+        <include layout="@layout/laod_animation"/>
+        <include layout="@layout/side_bar"/>
+
+    </FrameLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
