@@ -153,16 +153,17 @@ object GlobalUtils {
     fun getVideoQuality(context: Context): String {
         return getSharedPreferences(context).getString(KEY_VIDEO_QUALITY, DEFAULT_VIDEO_QUALITY) ?: DEFAULT_VIDEO_QUALITY
     }
-    
-    /**
-     * Set app theme
-     */
 
+    // ==================== THEME MANAGEMENT ====================
 
     // List of your theme keys
     private val availableThemes = listOf(
         "dark",
         "light",
+        "amoled",
+        "highContrast",
+        "green",
+        "red",
         "purple"
     )
     fun getAvailableThemes(): List<String> = availableThemes
@@ -180,7 +181,12 @@ object GlobalUtils {
 
     fun applyTheme(activity: Activity) {
         when (getAppTheme(activity)) {
+            "dark" -> activity.setTheme(R.style.Theme_Onyx_Dark)
             "light"  -> activity.setTheme(R.style.Theme_Onyx_Light)
+            "amoled" -> activity.setTheme(R.style.Theme_Onyx_Amoled)
+            "highContrast" -> activity.setTheme(R.style.Theme_Onyx_HighContrast)
+            "green" -> activity.setTheme(R.style.Theme_Onyx_Green)
+            "red" -> activity.setTheme(R.style.Theme_Onyx_Red)
             "purple" -> activity.setTheme(R.style.Theme_Onyx_Purple)
             else     -> activity.setTheme(R.style.Theme_Onyx_Dark)
         }

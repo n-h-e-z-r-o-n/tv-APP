@@ -1,13 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
         <!-- Default Dark Theme -->
-        <color name="BG_color">#0C0404</color>
-        <color name="FG_color">#FFFFFF</color>
-        <color name="Nav_color">#808A87</color>
-        <color name="gray">#1A1A1A</color>
-        <color name="NavBtnFocus">#33B5E5</color>
-        <color name="NavBtnActive">#E2C121</color>
-
-
-
 </resources>

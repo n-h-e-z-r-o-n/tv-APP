@@ -47,7 +47,7 @@
                 android:padding="1dp"
                 android:singleLine="true"
                 android:text="Movie Title"
-                android:textColor="@color/FG_color"
+                android:textColor="?attr/FG_color"
                 android:textSize="6sp" />
 
         </LinearLayout>

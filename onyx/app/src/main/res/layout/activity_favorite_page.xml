@@ -35,17 +35,18 @@
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
+                    android:layout_height="0dp"
                     android:background="@drawable/overlay_bottom_gradient"
                     android:orientation="horizontal"
-                    android:layout_gravity="end" />
+                    android:layout_gravity="bottom"
+                    android:alpha="0.5"/>
 
                 <LinearLayout
-                    android:layout_width="match_parent"
+                    android:layout_width="400dp"
                     android:layout_height="match_parent"
                     android:background="@drawable/overlay_left_gradient"
                     android:orientation="horizontal"
-                    android:layout_gravity="end" />
+                    android:layout_gravity="start" />
 
                 <LinearLayout
                     android:layout_width="400dp"
@@ -172,14 +173,15 @@
                 android:padding="8dp"
                 android:overScrollMode="never"
                 android:layout_gravity="bottom"
-                android:scrollbars="none"/>
+                android:scrollbars="none"
+                android:layout_marginBottom="5dp"/>
 
             <TextView
                 android:id="@+id/emptyState"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="No favorites yet. Add some from a show page."
-                android:textColor="@color/FG_color"
+                android:textColor="?attr/FG_color"
                 android:visibility="gone"/>
 
             <TextView

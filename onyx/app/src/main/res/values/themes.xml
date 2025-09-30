@@ -1,6 +1,7 @@
 <resources>
 
 
+    <!-- Dark Theme (already in place) -->
     <style name="Theme.Onyx.Dark" parent="Theme.AppCompat.DayNight.NoActionBar">
         <item name="BG_color">#0C0404</item>
         <item name="FG_color">#FFFFFF</item>
@@ -9,19 +10,61 @@
         <item name="SidebarFocus">#3D5AFE</item>
         <item name="SidebarDefault">#FFFFFF</item>
         <item name="SidebarActive">#DAA520</item>
-
     </style>
 
-    <style name="Theme.Onyx.Light" parent="Theme.AppCompat.DayNight.NoActionBar">
+    <!-- Light Theme -->
+    <style name="Theme.Onyx.Light" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="BG_color">#FFFFFF</item>
-        <item name="FG_color">#0C0404 </item>
-        <item name="BG_color_up">#1A1A1A</item>
+        <item name="FG_color">#0C0404</item>
+        <item name="BG_color_up">#F5F5F5</item>
         <item name="AccentColor">#3D5AFE</item>
         <item name="SidebarFocus">#3D5AFE</item>
         <item name="SidebarDefault">#0C0404</item>
         <item name="SidebarActive">#DAA520</item>
+    </style>
 
+    <!-- AMOLED Pure Black Theme -->
+    <style name="Theme.Onyx.Amoled" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="BG_color">#000000</item>
+        <item name="FG_color">#FFFFFF</item>
+        <item name="BG_color_up">#121212</item>
+        <item name="AccentColor">#FF0266</item>
+        <item name="SidebarFocus">#FF0266</item>
+        <item name="SidebarDefault">#B0B0B0</item>
+        <item name="SidebarActive">#FFD700</item>
+    </style>
 
+    <!-- High Contrast Theme -->
+    <style name="Theme.Onyx.HighContrast" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="BG_color">#000000</item>
+        <item name="FG_color">#FFFFFF</item>
+        <item name="BG_color_up">#2C2C2C</item>
+        <item name="AccentColor">#FFFF00</item>
+        <item name="SidebarFocus">#FFFF00</item>
+        <item name="SidebarDefault">#FFFFFF</item>
+        <item name="SidebarActive">#FF0000</item>
+    </style>
+
+    <!-- Custom Green Theme -->
+    <style name="Theme.Onyx.Green" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="BG_color">#0E1A0E</item>
+        <item name="FG_color">#E0FFE0</item>
+        <item name="BG_color_up">#1E2E1E</item>
+        <item name="AccentColor">#00C853</item>
+        <item name="SidebarFocus">#00C853</item>
+        <item name="SidebarDefault">#A5D6A7</item>
+        <item name="SidebarActive">#FFD700</item>
+    </style>
+
+    <!-- Custom Red Theme -->
+    <style name="Theme.Onyx.Red" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="BG_color">#1A0E0E</item>
+        <item name="FG_color">#FFE0E0</item>
+        <item name="BG_color_up">#2E1E1E</item>
+        <item name="AccentColor">#E53935</item>
+        <item name="SidebarFocus">#E53935</item>
+        <item name="SidebarDefault">#FFCDD2</item>
+        <item name="SidebarActive">#FFD700</item>
     </style>
 
     <style name="Theme.Onyx.Purple" parent="Theme.AppCompat.DayNight.NoActionBar">

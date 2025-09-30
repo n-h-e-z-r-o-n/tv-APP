@@ -45,7 +45,7 @@
                         android:layout_height="80dp"
                         android:background="@drawable/ic_person"
                         android:scaleType="centerCrop"
-                        android:backgroundTint="@color/NavBtnActive"
+                        android:backgroundTint="?attr/SidebarActive"
                         android:contentDescription="Profile Avatar" />
 
                     <LinearLayout
@@ -60,7 +60,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="User Profile"
-                            android:textColor="?attr/FG_color"
+                            android:textColor="?attr/SidebarActive"
                             android:textSize="24sp"
                             android:textStyle="bold" />
 
@@ -68,8 +68,7 @@
                             android:id="@+id/profileEmail"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="user@example.com"
-                            android:textColor="@color/Nav_color"
+                            android:textColor="?attr/FG_color"
                             android:textSize="16sp"
                             android:layout_marginTop="4dp" />
 
@@ -82,7 +81,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Statistics"
-                    android:textColor="@color/FG_color"
+                    android:textColor="?attr/FG_color"
                     android:textSize="20sp"
                     android:textStyle="bold"
                     android:layout_marginBottom="15dp" />
@@ -108,7 +107,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="0"
-                            android:textColor="@color/NavBtnActive"
+                            android:textColor="?attr/SidebarActive"
                             android:textSize="24sp"
                             android:textStyle="bold" />
 
@@ -116,7 +115,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Movies Watched"
-                            android:textColor="@color/FG_color"
+                            android:textColor="?attr/FG_color"
                             android:textSize="14sp"
                             android:layout_marginTop="4dp" />
 
@@ -137,7 +136,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="0"
-                            android:textColor="@color/NavBtnActive"
+                            android:textColor="?attr/SidebarActive"
                             android:textSize="24sp"
                             android:textStyle="bold" />
 
@@ -145,7 +144,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Series Watched"
-                            android:textColor="@color/FG_color"
+                            android:textColor="?attr/FG_color"
                             android:textSize="14sp"
                             android:layout_marginTop="4dp" />
 
@@ -158,7 +157,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Settings"
-                    android:textColor="@color/FG_color"
+                    android:textColor="?attr/FG_color"
                     android:textSize="20sp"
                     android:textStyle="bold"
                     android:layout_marginBottom="15dp" />
@@ -168,7 +167,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:layout_marginBottom="30dp">
+                    android:layout_marginBottom="30dp"
+                    android:padding="4dp">
 
                     <!-- Auto-play Setting -->
                     <LinearLayout
@@ -188,7 +188,7 @@
                             android:layout_height="24dp"
                             android:src="@drawable/ic_play_arrow"
                             android:contentDescription="Auto-play"
-                            app:tint="@color/NavBtnActive" />
+                            app:tint="?attr/FG_color" />
 
                         <LinearLayout
                             android:layout_width="0dp"
@@ -201,14 +201,14 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="Auto-play"
-                                android:textColor="@color/FG_color"
+                                android:textColor="?attr/FG_color"
                                 android:textSize="16sp" />
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="Automatically play next episode"
-                                android:textColor="@color/Nav_color"
+                                android:textColor="?attr/FG_color"
                                 android:textSize="12sp"
                                 android:layout_marginTop="2dp" />
 
@@ -240,7 +240,7 @@
                             android:layout_height="24dp"
                             android:src="@drawable/ic_notifications"
                             android:contentDescription="Notifications"
-                            app:tint="@color/NavBtnActive" />
+                            app:tint="?attr/FG_color" />
 
                         <LinearLayout
                             android:layout_width="0dp"
@@ -253,14 +253,14 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="Notifications"
-                                android:textColor="@color/FG_color"
+                                android:textColor="?attr/FG_color"
                                 android:textSize="16sp" />
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="Get notified about new releases"
-                                android:textColor="@color/Nav_color"
+                                android:textColor="?attr/FG_color"
                                 android:textSize="12sp"
                                 android:layout_marginTop="2dp" />
 
@@ -292,7 +292,7 @@
                             android:layout_height="24dp"
                             android:src="@drawable/ic_hd"
                             android:contentDescription="Video Quality"
-                            app:tint="@color/NavBtnActive" />
+                            app:tint="?attr/FG_color" />
 
                         <LinearLayout
                             android:layout_width="0dp"
@@ -305,7 +305,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="Video Quality"
-                                android:textColor="@color/FG_color"
+                                android:textColor="?attr/FG_color"
                                 android:textSize="16sp" />
 
                             <TextView
@@ -313,7 +313,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="1080p"
-                                android:textColor="@color/Nav_color"
+                                android:textColor="?attr/FG_color"
                                 android:textSize="12sp"
                                 android:layout_marginTop="2dp" />
 
@@ -324,7 +324,7 @@
                             android:layout_height="24dp"
                             android:src="@drawable/ic_arrow_forward"
                             android:contentDescription="Navigate"
-                            app:tint="@color/Nav_color" />
+                            app:tint="?attr/FG_color" />
 
                     </LinearLayout>
 
@@ -346,7 +346,7 @@
                             android:layout_height="24dp"
                             android:src="@drawable/ic_palette"
                             android:contentDescription="App Theme"
-                            app:tint="@color/NavBtnActive" />
+                            app:tint="?attr/FG_color" />
 
                         <LinearLayout
                             android:layout_width="0dp"
@@ -359,7 +359,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="App Theme"
-                                android:textColor="@color/FG_color"
+                                android:textColor="?attr/FG_color"
                                 android:textSize="16sp" />
 
                             <TextView
@@ -367,7 +367,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="Dark"
-                                android:textColor="@color/Nav_color"
+                                android:textColor="?attr/FG_color"
                                 android:textSize="12sp"
                                 android:layout_marginTop="2dp" />
 
@@ -378,7 +378,7 @@
                             android:layout_height="24dp"
                             android:src="@drawable/ic_arrow_forward"
                             android:contentDescription="Navigate"
-                            app:tint="@color/Nav_color" />
+                            app:tint="?attr/FG_color" />
 
                     </LinearLayout>
 
@@ -389,15 +389,17 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="About"
-                    android:textColor="@color/FG_color"
+                    android:textColor="?attr/FG_color"
                     android:textSize="20sp"
                     android:textStyle="bold"
+
                     android:layout_marginBottom="15dp" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
+                    android:padding="4dp"
                     android:layout_marginBottom="30dp">
 
                     <!-- App Version -->
@@ -418,7 +420,7 @@
                             android:layout_height="24dp"
                             android:src="@drawable/ic_info"
                             android:contentDescription="App Info"
-                            app:tint="@color/NavBtnActive" />
+                            app:tint="?attr/FG_color" />
 
                         <LinearLayout
                             android:layout_width="0dp"
@@ -431,7 +433,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="App Version"
-                                android:textColor="@color/FG_color"
+                                android:textColor="?attr/FG_color"
                                 android:textSize="16sp" />
 
                             <TextView
@@ -439,7 +441,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="1.0.0"
-                                android:textColor="@color/Nav_color"
+                                android:textColor="?attr/FG_color"
                                 android:textSize="12sp"
                                 android:layout_marginTop="2dp" />
 
@@ -465,7 +467,7 @@
                             android:layout_height="24dp"
                             android:src="@drawable/ic_delete"
                             android:contentDescription="Clear Cache"
-                            app:tint="@color/NavBtnActive" />
+                            app:tint="?attr/FG_color" />
 
                         <LinearLayout
                             android:layout_width="0dp"
@@ -478,14 +480,14 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="Clear Cache"
-                                android:textColor="@color/FG_color"
+                                android:textColor="?attr/FG_color"
                                 android:textSize="16sp" />
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="Free up storage space"
-                                android:textColor="@color/Nav_color"
+                                android:textColor="?attr/FG_color"
                                 android:textSize="12sp"
                                 android:layout_marginTop="2dp" />
 
@@ -511,7 +513,7 @@
                             android:layout_height="24dp"
                             android:src="@drawable/ic_update"
                             android:contentDescription="Check for Updates"
-                            app:tint="@color/NavBtnActive" />
+                            app:tint="?attr/FG_color" />
 
                         <LinearLayout
                             android:layout_width="0dp"
@@ -524,14 +526,14 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="Check for Updates"
-                                android:textColor="@color/FG_color"
+                                android:textColor="?attr/FG_color"
                                 android:textSize="16sp" />
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="Check for app updates"
-                                android:textColor="@color/Nav_color"
+                                android:textColor="?attr/FG_color"
                                 android:textSize="12sp"
                                 android:layout_marginTop="2dp" />
 
@@ -557,7 +559,7 @@
                             android:layout_height="24dp"
                             android:src="@drawable/ic_restart"
                             android:contentDescription="Restart App"
-                            app:tint="@color/NavBtnActive" />
+                            app:tint="?attr/FG_color" />
 
                         <LinearLayout
                             android:layout_width="0dp"
@@ -570,14 +572,14 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="Restart App"
-                                android:textColor="@color/FG_color"
+                                android:textColor="?attr/FG_color"
                                 android:textSize="16sp" />
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="Restart the application"
-                                android:textColor="@color/Nav_color"
+                                android:textColor="?attr/FG_color"
                                 android:textSize="12sp"
                                 android:layout_marginTop="2dp" />
 
