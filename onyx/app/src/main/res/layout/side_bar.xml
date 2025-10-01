@@ -167,7 +167,7 @@
                 android:layout_height="48dp"
                 android:background="@android:color/transparent"
                 android:nextFocusUp="@id/btnSearch"
-                android:nextFocusDown="@id/btnProfile"
+                android:nextFocusDown="@id/btnNotification"
                 android:src="@drawable/ic_fave"
                 app:tint="@color/nav_icon_color_selector"
                 android:clickable="true"
@@ -190,6 +190,57 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            >
+            <FrameLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+
+
+                <ImageButton
+                    android:id="@+id/btnNotification"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:background="@android:color/transparent"
+                    android:nextFocusUp="@id/btnFav"
+                    android:nextFocusDown="@id/btnProfile"
+                    android:src="@drawable/notifications"
+                    app:tint="@color/nav_icon_color_selector"
+                    android:clickable="true"
+                    android:focusable="true"/>
+
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/notificationBadge"
+                    android:layout_width="10dp"
+                    android:layout_height="10dp"
+                    android:layout_gravity="end|top"
+                    android:layout_marginTop="12dp"
+                    android:layout_marginEnd="6dp"
+                    app:cardCornerRadius="5dp"
+                    app:cardBackgroundColor="@android:color/holo_red_light"
+                    android:visibility="gone"/>
+            </FrameLayout>
+
+
+            <TextView
+                android:id="@+id/labelNotification"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="Notification"
+                android:textColor="?attr/FG_color"
+                android:textSize="14sp"
+                android:visibility="gone"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
@@ -198,7 +249,7 @@
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:background="@android:color/transparent"
-                android:nextFocusUp="@id/btnFav"
+                android:nextFocusUp="@id/btnNotification"
                 android:nextFocusDown="@id/btnHome"
                 android:src="@drawable/ic_person"
                 app:tint="@color/nav_icon_color_selector"
@@ -220,5 +271,9 @@
         </LinearLayout>
 
     </LinearLayout>
+
+
+
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

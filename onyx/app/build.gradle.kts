@@ -67,6 +67,7 @@ dependencies {
     implementation("androidx.media3:media3-datasource:1.8.0")
     implementation("androidx.media3:media3-datasource-okhttp:1.8.0")
     implementation("androidx.media3:media3-common:1.8.0")
+    implementation("com.google.code.gson:gson:2.11.0")
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)

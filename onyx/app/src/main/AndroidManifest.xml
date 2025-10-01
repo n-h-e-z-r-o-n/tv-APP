@@ -21,7 +21,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Onyx.Dark"
         android:usesCleartextTraffic="true">
-
+        <activity
+            android:name=".Notification_Page"
+            android:exported="false" />
         <activity
             android:name=".Favorite_Page"
             android:exported="false"
@@ -34,9 +36,7 @@
             android:name=".Actor_Page"
             android:exported="false"
             android:launchMode="singleTop" />
-        <activity
-            android:name=".test"
-            android:exported="false" />
+
         <activity
             android:name=".Tv_Page"
             android:exported="false"
@@ -51,8 +51,7 @@
             android:launchMode="singleTop" />
         <activity
             android:name=".Profile_Page"
-            android:exported="false"
-            />
+            android:exported="false" />
         <activity
             android:name=".TermsAndConditionsActivity"
             android:exported="false"

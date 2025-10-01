@@ -28,7 +28,8 @@
             tools:ignore="RtlSymmetry"
             android:focusable="true"
             android:focusableInTouchMode="true"
-            android:descendantFocusability="beforeDescendants"/>
+            android:descendantFocusability="beforeDescendants"
+            android:nextFocusLeft="@id/btnTvShow"/>
 
         <include layout="@layout/laod_animation"/>
         <include layout="@layout/side_bar"/>

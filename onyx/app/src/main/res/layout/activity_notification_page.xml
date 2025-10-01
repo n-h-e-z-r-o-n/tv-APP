@@ -3,8 +3,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".Movie_Page"
-    android:background="?attr/BG_color">
+    android:background="?attr/BG_color"
+    tools:context=".Notification_Page">
+
 
     <FrameLayout
         android:layout_width="match_parent"
@@ -12,28 +13,34 @@
         android:orientation="horizontal">
 
 
-
-
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/Movies"
-            android:layout_height="match_parent"
+        <LinearLayout
             android:layout_width="match_parent"
+            android:layout_height="match_parent"
             android:clipToPadding="false"
+            android:orientation="vertical"
             android:overScrollMode="never"
-            android:padding="10dp"
             android:scrollbars="none"
             android:paddingStart="41dp"
-            android:focusable="true"
-            android:focusableInTouchMode="true"
-            android:descendantFocusability="beforeDescendants"
-            android:nextFocusLeft="@id/btnMovies"
-            tools:ignore="RtlSymmetry" />
+            tools:layout_editor_absoluteY="8dp"
+            tools:ignore="RtlSymmetry">
 
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/notification_widget"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:clipToPadding="false"
+                android:overScrollMode="never"
+                android:scrollbars="none"
+                tools:ignore="NestedWeights"
+                android:nextFocusLeft="@id/btnNotification"/>
+
+
+
+        </LinearLayout>
         <include layout="@layout/laod_animation"/>
         <include layout="@layout/side_bar"/>
-
-
     </FrameLayout>
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

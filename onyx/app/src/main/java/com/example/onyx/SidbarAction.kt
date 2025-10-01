@@ -12,6 +12,17 @@ import android.widget.LinearLayout
 import android.widget.TextView
 
 import android.graphics.Typeface
+import android.util.Log
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.time.delay
+import kotlinx.coroutines.withContext
+import java.io.File
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
+
 
 object NavAction {
 
@@ -21,6 +32,7 @@ object NavAction {
         val btnTvShows = activity.findViewById<ImageButton>(R.id.btnTvShow)
         val btnSearch = activity.findViewById<ImageButton>(R.id.btnSearch)
         val btnFav = activity.findViewById<ImageButton>(R.id.btnFav)
+        val btnNotification = activity.findViewById<ImageButton>(R.id.btnNotification)
         val btnProfile = activity.findViewById<ImageButton>(R.id.btnProfile)
 
 
@@ -30,54 +42,22 @@ object NavAction {
         val labelTvShow = activity.findViewById<TextView>(R.id.labelTvShow)
         val labelSearch = activity.findViewById<TextView>(R.id.labelSearch)
         val labelFav = activity.findViewById<TextView>(R.id.labelFav)
+        val labelNotification = activity.findViewById<TextView>(R.id.labelNotification)
         val labelProfile = activity.findViewById<TextView>(R.id.labelProfile)
 
-        val buttons = listOf(btnHome, btnMovies, btnTvShows, btnSearch, btnFav, btnProfile)
-        val labels = listOf(labelHome, labelMovies, labelTvShow, labelSearch,labelFav, labelProfile )
+        val buttons = listOf(btnHome, btnMovies, btnTvShows, btnSearch, btnFav, btnNotification, btnProfile)
+        val labels = listOf(labelHome, labelMovies, labelTvShow, labelSearch,labelFav, labelNotification, labelProfile )
 
+        val navigationMap = mapOf(
+            btnHome to Home_Page::class.java,
+            btnMovies to Movie_Page::class.java,
+            btnTvShows to Tv_Page::class.java,
+            btnSearch to Search_Page::class.java,
+            btnFav to Favorite_Page::class.java,
+            btnNotification to Notification_Page::class.java,
+            btnProfile to Profile_Page::class.java
+        )
 
-
-        btnHome?.setOnClickListener {
-            if (activity !is Home_Page) {
-                val intent = Intent(activity, Home_Page::class.java).addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
-                activity.startActivity(intent)
-            }
-        }
-
-        btnMovies?.setOnClickListener {
-            if (activity !is Movie_Page) {
-                val intent = Intent(activity, Movie_Page::class.java).addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
-                activity.startActivity(intent)
-            }
-        }
-
-        btnTvShows?.setOnClickListener {
-            if (activity !is Tv_Page) {
-                val intent = Intent(activity, Tv_Page::class.java).addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
-                activity.startActivity(intent)
-            }
-        }
-
-        btnSearch?.setOnClickListener {
-            if (activity !is Search_Page) {
-                val intent = Intent(activity, Search_Page::class.java).addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
-                activity.startActivity(intent)
-            }
-        }
-
-        btnFav?.setOnClickListener {
-            if (activity !is Favorite_Page) {
-                val intent = Intent(activity, Favorite_Page::class.java).addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
-                activity.startActivity(intent)
-            }
-        }
-
-        btnProfile?.setOnClickListener {
-            if (activity !is Profile_Page) {
-                val intent = Intent(activity, Profile_Page::class.java).addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
-                activity.startActivity(intent)
-            }
-        }
 
 
 
@@ -89,6 +69,7 @@ object NavAction {
             is Tv_Page -> btnTvShows
             is Search_Page -> btnSearch
             is Favorite_Page -> btnFav
+            is Notification_Page -> btnNotification
             is Profile_Page -> btnProfile
             else -> btnHome
         }
@@ -96,6 +77,15 @@ object NavAction {
         highlightActive(activeButton, buttons)
         activeButton?.post { activeButton.requestFocus() }          // Request focus on the active button for TV D-pad usability
 
+        navigationMap.forEach { (button, targetClass) ->
+            button?.setOnClickListener {
+                if (activity::class.java != targetClass) {
+                    val intent = Intent(activity, targetClass)
+                        .addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
+                    activity.startActivity(intent)
+                }
+            }
+        }
 
         // ✅ Add focus scaling effect to each button
         // ✅ Focus animations for buttons + labels
@@ -140,7 +130,46 @@ object NavAction {
         }
 
 
+        checkNotifications(activity)
+
     }
+
+    private fun checkNotifications(activity: Activity) {
+        val badge = activity.findViewById<View>(R.id.notificationBadge) // CardView badge
+
+        CoroutineScope(Dispatchers.IO).launch {
+            while (true) { // 🔁 infinite loop to periodically check
+                val notificationsJson = NotificationHelper.getNotifications(activity)
+                val uniqueNotifications = notificationsJson.distinctBy { it.imdbCode }
+
+                Log.e("NotificationHelper", "AutoCheck ${uniqueNotifications}")
+
+
+                val file = File(activity.cacheDir, "notifications.json")
+                val gson = Gson()
+                val jsonString = gson.toJson(uniqueNotifications)
+                Log.e("NotificationHelper", "file AutoCheck ${jsonString}")
+                file.writeText(jsonString)
+
+                withContext(Dispatchers.Main) {
+                    badge?.visibility = if (uniqueNotifications.isNotEmpty()) View.VISIBLE else View.GONE
+                }
+
+                delay(18000_000) // ⏳ wait 1 minute before checking again
+            }
+        }
+    }
+
+    fun loadNotifications(context: Activity): List<NotificationItem> {
+        val file = File(context.cacheDir, "notifications.json")
+        if (!file.exists()) return emptyList()
+
+        val jsonString = file.readText()
+        val gson = Gson()
+        val type = object : TypeToken<List<NotificationItem>>() {}.type
+        return gson.fromJson(jsonString, type)
+    }
+
 
 
     private fun highlightActive(
@@ -179,6 +208,10 @@ object NavAction {
             label?.visibility = if (visible) View.VISIBLE else View.GONE
         }
     }
+
+
+
+
 
 
 

@@ -20,7 +20,8 @@
             android:scrollbars="none"
             android:overScrollMode="never"
             android:paddingStart="55dp"
-            tools:ignore="RtlSymmetry">
+            tools:ignore="RtlSymmetry"
+            android:nextFocusLeft="@id/btnProfile">
 
             <LinearLayout
                 android:layout_width="match_parent"

@@ -23,7 +23,8 @@
                 android:scrollbars="none"
                 android:paddingStart="41dp"
                 tools:layout_editor_absoluteY="8dp"
-                tools:ignore="RtlSymmetry">
+                tools:ignore="RtlSymmetry"
+                android:nextFocusLeft="@id/btnHome">
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/Slider_widget"
