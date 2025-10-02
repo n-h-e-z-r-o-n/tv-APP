@@ -2,6 +2,8 @@ package com.example.onyx
 
 import android.content.Intent
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import android.widget.ImageView
@@ -17,16 +19,25 @@ class MainActivity : ComponentActivity() {
 
 
 
-        loadingAnimation.setup(this@MainActivity)
-        NavAction.setupSidebar(this@MainActivity)
+        val loadingImageView = findViewById<ImageView>(R.id.LoadingAnimation)
+        Glide.with(this)
+            .asGif()
+            .load(R.raw.loadsplash)
+            .into(loadingImageView)
 
-        this.startActivity(Intent(this, Home_Page::class.java))
-        //finish()
+        Handler(Looper.getMainLooper()).postDelayed({
+            startActivity(Intent(this, PayWall::class.java))
+            finish()
+        }, 7500)
 
     }
 
-
 }
+
+
+
+
+
 
 
 

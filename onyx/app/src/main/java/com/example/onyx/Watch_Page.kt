@@ -57,7 +57,6 @@ class Watch_Page : AppCompatActivity() {
 
         fetchData(imdbCode.toString(), type.toString())
         //fetchData("10160", "tv")
-
     }
 
 

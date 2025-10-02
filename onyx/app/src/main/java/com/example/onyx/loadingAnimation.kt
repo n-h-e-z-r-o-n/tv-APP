@@ -12,7 +12,7 @@ object loadingAnimation {
 
         Glide.with(activity)
             .asGif()
-            .load(R.raw.flame)
+            .load(R.raw.dotloading)
             .into(loadingImageView)
     }
 
