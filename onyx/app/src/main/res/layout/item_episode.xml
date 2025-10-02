@@ -6,7 +6,7 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:padding="0dp"
-        android:elevation="6dp"
+        android:elevation="2dp"
         android:layout_margin="5dp"
         android:focusable="true"
         android:foreground="@drawable/item_episode_focus"
@@ -14,13 +14,29 @@
         android:background="?attr/BG_color_up"
         android:layout_marginBottom="8dp">
 
-        <ImageView
-            android:id="@+id/Ep_IMG"
+        <FrameLayout
             android:layout_width="65dp"
             android:layout_height="60dp"
             android:scaleType="fitXY"
             android:background="?attr/BG_color_up"
-            tools:srcCompat="@tools:sample/avatars" />
+            tools:srcCompat="@tools:sample/avatars">
+
+                <ImageView
+                    android:id="@+id/Ep_IMG"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="fitXY"
+                    android:background="?attr/BG_color_up"
+                    tools:srcCompat="@tools:sample/avatars" />
+
+                <LinearLayout
+                    android:layout_width="30dp"
+                    android:layout_gravity="right"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:background="@drawable/overlay_right_gradient"
+                    tools:ignore="RtlHardcoded" />
+        </FrameLayout>
 
         <LinearLayout
             android:layout_width="112dp"

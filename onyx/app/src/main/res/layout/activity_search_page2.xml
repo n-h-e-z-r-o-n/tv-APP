@@ -57,7 +57,7 @@
                         android:layout_width="0dp"
                         android:layout_height="50dp"
                         android:layout_weight="1"
-                        android:background="@drawable/tv_edittext_background"
+                        android:background="?attr/BG_color_up"
                         android:clickable="true"
                         android:focusable="true"
                         android:focusableInTouchMode="true"
@@ -94,7 +94,8 @@
                     android:nextFocusUp="@+id/searchInput"
                     android:overScrollMode="never"
                     android:padding="10dp"
-                    android:scrollbars="none" />
+                    android:scrollbars="none"
+                    android:nextFocusLeft="@id/btnSearch"/>
 
                     <include layout="@layout/laod_animation"/>
 

@@ -47,3 +47,5 @@ class TermsAndConditionsActivity : AppCompatActivity() {
         finish()
     }
 }
+
+

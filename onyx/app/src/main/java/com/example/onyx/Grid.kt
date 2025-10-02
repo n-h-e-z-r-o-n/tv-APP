@@ -529,3 +529,95 @@ data class MovieItem(
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+class NotificationAdapter(
+    private val  items: MutableList<NotificationItem>,   // ✅ mutable now,
+    private val layoutResId: Int   // 👈 pass in the layout resource
+) :  RecyclerView.Adapter<NotificationAdapter.ViewHolder>() {
+
+    inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        //val image: ImageView = view.findViewById(R.id.notification_title)
+        val showTitle: TextView = view.findViewById(R.id.notification_title)
+        val message: TextView = view.findViewById(R.id.notification_message)
+
+
+        init {
+
+            itemView.setOnFocusChangeListener { v, hasFocus ->
+                // Scale animation
+                v.animate()
+                    .scaleX(if (hasFocus) 1.02f else 1f)
+                    .scaleY(if (hasFocus) 1.02f else 1f)
+                    .setDuration(150)
+                    .start()
+            }
+        }
+
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val view = LayoutInflater.from(parent.context)
+            .inflate(layoutResId, parent, false)
+        return ViewHolder(view)
+    }
+
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+
+        val currentItem = items[position]
+
+        val title = currentItem.title
+        val imageUrl = currentItem.imageUrl
+        val imdbCode = currentItem.imdbCode
+        val type = currentItem.type
+        val info = currentItem.info
+        val updateSeason  = currentItem.newSeason
+        val updateEpisode  = currentItem.newEpisode
+
+
+        holder.showTitle.text =  title
+        holder.message.text =  info
+
+        /*
+        Glide.with(holder.itemView.context)
+            .load(imageUrl)
+            .centerInside()
+            .into(holder.Movie_image)
+
+         */
+
+
+        holder.itemView.setOnClickListener {
+            val context = holder.itemView.context
+            val intent = android.content.Intent(context, Watch_Page::class.java)
+            intent.putExtra("imdb_code", imdbCode)
+            intent.putExtra("type", type)
+            context.startActivity(intent)
+            //call updateNotification
+        }
+
+    }
+
+    override fun getItemCount() = items.size
+
+    // 👇 helper to add items one by one
+    fun addItem(item: NotificationItem) {
+        items.add(item)
+        notifyItemInserted(items.size - 1)
+
+    }
+}
+
+
+data class NotificationItem(
+    val imdbCode: String,
+    val title: String,
+    val imageUrl: String?,
+    val info: String,
+    val type: String = "tv",
+    val newSeason: Int,
+    val newEpisode: Int
+)
