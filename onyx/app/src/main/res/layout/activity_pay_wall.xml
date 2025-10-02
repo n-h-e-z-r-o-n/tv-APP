@@ -273,6 +273,7 @@
                     android:id="@+id/paywallShow"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
+                    android:background="?attr/FG_color"
                     android:clipToPadding="false"
                     android:scrollbars="vertical" />
 
@@ -280,6 +281,272 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:background="@drawable/overlay_left_gradient"/>
+
+        <androidx.cardview.widget.CardView
+            android:id="@+id/PaymentContainer"
+            android:layout_width="450dp"
+            android:layout_height="500dp"
+            app:cardBackgroundColor="?attr/BG_color_up"
+            android:layout_gravity="center"
+            android:elevation="5dp"
+            app:cardCornerRadius="15dp"
+            android:visibility="visible">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:padding="24dp">
+
+                <!-- Close Button -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="end"
+                    android:layout_marginBottom="16dp">
+
+                    <TextView
+                        android:id="@+id/btnClosePayment"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:background="@drawable/circle_background"
+                        android:gravity="center"
+                        android:text="×"
+                        android:textColor="?attr/FG_color"
+                        android:textSize="20sp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:elevation="4dp"/>
+
+                </LinearLayout>
+
+                <!-- Card Information Section -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginBottom="20dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Card information"
+                        android:textColor="?attr/FG_color"
+                        android:textSize="14sp"
+                        android:layout_marginBottom="8dp" />
+
+                    <!-- Card Number Input with Icons -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:background="@drawable/input_background"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:paddingHorizontal="12dp">
+
+                        <EditText
+                            android:id="@+id/etCardNumber"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:background="@android:color/transparent"
+                            android:hint="1234 1234 1234 1234"
+                            android:textColorHint="#666666"
+                            android:textColor="?attr/FG_color"
+                            android:textSize="14sp"
+                            android:inputType="number"
+                            android:maxLength="19" />
+
+                        <!-- Payment Method Icons -->
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+
+                            <ImageView
+                                android:layout_width="32dp"
+                                android:layout_height="20dp"
+                                android:layout_marginEnd="4dp"
+                                android:src="@drawable/visa"/>
+
+                            <ImageView
+                                android:layout_width="32dp"
+                                android:layout_height="20dp"
+                                android:layout_marginEnd="4dp"
+                                android:src="@drawable/master_card" />
+
+                            <ImageView
+                                android:layout_width="32dp"
+                                android:layout_height="20dp"
+                                android:layout_marginEnd="4dp"
+                                android:src="@drawable/master_card_2"
+                                />
+
+                            <ImageView
+                                android:layout_width="32dp"
+                                android:layout_height="20dp"
+                                android:src="@drawable/google_pay"
+                                 />
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                    <!-- Expiry and CVC Row -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:orientation="horizontal"
+                        android:layout_marginTop="1dp">
+
+                        <!-- Expiry Date -->
+                        <EditText
+                            android:id="@+id/etExpiryDate"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:background="@drawable/input_background"
+                            android:hint="MM / YY"
+                            android:textColorHint="#666666"
+                            android:textColor="?attr/FG_color"
+                            android:textSize="14sp"
+                            android:inputType="number"
+                            android:maxLength="5"
+                            android:paddingHorizontal="12dp"
+                            android:gravity="center_vertical" />
+
+                        <!-- CVC -->
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:layout_marginStart="1dp"
+                            android:background="@drawable/input_background"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:paddingHorizontal="12dp">
+
+                            <EditText
+                                android:id="@+id/etCVC"
+                                android:layout_width="0dp"
+                                android:layout_height="match_parent"
+                                android:layout_weight="1"
+                                android:background="@android:color/transparent"
+                                android:hint="CVC"
+                                android:textColorHint="#666666"
+                                android:textColor="?attr/FG_color"
+                                android:textSize="14sp"
+                                android:inputType="number"
+                                android:maxLength="4"
+                                android:gravity="center_vertical" />
+
+                            <TextView
+                                android:layout_width="20dp"
+                                android:layout_height="20dp"
+                                android:background="@drawable/circle_background"
+                                android:elevation="4dp"
+                                android:gravity="center"
+                                android:text="123"
+                                android:textColor="?attr/BG_color_up"
+                                android:textSize="8sp" />
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+                <!-- Cardholder Name Section -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginBottom="20dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Cardholder name"
+                        android:textColor="?attr/FG_color"
+                        android:textSize="14sp"
+                        android:layout_marginBottom="8dp" />
+
+                    <EditText
+                        android:id="@+id/etCardholderName"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:background="@drawable/input_background"
+                        android:hint="Full name on card"
+                        android:textColorHint="#666666"
+                        android:textColor="?attr/FG_color"
+                        android:textSize="14sp"
+                        android:inputType="textPersonName"
+                        android:paddingHorizontal="12dp"
+                        android:gravity="center_vertical" />
+
+                </LinearLayout>
+
+                <!-- Country Section -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginBottom="24dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Country or region"
+                        android:textColor="?attr/FG_color"
+                        android:textSize="14sp"
+                        android:layout_marginBottom="8dp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:background="@drawable/input_background"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:paddingHorizontal="12dp"
+                        android:clickable="true"
+                        android:focusable="true">
+
+                        <EditText
+                            android:id="@+id/etCountry"
+                            android:layout_width="match_parent"
+                            android:layout_height="48dp"
+                            android:background="@drawable/input_background"
+                            android:hint="Country"
+                            android:textColorHint="#666666"
+                            android:textColor="?attr/FG_color"
+                            android:textSize="14sp"
+                            android:inputType="textPersonName"
+                            android:gravity="center_vertical"
+                            tools:ignore="HardcodedText" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+                <!-- Payment Button -->
+                <Button
+                    android:id="@+id/btnCompletePayment"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:background="@drawable/button_gradient"
+                    android:text="Complete Payment"
+                    android:textColor="#FFFFFF"
+                    android:textSize="16sp"
+                    android:fontFamily="sans-serif-medium"
+                    android:elevation="2dp"
+                    android:clickable="true"
+                    android:focusable="true" />
+
+            </LinearLayout>
+
+        </androidx.cardview.widget.CardView>
+
 
     </FrameLayout>
 
