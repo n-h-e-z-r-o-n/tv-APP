@@ -39,7 +39,7 @@ class PayWall : AppCompatActivity() {
     private lateinit var etExpiryDate: EditText
     private lateinit var etCVC: EditText
     private lateinit var etCardholderName: EditText
-    private lateinit var tvCountry: TextView
+    private lateinit var etCountry: TextView
 
     
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -61,7 +61,7 @@ class PayWall : AppCompatActivity() {
         etExpiryDate = findViewById(R.id.etExpiryDate)
         etCVC = findViewById(R.id.etCVC)
         etCardholderName = findViewById(R.id.etCardholderName)
-        tvCountry = findViewById(R.id.etCountry)
+        etCountry = findViewById(R.id.etCountry)
         
         // Set up click listeners
         btnPurchase.setOnClickListener {
@@ -93,19 +93,26 @@ class PayWall : AppCompatActivity() {
         
         // Add expiry date formatting
         etExpiryDate.addTextChangedListener(object : android.text.TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            private var isDeleting = false
+
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+                // Track if the user is deleting
+                isDeleting = count > after
+            }
+
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+
             override fun afterTextChanged(s: android.text.Editable?) {
-                val text = s.toString().replace("/", "")
-                if (text.length >= 2) {
-                    val formatted = "${text.substring(0, 2)} / ${text.substring(2)}"
-                    if (formatted != s.toString()) {
-                        etExpiryDate.setText(formatted)
-                        etExpiryDate.setSelection(formatted.length)
-                    }
+                val text = s.toString()
+
+                // ✅ Auto insert "/" after typing 2 digits (if not deleting)
+                if (!isDeleting && text.length == 2 && !text.contains("/")) {
+                    etExpiryDate.setText("$text/")
+                    etExpiryDate.setSelection(etExpiryDate.text.length)
                 }
             }
         })
+
     }
 
     
@@ -174,18 +181,21 @@ class PayWall : AppCompatActivity() {
         val expiryDate = etExpiryDate.text.toString()
         val cvc = etCVC.text.toString()
         val cardholderName = etCardholderName.text.toString()
-        val country = tvCountry.text.toString()
-        
+        val countryHolderName = etCardholderName.text.toString()
+
         // Basic validation
         if (cardNumber.length < 16) {
             etCardNumber.error = "Invalid card number"
             return
         }
         
+        /*
         if (expiryDate.length < 7) {
             etExpiryDate.error = "Invalid expiry date"
             return
         }
+         */
+
         
         if (cvc.length < 3) {
             etCVC.error = "Invalid CVC"
@@ -194,6 +204,11 @@ class PayWall : AppCompatActivity() {
         
         if (cardholderName.isEmpty()) {
             etCardholderName.error = "Cardholder name required"
+            return
+        }
+
+        if (countryHolderName.isEmpty()) {
+            etCountry.error = "Cardholder name required"
             return
         }
         
@@ -205,8 +220,8 @@ class PayWall : AppCompatActivity() {
             delay(2000) // Simulate processing time
             
             // Hide payment container and navigate to home
-            PaymentContainer.visibility = View.GONE
-            navigateToHome()
+            //PaymentContainer.visibility = View.GONE
+            //navigateToHome()
         }
     }
 
