@@ -69,6 +69,10 @@ class Movie_Page : AppCompatActivity() {
                     val jsonObject = JSONObject(response)
                     val moviesArray = jsonObject.getJSONArray("result")
 
+                    val finalArray = JSONArray()
+
+                    /*
+
                     val connection2 = URL(url2).openConnection() as HttpURLConnection
                     connection2.requestMethod = "GET"
                     val response2 = connection2.inputStream.bufferedReader().use { it.readText() }
@@ -81,7 +85,7 @@ class Movie_Page : AppCompatActivity() {
                     val jsonObject3 = JSONObject(response3)
                     val moviesArray3 = jsonObject3.getJSONArray("result")
 
-                    val finalArray = JSONArray()
+
 
                     for (i in 0 until moviesArray.length()) {
                         finalArray.put(moviesArray.getJSONObject(i))
@@ -93,6 +97,11 @@ class Movie_Page : AppCompatActivity() {
 
                     for (i in 0 until moviesArray3.length()) {
                         finalArray.put(moviesArray3.getJSONObject(i))
+                    }
+                    */
+
+                    for (i in 0 until moviesArray.length()) {
+                        finalArray.put(moviesArray.getJSONObject(i))
                     }
 
                     Log.e("DEBUG_TAG_Movies 1", finalArray.toString())

@@ -1,13 +1,8 @@
 package com.example.onyx
 
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
-import android.view.View
 import android.view.WindowManager
-import android.widget.ImageView
-import android.widget.LinearLayout
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 
@@ -23,16 +18,6 @@ import java.net.URL
 import java.util.Calendar
 
 class Home_Page : AppCompatActivity() {
-    
-    private lateinit var sliderIndicators: LinearLayout
-    private lateinit var sliderRecyclerView: RecyclerView
-    private var currentSliderPosition = 0
-    private var totalSliderItems = 0
-    private var autoScrollHandler: Handler? = null
-    private var autoScrollRunnable: Runnable? = null
-    private val autoScrollDelay = 10000L // 4 seconds
-    private var isUserInteracting = false
-    
     override fun onCreate(savedInstanceState: Bundle?) {
         GlobalUtils.applyTheme(this)
         super.onCreate(savedInstanceState)
@@ -42,8 +27,6 @@ class Home_Page : AppCompatActivity() {
 
         LoadingAnimation.setup(this@Home_Page)
         NavAction.setupSidebar(this)
-        
-        sliderIndicators = findViewById(R.id.slider_indicators)
 
         SliderData()
     }
@@ -247,72 +230,21 @@ class Home_Page : AppCompatActivity() {
 
 
 
-                    movies.shuffle()
+                    //movies.shuffle()
                     movies = movies.distinctBy { it.imdbCode }.toMutableList()
 
                     withContext(Dispatchers.Main) {
                         LoadingAnimation.hide(this@Home_Page)
-                        sliderRecyclerView = findViewById<RecyclerView>(R.id.Slider_widget)
+                        val recyclerView = findViewById<RecyclerView>(R.id.Slider_widget)
                         val adapter = CardSwiper(movies, R.layout.card_layout)
 
-                        sliderRecyclerView.layoutManager = LinearLayoutManager(
+
+                        recyclerView.layoutManager = LinearLayoutManager(
                             this@Home_Page,
                             LinearLayoutManager.HORIZONTAL, // 👈 makes it horizontal
                             false
                         )
-                        sliderRecyclerView.adapter = adapter
-                        
-                        // Setup indicators
-                        totalSliderItems = movies.size
-                        setupSliderIndicators()
-                        updateIndicators(0)
-                        
-                        // Add scroll listener to track position
-                        sliderRecyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-                            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                                super.onScrolled(recyclerView, dx, dy)
-                                val layoutManager = recyclerView.layoutManager as LinearLayoutManager
-                                val firstVisiblePosition = layoutManager.findFirstVisibleItemPosition()
-                                val firstCompletelyVisiblePosition = layoutManager.findFirstCompletelyVisibleItemPosition()
-                                
-                                // Use the first completely visible position, or fallback to first visible
-                                val position = if (firstCompletelyVisiblePosition != RecyclerView.NO_POSITION) {
-                                    firstCompletelyVisiblePosition
-                                } else {
-                                    firstVisiblePosition
-                                }
-                                
-                                if (position != RecyclerView.NO_POSITION && position != currentSliderPosition) {
-                                    currentSliderPosition = position
-                                    updateIndicators(position)
-                                }
-                            }
-                            
-                            override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
-                                super.onScrollStateChanged(recyclerView, newState)
-                                when (newState) {
-                                    RecyclerView.SCROLL_STATE_DRAGGING -> {
-                                        // User is manually scrolling
-                                        isUserInteracting = true
-                                        stopAutoScroll()
-                                    }
-                                    RecyclerView.SCROLL_STATE_IDLE -> {
-                                        // Scrolling stopped, restart auto-scroll after a delay
-                                        if (isUserInteracting) {
-                                            isUserInteracting = false
-                                            Handler(Looper.getMainLooper()).postDelayed({
-                                                if (!isUserInteracting) {
-                                                    startAutoScroll()
-                                                }
-                                            }, 2000) // Wait 2 seconds after user stops interacting
-                                        }
-                                    }
-                                }
-                            }
-                        })
-                        
-                        // Start auto-scroll
-                        startAutoScroll()
+                        recyclerView.adapter = adapter
 
                     }
 
@@ -323,80 +255,6 @@ class Home_Page : AppCompatActivity() {
                 }
             }
         }
-    }
-    
-    private fun setupSliderIndicators() {
-        sliderIndicators.removeAllViews()
-        
-        for (i in 0 until totalSliderItems) {
-            val indicator = ImageView(this)
-            val layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-            layoutParams.setMargins(8, 0, 8, 0) // Add spacing between dots
-            indicator.layoutParams = layoutParams
-            indicator.setImageResource(R.drawable.indicator_dot_inactive)
-            indicator.tag = i
-            sliderIndicators.addView(indicator)
-        }
-    }
-    
-    private fun updateIndicators(position: Int) {
-        for (i in 0 until sliderIndicators.childCount) {
-            val indicator = sliderIndicators.getChildAt(i) as ImageView
-            if (i == position) {
-                indicator.setImageResource(R.drawable.indicator_dot_active)
-                indicator.alpha = 1.0f
-            } else {
-                indicator.setImageResource(R.drawable.indicator_dot_inactive)
-                indicator.alpha = 0.6f
-            }
-        }
-    }
-    
-    private fun startAutoScroll() {
-        if (totalSliderItems <= 1) return // Don't auto-scroll if there's only one item
-        
-        autoScrollHandler = Handler(Looper.getMainLooper())
-        autoScrollRunnable = object : Runnable {
-            override fun run() {
-                if (!isUserInteracting && totalSliderItems > 1) {
-                    val nextPosition = (currentSliderPosition + 1) % totalSliderItems
-                    smoothScrollToPosition(nextPosition)
-                }
-                autoScrollHandler?.postDelayed(this, autoScrollDelay)
-            }
-        }
-        autoScrollHandler?.postDelayed(autoScrollRunnable!!, autoScrollDelay)
-    }
-    
-    private fun stopAutoScroll() {
-        autoScrollHandler?.removeCallbacks(autoScrollRunnable!!)
-    }
-    
-    private fun smoothScrollToPosition(position: Int) {
-        if (position < totalSliderItems && ::sliderRecyclerView.isInitialized) {
-            val layoutManager = sliderRecyclerView.layoutManager as LinearLayoutManager
-            layoutManager.smoothScrollToPosition(sliderRecyclerView, null, position)
-        }
-    }
-    
-    override fun onPause() {
-        super.onPause()
-        stopAutoScroll()
-    }
-    
-    override fun onResume() {
-        super.onResume()
-        if (::sliderRecyclerView.isInitialized && !isUserInteracting) {
-            startAutoScroll()
-        }
-    }
-    
-    override fun onDestroy() {
-        super.onDestroy()
-        stopAutoScroll()
     }
 
 }

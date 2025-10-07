@@ -4,7 +4,7 @@
     <selectionStates>
       <SelectionState runConfigName="app">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2025-10-07T17:07:39.536675Z">
+        <DropdownSelection timestamp="2025-10-07T18:00:54.267729500Z">
           <Target type="DEFAULT_BOOT">
             <handle>
               <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\n-h-e-z-r-o-n\.android\avd\Television_4K.avd" />
