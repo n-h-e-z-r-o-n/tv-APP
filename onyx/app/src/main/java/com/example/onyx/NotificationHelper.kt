@@ -1,16 +1,23 @@
 // NotificationHelper.kt
 package com.example.onyx
 
+import android.app.Activity
 import android.content.Context
 import android.util.Log
+import android.view.View
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
+import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
 import kotlin.String
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 
 object NotificationHelper {
 
@@ -18,6 +25,13 @@ object NotificationHelper {
     private const val KEY_NOTIFICATIONS = "notifications_json"
 
     val results = mutableListOf<NotificationItem>()
+    
+    // Callback to notify when notifications are updated
+    private var onNotificationsUpdated: (() -> Unit)? = null
+    
+    fun setOnNotificationsUpdatedCallback(callback: () -> Unit) {
+        onNotificationsUpdated = callback
+    }
 
     data class NotificationState(
         val season: Int,
@@ -30,7 +44,45 @@ object NotificationHelper {
         }
     }
 
+    fun checkNotificationsWithBadge(activity: Activity) {
+        val badge = activity.findViewById<View>(R.id.notificationBadge) // CardView badge
+
+        CoroutineScope(Dispatchers.IO).launch {
+            while (true) { // 🔁 infinite loop to periodically check
+                val notificationsJson = getNotifications(activity)
+                val uniqueNotifications = notificationsJson.distinctBy { it.imdbCode }
+
+                Log.e("NotificationHelper", "AutoCheck ${uniqueNotifications}")
+
+                val file = File(activity.cacheDir, "notifications.json")
+                val gson = Gson()
+                val jsonString = gson.toJson(uniqueNotifications)
+                Log.e("NotificationHelper", "file AutoCheck ${jsonString}")
+                file.writeText(jsonString)
+
+                withContext(Dispatchers.Main) {
+                    badge?.visibility = if (uniqueNotifications.isNotEmpty()) View.VISIBLE else View.GONE
+                }
+
+                delay(18000_000) // ⏳ wait 18 seconds before checking again
+            }
+        }
+    }
+
+    fun loadNotifications(context: Activity): List<NotificationItem> {
+        val file = File(context.cacheDir, "notifications.json")
+        if (!file.exists()) return emptyList()
+
+        val jsonString = file.readText()
+        val gson = Gson()
+        val type = object : TypeToken<List<NotificationItem>>() {}.type
+        return gson.fromJson(jsonString, type)
+    }
+
     fun getNotifications(context: Context) : List<NotificationItem>{
+        // Clear previous results to avoid duplicates
+        results.clear()
+        
         val list = FavoritesManager.getFavorites(context).toMutableList()
 
         // keep only TV shows
@@ -118,7 +170,7 @@ object NotificationHelper {
         return results
     }
 
-    private fun updateNotification(context: Context, id: String, newSeason: Int, newEpisode: Int) {
+    fun updateNotification(context: Context, id: String, newSeason: Int, newEpisode: Int) {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         val json = prefs.getString(KEY_NOTIFICATIONS, "{}") ?: "{}"
         val root = JSONObject(json)
@@ -130,6 +182,20 @@ object NotificationHelper {
         root.put(id, obj)
 
         prefs.edit().putString(KEY_NOTIFICATIONS, root.toString()).apply()
+        
+        // Refresh the cached notifications file and trigger UI update
+        CoroutineScope(Dispatchers.IO).launch {
+            val updatedNotifications = getNotifications(context)
+            val uniqueNotifications = updatedNotifications.distinctBy { it.imdbCode }
+            
+            val file = File(context.cacheDir, "notifications.json")
+            val gson = Gson()
+            val jsonString = gson.toJson(uniqueNotifications)
+            file.writeText(jsonString)
+            
+            // Trigger UI refresh callback
+            onNotificationsUpdated?.invoke()
+        }
     }
 
     private fun getStoredNotification(context: Context, id: String): NotificationState? {

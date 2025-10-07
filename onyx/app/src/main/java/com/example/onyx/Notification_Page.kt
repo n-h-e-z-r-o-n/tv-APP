@@ -17,6 +17,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class Notification_Page : AppCompatActivity() {
+    
+    private lateinit var adapter: NotificationAdapter
+    private lateinit var recyclerView: RecyclerView
+    
     override fun onCreate(savedInstanceState: Bundle?) {
         GlobalUtils.applyTheme(this)
         super.onCreate(savedInstanceState)
@@ -27,32 +31,44 @@ class Notification_Page : AppCompatActivity() {
         LoadingAnimation.setup(this@Notification_Page)
         NavAction.setupSidebar(this)
 
-
-
-        val recyclerView = findViewById<RecyclerView>(R.id.notification_widget)
+        recyclerView = findViewById<RecyclerView>(R.id.notification_widget)
         recyclerView.layoutManager = LinearLayoutManager(this)
 
+        // Set up callback to refresh UI when notifications are updated
+        NotificationHelper.setOnNotificationsUpdatedCallback {
+            runOnUiThread {
+                refreshNotifications()
+            }
+        }
 
-
+        loadNotifications()
+    }
+    
+    private fun loadNotifications() {
         CoroutineScope(Dispatchers.IO).launch {
-            val notifications = NavAction.loadNotifications(this@Notification_Page)
-            //val notifications = NotificationHelper.getNotifications(this@Notification_Page)
+            val notifications = NotificationHelper.loadNotifications(this@Notification_Page)
             Log.e("NotificationHelper", "notifications ${notifications}")
 
-
             withContext(Dispatchers.Main) {
-
-                val adapter = NotificationAdapter(
+                adapter = NotificationAdapter(
                     items = notifications.toMutableList(),
                     layoutResId = R.layout.item_notification
                 )
                 recyclerView.adapter = adapter
             }
-
         }
+    }
+    
+    private fun refreshNotifications() {
+        CoroutineScope(Dispatchers.IO).launch {
+            val notifications = NotificationHelper.loadNotifications(this@Notification_Page)
+            Log.e("NotificationHelper", "refreshed notifications ${notifications}")
 
-
-
-
+            withContext(Dispatchers.Main) {
+                if (::adapter.isInitialized) {
+                    adapter.refreshItems(notifications)
+                }
+            }
+        }
     }
 }

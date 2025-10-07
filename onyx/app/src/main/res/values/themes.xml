@@ -9,7 +9,7 @@
         <item name="AccentColor">#DAA520</item>
         <item name="SidebarFocus">#3D5AFE</item>
         <item name="SidebarDefault">#FFFFFF</item>
-        <item name="SidebarActive">#DAA520</item>
+        <item name="SidebarActive">#008080</item>
     </style>
 
     <!-- Light Theme -->

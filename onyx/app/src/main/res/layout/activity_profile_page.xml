@@ -48,7 +48,8 @@
                         android:scaleType="centerCrop"
                         android:backgroundTint="?attr/FG_color"
                         android:contentDescription="Profile Avatar"
-                        android:alpha="0.8"/>
+                        android:alpha="0.8"
+                        tools:ignore="HardcodedText" />
 
                     <LinearLayout
                         android:layout_width="0dp"
@@ -65,7 +66,8 @@
                             android:textColor="?attr/FG_color"
                             android:textSize="24sp"
                             android:textStyle="bold"
-                            android:alpha="0.8"/>
+                            android:alpha="0.8"
+                            tools:ignore="HardcodedText" />
 
                         <TextView
                             android:id="@+id/profileEmail"
@@ -87,13 +89,15 @@
                     android:textColor="?attr/FG_color"
                     android:textSize="20sp"
                     android:textStyle="bold"
-                    android:layout_marginBottom="15dp" />
+                    android:layout_marginBottom="15dp"
+                    tools:ignore="HardcodedText" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginBottom="30dp">
+                    android:baselineAligned="false" android:orientation="horizontal"
+                    android:layout_marginBottom="30dp"
+                    tools:ignore="DisableBaselineAlignment">
 
                     <LinearLayout
                         android:layout_width="0dp"
@@ -112,7 +116,8 @@
                             android:text="0"
                             android:textColor="?attr/SidebarActive"
                             android:textSize="24sp"
-                            android:textStyle="bold" />
+                            android:textStyle="bold"
+                            tools:ignore="HardcodedText" />
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -120,7 +125,8 @@
                             android:text="Movies Watched"
                             android:textColor="?attr/FG_color"
                             android:textSize="14sp"
-                            android:layout_marginTop="4dp" />
+                            android:layout_marginTop="4dp"
+                            tools:ignore="HardcodedText" />
 
                     </LinearLayout>
 
@@ -141,7 +147,8 @@
                             android:text="0"
                             android:textColor="?attr/SidebarActive"
                             android:textSize="24sp"
-                            android:textStyle="bold" />
+                            android:textStyle="bold"
+                            tools:ignore="HardcodedText" />
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -149,22 +156,14 @@
                             android:text="Series Watched"
                             android:textColor="?attr/FG_color"
                             android:textSize="14sp"
-                            android:layout_marginTop="4dp" />
+                            android:layout_marginTop="4dp"
+                            tools:ignore="HardcodedText" />
 
                     </LinearLayout>
 
                 </LinearLayout>
 
                 <!-- Settings Section -->
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Settings"
-                    android:textColor="?attr/FG_color"
-                    android:textSize="20sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="15dp"
-                    android:alpha="0.8"/>
 
                 <!-- Settings Items -->
                 <LinearLayout
@@ -172,7 +171,7 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:layout_marginBottom="30dp"
-                    android:padding="4dp">
+                    android:padding="10dp">
 
                     <!-- Auto-play Setting -->
                     <LinearLayout
@@ -192,7 +191,8 @@
                             android:layout_height="24dp"
                             android:src="@drawable/ic_play_arrow"
                             android:contentDescription="Auto-play"
-                            app:tint="?attr/FG_color" />
+                            app:tint="?attr/FG_color"
+                            tools:ignore="HardcodedText" />
 
                         <LinearLayout
                             android:layout_width="0dp"
@@ -206,7 +206,8 @@
                                 android:layout_height="wrap_content"
                                 android:text="Auto-play"
                                 android:textColor="?attr/FG_color"
-                                android:textSize="16sp" />
+                                android:textSize="16sp"
+                                tools:ignore="HardcodedText" />
 
                             <TextView
                                 android:layout_width="wrap_content"
@@ -214,7 +215,8 @@
                                 android:text="Automatically play next episode"
                                 android:textColor="?attr/FG_color"
                                 android:textSize="12sp"
-                                android:layout_marginTop="2dp" />
+                                android:layout_marginTop="2dp"
+                                tools:ignore="HardcodedText" />
 
                         </LinearLayout>
 
@@ -222,7 +224,8 @@
                             android:id="@+id/autoPlaySwitch"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:checked="true" />
+                            android:checked="true"
+                            tools:ignore="UseSwitchCompatOrMaterialXml" />
 
                     </LinearLayout>
 
@@ -237,14 +240,16 @@
                         android:background="@drawable/setting_item_background"
                         android:layout_marginBottom="8dp"
                         android:focusable="true"
-                        android:clickable="true">
+                        android:clickable="true"
+                        android:focusableInTouchMode="true">
 
                         <ImageView
                             android:layout_width="24dp"
                             android:layout_height="24dp"
                             android:src="@drawable/ic_notifications"
                             android:contentDescription="Notifications"
-                            app:tint="?attr/FG_color" />
+                            app:tint="?attr/FG_color"
+                            tools:ignore="HardcodedText" />
 
                         <LinearLayout
                             android:layout_width="0dp"
@@ -258,7 +263,8 @@
                                 android:layout_height="wrap_content"
                                 android:text="Notifications"
                                 android:textColor="?attr/FG_color"
-                                android:textSize="16sp" />
+                                android:textSize="16sp"
+                                tools:ignore="HardcodedText" />
 
                             <TextView
                                 android:layout_width="wrap_content"
@@ -266,7 +272,8 @@
                                 android:text="Get notified about new releases"
                                 android:textColor="?attr/FG_color"
                                 android:textSize="12sp"
-                                android:layout_marginTop="2dp" />
+                                android:layout_marginTop="2dp"
+                                tools:ignore="HardcodedText" />
 
                         </LinearLayout>
 
@@ -274,7 +281,8 @@
                             android:id="@+id/notificationsSwitch"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:checked="true" />
+                            android:checked="true"
+                            tools:ignore="UseSwitchCompatOrMaterialXml" />
 
                     </LinearLayout>
 
@@ -289,6 +297,7 @@
                         android:background="@drawable/setting_item_background"
                         android:layout_marginBottom="8dp"
                         android:focusable="true"
+                        android:focusableInTouchMode="true"
                         android:clickable="true">
 
                         <ImageView
@@ -296,7 +305,8 @@
                             android:layout_height="24dp"
                             android:src="@drawable/ic_hd"
                             android:contentDescription="Video Quality"
-                            app:tint="?attr/FG_color" />
+                            app:tint="?attr/FG_color"
+                            tools:ignore="HardcodedText" />
 
                         <LinearLayout
                             android:layout_width="0dp"
@@ -310,7 +320,8 @@
                                 android:layout_height="wrap_content"
                                 android:text="Video Quality"
                                 android:textColor="?attr/FG_color"
-                                android:textSize="16sp" />
+                                android:textSize="16sp"
+                                tools:ignore="HardcodedText" />
 
                             <TextView
                                 android:id="@+id/qualityValue"
@@ -319,7 +330,8 @@
                                 android:text="1080p"
                                 android:textColor="?attr/FG_color"
                                 android:textSize="12sp"
-                                android:layout_marginTop="2dp" />
+                                android:layout_marginTop="2dp"
+                                tools:ignore="HardcodedText" />
 
                         </LinearLayout>
 
@@ -328,7 +340,8 @@
                             android:layout_height="24dp"
                             android:src="@drawable/ic_arrow_forward"
                             android:contentDescription="Navigate"
-                            app:tint="?attr/FG_color" />
+                            app:tint="?attr/FG_color"
+                            tools:ignore="HardcodedText" />
 
                     </LinearLayout>
 
@@ -343,6 +356,7 @@
                         android:background="@drawable/setting_item_background"
                         android:layout_marginBottom="8dp"
                         android:focusable="true"
+                        android:focusableInTouchMode="true"
                         android:clickable="true">
 
                         <ImageView
@@ -350,7 +364,8 @@
                             android:layout_height="24dp"
                             android:src="@drawable/ic_palette"
                             android:contentDescription="App Theme"
-                            app:tint="?attr/FG_color" />
+                            app:tint="?attr/FG_color"
+                            tools:ignore="HardcodedText" />
 
                         <LinearLayout
                             android:layout_width="0dp"
@@ -364,7 +379,8 @@
                                 android:layout_height="wrap_content"
                                 android:text="App Theme"
                                 android:textColor="?attr/FG_color"
-                                android:textSize="16sp" />
+                                android:textSize="16sp"
+                                tools:ignore="HardcodedText" />
 
                             <TextView
                                 android:id="@+id/themeValue"
@@ -373,7 +389,8 @@
                                 android:text="Dark"
                                 android:textColor="?attr/FG_color"
                                 android:textSize="12sp"
-                                android:layout_marginTop="2dp" />
+                                android:layout_marginTop="2dp"
+                                tools:ignore="HardcodedText" />
 
                         </LinearLayout>
 
@@ -382,28 +399,20 @@
                             android:layout_height="24dp"
                             android:src="@drawable/ic_arrow_forward"
                             android:contentDescription="Navigate"
-                            app:tint="?attr/FG_color" />
+                            app:tint="?attr/FG_color"
+                            tools:ignore="HardcodedText" />
 
                     </LinearLayout>
 
                 </LinearLayout>
 
                 <!-- About Section -->
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="About"
-                    android:textColor="?attr/FG_color"
-                    android:textSize="20sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="15dp"
-                    android:alpha="0.8"/>
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="4dp"
+                    android:padding="10dp"
                     android:layout_marginBottom="30dp">
 
                     <!-- App Version -->
@@ -417,6 +426,7 @@
                         android:background="@drawable/setting_item_background"
                         android:layout_marginBottom="8dp"
                         android:focusable="true"
+                        android:focusableInTouchMode="true"
                         android:clickable="true">
 
                         <ImageView
@@ -424,7 +434,8 @@
                             android:layout_height="24dp"
                             android:src="@drawable/ic_info"
                             android:contentDescription="App Info"
-                            app:tint="?attr/FG_color" />
+                            app:tint="?attr/FG_color"
+                            tools:ignore="HardcodedText" />
 
                         <LinearLayout
                             android:layout_width="0dp"
@@ -438,7 +449,8 @@
                                 android:layout_height="wrap_content"
                                 android:text="App Version"
                                 android:textColor="?attr/FG_color"
-                                android:textSize="16sp" />
+                                android:textSize="16sp"
+                                tools:ignore="HardcodedText" />
 
                             <TextView
                                 android:id="@+id/appVersion"
@@ -447,7 +459,8 @@
                                 android:text="1.0.0"
                                 android:textColor="?attr/FG_color"
                                 android:textSize="12sp"
-                                android:layout_marginTop="2dp" />
+                                android:layout_marginTop="2dp"
+                                tools:ignore="HardcodedText" />
 
                         </LinearLayout>
 
@@ -464,14 +477,16 @@
                         android:background="@drawable/setting_item_background"
                         android:layout_marginBottom="8dp"
                         android:focusable="true"
-                        android:clickable="true">
+                        android:clickable="true"
+                        android:focusableInTouchMode="true">
 
                         <ImageView
                             android:layout_width="24dp"
                             android:layout_height="24dp"
                             android:src="@drawable/ic_delete"
                             android:contentDescription="Clear Cache"
-                            app:tint="?attr/FG_color" />
+                            app:tint="?attr/FG_color"
+                            tools:ignore="HardcodedText" />
 
                         <LinearLayout
                             android:layout_width="0dp"
@@ -485,7 +500,8 @@
                                 android:layout_height="wrap_content"
                                 android:text="Clear Cache"
                                 android:textColor="?attr/FG_color"
-                                android:textSize="16sp" />
+                                android:textSize="16sp"
+                                tools:ignore="HardcodedText" />
 
                             <TextView
                                 android:layout_width="wrap_content"
@@ -493,7 +509,8 @@
                                 android:text="Free up storage space"
                                 android:textColor="?attr/FG_color"
                                 android:textSize="12sp"
-                                android:layout_marginTop="2dp" />
+                                android:layout_marginTop="2dp"
+                                tools:ignore="HardcodedText" />
 
                         </LinearLayout>
 
@@ -510,14 +527,16 @@
                         android:background="@drawable/setting_item_background"
                         android:layout_marginBottom="8dp"
                         android:focusable="true"
-                        android:clickable="true">
+                        android:clickable="true"
+                        android:focusableInTouchMode="true">
 
                         <ImageView
                             android:layout_width="24dp"
                             android:layout_height="24dp"
                             android:src="@drawable/ic_update"
                             android:contentDescription="Check for Updates"
-                            app:tint="?attr/FG_color" />
+                            app:tint="?attr/FG_color"
+                            tools:ignore="HardcodedText" />
 
                         <LinearLayout
                             android:layout_width="0dp"
@@ -531,7 +550,8 @@
                                 android:layout_height="wrap_content"
                                 android:text="Check for Updates"
                                 android:textColor="?attr/FG_color"
-                                android:textSize="16sp" />
+                                android:textSize="16sp"
+                                tools:ignore="HardcodedText" />
 
                             <TextView
                                 android:layout_width="wrap_content"
@@ -539,7 +559,8 @@
                                 android:text="Check for app updates"
                                 android:textColor="?attr/FG_color"
                                 android:textSize="12sp"
-                                android:layout_marginTop="2dp" />
+                                android:layout_marginTop="2dp"
+                                tools:ignore="HardcodedText" />
 
                         </LinearLayout>
 
@@ -556,14 +577,16 @@
                         android:background="@drawable/setting_item_background"
                         android:layout_marginBottom="8dp"
                         android:focusable="true"
-                        android:clickable="true">
+                        android:clickable="true"
+                        android:focusableInTouchMode="true">
 
                         <ImageView
                             android:layout_width="24dp"
                             android:layout_height="24dp"
                             android:src="@drawable/ic_restart"
                             android:contentDescription="Restart App"
-                            app:tint="?attr/FG_color" />
+                            app:tint="?attr/FG_color"
+                            tools:ignore="HardcodedText" />
 
                         <LinearLayout
                             android:layout_width="0dp"
@@ -577,7 +600,8 @@
                                 android:layout_height="wrap_content"
                                 android:text="Restart App"
                                 android:textColor="?attr/FG_color"
-                                android:textSize="16sp" />
+                                android:textSize="16sp"
+                                tools:ignore="HardcodedText" />
 
                             <TextView
                                 android:layout_width="wrap_content"
@@ -585,7 +609,8 @@
                                 android:text="Restart the application"
                                 android:textColor="?attr/FG_color"
                                 android:textSize="12sp"
-                                android:layout_marginTop="2dp" />
+                                android:layout_marginTop="2dp"
+                                tools:ignore="HardcodedText" />
 
                         </LinearLayout>
 
@@ -602,6 +627,7 @@
                         android:background="@drawable/setting_item_background"
                         android:layout_marginBottom="8dp"
                         android:focusable="true"
+                        android:focusableInTouchMode="true"
                         android:clickable="true">
 
                         <ImageView
@@ -609,7 +635,8 @@
                             android:layout_height="24dp"
                             android:src="@drawable/ic_terms"
                             android:contentDescription="Terms and Conditions"
-                            app:tint="?attr/FG_color" />
+                            app:tint="?attr/FG_color"
+                            tools:ignore="HardcodedText" />
 
                         <LinearLayout
                             android:layout_width="0dp"
@@ -623,7 +650,8 @@
                                 android:layout_height="wrap_content"
                                 android:text="Terms and Conditions"
                                 android:textColor="?attr/FG_color"
-                                android:textSize="16sp" />
+                                android:textSize="16sp"
+                                tools:ignore="HardcodedText" />
 
                             <TextView
                                 android:layout_width="wrap_content"
@@ -631,7 +659,8 @@
                                 android:text="View terms of service and privacy policy"
                                 android:textColor="?attr/FG_color"
                                 android:textSize="12sp"
-                                android:layout_marginTop="2dp" />
+                                android:layout_marginTop="2dp"
+                                tools:ignore="HardcodedText" />
 
                         </LinearLayout>
 
@@ -640,7 +669,8 @@
                             android:layout_height="24dp"
                             android:src="@drawable/ic_arrow_forward"
                             android:contentDescription="Navigate"
-                            app:tint="?attr/FG_color" />
+                            app:tint="?attr/FG_color"
+                            tools:ignore="HardcodedText" />
 
                     </LinearLayout>
 

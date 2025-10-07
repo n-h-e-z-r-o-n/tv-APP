@@ -6,6 +6,6 @@
         android:centerX="50%"
         android:centerY="50%"
         android:startColor="@android:color/transparent"
-        android:endColor="?attr/SidebarActive"
+        android:endColor="?attr/AccentColor"
     />
 </shape>

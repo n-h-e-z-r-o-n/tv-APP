@@ -600,6 +600,8 @@ class NotificationAdapter(
             intent.putExtra("imdb_code", imdbCode)
             intent.putExtra("type", type)
             context.startActivity(intent)
+
+            NotificationHelper.updateNotification(context, imdbCode, updateSeason, updateEpisode)
             //call updateNotification
         }
 
@@ -611,7 +613,22 @@ class NotificationAdapter(
     fun addItem(item: NotificationItem) {
         items.add(item)
         notifyItemInserted(items.size - 1)
-
+    }
+    
+    // 👇 helper to refresh all items
+    fun refreshItems(newItems: List<NotificationItem>) {
+        items.clear()
+        items.addAll(newItems)
+        notifyDataSetChanged()
+    }
+    
+    // 👇 helper to remove specific item by imdbCode
+    fun removeItem(imdbCode: String) {
+        val index = items.indexOfFirst { it.imdbCode == imdbCode }
+        if (index != -1) {
+            items.removeAt(index)
+            notifyItemRemoved(index)
+        }
     }
 }
 

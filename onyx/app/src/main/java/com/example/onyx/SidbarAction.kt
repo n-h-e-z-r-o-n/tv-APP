@@ -12,16 +12,6 @@ import android.widget.LinearLayout
 import android.widget.TextView
 
 import android.graphics.Typeface
-import android.util.Log
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.time.delay
-import kotlinx.coroutines.withContext
-import java.io.File
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 
 
 object NavAction {
@@ -130,45 +120,10 @@ object NavAction {
         }
 
 
-        checkNotifications(activity)
+        NotificationHelper.checkNotificationsWithBadge(activity)
 
     }
 
-    private fun checkNotifications(activity: Activity) {
-        val badge = activity.findViewById<View>(R.id.notificationBadge) // CardView badge
-
-        CoroutineScope(Dispatchers.IO).launch {
-            while (true) { // 🔁 infinite loop to periodically check
-                val notificationsJson = NotificationHelper.getNotifications(activity)
-                val uniqueNotifications = notificationsJson.distinctBy { it.imdbCode }
-
-                Log.e("NotificationHelper", "AutoCheck ${uniqueNotifications}")
-
-
-                val file = File(activity.cacheDir, "notifications.json")
-                val gson = Gson()
-                val jsonString = gson.toJson(uniqueNotifications)
-                Log.e("NotificationHelper", "file AutoCheck ${jsonString}")
-                file.writeText(jsonString)
-
-                withContext(Dispatchers.Main) {
-                    badge?.visibility = if (uniqueNotifications.isNotEmpty()) View.VISIBLE else View.GONE
-                }
-
-                delay(18000_000) // ⏳ wait 1 minute before checking again
-            }
-        }
-    }
-
-    fun loadNotifications(context: Activity): List<NotificationItem> {
-        val file = File(context.cacheDir, "notifications.json")
-        if (!file.exists()) return emptyList()
-
-        val jsonString = file.readText()
-        val gson = Gson()
-        val type = object : TypeToken<List<NotificationItem>>() {}.type
-        return gson.fromJson(jsonString, type)
-    }
 
 
 
