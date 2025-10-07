@@ -58,7 +58,7 @@
         <LinearLayout
             android:id="@+id/focusOverlay"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:layout_gravity="bottom"
             android:orientation="vertical"
             android:background="@drawable/item_grid_overlay"

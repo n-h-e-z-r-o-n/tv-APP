@@ -24,7 +24,7 @@ class Notification_Page : AppCompatActivity() {
         setContentView(R.layout.activity_notification_page)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
-        loadingAnimation.setup(this@Notification_Page)
+        LoadingAnimation.setup(this@Notification_Page)
         NavAction.setupSidebar(this)
 
 

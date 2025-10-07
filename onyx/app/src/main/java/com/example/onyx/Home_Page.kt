@@ -2,7 +2,10 @@ package com.example.onyx
 
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.view.WindowManager
+import android.widget.ImageView
+import android.widget.LinearLayout
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 
@@ -18,6 +21,11 @@ import java.net.URL
 import java.util.Calendar
 
 class Home_Page : AppCompatActivity() {
+    
+    private lateinit var sliderIndicators: LinearLayout
+    private var currentSliderPosition = 0
+    private var totalSliderItems = 0
+    
     override fun onCreate(savedInstanceState: Bundle?) {
         GlobalUtils.applyTheme(this)
         super.onCreate(savedInstanceState)
@@ -25,15 +33,17 @@ class Home_Page : AppCompatActivity() {
         setContentView(R.layout.activity_home_page)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
-        loadingAnimation.setup(this@Home_Page)
+        LoadingAnimation.setup(this@Home_Page)
         NavAction.setupSidebar(this)
+        
+        sliderIndicators = findViewById(R.id.slider_indicators)
 
         SliderData()
     }
 
 
     private fun SliderData() {
-        loadingAnimation.show(this@Home_Page)
+        LoadingAnimation.show(this@Home_Page)
         CoroutineScope(Dispatchers.IO).launch {
 
             while (true) {
@@ -83,14 +93,24 @@ class Home_Page : AppCompatActivity() {
                     val moviesArray3 = jsonObject3.getJSONArray("results")
 
 
+
+
                     var movies = mutableListOf<SliderItem>()
                     for (i in 0 until moviesArray.length()) {
 
                         val item = moviesArray.getJSONObject(i)
-                        Log.e("DEBUG_MAIN_Slider", item.toString())
+
                         val title = item.getString("title")
-                        val backdrop_path =
-                            "https://image.tmdb.org/t/p/w1280" + item.getString("backdrop_path")
+                        //val backdrop_path = "https://image.tmdb.org/t/p/w1280" + item.getString("backdrop_path")
+
+                        val backdrop_path = if (item.has("backdrop_path") && !item.isNull("backdrop_path")) {
+                            "https://image.tmdb.org/t/p/w1280${item.getString("backdrop_path")}"
+                        } else if (item.has("poster_path") && !item.isNull("poster_path")) {
+                            "https://image.tmdb.org/t/p/w780${item.getString("poster_path")}"
+                        } else { "" }
+
+                        val PG = if (item.optString("adult") == "true") "PG-18 +" else "PG-13"
+
                         val id = item.getString("id")
                         val type = "movie"
                         val overview = item.getString("overview")
@@ -112,18 +132,28 @@ class Home_Page : AppCompatActivity() {
                                 release_date,
                                 vote_average,
                                 poster_path,
-                                genreIds
+                                genreIds,
+                                PG
                             )
+
                         )
+                        Log.e("DEBUG_MAIN_Slider 1", movies.toString())
                     }
+
 
                     for (i in 0 until moviesArray2.length()) {
 
                         val item = moviesArray2.getJSONObject(i)
-                        Log.e("DEBUG_MAIN_Slider", item.toString())
                         val title = item.getString("original_name")
-                        val backdrop_path =
-                            "https://image.tmdb.org/t/p/w1280" + item.getString("backdrop_path")
+
+                        val backdrop_path = if (item.has("backdrop_path") && !item.isNull("backdrop_path")) {
+                            "https://image.tmdb.org/t/p/w1280${item.getString("backdrop_path")}"
+                        } else if (item.has("poster_path") && !item.isNull("poster_path")) {
+                            "https://image.tmdb.org/t/p/w780${item.getString("poster_path")}"
+                        } else { "" }
+
+                        val PG = if (item.optString("adult") == "true") "PG-18 +" else "PG-13"
+
                         val id = item.getString("id")
                         val type = "tv"
                         val overview = item.getString("overview")
@@ -145,7 +175,8 @@ class Home_Page : AppCompatActivity() {
                                 release_date,
                                 vote_average,
                                 poster_path,
-                                genreIds
+                                genreIds,
+                                PG
                             )
                         )
                     }
@@ -169,15 +200,20 @@ class Home_Page : AppCompatActivity() {
                         if (type != "movie" && type != "tv") {
                             continue   // skip this loop iteration
                         }
-                        val backdropPath =
-                            "https://image.tmdb.org/t/p/w1280" + item.getString("backdrop_path")
+                        val backdrop_path = if (item.has("backdrop_path") && !item.isNull("backdrop_path")) {
+                            "https://image.tmdb.org/t/p/w1280${item.getString("backdrop_path")}"
+                        } else if (item.has("poster_path") && !item.isNull("poster_path")) {
+                            "https://image.tmdb.org/t/p/w780${item.getString("poster_path")}"
+                        } else { "" }
+
+                        val PG = if (item.optString("adult") == "true") "PG-18 +" else "PG-13"
                         val id = item.getString("id")
                         val overview = item.getString("overview")
                         val release_date = try {
-                            item.getString("release_date").substring(0, 4)
-                        } catch (e: Exception) {
-                            item.getString("first_air_date").substring(0, 4)
-                        }
+                                    item.getString("release_date").substring(0, 4)
+                                } catch (e: Exception) {
+                                    item.getString("first_air_date").substring(0, 4)
+                                }
                         val vote_average = item.getString("vote_average").substring(0, 3)
                         val poster_path = item.getString("poster_path")
                         val genreIdsJson = item.getJSONArray("genre_ids")
@@ -188,27 +224,29 @@ class Home_Page : AppCompatActivity() {
                         movies.add(
                             SliderItem(
                                 title,
-                                imageUrl = backdropPath,
-                                imdbCode = id,
-                                type = type,
+                                backdrop_path,
+                                id,
+                                type,
                                 overview,
                                 release_date,
                                 vote_average,
                                 poster_path,
-                                genreIds
+                                genreIds,
+                                PG
                             )
                         )
 
                     }
 
-                    movies.shuffle()
+
+
+                    //movies.shuffle()
                     movies = movies.distinctBy { it.imdbCode }.toMutableList()
 
                     withContext(Dispatchers.Main) {
-                        loadingAnimation.hide(this@Home_Page)
+                        LoadingAnimation.hide(this@Home_Page)
                         val recyclerView = findViewById<RecyclerView>(R.id.Slider_widget)
                         val adapter = CardSwiper(movies, R.layout.card_layout)
-
 
                         recyclerView.layoutManager = LinearLayoutManager(
                             this@Home_Page,
@@ -216,14 +254,71 @@ class Home_Page : AppCompatActivity() {
                             false
                         )
                         recyclerView.adapter = adapter
+                        
+                        // Setup indicators
+                        totalSliderItems = movies.size
+                        setupSliderIndicators()
+                        updateIndicators(0)
+                        
+                        // Add scroll listener to track position
+                        recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+                            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                                super.onScrolled(recyclerView, dx, dy)
+                                val layoutManager = recyclerView.layoutManager as LinearLayoutManager
+                                val firstVisiblePosition = layoutManager.findFirstVisibleItemPosition()
+                                val firstCompletelyVisiblePosition = layoutManager.findFirstCompletelyVisibleItemPosition()
+                                
+                                // Use the first completely visible position, or fallback to first visible
+                                val position = if (firstCompletelyVisiblePosition != RecyclerView.NO_POSITION) {
+                                    firstCompletelyVisiblePosition
+                                } else {
+                                    firstVisiblePosition
+                                }
+                                
+                                if (position != RecyclerView.NO_POSITION && position != currentSliderPosition) {
+                                    currentSliderPosition = position
+                                    updateIndicators(position)
+                                }
+                            }
+                        })
 
                     }
 
                     break
                 } catch (e: Exception) {
                     delay(10_000)
-                    Log.e("DEBUG_MAIN_Slider Error", "Error fetching data", e)
+                    Log.e("DEBUG_MAINSliderPage", "Error fetching data", e)
                 }
+            }
+        }
+    }
+    
+    private fun setupSliderIndicators() {
+        sliderIndicators.removeAllViews()
+        
+        for (i in 0 until totalSliderItems) {
+            val indicator = ImageView(this)
+            val layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            layoutParams.setMargins(8, 0, 8, 0) // Add spacing between dots
+            indicator.layoutParams = layoutParams
+            indicator.setImageResource(R.drawable.indicator_dot_inactive)
+            indicator.tag = i
+            sliderIndicators.addView(indicator)
+        }
+    }
+    
+    private fun updateIndicators(position: Int) {
+        for (i in 0 until sliderIndicators.childCount) {
+            val indicator = sliderIndicators.getChildAt(i) as ImageView
+            if (i == position) {
+                indicator.setImageResource(R.drawable.indicator_dot_active)
+                indicator.alpha = 1.0f
+            } else {
+                indicator.setImageResource(R.drawable.indicator_dot_inactive)
+                indicator.alpha = 0.6f
             }
         }
     }

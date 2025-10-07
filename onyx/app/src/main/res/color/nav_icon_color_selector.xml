@@ -2,7 +2,7 @@
     <!-- Focused state -->
     <item android:color="?attr/SidebarFocus" android:state_focused="true"/>
     <!-- Pressed (optional) -->
-    <item android:color="?attr/SidebarActive" android:state_selected="true"/>
+    <item android:color="?attr/AccentColor" android:state_selected="true"/>
     <!-- Default -->
     <item android:color="?attr/SidebarDefault"/>
 </selector>

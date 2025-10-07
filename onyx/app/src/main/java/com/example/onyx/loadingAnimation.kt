@@ -1,31 +1,31 @@
 package com.example.onyx
 
 import android.app.Activity
-import android.widget.ImageView
 import android.view.View
+import android.widget.ImageView
 import com.bumptech.glide.Glide
 
-object loadingAnimation {
+object LoadingAnimation {
 
-    fun setup(activity: Activity) {
+    private var currentAnimationRes: Int = R.raw.dotloading // default
+
+    fun setup(activity: Activity, animationRes: Int = R.raw.dotloading) {
+        currentAnimationRes = animationRes
         val loadingImageView = activity.findViewById<ImageView>(R.id.loadingGif)
 
         Glide.with(activity)
             .asGif()
-            .load(R.raw.dotloading)
+            .load(animationRes)
             .into(loadingImageView)
     }
 
-    /** Show the full-screen loading overlay */
     fun show(activity: Activity) {
         val container = activity.findViewById<View>(R.id.loadingContainer)
         container?.visibility = View.VISIBLE
     }
 
-    /** Hide the overlay */
     fun hide(activity: Activity) {
         val container = activity.findViewById<View>(R.id.loadingContainer)
         container?.visibility = View.GONE
     }
-
 }

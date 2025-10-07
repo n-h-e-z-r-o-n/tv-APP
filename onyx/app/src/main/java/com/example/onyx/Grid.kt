@@ -480,15 +480,19 @@ class EpisodesAdapter(
                 .into(holder.epsImg)
 
 
-        holder.itemView.setOnClickListener {
+        holder.itemView.setOnClickListener {view ->
+            view.isEnabled = false
             val context = holder.itemView.context
             val intent = Intent(context, Play::class.java).apply {
                 putExtra("imdb_code", ep.seriesId)
                 putExtra("type", "tv")
                 putExtra("seasonNo", ep.seasonNumber.toString())
-                putExtra("episodeNo", ep.episodesName.toString())
+                putExtra("episodeNo", ep.episodesNumber.toString())
             }
             context.startActivity(intent)
+            view.postDelayed({
+                view.isEnabled = true
+            }, 5000)
         }
     }
 

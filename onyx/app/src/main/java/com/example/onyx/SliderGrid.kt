@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
@@ -29,12 +30,14 @@ class CardSwiper(
         val SliderBackdrop: ImageView = view.findViewById(R.id.SliderBackdrop)
         val SliderTitle: TextView = view.findViewById(R.id.SliderTitle)
         val SliderOverview: TextView = view.findViewById(R.id.SliderOverview)
-        val SliderButton: Button = view.findViewById(R.id.SliderButton)
+        val SliderButton: LinearLayout = view.findViewById(R.id.SliderButton)
 
         val SliderType: TextView = view.findViewById(R.id.SliderType)
         val SliderRating: TextView = view.findViewById(R.id.SliderRating)
         val SliderYear: TextView = view.findViewById(R.id.SliderYear)
         val SliderGenre: TextView = view.findViewById(R.id.SliderGenre)
+
+        val SliderPg: TextView = view.findViewById(R.id.SliderPg)
 
 
 
@@ -75,6 +78,7 @@ class CardSwiper(
         val vote_average = currentItem.vote_average
         val poster_path = currentItem.poster_path
         val genre_ids = currentItem.genre_ids
+        val pg_info = currentItem.pg
 
 
 
@@ -82,14 +86,15 @@ class CardSwiper(
 
         holder.SliderTitle.text = title
         holder.SliderOverview.text = overview
+        holder.SliderPg.text = pg_info
 
         if(type=="tv"){
-            holder.SliderType.text = "\uD83D\uDCFA Tv"
+            holder.SliderType.text = "Tv"
         } else{
-            holder.SliderType.text = "\uD83C\uDFAC Movie"
+            holder.SliderType.text = "Movie"
         }
 
-        holder.SliderRating.text = vote_average+"Imdb"
+        holder.SliderRating.text = vote_average
         holder.SliderYear.text = release_date
 
 
@@ -111,7 +116,6 @@ class CardSwiper(
                 intent.putExtra("type", type)
                 context.startActivity(intent)
             }
-
     }
 
     override fun getItemCount() = items.size
@@ -133,7 +137,8 @@ data class SliderItem(
     val release_date: String,
     val vote_average: String,
     val poster_path: String,
-    val genre_ids: List<Int>
+    val genre_ids: List<Int>,
+    val pg: String
 )
 
 

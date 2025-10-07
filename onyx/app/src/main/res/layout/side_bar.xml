@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="wrap_content"
-    android:layout_height="match_parent"
-    >
+    android:layout_height="match_parent">
 
     <!-- Side bar -->
 
@@ -25,20 +25,23 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="24dp"
             android:gravity="center_vertical"
-            android:orientation="horizontal"
-            >
+            android:orientation="horizontal" >
+
+
 
             <ImageButton
                 android:id="@+id/btnHome"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:background="@android:color/transparent"
+                android:contentDescription="Home"
+                android:nextFocusUp="@id/btnProfile"
+                android:nextFocusDown="@id/btnMovies"
+                android:src="@drawable/ic_home"
+                app:tint="@color/nav_icon_color_selector"
                 android:clickable="true"
                 android:focusable="true"
-                android:nextFocusDown="@id/btnMovies"
-                android:nextFocusUp="@id/btnProfile"
-                android:src="@drawable/ic_home"
-                app:tint="@color/nav_icon_color_selector"/>
+                tools:ignore="HardcodedText" />
 
             <TextView
                 android:id="@+id/labelHome"
@@ -51,7 +54,8 @@
                 android:text="Home"
                 android:textColor="?attr/FG_color"
                 android:textSize="14sp"
-                android:visibility="gone"/>
+                android:visibility="gone"
+                tools:ignore="HardcodedText" />
         </LinearLayout>
 
         <LinearLayout
@@ -72,7 +76,8 @@
                 android:src="@drawable/ic_category"
                 app:tint="@color/nav_icon_color_selector"
                 android:clickable="true"
-                android:focusable="true"/>
+                android:focusable="true"
+                tools:ignore="HardcodedText" />
 
             <TextView
                 android:id="@+id/labelMovies"
@@ -85,7 +90,8 @@
                 android:text="Movies"
                 android:textColor="?attr/FG_color"
                 android:textSize="14sp"
-                android:visibility="gone"/>
+                android:visibility="gone"
+                tools:ignore="HardcodedText" />
         </LinearLayout>
 
         <LinearLayout
@@ -100,12 +106,14 @@
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:background="@android:color/transparent"
+                android:contentDescription="Tv"
                 android:nextFocusUp="@id/btnMovies"
                 android:nextFocusDown="@id/btnSearch"
                 android:src="@drawable/ic_category"
                 app:tint="@color/nav_icon_color_selector"
                 android:clickable="true"
-                android:focusable="true"/>
+                android:focusable="true"
+                tools:ignore="HardcodedText" />
 
             <TextView
                 android:id="@+id/labelTvShow"
@@ -118,7 +126,8 @@
                 android:text="TV Shows"
                 android:textColor="?attr/FG_color"
                 android:textSize="14sp"
-                android:visibility="gone"/>
+                android:visibility="gone"
+                tools:ignore="HardcodedText" />
         </LinearLayout>
 
         <LinearLayout
@@ -133,12 +142,14 @@
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:background="@android:color/transparent"
+                android:contentDescription="Search"
                 android:nextFocusUp="@id/btnTvShow"
                 android:nextFocusDown="@id/btnFav"
                 android:src="@drawable/ic_search"
                 app:tint="@color/nav_icon_color_selector"
                 android:clickable="true"
-                android:focusable="true"/>
+                android:focusable="true"
+                tools:ignore="HardcodedText" />
 
             <TextView
                 android:id="@+id/labelSearch"
@@ -151,7 +162,8 @@
                 android:text="Search"
                 android:textColor="?attr/FG_color"
                 android:textSize="14sp"
-                android:visibility="gone"/>
+                android:visibility="gone"
+                tools:ignore="HardcodedText" />
         </LinearLayout>
 
         <LinearLayout
@@ -166,6 +178,7 @@
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:background="@android:color/transparent"
+                android:importantForAccessibility="no"
                 android:nextFocusUp="@id/btnSearch"
                 android:nextFocusDown="@id/btnNotification"
                 android:src="@drawable/ic_fave"
@@ -204,6 +217,7 @@
                     android:layout_width="48dp"
                     android:layout_height="48dp"
                     android:background="@android:color/transparent"
+                    android:importantForAccessibility="no"
                     android:nextFocusUp="@id/btnFav"
                     android:nextFocusDown="@id/btnProfile"
                     android:src="@drawable/notifications"
@@ -235,7 +249,8 @@
                 android:text="Notification"
                 android:textColor="?attr/FG_color"
                 android:textSize="14sp"
-                android:visibility="gone"/>
+                android:visibility="gone"
+                tools:ignore="HardcodedText" />
         </LinearLayout>
 
         <LinearLayout
@@ -249,6 +264,7 @@
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:background="@android:color/transparent"
+                android:importantForAccessibility="no"
                 android:nextFocusUp="@id/btnNotification"
                 android:nextFocusDown="@id/btnHome"
                 android:src="@drawable/ic_person"
@@ -267,7 +283,8 @@
                 android:text="Profile"
                 android:textColor="?attr/FG_color"
                 android:textSize="14sp"
-                android:visibility="gone"/>
+                android:visibility="gone"
+                tools:ignore="HardcodedText" />
         </LinearLayout>
 
     </LinearLayout>

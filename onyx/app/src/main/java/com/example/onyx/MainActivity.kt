@@ -26,9 +26,9 @@ class MainActivity : ComponentActivity() {
             .into(loadingImageView)
 
         Handler(Looper.getMainLooper()).postDelayed({
-            startActivity(Intent(this, PayWall::class.java))
+            startActivity(Intent(this, Home_Page::class.java))
             finish()
-        }, 7500)
+        }, 500)
 
     }
 

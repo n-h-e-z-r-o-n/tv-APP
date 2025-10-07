@@ -264,6 +264,19 @@ object GlobalUtils {
             Log.e("GlobalUtils", "Error restarting app", e)
         }
     }
+
+
+    fun formatRuntime(totalMinutes: Int): String {
+        if (totalMinutes <= 0) return ""
+
+        val hours = totalMinutes / 60
+        val minutes = totalMinutes % 60
+
+        return buildString {
+            if (hours > 0) append("${hours}h ")
+            if (minutes > 0) append("${minutes} min")
+        }.trim()
+    }
     
 
 }

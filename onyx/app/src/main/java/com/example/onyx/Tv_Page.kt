@@ -26,9 +26,9 @@ class Tv_Page : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.activity_tv_page)
         NavAction.setupSidebar(this@Tv_Page)
-        loadingAnimation.setup(this@Tv_Page)
+        LoadingAnimation.setup(this@Tv_Page)
 
-        loadingAnimation.show(this@Tv_Page)
+        LoadingAnimation.show(this@Tv_Page)
         TvShows()
     }
 
@@ -139,7 +139,7 @@ class Tv_Page : AppCompatActivity() {
                         val movieItem = MovieItem(title=title, imageUrl=imgUrl, imdbCode=id, type=type, year=firstAirDate, rating=voteAverage, runtime=showD)
 
                         withContext(Dispatchers.Main) {
-                            loadingAnimation.hide(this@Tv_Page)
+                            LoadingAnimation.hide(this@Tv_Page)
                             adapter.addItem(movieItem)  // 👈 add one at a time
                         }
 
@@ -159,7 +159,7 @@ class Tv_Page : AppCompatActivity() {
                      */
                     break
                 } catch (e: Exception) {
-                    loadingAnimation.show(this@Tv_Page)
+                    LoadingAnimation.show(this@Tv_Page)
                     delay(10_000)
                     Log.e("DEBUG_TAG_TvShows", "Error fetching data", e)
                     //break

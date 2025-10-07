@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.graphics.Typeface
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.KeyEvent
@@ -27,12 +28,16 @@ import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.delay
 import org.json.JSONArray
 import android.widget.Button
+import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.Toast
+import androidx.annotation.RequiresApi
+import androidx.appcompat.widget.TooltipCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.marginEnd
 import com.bumptech.glide.Glide
 import org.json.JSONObject
+import kotlin.text.ifEmpty
 
 class Watch_Page : AppCompatActivity() {
     
@@ -54,9 +59,15 @@ class Watch_Page : AppCompatActivity() {
         // Get extras from Intent
         val imdbCode = intent.getStringExtra("imdb_code")
         val type = intent.getStringExtra("type")
+        if(!imdbCode.isNullOrEmpty()){
+            fetchData(imdbCode.toString(), type.toString())
+        }else{
+            //fetchData("110316", "tv")
+        }
 
-        fetchData(imdbCode.toString(), type.toString())
-        //fetchData("10160", "tv")
+        //fetchData(imdbCode.toString(), type.toString())
+        // fetchData("110316", "tv")
+
     }
 
 
@@ -96,8 +107,12 @@ class Watch_Page : AppCompatActivity() {
                     Log.e("DEBUG_Watch", jsonObject.toString())
 
 
-                    val backdrop_Url =
+                    val backdrop_Url = if (jsonObject.has("backdrop_path") && !jsonObject.isNull("backdrop_path")) {
                         "https://image.tmdb.org/t/p/w1280${jsonObject.getString("backdrop_path")}"
+                    } else if (jsonObject.has("poster_path") && !jsonObject.isNull("poster_path")) {
+                        "https://image.tmdb.org/t/p/w780${jsonObject.getString("poster_path")}"
+                    } else { "" }
+
                     val poster_Url =
                         "https://image.tmdb.org/t/p/w780${jsonObject.getString("poster_path")}"
 
@@ -118,19 +133,27 @@ class Watch_Page : AppCompatActivity() {
                     }
 
                     val adult = jsonObject.getString("adult")
-                    if(adult == "true"){
-                        PG = "18 +"
+                    PG = if(adult == "true"){
+                        "18 +"
                     } else {
-                        PG = "13"
+                        "13"
                     }
 
                     release_date = jsonObject.optString("release_date").ifEmpty {
                         jsonObject.optString("first_air_date")
+                    }.substring(0, 4)
+
+
+
+                    runtime = if (jsonObject.has("runtime") && !jsonObject.isNull("runtime")) {
+                        val runtimeInt = jsonObject.optInt("runtime", 0)
+                        if (runtimeInt > 0) GlobalUtils.formatRuntime(runtimeInt) else ""
+                    } else {
+                        val arr = jsonObject.optJSONArray("episode_run_time")
+                        val runtimeInt = if (arr != null && arr.length() > 0) arr.optInt(0) else 0
+                        if (runtimeInt > 0) GlobalUtils.formatRuntime(runtimeInt) else ""
                     }
 
-                    runtime = jsonObject.optString("runtime").ifEmpty {
-                        jsonObject.optString("episode_run_time")
-                    }
 
                     overview = jsonObject.getString("overview")
 
@@ -143,7 +166,7 @@ class Watch_Page : AppCompatActivity() {
                         val genreName = genreObject.getString("name")
                         genresList.add(genreName)
                     }
-                    genres = genresList.joinToString("   ⬤ ")
+                    genres = genresList.joinToString("  -  ")
 
 
                     val production_companies = jsonObject.getJSONArray("production_companies") //[{"id":80,"name":"Crime"},{"id":99,"name":"Documentary"}]
@@ -215,10 +238,40 @@ class Watch_Page : AppCompatActivity() {
                             .into(poster_widget)
 
 
-                        val watchButton = findViewById<Button>(R.id.watchNowButton)
-                        val FaveButton = findViewById<Button>(R.id.favoriteButton)
-                        val TrailerButton = findViewById<Button>(R.id.TrailerButton)
-                        val serverButton = findViewById<Button>(R.id.serverButton)
+                        val watchButton = findViewById<ImageButton>(R.id.watchNowButton)
+                        val FaveButton = findViewById<ImageButton>(R.id.favoriteButton)
+                        val TrailerButton = findViewById<ImageButton>(R.id.TrailerButton)
+                        val serverButton = findViewById<ImageButton>(R.id.serverButton)
+
+                        watchButton.setOnFocusChangeListener { v, hasFocus ->
+                            if (hasFocus) {
+                                TooltipCompat.setTooltipText(v, "Play")  // ensure tooltip text is set
+                                v.post {
+                                    v.performLongClick() // 👈 This forces the tooltip to show
+                                }
+                            }
+                        }
+                        FaveButton.setOnFocusChangeListener { v, hasFocus ->
+                            if (hasFocus) {
+                                v.post {
+                                    v.performLongClick() // 👈 This forces the tooltip to show
+                                }
+                            }
+                        }
+                        TrailerButton.setOnFocusChangeListener { v, hasFocus ->
+                            if (hasFocus) {
+                                v.post {
+                                    v.performLongClick() // 👈 This forces the tooltip to show
+                                }
+                            }
+                        }
+                        serverButton.setOnFocusChangeListener { v, hasFocus ->
+                            if (hasFocus) {
+                                v.post {
+                                    v.performLongClick() // 👈 This forces the tooltip to show
+                                }
+                            }
+                        }
 
 
 
@@ -234,22 +287,7 @@ class Watch_Page : AppCompatActivity() {
                             showServerDialog()
                         }
 
-                        setupExpandableButton(watchButton, 105, 40, "▶ Play", "▶")
 
-                        setupExpandableButton(
-                            TrailerButton,
-                            130,
-                            40,
-                            "\uD83C\uDFAC Trailer",
-                            "\uD83C\uDFAC"
-                        )
-                        setupExpandableButton(
-                            serverButton,
-                            120,
-                            44,
-                            "🌐 ${servers[currentServerIndex]}",
-                            "🌐"
-                        )
 
                         setupFavoriteButton(
                             button = FaveButton,
@@ -321,7 +359,11 @@ class Watch_Page : AppCompatActivity() {
             }
 
             SeasonButton.setOnClickListener {
+                SeasonButton.isEnabled = false
                 ShowSeasonEpisodes(season_no,  seasonData, seasonID, seasonAllData)
+                SeasonButton.postDelayed({
+                    SeasonButton.isEnabled = true
+                }, 3000) // 1 second
             }
 
             container.addView(SeasonButton)
@@ -336,6 +378,9 @@ class Watch_Page : AppCompatActivity() {
 
     private fun ShowSeasonEpisodes(SelectedSeasons: Int, seasonData : MutableList<JSONObject>, seriesId: String, seasonAllData:  JSONObject){
 
+        LoadingAnimation.setup(this, R.raw.grey )
+        LoadingAnimation.show(this)
+
         val recyclerView = findViewById<RecyclerView>(R.id.episodes_recycler)
         recyclerView.layoutManager = GridLayoutManager(this@Watch_Page, 5)
         recyclerView.removeAllViews()
@@ -344,6 +389,7 @@ class Watch_Page : AppCompatActivity() {
         val overviewWidget = findViewById<TextView>(R.id.overview_widget)
         val ratingWidget = findViewById<TextView>(R.id.Rating_widget)
         val posterWidget = findViewById<ImageView>(R.id.posterImageView)
+        val backdropWidget = findViewById<ImageView>(R.id.backdropImageView)
         val season_CWidget = findViewById<TextView>(R.id.season_C)
 
 
@@ -352,8 +398,8 @@ class Watch_Page : AppCompatActivity() {
         val episodeCountText = findViewById<TextView>(R.id.episode_count_text)
         val seasonYearText = findViewById<TextView>(R.id.season_year_text)
 
-        Log.e("DEBUG_Each E--- S w", SelectedSeasons.toString())
-        Log.e("DEBUG_Each E--- S g", seasonData.toString())
+        //Log.e("DEBUG_Each Selecteds", SelectedSeasons.toString())
+        //Log.e("DEBUG_Each seasonData", seasonData.toString())
 
        // val selectedSeason = seasonData[SelectedSeasons]
         val selectedSeason = seasonData.firstOrNull {
@@ -367,6 +413,9 @@ class Watch_Page : AppCompatActivity() {
         val selectedSeasonOverview = selectedSeason.optString("overview", "")
         val selectedSeasonNumber = selectedSeason.optString("season_number", "")
         val selectedSeasonRating = selectedSeason.optDouble("vote_average", 0.0)
+        var stillPath = selectedSeason.optString("still_path", "")
+
+        Log.e("DEBUG_Each  stillPath", stillPath.toString())
 
 
 
@@ -441,6 +490,7 @@ class Watch_Page : AppCompatActivity() {
             }
             withContext(Dispatchers.Main) {
                 recyclerView.adapter = EpisodesAdapter(episodesList)
+                LoadingAnimation.hide(this@Watch_Page)
             }
         }
 
@@ -591,58 +641,40 @@ class Watch_Page : AppCompatActivity() {
         }
     }
 
-    fun setupExpandableButton(
-        button: Button,
-        expandedWidthDp: Int,
-        collapsedWidthDp: Int,
-        expandedText: String,
-        collapsedText: String
-    ) {
-        button.setOnFocusChangeListener { _, hasFocus ->
-            val params = button.layoutParams
-            if (hasFocus) {
-                button.text = expandedText
-                params.width = expandedWidthDp.dpToPx(button.context)
-            } else {
-                button.text = collapsedText
-                params.width = collapsedWidthDp.dpToPx(button.context)
-            }
-            button.layoutParams = params
-        }
-    }
+
 
     private fun setupFavoriteButton(
-        button: Button,
+        button: ImageButton,   // 👈 Changed to ImageButton
         data: JSONObject
     ) {
         val id = data.optString("id")
         val inferredType = if (data.has("first_air_date")) "tv" else "movie"
-        val title = data.optString("name").ifEmpty { data.optString("title") }
-        val imageUrl = "https://image.tmdb.org/t/p/w780" + data.optString("poster_path")
-        fun applyLabel() {
-            val fav = FavoritesManager.isFavorite(this@Watch_Page, id, inferredType)
-            val expanded = if (fav) "x Remove from Fav" else "+ Add to Fav"
-            val collapsed = "\uD83E\uDD0D"
-            setupExpandableButton(button, 150, 40, expanded, collapsed)
-            // Also set current text to match state if already focused
-            if (button.isFocused) button.text = expanded else button.text = collapsed
+
+        @RequiresApi(Build.VERSION_CODES.O)
+        fun applyIcon() {
+            val isFav = FavoritesManager.isFavorite(this@Watch_Page, id, inferredType)
+            if (isFav) {
+                button.setImageResource(R.drawable.ic_tickfave)  // ❤️ e.g. filled heart icon
+                button.tooltipText = "Remove from Favorites"
+            } else {
+                button.setImageResource(R.drawable.ic_addfave) // 🤍 outline heart icon
+                button.tooltipText = "Add to Favorites"
+            }
         }
 
-        applyLabel()
+        applyIcon()
 
         button.setOnClickListener {
-            val fav = FavoritesManager.isFavorite(this@Watch_Page, id, inferredType)
-            if (fav) {
+            val isFav = FavoritesManager.isFavorite(this@Watch_Page, id, inferredType)
+            if (isFav) {
                 FavoritesManager.removeFavorite(this@Watch_Page, id, inferredType)
             } else {
-                FavoritesManager.addFavorite(
-                    this@Watch_Page,
-                    data
-                )
+                FavoritesManager.addFavorite(this@Watch_Page, data)
             }
-            applyLabel()
+            applyIcon()
         }
     }
+
 
     // dp → px converter
     fun Int.dpToPx(context: Context): Int {
@@ -651,18 +683,12 @@ class Watch_Page : AppCompatActivity() {
 
     private fun showServerDialog() {
         val builder = android.app.AlertDialog.Builder(this, R.style.CustomDialogTheme)
-        builder.setTitle("Select Server")
+        builder.setTitle("Select a Streaming Server (Powered by Third Parties)")
             .setSingleChoiceItems(servers.toTypedArray(), currentServerIndex) { dialog, which ->
                 currentServerIndex = which
                 // Update server button display
-                val serverButton = findViewById<Button>(R.id.serverButton)
-                setupExpandableButton(
-                    serverButton,
-                    120,
-                    44,
-                    "🌐 ${servers[currentServerIndex]}",
-                    "🌐"
-                )
+                val serverButton = findViewById<ImageButton>(R.id.serverButton)
+
                 Toast.makeText(this, "Server changed to: ${servers[currentServerIndex]}", Toast.LENGTH_SHORT).show()
                 dialog.dismiss() // Auto-close dialog when option is selected
             }

@@ -24,9 +24,9 @@ class Movie_Page : AppCompatActivity() {
         setContentView(R.layout.activity_movie_page)
 
         NavAction.setupSidebar(this)
-        loadingAnimation.setup(this@Movie_Page)
+        LoadingAnimation.setup(this@Movie_Page)
 
-        loadingAnimation.show(this@Movie_Page)
+        LoadingAnimation.show(this@Movie_Page)
         Movies()
 
     }
@@ -85,7 +85,7 @@ class Movie_Page : AppCompatActivity() {
                         //movies.add(MovieItem(title, imgUrl, imdb_code, type))
                         val movieItem = MovieItem(title=title, imageUrl=imgUrl, imdbCode=imdbCode, type=type, year = year, rating=rating, runtime=runtime)
                         withContext(Dispatchers.Main) {
-                            loadingAnimation.hide(this@Movie_Page)
+                            LoadingAnimation.hide(this@Movie_Page)
                             adapter.addItem(movieItem)  // 👈 add one at a time
                         }
                     }
@@ -93,7 +93,7 @@ class Movie_Page : AppCompatActivity() {
                     break
                 } catch (e: Exception) {
                     delay(10_000)
-                    loadingAnimation.show(this@Movie_Page)
+                    LoadingAnimation.show(this@Movie_Page)
                     Log.e("DEBUG_TAG_Movies 2", "Error fetching data", e)
                     break
                 }

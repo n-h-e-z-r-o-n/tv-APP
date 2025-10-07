@@ -20,7 +20,7 @@
                 app:cardCornerRadius="100dp"
                 app:cardElevation="6dp"
                 android:layout_gravity="center_horizontal"
-                app:cardBackgroundColor="@android:color/transparent"
+                app:cardBackgroundColor="?attr/BG_color_up"
                 >
 
             <ImageView

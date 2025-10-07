@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:keepScreenOn="true"
     tools:context=".Watch_Page"
-    android:background="?attr/BG_color"
-    >
+    android:background="?attr/BG_color">
 
     <ScrollView
         android:layout_width="match_parent"
@@ -50,7 +50,7 @@
 
                     <!-- Gradient overlay -->
                     <LinearLayout
-                        android:layout_width="500dp"
+                        android:layout_width="300dp"
                         android:layout_height="match_parent"
                         android:background="@drawable/overlay_left_gradient"
                         android:alpha="1"/>
@@ -88,19 +88,21 @@
                         card_view:cardCornerRadius="14dp"
                         card_view:cardElevation="0dp"
                         card_view:cardBackgroundColor="@android:color/transparent"
-                        android:foreground="@drawable/card_focus">
+                        android:foreground="@drawable/card_focus"
+                        android:visibility="gone">
 
                         <ImageView
                             android:id="@+id/posterImageView"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
                             android:scaleType="fitXY"
-                            android:background="@android:color/transparent"/>
+                            android:background="@android:color/transparent"
+                            />
                     </androidx.cardview.widget.CardView>
 
                     <LinearLayout
                         android:layout_width="match_parent"
-                        android:layout_height="match_parent"
+                        android:layout_height="wrap_content"
                         android:layout_gravity="bottom"
                         android:orientation="vertical"
                         android:paddingStart="20dp"
@@ -110,22 +112,8 @@
                         tools:ignore="RtlSymmetry">
 
 
-                        <TextView
-                            android:id="@+id/season_C"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="0dp"
-                            android:text=""
-                            android:textColor="#AAAAAA"
-                            android:textSize="14sp"  />
-                        <TextView
-                            android:id="@+id/year_widget"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="1dp"
-                            android:text="2025"
-                            android:textColor="#AAAAAA"
-                            android:textSize="14sp"  />
+
+
 
                         <TextView
                             android:id="@+id/title_widget"
@@ -136,77 +124,100 @@
                             android:maxLines="2"
                             android:text="Movie Title"
                             android:textColor="?attr/FG_color"
-                            android:textSize="28sp"
-                            android:textStyle="bold" />
+                            android:textSize="35sp"
+                            android:textStyle="bold"
+                            tools:ignore="HardcodedText" />
 
-
-<!-- ========================================================================================    -->
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
+                        <TextView
+                            android:id="@+id/season_C"
+                            android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_gravity="bottom"
-                            android:gravity="start"
-                            android:orientation="vertical"
-                            android:padding="5dp"
-                            android:paddingEnd="0dp"
-                            >
+                            android:layout_marginTop="0dp"
+                            android:text=""
+                            android:textStyle="italic|bold"
+                            android:textColor="?attr/BG_color_up"
+                            android:textSize="9sp"
+                            tools:ignore="SmallSp"
+                            android:layout_marginBottom="10dp"/>
 
-                            <TextView
-                                android:id="@+id/Genres_widget"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="- Science fiction    - drama   - action"
-                                android:textColor="#FFFFFF"
-                                android:textSize="11sp"
-                                android:textStyle="italic"
-                                />
 
                             <TextView
                                 android:id="@+id/Production_widget"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="- Marvel    - DC   - action"
-                                android:textColor="#AAAAAA"
+                                android:textColor="?attr/FG_color"
                                 android:textSize="9sp"
                                 android:textStyle="italic"
-                                android:layout_marginTop="5dp"
-                                />
+                                tools:ignore="HardcodedText,SmallSp"
+                                android:alpha="0.8"/>
 
-                        </LinearLayout>
 <!-- ========================================================================================    -->
                         <LinearLayout
-                            android:layout_width="match_parent"
+                            android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_gravity="bottom"
-                            android:gravity="start"
+                            android:layout_gravity=""
+                            android:gravity="center"
                             android:orientation="horizontal"
-                            android:padding="5dp"
                             android:paddingEnd="0dp" >
 
-                            <!-- Runtime -->
+                            <!-- VoteCount -->
                             <LinearLayout
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_gravity="center"
                                 android:gravity="start"
                                 android:orientation="horizontal"
-                                android:paddingEnd="0dp">
+                                android:layout_marginEnd="15dp"
+                                android:alpha="0.5">
 
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="⏱ "
+                                    android:text="★★★★☆ "
                                     android:textColor="#FFFFFF"
-                                    android:textSize="11sp" />
+                                    android:textSize="15sp"
+                                    android:textStyle="bold"
+                                    tools:ignore="HardcodedText" />
                                 <TextView
-                                    android:id="@+id/Runtime_widget"
+                                    android:id="@+id/VoteCount_widget"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="342323"
+                                    android:textColor="#FFFFFF"
+                                    android:textStyle="bold"
+                                    android:textSize="11sp"
+                                    tools:ignore="HardcodedText" />
+                            </LinearLayout>
+
+                            <!-- Rating -->
+                            <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center"
+                                android:gravity="start"
+                                android:orientation="horizontal"
+                                android:layout_marginEnd="15dp"
+                                android:alpha="0.5">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="IMDB "
+                                    android:textColor="#FFFFFF"
+                                    android:textSize="11sp"
+                                    tools:ignore="HardcodedText"
+                                    android:textStyle="bold"/>
+                                <TextView
+                                    android:id="@+id/Rating_widget"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:text="8.5/10"
                                     android:textColor="#FFFFFF"
                                     android:textStyle="bold"
-                                    android:textSize="11sp" />
+                                    android:textSize="11sp"
+                                    tools:ignore="HardcodedText" />
+
                             </LinearLayout>
 
                             <!-- Runtime -->
@@ -216,23 +227,47 @@
                                 android:layout_gravity="center"
                                 android:gravity="start"
                                 android:orientation="horizontal"
-                                android:layout_marginStart="15dp"
-                                >
+                                android:paddingEnd="0dp"
+                                android:alpha="0.5">
 
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="🔊 "
+                                    android:text="⏱ "
                                     android:textColor="#FFFFFF"
-                                    android:textSize="11sp" />
+                                    android:textSize="11sp"
+                                    tools:ignore="HardcodedText" />
                                 <TextView
-                                    android:id="@+id/Subtitle_widget"
+                                    android:id="@+id/Runtime_widget"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="Subtitles"
+                                    android:text="2h 3min"
                                     android:textColor="#FFFFFF"
-                                    android:textFontWeight="700"
-                                    android:textSize="11sp" />
+                                    android:textStyle="bold"
+                                    android:textSize="11sp"
+                                    tools:ignore="HardcodedText" />
+                            </LinearLayout>
+
+                            <!-- Year -->
+                            <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center"
+                                android:gravity="start"
+                                android:orientation="horizontal"
+                                android:layout_marginStart="15dp"
+                                android:alpha="0.5">
+
+                                <TextView
+                                    android:id="@+id/year_widget"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="1dp"
+                                    android:text="2025"
+                                    android:textColor="?attr/FG_color"
+                                    android:textSize="11sp"
+                                    tools:ignore="HardcodedText"
+                                    android:textStyle="bold"    />
                             </LinearLayout>
 
                             <!-- Pg -->
@@ -243,14 +278,16 @@
                                 android:gravity="start"
                                 android:orientation="horizontal"
                                 android:layout_marginStart="15dp"
-                                >
+                                android:alpha="0.5">
 
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="⬤ PG : "
+                                    android:text="PG "
                                     android:textColor="#FFFFFF"
-                                    android:textSize="11sp" />
+                                    android:textStyle="bold"
+                                    android:textSize="11sp"
+                                    tools:ignore="HardcodedText" />
                                 <TextView
                                     android:id="@+id/PG_widget"
                                     android:layout_width="wrap_content"
@@ -258,65 +295,42 @@
                                     android:text="13"
                                     android:textColor="#FFFFFF"
                                     android:textStyle="bold"
-                                    android:textSize="11sp" />
+                                    android:textSize="11sp"
+                                    tools:ignore="HardcodedText" />
                             </LinearLayout>
 
-                            <!-- Rating -->
-                            <LinearLayout
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_gravity="center"
-                                android:gravity="start"
-                                android:orientation="horizontal"
-                                android:layout_marginStart="15dp"
-                                >
+                            <!-- Runtime -->
 
-                                <TextView
+                                <ImageView
+                                    android:layout_marginStart="10dp"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="⬤ Imdb : "
-                                    android:textColor="#FFFFFF"
-                                    android:textSize="11sp" />
-                                <TextView
-                                    android:id="@+id/Rating_widget"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="8.5/10"
-                                    android:textColor="#FFFFFF"
-                                    android:textStyle="bold"
-                                    android:textSize="11sp" />
-                            </LinearLayout>
+                                    android:src="@drawable/ic_hdr"
+                                    app:tint="?attr/FG_color"
+                                    android:textSize="11sp"
+                                    android:alpha="0.7"/>
 
-
+                                <ImageView
+                                    android:layout_marginStart="0dp"
+                                    android:layout_width="24dp"
+                                    android:layout_height="18dp"
+                                    android:src="@drawable/ic_caption"
+                                    app:tint="?attr/FG_color"
+                                    android:textSize="11sp"
+                                    android:alpha="0.7"/>
 
 
                         </LinearLayout>
 
-
-                        <LinearLayout
-                            android:layout_width="460dp"
-                            android:layout_height="100dp"
-                            android:layout_gravity="bottom"
-                            android:gravity="start"
-                            android:maxHeight="145dp"
-                            android:orientation="horizontal"
-                            android:padding="4dp"
-                            android:paddingEnd="0dp">
-
-                            <TextView
-                                android:id="@+id/overview_widget"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="8dp"
-                                android:ellipsize="end"
-                                android:maxLines="5"
-                                android:singleLine="false"
-                                android:text="Loading . . ."
-                                android:textColor="?attr/FG_color"
-                                android:textSize="14sp" />
-
-                        </LinearLayout>
-
+                        <TextView
+                            android:id="@+id/Genres_widget"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Science fiction     drama   - action"
+                            android:textColor="?attr/FG_color"
+                            android:textSize="11sp"
+                            tools:ignore="HardcodedText"
+                            android:textStyle="bold"/>
 
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -324,27 +338,65 @@
                             android:layout_gravity="bottom"
                             android:gravity="start"
                             android:orientation="horizontal"
-                            android:padding="10dp"
+                            android:padding="5dp"
+                            android:paddingEnd="0dp" >
+
+                        </LinearLayout>
+
+
+                        <LinearLayout
+                            android:layout_width="460dp"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="bottom"
+                            android:gravity="start"
+                            android:maxHeight="145dp"
+                            android:orientation="horizontal"
+                            android:paddingEnd="0dp"
+                            android:layout_marginBottom="9dp">
+
+                            <TextView
+                                android:id="@+id/overview_widget"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="8dp"
+                                android:ellipsize="end"
+                                android:maxLines="6"
+                                android:singleLine="false"
+                                android:text="An assassin, trained in the ways of the Ruska Roma, embarks on a quest for vengeance following the death of her father."
+                                android:textColor="?attr/FG_color"
+                                android:textSize="12sp"
+                                android:textStyle="bold"
+                                tools:ignore="HardcodedText" />
+
+                        </LinearLayout>
+
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="left"
+                            android:gravity="center"
+                            android:orientation="horizontal"
                             android:paddingEnd="0dp">
 
                             <!-- This is our custom expanding button -->
-                            <Button
+                            <ImageButton
                                 android:id="@+id/watchNowButton"
                                 android:layout_width="44dp"
                                 android:layout_height="44dp"
                                 android:background="@drawable/tv_button_selector"
                                 android:focusable="true"
                                 android:focusableInTouchMode="true"
-                                android:text="▶"
-                                android:textColor="?attr/FG_color"
-                                android:textSize="15sp"
+                                android:src="@drawable/ic_play"
+                                app:tint="?attr/FG_color"
                                 android:textAllCaps="false"
                                 android:nextFocusLeft="@+id/serverButton"
                                 android:nextFocusRight="@+id/TrailerButton"
+                                android:tooltipText="Play"
+                                android:elevation="2dp"
+                                tools:ignore="UnusedAttribute" />
 
-                                android:elevation="4dp"/>
-
-                            <Button
+                            <ImageButton
                                 android:id="@+id/TrailerButton"
                                 android:layout_width="44dp"
                                 android:layout_height="44dp"
@@ -352,15 +404,16 @@
                                 android:background="@drawable/tv_button_selector"
                                 android:focusable="true"
                                 android:focusableInTouchMode="true"
-                                android:text="🎬"
-                                android:textColor="?attr/FG_color"
-                                android:textSize="14sp"
+                                android:src="@drawable/ic_trailer"
+                                app:tint="?attr/FG_color"                                android:textSize="14sp"
                                 android:textAllCaps="false"
                                 android:nextFocusLeft="@+id/watchNowButton"
                                 android:nextFocusRight="@+id/favoriteButton"
-                                android:elevation="4dp"/>
+                                android:tooltipText="Trailer"
+                                android:elevation="2dp"
+                                tools:ignore="UnusedAttribute" />
 
-                            <Button
+                            <ImageButton
                                 android:id="@+id/favoriteButton"
                                 android:layout_width="44dp"
                                 android:layout_height="44dp"
@@ -368,15 +421,17 @@
                                 android:background="@drawable/tv_button_selector"
                                 android:focusable="true"
                                 android:focusableInTouchMode="true"
-                                android:text="🤍"
+                                android:src="@drawable/ic_addfave"
+                                app:tint="?attr/FG_color"
                                 android:textColor="?attr/FG_color"
-                                android:textSize="14sp"
                                 android:textAllCaps="false"
+                                android:tooltipText="Add to Favorites"
                                 android:nextFocusLeft="@+id/TrailerButton"
                                 android:nextFocusRight="@+id/serverButton"
-                                android:elevation="4dp"/>
+                                android:elevation="4dp"
+                                tools:ignore="UnusedAttribute" />
 
-                            <Button
+                            <ImageButton
                                 android:id="@+id/serverButton"
                                 android:layout_width="44dp"
                                 android:layout_height="44dp"
@@ -384,13 +439,14 @@
                                 android:background="@drawable/tv_button_selector"
                                 android:focusable="true"
                                 android:focusableInTouchMode="true"
-                                android:text="🌐"
-                                android:textColor="?attr/FG_color"
-                                android:textSize="14sp"
+                                android:src="@drawable/ic_server"
+                                app:tint="?attr/FG_color"
                                 android:textAllCaps="false"
+                                android:tooltipText="Change Server"
                                 android:nextFocusLeft="@+id/favoriteButton"
                                 android:nextFocusRight="@+id/watchNowButton"
-                                android:elevation="4dp"/>
+                                android:elevation="2dp"
+                                tools:targetApi="26" />
                         </LinearLayout>
 
                 </LinearLayout>
@@ -399,6 +455,8 @@
 
 
             </FrameLayout>
+
+
 
             <FrameLayout
                 android:layout_width="match_parent"
@@ -427,25 +485,29 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="@string/seasons_episodes"
-                            android:textColor="#FFFFFF"
+                            android:text="Seasons"
+                            android:textColor="?attr/FG_color"
                             android:textSize="20sp"
-                            android:textStyle="bold" />
+                            android:textStyle="bold"
+                            tools:ignore="HardcodedText"
+                            android:alpha="0.8"/>
 
                         <View
                             android:layout_width="0dp"
                             android:layout_height="1dp"
                             android:layout_weight="1"
                             android:layout_marginStart="16dp"
-                            android:background="#333333" />
+                            android:background="?attr/BG_color_up" />
 
                         <TextView
                             android:id="@+id/season_count_text"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="3 Seasons"
-                            android:textColor="#AAAAAA"
-                            android:textSize="14sp" />
+                            android:textColor="?attr/BG_color_up"
+                            android:textSize="11sp"
+                            android:textStyle="italic|bold"
+                            tools:ignore="HardcodedText" />
                     </LinearLayout>
 
                     <!-- Season Selector -->
@@ -498,7 +560,8 @@
                             android:layout_height="wrap_content"
                             android:textColor="?attr/FG_color"
                             android:textSize="18sp"
-                            android:textStyle="bold" />
+                            android:textStyle="italic|bold"
+                            android:alpha="0.8"/>
 
                         <View
                             android:layout_width="50dp"
@@ -510,7 +573,9 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:textColor="?attr/FG_color"
-                            android:textSize="14sp" />
+                            android:textSize="13sp"
+                            android:textStyle="italic"
+                            android:alpha="0.8"/>
 
                         <View
                             android:layout_width="50dp"
@@ -522,17 +587,20 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:textColor="?attr/FG_color"
-                            android:textSize="14sp" />
+                            android:textSize="13sp"
+                            android:textStyle="italic"
+                            android:alpha="0.8"/>
 
                     </LinearLayout>
 
 
                     <!-- Episodes List -->
+                    <include android:layout_height="50dp" layout="@layout/laod_animation"
+                        tools:ignore="IncludeLayoutParam" />
                     <androidx.recyclerview.widget.RecyclerView
                         android:id="@+id/episodes_recycler"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:paddingTop="8dp"
                         android:clipToPadding="false"
                         android:scrollbars="vertical"
                         />

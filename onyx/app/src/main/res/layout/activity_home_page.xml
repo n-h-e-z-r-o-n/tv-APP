@@ -14,7 +14,7 @@
 
 
 
-        <LinearLayout
+        <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:clipToPadding="false"
@@ -29,12 +29,21 @@
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/Slider_widget"
                     android:layout_width="match_parent"
-                    android:layout_height="0dp"
-                    android:layout_weight="1"
+                    android:layout_height="match_parent"
                     android:clipToPadding="false"
                     android:overScrollMode="never"
                     android:scrollbars="none"
                     tools:ignore="NestedWeights" />
+
+                <!-- Slider Indicators -->
+            <LinearLayout
+                android:id="@+id/slider_indicators"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center|bottom"
+                android:layout_marginBottom="5dp"
+                android:gravity="center"
+                android:orientation="horizontal" />
 
 
                 <HorizontalScrollView
@@ -62,7 +71,7 @@
                     </LinearLayout>
                 </HorizontalScrollView>
 
-        </LinearLayout>
+        </FrameLayout>
         <include layout="@layout/laod_animation"/>
         <include layout="@layout/side_bar"/>
     </FrameLayout>

@@ -31,7 +31,7 @@ class Search_Page : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.activity_search_page2)
 
-        loadingAnimation.setup(this@Search_Page)
+        LoadingAnimation.setup(this@Search_Page)
         NavAction.setupSidebar(this)
 
 
@@ -58,7 +58,7 @@ class Search_Page : AppCompatActivity() {
     }
 
     private fun performSearch() {
-        loadingAnimation.show(this@Search_Page)
+        LoadingAnimation.show(this@Search_Page)
         val query = searchInput.text.toString().trim()
 
         val adapter = GridAdapter(mutableListOf(), R.layout.item_grid)
@@ -180,7 +180,7 @@ class Search_Page : AppCompatActivity() {
                         val movieItem = MovieItem(title=title, imageUrl=imgUrl, imdbCode=id, type=mediaType, year = date, rating=voteAverage, runtime=info)
 
                         withContext(Dispatchers.Main) {
-                            loadingAnimation.hide(this@Search_Page)
+                            LoadingAnimation.hide(this@Search_Page)
                             adapter.addItem(movieItem)  // 👈 add one at a time
                         }
 

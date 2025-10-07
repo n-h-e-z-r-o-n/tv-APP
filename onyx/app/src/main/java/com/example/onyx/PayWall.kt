@@ -22,6 +22,7 @@ import kotlinx.coroutines.withContext
 import java.net.HttpURLConnection
 import java.net.URL
 import android.view.View
+import android.widget.Toast
 
 
 
@@ -41,7 +42,7 @@ class PayWall : AppCompatActivity() {
     private lateinit var etCardholderName: EditText
     private lateinit var etCountry: TextView
 
-    
+
     override fun onCreate(savedInstanceState: Bundle?) {
         GlobalUtils.applyTheme(this)
         super.onCreate(savedInstanceState)
@@ -113,6 +114,10 @@ class PayWall : AppCompatActivity() {
             }
         })
 
+        // ✅ Initialize Paystack SDK
+
+
+
     }
 
     
@@ -120,7 +125,7 @@ class PayWall : AppCompatActivity() {
 
 
     private fun loadTrendingMovies() {
-        loadingAnimation.show(this@PayWall)
+        LoadingAnimation.show(this@PayWall)
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
@@ -176,6 +181,9 @@ class PayWall : AppCompatActivity() {
     }
     
     private fun processPayment() {
+        //createPaymentMethod("4987050044153967","09/28",  "497", "Hezron" )
+        /*
+
         // Validate form fields
         val cardNumber = etCardNumber.text.toString().replace(" ", "")
         val expiryDate = etExpiryDate.text.toString()
@@ -218,14 +226,24 @@ class PayWall : AppCompatActivity() {
         
         CoroutineScope(Dispatchers.Main).launch {
             delay(2000) // Simulate processing time
-            
+
+            //createPaymentMethod(cardNumber,expiryDate,  cvc, cardholderName )
+            createPaymentMethod("4987050044153967","09/28",  "497", "Hezron" )
+
+            btnCompletePayment.text = "Complete Payment"
+            btnCompletePayment.isEnabled = true
             // Hide payment container and navigate to home
             //PaymentContainer.visibility = View.GONE
             //navigateToHome()
         }
+
+         */
     }
 
-    
+
+
+
+
     private fun navigateToHome() {
         val intent = Intent(this, Home_Page::class.java)
         startActivity(intent)

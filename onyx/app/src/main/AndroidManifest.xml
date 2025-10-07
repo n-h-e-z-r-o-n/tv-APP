@@ -61,13 +61,15 @@
         <activity
             android:name=".Video_payer"
             android:exported="false"
-            android:launchMode="singleTask" />
+            android:launchMode="singleTop" />
         <activity
             android:name=".Play"
-            android:exported="false" />
+            android:exported="false"
+            android:launchMode="singleTop"/>
         <activity
             android:name=".Watch_Page"
-            android:exported="false" />
+            android:exported="false"
+            android:launchMode="singleTop"/>
         <activity
             android:name=".MainActivity"
             android:exported="true">

@@ -12,6 +12,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.util.UnstableApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.json.JSONObject
 
 class Play : AppCompatActivity() {
 
@@ -29,6 +30,8 @@ class Play : AppCompatActivity() {
         val episodeNo = intent.getStringExtra("episodeNo")
         val server = intent.getStringExtra("server") ?: "VidSrc.to"
 
+
+
         // Increment watch statistics using GlobalUtils
         if(type == "movie"){
             GlobalUtils.incrementMoviesWatched(this)
@@ -42,12 +45,55 @@ class Play : AppCompatActivity() {
         webView.webChromeClient = WebChromeClient()
         webView.webViewClient = object : WebViewClient() {
 
+
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
+
+                webView.evaluateJavascript(
+                    """
+                    (function() {
+                        // Common ad selectors
+                        const selectors = [
+                            'iframe[src*="ads"]',
+                            'iframe[src*="doubleclick"]',
+                            'iframe[src*="adservice"]',
+                            'div[id*="ad"]',
+                            'div[class*="ad"]',
+                            'div[class*="ads"]',
+                            'div[class*="banner"]',
+                            'div[class*="popup"]',
+                            '[id^="ad_"]',
+                            '[class^="ad-"]',
+                            '.overlay',
+                            '.adsbox',
+                            '#ads',
+                            '#overlay',
+                            '#banner'
+                        ];
+            
+                        selectors.forEach(sel => {
+                            document.querySelectorAll(sel).forEach(el => {
+                                el.remove(); // 🚫 Remove the ad element
+                            });
+                        });
+            
+                        // Also remove fixed position elements that usually block content
+                        document.querySelectorAll('*').forEach(el => {
+                            const style = window.getComputedStyle(el);
+                            if (style.position === 'fixed' && (el.offsetHeight > 50 || el.offsetWidth > 50)) {
+                                el.remove();
+                            }
+                        });
+            
+                        console.log('✅ Inline ads cleaned up');
+                    })();
+                    """.trimIndent(), null
+                )
+
                 // Wait for page to render, then simulate a few center clicks
                 webView.postDelayed({
                     simulateRepeatedCenterClicks(webView, repeatCount = 3, intervalMs = 1200L)
-                }, 1500)
+                }, 2000)
             }
 
             override fun shouldInterceptRequest(
@@ -56,6 +102,41 @@ class Play : AppCompatActivity() {
             ): WebResourceResponse? {
                 val url = request?.url.toString()
 
+                val videoExtensions = listOf(
+                    ".mp4",
+                    ".m3u8",
+                    ".webm",
+                    ".mov",
+                    ".mkv",
+                    ".avi",
+                    ".flv",
+                    ".wmv",
+                    ".ts",
+                    ".m4v",
+                    ".3gp",
+                    ".ogv",
+                    ".mpeg",
+                    ".mpg",
+                    ".f4v"
+                )
+
+                val streamingIndicators = listOf(
+                    "video=", "stream=", "media=", "playback", "videoplayback",
+                    "master.m3u8", "playlist.m3u8"
+                )
+
+
+                // Check if URL is a video by extension or indicator
+                val isVideo = videoExtensions.any { url.endsWith(it) } ||
+                        streamingIndicators.any { url.contains(it) }
+
+                if (isVideo) {
+                    runOnUiThread {
+                        playVideoExternally(url)
+                    }
+                }
+
+                /*
                 if (url.endsWith(".mp4") || url.endsWith(".m3u8")
                     || url.endsWith(".webm") || url.endsWith(".mov")
                 ) {
@@ -63,6 +144,19 @@ class Play : AppCompatActivity() {
                         playVideoExternally(url)
                     }
                 }
+
+                 */
+
+                if (url.contains("doubleclick.net") ||
+                    url.contains("googlesyndication.com") ||
+                    url.contains("adservice.google.com") ||
+                    url.contains("popads.net") ||
+                    url.contains("adexchangeclear.com") ||
+                    url.contains("propellerads") ||
+                    url.contains("adsterra")) {
+                    return WebResourceResponse("text/plain", "utf-8", null) // block
+                }
+
 
                 return super.shouldInterceptRequest(view, request)
             }
@@ -84,6 +178,8 @@ class Play : AppCompatActivity() {
                     true
                 }
             }
+
+
         }
 
         val settings = webView.settings
@@ -92,13 +188,21 @@ class Play : AppCompatActivity() {
         settings.mediaPlaybackRequiresUserGesture = false
         settings.setSupportMultipleWindows(false)
         settings.userAgentString = WebSettings.getDefaultUserAgent(this)
+        webView.settings.mediaPlaybackRequiresUserGesture = false //This allows videos to play automatically once loaded
+
+        //This prevents most scripts from opening new tabs or windows automatically.
+        webView.settings.javaScriptCanOpenWindowsAutomatically = false
+        webView.settings.setSupportMultipleWindows(false)
 
         // Get complete URL based on server selection and content type
         val url = getServerUrl(server, type, imdbCode, seasonNo, episodeNo)
         
         // Load the URL
         webView.loadUrl(url)
-        Log.e("Play Data 5M", "Loading from server '$server': $url")
+        Log.d("DEBUG_WEBVIEW", "imdbCode: $imdbCode - type: $type -seasonNo:  $seasonNo - episodeNo: $episodeNo - server: $server ")
+        Log.d("DEBUG_WEBVIEW", "url: $url ")
+
+
     }
 
     @OptIn(UnstableApi::class)
@@ -131,8 +235,11 @@ class Play : AppCompatActivity() {
         intervalMs: Long = 500L
     ) {
         lifecycleScope.launch {
-            val centerX = webView.width / 2
-            val centerY = webView.height / 2
+            var centerX = webView.width / 2
+            var centerY = webView.height / 2
+
+
+
 
             repeat(repeatCount) { index ->
                 val downTime = System.currentTimeMillis()
@@ -153,7 +260,6 @@ class Play : AppCompatActivity() {
                 downEvent.recycle()
                 upEvent.recycle()
 
-                Log.d("DEBUG_TAG_Click", "Simulated click #${index + 1} at ($centerX, $centerY)")
 
                 delay(intervalMs)
             }
