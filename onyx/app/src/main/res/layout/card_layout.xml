@@ -57,7 +57,7 @@
                 android:singleLine="false"
                 android:text="Sakamoto Days Part 2"
                 android:textColor="?attr/FG_color"
-                android:textSize="40sp"
+                android:textSize="45sp"
                 android:textStyle="bold"
                 android:layout_marginBottom="5dp"
                 android:fontFamily="@font/tre"

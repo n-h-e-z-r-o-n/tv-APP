@@ -1,6 +1,8 @@
 package com.example.onyx
 
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.View
 import android.view.WindowManager
@@ -23,8 +25,13 @@ import java.util.Calendar
 class Home_Page : AppCompatActivity() {
     
     private lateinit var sliderIndicators: LinearLayout
+    private lateinit var sliderRecyclerView: RecyclerView
     private var currentSliderPosition = 0
     private var totalSliderItems = 0
+    private var autoScrollHandler: Handler? = null
+    private var autoScrollRunnable: Runnable? = null
+    private val autoScrollDelay = 10000L // 4 seconds
+    private var isUserInteracting = false
     
     override fun onCreate(savedInstanceState: Bundle?) {
         GlobalUtils.applyTheme(this)
@@ -240,20 +247,20 @@ class Home_Page : AppCompatActivity() {
 
 
 
-                    //movies.shuffle()
+                    movies.shuffle()
                     movies = movies.distinctBy { it.imdbCode }.toMutableList()
 
                     withContext(Dispatchers.Main) {
                         LoadingAnimation.hide(this@Home_Page)
-                        val recyclerView = findViewById<RecyclerView>(R.id.Slider_widget)
+                        sliderRecyclerView = findViewById<RecyclerView>(R.id.Slider_widget)
                         val adapter = CardSwiper(movies, R.layout.card_layout)
 
-                        recyclerView.layoutManager = LinearLayoutManager(
+                        sliderRecyclerView.layoutManager = LinearLayoutManager(
                             this@Home_Page,
                             LinearLayoutManager.HORIZONTAL, // 👈 makes it horizontal
                             false
                         )
-                        recyclerView.adapter = adapter
+                        sliderRecyclerView.adapter = adapter
                         
                         // Setup indicators
                         totalSliderItems = movies.size
@@ -261,7 +268,7 @@ class Home_Page : AppCompatActivity() {
                         updateIndicators(0)
                         
                         // Add scroll listener to track position
-                        recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+                        sliderRecyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
                             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                                 super.onScrolled(recyclerView, dx, dy)
                                 val layoutManager = recyclerView.layoutManager as LinearLayoutManager
@@ -280,7 +287,32 @@ class Home_Page : AppCompatActivity() {
                                     updateIndicators(position)
                                 }
                             }
+                            
+                            override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
+                                super.onScrollStateChanged(recyclerView, newState)
+                                when (newState) {
+                                    RecyclerView.SCROLL_STATE_DRAGGING -> {
+                                        // User is manually scrolling
+                                        isUserInteracting = true
+                                        stopAutoScroll()
+                                    }
+                                    RecyclerView.SCROLL_STATE_IDLE -> {
+                                        // Scrolling stopped, restart auto-scroll after a delay
+                                        if (isUserInteracting) {
+                                            isUserInteracting = false
+                                            Handler(Looper.getMainLooper()).postDelayed({
+                                                if (!isUserInteracting) {
+                                                    startAutoScroll()
+                                                }
+                                            }, 2000) // Wait 2 seconds after user stops interacting
+                                        }
+                                    }
+                                }
+                            }
                         })
+                        
+                        // Start auto-scroll
+                        startAutoScroll()
 
                     }
 
@@ -321,6 +353,50 @@ class Home_Page : AppCompatActivity() {
                 indicator.alpha = 0.6f
             }
         }
+    }
+    
+    private fun startAutoScroll() {
+        if (totalSliderItems <= 1) return // Don't auto-scroll if there's only one item
+        
+        autoScrollHandler = Handler(Looper.getMainLooper())
+        autoScrollRunnable = object : Runnable {
+            override fun run() {
+                if (!isUserInteracting && totalSliderItems > 1) {
+                    val nextPosition = (currentSliderPosition + 1) % totalSliderItems
+                    smoothScrollToPosition(nextPosition)
+                }
+                autoScrollHandler?.postDelayed(this, autoScrollDelay)
+            }
+        }
+        autoScrollHandler?.postDelayed(autoScrollRunnable!!, autoScrollDelay)
+    }
+    
+    private fun stopAutoScroll() {
+        autoScrollHandler?.removeCallbacks(autoScrollRunnable!!)
+    }
+    
+    private fun smoothScrollToPosition(position: Int) {
+        if (position < totalSliderItems && ::sliderRecyclerView.isInitialized) {
+            val layoutManager = sliderRecyclerView.layoutManager as LinearLayoutManager
+            layoutManager.smoothScrollToPosition(sliderRecyclerView, null, position)
+        }
+    }
+    
+    override fun onPause() {
+        super.onPause()
+        stopAutoScroll()
+    }
+    
+    override fun onResume() {
+        super.onResume()
+        if (::sliderRecyclerView.isInitialized && !isUserInteracting) {
+            startAutoScroll()
+        }
+    }
+    
+    override fun onDestroy() {
+        super.onDestroy()
+        stopAutoScroll()
     }
 
 }
