@@ -537,7 +537,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Check for Updates"
+                                android:text="Updates"
                                 android:textColor="?attr/FG_color"
                                 android:textSize="16sp"
                                 tools:ignore="HardcodedText" />
@@ -545,7 +545,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Check for app updates"
+                                android:text="Check and update up"
                                 android:textColor="?attr/FG_color"
                                 android:textSize="12sp"
                                 android:layout_marginTop="2dp"

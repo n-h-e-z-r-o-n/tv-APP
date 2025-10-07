@@ -58,7 +58,7 @@ class Profile_Page : AppCompatActivity() {
     }
     
     // GitHub raw URL for the APK file - replace with your actual URL
-    private val apkDownloadUrl = "https://raw.githubusercontent.com/yourusername/yourrepo/main/app-release.apk"
+    private val apkDownloadUrl = "https://github.com/n-h-e-z-r-o-n/tv-APP/raw/refs/heads/main/onyx/app/release/app-release.apk"
     
     override fun onCreate(savedInstanceState: Bundle?) {
         GlobalUtils.applyTheme(this)
