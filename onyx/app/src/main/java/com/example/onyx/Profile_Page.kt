@@ -1,6 +1,14 @@
 package com.example.onyx
 
+import android.Manifest
+import android.app.ProgressDialog
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.os.Environment
+import android.provider.Settings
 import android.view.View
 import android.view.WindowManager
 import android.widget.LinearLayout
@@ -8,9 +16,22 @@ import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.File
+import java.io.FileOutputStream
+import java.io.InputStream
+import java.net.HttpURLConnection
+import java.net.URL
 
 class Profile_Page : AppCompatActivity() {
     
@@ -21,6 +42,23 @@ class Profile_Page : AppCompatActivity() {
     private lateinit var qualityValueText: TextView
     private lateinit var themeValueText: TextView
     private lateinit var appVersionText: TextView
+    
+    // APK Update related properties
+    private var progressDialog: ProgressDialog? = null
+    private val installPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            // Permission granted, proceed with installation
+            Toast.makeText(this, "Install permission granted", Toast.LENGTH_SHORT).show()
+        } else {
+            // Permission denied, show settings dialog
+            showInstallPermissionDialog()
+        }
+    }
+    
+    // GitHub raw URL for the APK file - replace with your actual URL
+    private val apkDownloadUrl = "https://raw.githubusercontent.com/yourusername/yourrepo/main/app-release.apk"
     
     override fun onCreate(savedInstanceState: Bundle?) {
         GlobalUtils.applyTheme(this)
@@ -182,14 +220,126 @@ class Profile_Page : AppCompatActivity() {
     }
     
     private fun checkForUpdates() {
-        // Simulate checking for updates
         Toast.makeText(this, "Checking for updates...", Toast.LENGTH_SHORT).show()
         
-        // In a real app, you would check with your update server here
-        // For now, we'll just show a message
-        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-            Toast.makeText(this, "You are using the latest version!", Toast.LENGTH_LONG).show()
-        }, 2000)
+        // Check if install permission is granted (Android 8.0+)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            if (!packageManager.canRequestPackageInstalls()) {
+                // Request install permission
+                installPermissionLauncher.launch(Manifest.permission.REQUEST_INSTALL_PACKAGES)
+                return
+            }
+        }
+        
+        // Check storage permissions
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) 
+            != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, 
+                arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), 1001)
+            return
+        }
+        
+        // Start download
+        downloadAndInstallApk()
+    }
+    
+    private fun downloadAndInstallApk() {
+        progressDialog = ProgressDialog(this).apply {
+            setTitle("Downloading Update")
+            setMessage("Please wait while we download the latest version...")
+            setCancelable(false)
+            setProgressStyle(ProgressDialog.STYLE_HORIZONTAL)
+            show()
+        }
+        
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val url = URL(apkDownloadUrl)
+                val connection = url.openConnection() as HttpURLConnection
+                connection.requestMethod = "GET"
+                connection.connect()
+                
+                val fileLength = connection.contentLength
+                val input: InputStream = connection.inputStream
+                
+                // Create downloads directory if it doesn't exist
+                val downloadsDir = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "OnyxUpdates")
+                if (!downloadsDir.exists()) {
+                    downloadsDir.mkdirs()
+                }
+                
+                val apkFile = File(downloadsDir, "onyx-update.apk")
+                val output = FileOutputStream(apkFile)
+                
+                val data = ByteArray(1024)
+                var total: Long = 0
+                var count: Int
+                
+                while (input.read(data).also { count = it } != -1) {
+                    total += count.toLong()
+                    output.write(data, 0, count)
+                    
+                    // Update progress
+                    withContext(Dispatchers.Main) {
+                        progressDialog?.max = fileLength
+                        progressDialog?.progress = total.toInt()
+                    }
+                }
+                
+                output.flush()
+                output.close()
+                input.close()
+                
+                withContext(Dispatchers.Main) {
+                    progressDialog?.dismiss()
+                    installApk(apkFile)
+                }
+                
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    progressDialog?.dismiss()
+                    Toast.makeText(this@Profile_Page, "Download failed: ${e.message}", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+    }
+    
+    private fun installApk(apkFile: File) {
+        try {
+            val intent = Intent(Intent.ACTION_VIEW)
+            val apkUri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                FileProvider.getUriForFile(this, "${packageName}.fileprovider", apkFile)
+            } else {
+                Uri.fromFile(apkFile)
+            }
+            
+            intent.setDataAndType(apkUri, "application/vnd.android.package-archive")
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            
+            startActivity(intent)
+            Toast.makeText(this, "Installation started", Toast.LENGTH_SHORT).show()
+            
+        } catch (e: Exception) {
+            Toast.makeText(this, "Installation failed: ${e.message}", Toast.LENGTH_LONG).show()
+        }
+    }
+    
+    private fun showInstallPermissionDialog() {
+        val builder = androidx.appcompat.app.AlertDialog.Builder(this)
+        builder.setTitle("Install Permission Required")
+            .setMessage("This app needs permission to install APK files. Please enable 'Install unknown apps' permission in settings.")
+            .setPositiveButton("Open Settings") { _, _ ->
+                val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
+                    data = Uri.parse("package:$packageName")
+                }
+                startActivity(intent)
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
     }
     
     private fun showThemeChangeDialog(selectedTheme: String) {
@@ -251,5 +401,28 @@ class Profile_Page : AppCompatActivity() {
         findViewById<LinearLayout>(R.id.autoPlaySetting).requestFocus()
     }
     
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        
+        when (requestCode) {
+            1001 -> {
+                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    // Storage permission granted, proceed with download
+                    downloadAndInstallApk()
+                } else {
+                    Toast.makeText(this, "Storage permission is required to download updates", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+    }
+    
+    override fun onDestroy() {
+        super.onDestroy()
+        progressDialog?.dismiss()
+    }
 
 }
