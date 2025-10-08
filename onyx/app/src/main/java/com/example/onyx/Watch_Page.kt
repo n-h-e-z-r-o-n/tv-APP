@@ -28,6 +28,7 @@ import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.delay
 import org.json.JSONArray
 import android.widget.Button
+import android.widget.FrameLayout
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.Toast
@@ -119,6 +120,7 @@ class Watch_Page : AppCompatActivity() {
                     val release_date: String
                     val runtime: String
                     val vote_average: String
+                    val vote_count: String
                     val genres: String
                     val production_C:String
                     val PG: String
@@ -156,6 +158,8 @@ class Watch_Page : AppCompatActivity() {
                     overview = jsonObject.getString("overview")
 
                     vote_average = jsonObject.getString("vote_average")
+
+                    vote_count = jsonObject.getString("vote_count")
 
                     val genresArray = jsonObject.getJSONArray("genres") //[{"id":80,"name":"Crime"},{"id":99,"name":"Documentary"}]
                     val genresList = mutableListOf<String>()
@@ -206,6 +210,9 @@ class Watch_Page : AppCompatActivity() {
                         val Genres_widget = findViewById<TextView>(R.id.Genres_widget)
                         val Production_widget = findViewById<TextView>(R.id.Production_widget)
                         val PG_widget = findViewById<TextView>(R.id.PG_widget)
+                        val VoteCount_widget = findViewById<TextView>(R.id.VoteCount_widget)
+
+
 
 
                         title_widget.text = original_title
@@ -216,6 +223,7 @@ class Watch_Page : AppCompatActivity() {
 
 
                         Rating_widget.text = "${vote_average}/10"
+                        VoteCount_widget.text = "$vote_count"
                         Runtime_widget.text = "${runtime} min"
                         PG_widget.text = PG
 
@@ -294,7 +302,7 @@ class Watch_Page : AppCompatActivity() {
 
                         if(type=="tv"){
                             watchButton.visibility = View.GONE
-                            val Season_widget = findViewById<LinearLayout>(R.id.Season_widget)
+                            val Season_widget = findViewById<FrameLayout>(R.id.Season_widget)
                             Season_widget.visibility = View.VISIBLE
 
                             val season_count_widget = findViewById<TextView>(R.id.season_count_text)
@@ -678,10 +686,8 @@ class Watch_Page : AppCompatActivity() {
         val builder = android.app.AlertDialog.Builder(this, R.style.CustomDialogTheme)
         builder.setTitle("Select a Streaming Server (Powered by Third Parties)")
             .setSingleChoiceItems(servers.toTypedArray(), currentServerIndex) { dialog, which ->
+                // Update server index when user selects
                 currentServerIndex = which
-                // Update server button display
-                val serverButton = findViewById<ImageButton>(R.id.serverButton)
-
                 Toast.makeText(this, "Server changed to: ${servers[currentServerIndex]}", Toast.LENGTH_SHORT).show()
                 dialog.dismiss() // Auto-close dialog when option is selected
             }

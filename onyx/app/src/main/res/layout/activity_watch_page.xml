@@ -397,7 +397,7 @@
                                 android:focusable="true"
                                 android:focusableInTouchMode="true"
                                 android:src="@drawable/ic_play"
-                                app:tint="?attr/FG_color"
+                                app:tint="?attr/AccentColor"
                                 android:textAllCaps="false"
                                 android:nextFocusLeft="@+id/serverButton"
                                 android:nextFocusRight="@+id/TrailerButton"
@@ -414,7 +414,7 @@
                                 android:focusable="true"
                                 android:focusableInTouchMode="true"
                                 android:src="@drawable/ic_trailer"
-                                app:tint="?attr/FG_color"                                android:textSize="14sp"
+                                app:tint="?attr/AccentColor"                                android:textSize="14sp"
                                 android:textAllCaps="false"
                                 android:nextFocusLeft="@+id/watchNowButton"
                                 android:nextFocusRight="@+id/favoriteButton"
@@ -431,8 +431,8 @@
                                 android:focusable="true"
                                 android:focusableInTouchMode="true"
                                 android:src="@drawable/ic_addfave"
-                                app:tint="?attr/FG_color"
-                                android:textColor="?attr/FG_color"
+                                app:tint="?attr/AccentColor"
+                                android:textColor="?attr/AccentColor"
                                 android:textAllCaps="false"
                                 android:tooltipText="Add to Favorites"
                                 android:nextFocusLeft="@+id/TrailerButton"
@@ -449,7 +449,7 @@
                                 android:focusable="true"
                                 android:focusableInTouchMode="true"
                                 android:src="@drawable/ic_server"
-                                app:tint="?attr/FG_color"
+                                app:tint="?attr/AccentColor"
                                 android:textAllCaps="false"
                                 android:tooltipText="Change Server"
                                 android:nextFocusLeft="@+id/favoriteButton"
@@ -470,17 +470,19 @@
             <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:id="@+id/Season_widget"
                 android:paddingTop="8dp"
                 android:paddingBottom="24dp"
-                android:scrollbars="none">
+                android:scrollbars="none"
+                android:visibility="gone">
 
                 <LinearLayout
-                    android:id="@+id/Season_widget"
+
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:padding="16dp"
-                    android:visibility="gone"
+
                     >
 
                     <!-- Season Header -->
@@ -495,7 +497,8 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Seasons"
-                            android:textColor="?attr/FG_color"
+                            android:textColor="?attr/AccentColor"
+                            android:fontFamily="@font/d"
                             android:textSize="20sp"
                             android:textStyle="bold"
                             tools:ignore="HardcodedText"
@@ -513,7 +516,9 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="3 Seasons"
-                            android:textColor="?attr/BG_color_up"
+                            android:alpha="0.7"
+                            android:fontFamily="@font/g"
+                            android:textColor="?attr/FG_color"
                             android:textSize="11sp"
                             android:textStyle="italic|bold"
                             tools:ignore="HardcodedText" />

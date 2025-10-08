@@ -26,7 +26,7 @@ class MainActivity : ComponentActivity() {
             .into(loadingImageView)
 
         Handler(Looper.getMainLooper()).postDelayed({
-            startActivity(Intent(this, Watch_Page::class.java))
+            startActivity(Intent(this, Home_Page::class.java))
             finish()
         }, 500)
 

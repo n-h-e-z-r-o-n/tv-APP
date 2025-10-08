@@ -3,8 +3,16 @@
 <item android:state_focused="true">
 	<shape android:shape="rectangle">
 		<corners android:radius="30dp" />
-		<solid android:color="?attr/AccentColor" />
-		<stroke android:width="2dp" android:color="#FFFFFF" />
+		<gradient
+			android:type="radial"
+			android:centerX="50%"
+			android:centerY="50%"
+			android:gradientRadius="80dp"
+			android:startColor="@android:color/transparent"
+			android:endColor="?attr/AccentColor"
+			/>
+
+		<stroke android:width="2dp" android:color="?attr/AccentColor" />
 	</shape>
 </item>
 <item android:state_pressed="true">
@@ -17,7 +25,14 @@
 <item>
 	<shape android:shape="rectangle"  android:alpha="0.2">
 		<corners android:radius="30dp" />
-		<solid android:color="?attr/AccentColor" />
+		<gradient
+			android:type="radial"
+			android:centerX="50%"
+			android:centerY="50%"
+			android:gradientRadius="80dp"
+			android:startColor="@android:color/transparent"
+			android:endColor="?attr/BG_color_up"
+			/>
 		<stroke android:width="2dp" android:color="@android:color/transparent" />
 	</shape>
 </item>

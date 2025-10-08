@@ -7,7 +7,7 @@
         <item name="android:textColorSecondary">#CCCCCC</item>
         <item name="colorPrimary">#33B5E5</item>
         <item name="colorPrimaryDark">#2A9BC4</item>
-        <item name="colorAccent">?attr/SidebarActive</item>
+        <item name="colorAccent">?attr/AccentColor</item>
     </style>
 
 
