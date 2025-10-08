@@ -1,56 +1,62 @@
-    <androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:card_view="http://schemas.android.com/apk/res-auto"
-        xmlns:app="http://schemas.android.com/apk/res-auto"
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:card_view="http://schemas.android.com/apk/res-auto"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    card_view:cardElevation="0dp"
+    app:cardBackgroundColor="@android:color/transparent"
+    android:descendantFocusability="afterDescendants">
+
+    <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        card_view:cardElevation="0dp"
-        app:cardBackgroundColor="@android:color/transparent"
-        android:descendantFocusability="afterDescendants"
-        >
+        android:orientation="vertical"
+        android:background="@android:color/transparent">
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="101dp"
+        android:layout_height="101dp"
+        app:cardCornerRadius="100dp"
+        app:cardElevation="6dp"
+        android:layout_gravity="center_horizontal"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:clickable="true"
+        android:padding="1dp"
+        android:foreground="@drawable/cast_focus"
+        app:cardUseCompatPadding="false"
+        app:cardPreventCornerOverlap="false"
+        android:id="@+id/CardViewcontiner">
 
         <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:background="@android:color/transparent">
-
-            <androidx.cardview.widget.CardView
-                android:layout_width="100dp"
-                android:layout_height="100dp"
-                app:cardCornerRadius="100dp"
-                app:cardElevation="6dp"
-                android:layout_gravity="center_horizontal"
-                app:cardBackgroundColor="?attr/BG_color_up"
-                >
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="?attr/BG_color_up">
 
             <ImageView
                 android:id="@+id/itemImage"
-                android:layout_width="100dp"
-                android:layout_height="100dp"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
                 android:contentDescription="@string/app_name"
                 android:maxHeight="100dp"
-                android:scaleType="centerCrop"
-                android:focusable="true"
-                android:focusableInTouchMode="true"
-                android:background = "@drawable/cast_focus"
-                />
+                android:scaleType="centerCrop"/>
 
-            </androidx.cardview.widget.CardView>
-
-            <TextView
-                android:id="@+id/itemText"
-                android:layout_width="100dp"
-                android:layout_height="10dp"
-                android:ellipsize="end"
-                android:gravity="center"
-                android:maxLines="1"
-                android:padding="1dp"
-                android:singleLine="true"
-                android:text="Movie Title"
-                android:textColor="?attr/FG_color"
-                android:textSize="6sp" />
 
         </LinearLayout>
 
 
 </androidx.cardview.widget.CardView>
+
+<TextView
+android:id="@+id/itemText"
+android:layout_width="100dp"
+android:layout_height="wrap_content"
+android:ellipsize="end"
+android:gravity="center"
+android:maxLines="1"
+android:paddingTop="4dp"
+android:text="Movie Title"
+android:textColor="?attr/FG_color"
+android:textSize="10sp" />
+    </LinearLayout>
+    </androidx.cardview.widget.CardView>

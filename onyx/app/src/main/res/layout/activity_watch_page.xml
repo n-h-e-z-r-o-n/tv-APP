@@ -120,13 +120,18 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:ellipsize="end"
-                            android:fontFamily=""
-                            android:maxLines="2"
+                            android:maxLines="3"
+                            android:maxWidth="400dp"
                             android:text="Movie Title"
                             android:textColor="?attr/FG_color"
-                            android:textSize="35sp"
+                            android:fontFamily="@font/b"
+                            android:textSize="40sp"
                             android:textStyle="bold"
-                            tools:ignore="HardcodedText" />
+                            tools:ignore="HardcodedText"
+                            android:shadowColor="#80000000"
+                            android:shadowDx="5"
+                            android:shadowDy="6"
+                            android:shadowRadius="4"/>
 
                         <TextView
                             android:id="@+id/season_C"
@@ -366,7 +371,11 @@
                                 android:textColor="?attr/FG_color"
                                 android:textSize="12sp"
                                 android:textStyle="bold"
-                                tools:ignore="HardcodedText" />
+                                tools:ignore="HardcodedText"
+                                android:shadowColor="#80000000"
+                                android:shadowDx="5"
+                                android:shadowDy="6"
+                                android:shadowRadius="4"/>
 
                         </LinearLayout>
 
@@ -610,7 +619,7 @@
 
             </FrameLayout>
 
-            <!-- Cast -->
+            <!-- Cast   -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -620,7 +629,7 @@
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/Cast_widget"
                     android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
+                    android:layout_height="wrap_content"
                     android:clipToPadding="false"
                     android:orientation="horizontal"
                     android:overScrollMode="never"
@@ -628,10 +637,9 @@
                     android:paddingHorizontal="32dp"
                     android:scrollbars="none"
                     tools:layout_editor_absoluteY="8dp"
-                    android:gravity="center"
-
-                    />
+                    android:gravity="center" />
             </LinearLayout>
+
 
             <TextView
                 android:layout_width="match_parent"
@@ -639,23 +647,19 @@
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp"
                 android:paddingTop="16dp"
-                android:text="More like this"
-                android:textColor="#FFFFFF"
+                android:text=" You may also like"
+                android:fontFamily="@font/d"
+                android:textColor="?attr/AccentColor"
                 android:textSize="18sp"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                tools:ignore="HardcodedText" />
 
-            <!-- Recommendations -->
-            <FrameLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:paddingTop="8dp"
-                android:paddingBottom="24dp"
-                android:scrollbars="none">
+
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/Recommendation_widget"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
+                    android:layout_height="wrap_content"
                     android:clipToPadding="false"
                     android:overScrollMode="never"
                     android:padding="10dp"
@@ -666,12 +670,7 @@
                     android:descendantFocusability="afterDescendants"/>
 
 
-            </FrameLayout>
 
-            <!-- Overview -->
-
-
-            <!-- Buttons -->
 
         </LinearLayout>
     </ScrollView>

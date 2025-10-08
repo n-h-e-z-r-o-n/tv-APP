@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
@@ -152,13 +153,15 @@ class OtherAdapter(
 ) :  RecyclerView.Adapter<OtherAdapter.ViewHolder>() {
 
     inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+
+
+        val CardViewSquare: CardView = view.findViewById(R.id.CardViewSquare)
         val Movie_image: ImageView = view.findViewById(R.id.itemImage)
         val itemText: TextView = view.findViewById(R.id.itemText)
 
 
 
         init {
-
             itemView.setOnFocusChangeListener { v, hasFocus ->
                 // Scale animation
                 v.animate()
@@ -166,8 +169,6 @@ class OtherAdapter(
                     .scaleY(if (hasFocus) 1.02f else 1f)
                     .setDuration(150)
                     .start()
-
-
             }
         }
 
@@ -191,23 +192,24 @@ class OtherAdapter(
 
         Glide.with(holder.itemView.context)
             .load(imageUrl)
-            .centerInside()
+            .centerCrop()
             .into(holder.Movie_image)
 
 
-        holder.itemView.setOnClickListener {
+        holder.CardViewSquare.setOnClickListener {
             val context = holder.itemView.context
-            val intent = android.content.Intent(context, Watch_Page::class.java)
-            intent.putExtra("imdb_code", imdbCode)
-            intent.putExtra("type", type)
+            val intent = Intent(context, Watch_Page::class.java).apply {
+                putExtra("imdb_code", imdbCode)
+                putExtra("type", type)
+            }
             context.startActivity(intent)
+            Log.e("OtherAdapter", "clicked ${intent.toString()}")
         }
 
     }
 
     override fun getItemCount() = items.size
 
-    // 👇 helper to add items one by one
     fun addItem(item: MovieItem) {
         items.add(item)
         notifyItemInserted(items.size - 1)
@@ -221,11 +223,12 @@ class OtherAdapter(
 
 
 class CastAdapter(
-    private val  items: MutableList<MovieItem>,   // ✅ mutable now,
+    private val  items: MutableList<CastItem>,   // ✅ mutable now,
     private val layoutResId: Int   // 👈 pass in the layout resource
 ) :  RecyclerView.Adapter<CastAdapter.ViewHolder>() {
 
     inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        val CardViewcontiner: CardView = view.findViewById(R.id.CardViewcontiner)
         val Movie_image: ImageView = view.findViewById(R.id.itemImage)
         val Actor_Name: TextView = view.findViewById(R.id.itemText)
 
@@ -260,9 +263,6 @@ class CastAdapter(
         val imageUrl = currentItem.imageUrl
         val imdbCode = currentItem.imdbCode
         val type = currentItem.type
-        val year = currentItem.year
-        val rating = currentItem.rating
-        val runtime = currentItem.runtime
 
 
 
@@ -277,13 +277,13 @@ class CastAdapter(
             .centerInside()
             .into(holder.Movie_image)
 
-            holder.Movie_image.setOnClickListener {
-                val context = holder.itemView.context
-                val intent = android.content.Intent(context, Actor_Page::class.java)
-                intent.putExtra("imdb_code", currentItem.imdbCode)
-                intent.putExtra("type", currentItem.type)
-                context.startActivity(intent)
-            }
+        holder.CardViewcontiner.setOnClickListener {
+            val context = holder.itemView.context
+            val intent = Intent(context, Actor_Page::class.java)
+            intent.putExtra("imdb_code", imdbCode)
+            intent.putExtra("type", type)
+            context.startActivity(intent)
+        }
 
 
     }
@@ -291,12 +291,21 @@ class CastAdapter(
     override fun getItemCount() = items.size
 
     // 👇 helper to add items one by one
-    fun addItem(item: MovieItem) {
+    fun addItem(item: CastItem) {
         items.add(item)
         notifyItemInserted(items.size - 1)
 
     }
 }
+
+
+data class CastItem(
+    val title: String = "",
+    val imageUrl: String= "",
+    val imdbCode: String= "",
+    val type: String = "",
+
+)
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

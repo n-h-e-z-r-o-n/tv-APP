@@ -28,6 +28,9 @@ class Actor_Page : AppCompatActivity() {
 
         val cast_id = intent.getStringExtra("imdb_code")
 
+        Log.e("cast RESULTS start", "id $cast_id ")
+
+
         //val cast_id = "500"
         fetchActorShows(cast_id.toString())
 
@@ -95,8 +98,8 @@ class Actor_Page : AppCompatActivity() {
 
                     val backdrop_path   = "https://image.tmdb.org/t/p/w500" + current.optString("backdrop_path")
                     val overview = current.optString("overview")
-                    val date =  current.optString("release_date").substring(0, 4)
-                    val info = current.optString("runtime")
+                    val date =  current.optString("release_date", current.optString("first_air_date")).substring(0, 4)
+                    val info = current.optString("runtime", "")
                     val vote_average  = current.optString("vote_average").substring(0, 3)
                     val id = current.getString("id")
 

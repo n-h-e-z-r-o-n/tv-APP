@@ -62,11 +62,9 @@ class Watch_Page : AppCompatActivity() {
         if(!imdbCode.isNullOrEmpty()){
             fetchData(imdbCode.toString(), type.toString())
         }else{
-            //fetchData("110316", "tv")
+            fetchData("110316", "tv")
         }
 
-        //fetchData(imdbCode.toString(), type.toString())
-        // fetchData("110316", "tv")
 
     }
 
@@ -525,7 +523,7 @@ class Watch_Page : AppCompatActivity() {
 
                     Log.e("DEBUG_WATCH_Results", jsonObject.toString())
 
-                    val movies = mutableListOf<MovieItem>()
+                    val movies = mutableListOf<CastItem>()
 
                     for (i in 0 until moviesArray.length()) {
                         val item = moviesArray.getJSONObject(i)
@@ -533,10 +531,9 @@ class Watch_Page : AppCompatActivity() {
                         val imgUrl = "https://image.tmdb.org/t/p/h632" + item.getString("profile_path")
                         val cast_id = item.getString("id")
                         val type = "Actor"
-                        movies.add(MovieItem(title, imgUrl, cast_id, type))
+                        movies.add(CastItem(title, imgUrl, cast_id, type))
                     }
 
-                    Log.e("DEBUG_WATCH_RECO", movies.toString())
 
 
                     withContext(Dispatchers.Main) {
@@ -607,22 +604,19 @@ class Watch_Page : AppCompatActivity() {
                         } else {
                             jsonObject.optString("title")
                         }
-                        val imgUrl = "https://image.tmdb.org/t/p/w500" + item.getString("poster_path")
+                        val imgUrl = "https://image.tmdb.org/t/p/w780" + item.getString("poster_path")
                         val imdb_code = item.getString("id")
                         val type = item.getString("media_type")
                         movies.add(MovieItem(title, imgUrl, imdb_code, type))
                     }
 
-                    Log.e("DEBUG_WATCH_RECO", movies.toString())
-
 
                     withContext(Dispatchers.Main) {
                         val recyclerView = findViewById<RecyclerView>(R.id.Recommendation_widget)
-                        recyclerView.layoutManager = LinearLayoutManager(
-                            this@Watch_Page,
-                            LinearLayoutManager.HORIZONTAL, // 👈 makes it horizontal
-                            false
-                        )
+
+
+
+                        recyclerView.layoutManager = GridLayoutManager(this@Watch_Page, 6)
                         recyclerView.adapter = OtherAdapter(movies,  R.layout.square_card)
                         val spacing = (19 * resources.displayMetrics.density).toInt() // 16dp to px
                         recyclerView.addItemDecoration(EqualSpaceItemDecoration(spacing))
@@ -634,7 +628,6 @@ class Watch_Page : AppCompatActivity() {
                     break
                 } catch (e: Exception) {
                     delay(10_000)
-                    Log.e("DEBUG_WATCH_RECO", "Error fetching data", e)
                     break
                 }
             }
