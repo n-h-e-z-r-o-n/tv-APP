@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.GridLayoutManager
@@ -320,6 +321,7 @@ class FavAdapter(
     private val favRatingView: TextView,
     private val favYearView: TextView,
     private val favOverviewView: TextView,
+    private val RemoveFaveItemBtn: LinearLayout
 
 
 ) :  RecyclerView.Adapter<FavAdapter.ViewHolder>() {
@@ -329,14 +331,18 @@ class FavAdapter(
         val itemText: TextView = view.findViewById(R.id.itemText)
 
 
+
         init {
             itemView.setOnFocusChangeListener { _, hasFocus ->
-                // Scale animation
+
+                /*Scale animation
                 itemView.animate()
                     .scaleX(if (hasFocus) 1.02f else 1f)
                     .scaleY(if (hasFocus) 1.02f else 1f)
                     .setDuration(150)
                     .start()
+
+                 */
 
                 if (hasFocus) {
                     val pos = bindingAdapterPosition
@@ -356,6 +362,15 @@ class FavAdapter(
                         favRatingView.text   = item.voteAverage.toString()
                         favYearView.text     = item.releaseDate
                         favOverviewView.text = item.overview
+
+
+                        RemoveFaveItemBtn.setOnClickListener {
+                            FavoritesManager.removeFavorite( RemoveFaveItemBtn.context, item.imdbCode, item.showType)
+                        }
+
+
+
+
                     }
                 }
             }
@@ -394,6 +409,8 @@ class FavAdapter(
             intent.putExtra("type", type)
             context.startActivity(intent)
         }
+
+
     }
 
     override fun getItemCount() = items.size

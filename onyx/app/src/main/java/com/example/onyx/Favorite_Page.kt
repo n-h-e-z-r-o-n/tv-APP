@@ -7,6 +7,7 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import android.view.View
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import org.json.JSONArray
 import kotlin.text.ifEmpty
@@ -23,13 +24,10 @@ class Favorite_Page : AppCompatActivity() {
         val recyclerView = findViewById<RecyclerView>(R.id.favoritesRecycler)
         val emptyState = findViewById<TextView>(R.id.emptyState)
 
-        val spacingPx = (16 * resources.displayMetrics.density).toInt()
-        val itemMinWidthDp = 130
-        val itemMinWidthPx = (itemMinWidthDp * resources.displayMetrics.density).toInt()
-        val screenWidthPx = resources.displayMetrics.widthPixels
-        val spanCount = maxOf(1, (screenWidthPx - (40 * resources.displayMetrics.density).toInt()) / itemMinWidthPx)
 
-        recyclerView.layoutManager = GridLayoutManager(this, spanCount)
+
+        recyclerView.layoutManager = GridLayoutManager(this, 6)
+
 
         val favorites = FavoritesManager.getFavorites(this)
 
@@ -142,9 +140,12 @@ class Favorite_Page : AppCompatActivity() {
             val FavRating: TextView = findViewById(R.id.FavRating)
             val FavYear: TextView = findViewById(R.id.FavYear)
             val FavOverview: TextView = findViewById(R.id.FavOverview)
+            val RemoveFaveItem: LinearLayout = findViewById(R.id.RemoveFaveItem)
 
 
-            recyclerView.adapter = FavAdapter(items, R.layout.square_card, FavBackdrop, FavTitle, FavGenre, FavType, FavRating, FavYear, FavOverview, )
+
+
+            recyclerView.adapter = FavAdapter(items, R.layout.square_card, FavBackdrop, FavTitle, FavGenre, FavType, FavRating, FavYear, FavOverview,RemoveFaveItem )
         }
     }
 }

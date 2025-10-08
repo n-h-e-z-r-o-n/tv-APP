@@ -25,7 +25,6 @@
             <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_weight="1"
                 android:orientation="horizontal">
 
                 <ImageView
@@ -55,7 +54,7 @@
                     android:layout_height="wrap_content"
 
                     android:layout_gravity="bottom"
-                    android:layout_marginBottom="129dp"
+                    android:layout_marginBottom="182dp"
                     android:layout_marginStart="20dp"
                     android:orientation="vertical">
 
@@ -69,11 +68,11 @@
                         android:text="Sakamoto Days Part 2"
                         android:singleLine="false"
                         android:textColor="?attr/FG_color"
-                        android:textSize="25sp"
+                        android:textSize="40sp"
                         android:textStyle="bold"
                         android:layout_marginBottom="5dp"
-                        android:fontFamily="sans-serif-condensed-medium"
-                        />
+                        android:fontFamily="@font/h"
+                        tools:ignore="HardcodedText" />
                     <TextView
                         android:id="@+id/FavGenre"
                         android:layout_width="match_parent"
@@ -145,6 +144,9 @@
                             android:paddingStart="15dp"
                             />
 
+                        
+
+
 
                     </LinearLayout>
 
@@ -161,6 +163,43 @@
                         android:layout_marginBottom="20dp"
                         />
 
+                    <LinearLayout
+                        android:id="@+id/RemoveFaveItem"
+                        android:layout_width="wrap_content"
+                        android:layout_height="30dp"
+                        android:focusable="true"
+                        android:focusableInTouchMode="true"
+                        android:clickable="true"
+                        android:background="@drawable/tv_button_selector"
+                        android:nextFocusLeft="@+id/sideBar"
+                        android:paddingStart="9dp"
+                        android:paddingEnd="9dp"
+                        android:gravity="center">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/remove_fave"
+                            app:tint="?attr/AccentColor"
+                            />
+
+
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Remove From Favorites"
+                            android:textColor="@android:color/white"
+                            android:fontFamily="@font/i"
+                            android:textSize="8sp"
+                            android:layout_marginStart="2dp"
+                            tools:ignore="HardcodedText,SmallSp"
+                            android:alpha="0.6"
+                            />
+
+                    </LinearLayout>
+
+
                 </LinearLayout>
             </FrameLayout>
 
@@ -170,9 +209,8 @@
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/favoritesRecycler"
                 android:layout_width="match_parent"
-                android:layout_height="129dp"
+                android:layout_height="170dp"
                 android:clipToPadding="false"
-                android:padding="8dp"
                 android:overScrollMode="never"
                 android:layout_gravity="bottom"
                 android:scrollbars="none"

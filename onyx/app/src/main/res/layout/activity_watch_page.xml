@@ -470,19 +470,17 @@
             <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:id="@+id/Season_widget"
                 android:paddingTop="8dp"
                 android:paddingBottom="24dp"
-                android:scrollbars="none"
-                android:visibility="gone">
+                android:scrollbars="none">
 
                 <LinearLayout
-
+                    android:id="@+id/Season_widget"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:padding="16dp"
-
+                    android:visibility="gone"
                     >
 
                     <!-- Season Header -->

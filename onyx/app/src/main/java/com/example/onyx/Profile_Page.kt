@@ -186,7 +186,7 @@ class Profile_Page : AppCompatActivity() {
         val currentQuality = qualityValueText.text.toString()
         val currentIndex = qualities.indexOf(currentQuality)
         
-        val builder = androidx.appcompat.app.AlertDialog.Builder(this)
+        val builder = androidx.appcompat.app.AlertDialog.Builder(this, R.style.CustomDialogTheme)
         builder.setTitle("Select Video Quality")
             .setSingleChoiceItems(qualities, currentIndex) { dialog, which ->
                 val selectedQuality = qualities[which]
@@ -204,7 +204,7 @@ class Profile_Page : AppCompatActivity() {
         val currentTheme = GlobalUtils.getAppTheme(this)
         val currentIndex = themes.indexOf(currentTheme)
         
-        val builder = androidx.appcompat.app.AlertDialog.Builder(this)
+        val builder = androidx.appcompat.app.AlertDialog.Builder(this, R.style.CustomDialogTheme)
         builder.setTitle("Select App Theme")
             .setSingleChoiceItems(themes.map { it.replaceFirstChar { char -> char.uppercase() } }.toTypedArray(), currentIndex) { dialog, which ->
                 val selectedTheme = themes[which]
@@ -329,7 +329,7 @@ class Profile_Page : AppCompatActivity() {
     }
     
     private fun showInstallPermissionDialog() {
-        val builder = androidx.appcompat.app.AlertDialog.Builder(this)
+        val builder = androidx.appcompat.app.AlertDialog.Builder(this, R.style.CustomDialogTheme)
         builder.setTitle("Install Permission Required")
             .setMessage("This app needs permission to install APK files. Please enable 'Install unknown apps' permission in settings.")
             .setPositiveButton("Open Settings") { _, _ ->
@@ -343,7 +343,7 @@ class Profile_Page : AppCompatActivity() {
     }
     
     private fun showThemeChangeDialog(selectedTheme: String) {
-        val builder = androidx.appcompat.app.AlertDialog.Builder(this)
+        val builder = androidx.appcompat.app.AlertDialog.Builder(this, R.style.CustomDialogTheme)
         builder.setTitle("Theme Changed")
             .setMessage("Theme changed to ${selectedTheme.replaceFirstChar { it.uppercase() }}. Would you like to restart the app now to see the full effect?")
             .setPositiveButton("Restart Now") { _, _ ->
@@ -357,7 +357,7 @@ class Profile_Page : AppCompatActivity() {
     }
     
     private fun showRestartDialog() {
-        val builder = androidx.appcompat.app.AlertDialog.Builder(this)
+        val builder = androidx.appcompat.app.AlertDialog.Builder(this, R.style.CustomDialogTheme)
         builder.setTitle("Restart App")
             .setMessage("Are you sure you want to restart the application? This will close all current activities and restart the app.")
             .setPositiveButton("Restart") { _, _ ->
