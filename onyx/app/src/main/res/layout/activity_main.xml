@@ -40,7 +40,7 @@
                 android:shadowDy="6"
                 android:shadowRadius="4"
                 android:fontFamily="@font/j"
-                android:visibility="gone"
+                android:visibility="visible"
                 />
 
                 <ImageView
