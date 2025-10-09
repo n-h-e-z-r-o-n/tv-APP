@@ -263,11 +263,11 @@ class Profile_Page : AppCompatActivity() {
                 val input: InputStream = connection.inputStream
                 
                 // Create downloads directory if it doesn't exist
-                val downloadsDir = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "OnyxUpdates")
+                val downloadsDir = File(getExternalFilesDir(null), "OnyxUpdates")
                 if (!downloadsDir.exists()) {
                     downloadsDir.mkdirs()
                 }
-                
+
                 val apkFile = File(downloadsDir, "onyx-update.apk")
                 val output = FileOutputStream(apkFile)
                 

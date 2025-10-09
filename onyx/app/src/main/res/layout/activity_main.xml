@@ -25,7 +25,23 @@
                 android:layout_width="625dp"
                 android:layout_height="438dp"
                 android:contentDescription="@string/app_name"
+                android:visibility="gone"
                 android:src="@raw/logo" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="ONYX"
+                android:textSize="250sp"
+                android:textColor="?attr/FG_color"
+                tools:ignore="HardcodedText"
+                android:shadowColor="?attr/AccentColor"
+                android:shadowDx="5"
+                android:shadowDy="6"
+                android:shadowRadius="4"
+                android:fontFamily="@font/j"
+                android:visibility="gone"
+                />
 
                 <ImageView
                     android:id="@+id/LoadingAnimation"

@@ -544,13 +544,14 @@
                                 android:layout_height="48dp"
                                 android:layout_marginEnd="8dp"
                                 android:text="Season 1"
-                                android:textColor="#FFFFFF"
+                                android:textColor="?attr/FG_color"
                                 android:textSize="14sp"
                                 android:textStyle="bold"
                                 android:background="@drawable/tv_button_selector"
                                 android:focusable="true"
                                 android:focusableInTouchMode="true"
-                                android:stateListAnimator="@null" />
+                                android:stateListAnimator="@null"
+                                tools:ignore="HardcodedText" />
 
 
                         </LinearLayout>

@@ -1,5 +1,7 @@
 package com.example.onyx
 
+import android.net.http.SslError
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.MotionEvent
@@ -7,6 +9,7 @@ import android.webkit.*
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.OptIn
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.util.UnstableApi
@@ -18,6 +21,7 @@ class Play : AppCompatActivity() {
 
     private var isVideoLaunching = false
 
+    @RequiresApi(Build.VERSION_CODES.N)
     override fun onCreate(savedInstanceState: Bundle?) {
         GlobalUtils.applyTheme(this)
         super.onCreate(savedInstanceState)
@@ -49,51 +53,82 @@ class Play : AppCompatActivity() {
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
 
-                webView.evaluateJavascript(
-                    """
-                    (function() {
-                        // Common ad selectors
-                        const selectors = [
-                            'iframe[src*="ads"]',
-                            'iframe[src*="doubleclick"]',
-                            'iframe[src*="adservice"]',
-                            'div[id*="ad"]',
-                            'div[class*="ad"]',
-                            'div[class*="ads"]',
-                            'div[class*="banner"]',
-                            'div[class*="popup"]',
-                            '[id^="ad_"]',
-                            '[class^="ad-"]',
-                            '.overlay',
-                            '.adsbox',
-                            '#ads',
-                            '#overlay',
-                            '#banner'
-                        ];
-            
-                        selectors.forEach(sel => {
-                            document.querySelectorAll(sel).forEach(el => {
-                                el.remove(); // 🚫 Remove the ad element
+
+
+                webView.postDelayed({
+                    webView.evaluateJavascript(
+                        """
+                        (function() {
+                            // ✅ Target only known ad patterns
+                            const safeSelectors = [
+                                'iframe[src*="doubleclick"]',
+                                'iframe[src*="adservice"]',
+                                'iframe[src*="/ads"]',
+                                'div[id^="ad_"]',
+                                'div[id*="_ad_"]',
+                                '.adsbox',
+                                '#ads',
+                                '.ad-banner',
+                                '.advertisement',
+                                '.sponsor',
+                                'div[class="ad-container"]'
+                            ];
+                            
+                            safeSelectors.forEach(sel => {
+                                document.querySelectorAll(sel).forEach(el => {
+                                    el.remove();
+                                });
                             });
-                        });
-            
-                        // Also remove fixed position elements that usually block content
-                        document.querySelectorAll('*').forEach(el => {
-                            const style = window.getComputedStyle(el);
-                            if (style.position === 'fixed' && (el.offsetHeight > 50 || el.offsetWidth > 50)) {
-                                el.remove();
+                        
+                            // ✅ Remove only large fixed-position elements covering the center
+                            const centerX = window.innerWidth / 2;
+                            const centerY = window.innerHeight / 2;
+                        
+                            document.querySelectorAll('*').forEach(el => {
+                                const style = window.getComputedStyle(el);
+                                if (style.position === 'fixed') {
+                                    const rect = el.getBoundingClientRect();
+                                    const coversCenter = rect.left <= centerX && rect.right >= centerX &&
+                                                         rect.top <= centerY && rect.bottom >= centerY;
+                        
+                                    if (coversCenter && (rect.height > 80 || rect.width > 80)) {
+                                        el.remove();
+                                    }
+                                }
+                            });
+                        
+                            // ✅ Watch for newly injected ads (MutationObserver)
+                            if (!window.__adObserverAdded) {
+                                const observer = new MutationObserver(mutations => {
+                                    mutations.forEach(m => {
+                                        m.addedNodes.forEach(node => {
+                                            if (node.nodeType === 1) {
+                                                const el = node;
+                                                if (el.matches('.adsbox, .ad-banner, iframe[src*="doubleclick"], iframe[src*="adservice"]')) {
+                                                    el.remove();
+                                                }
+                                            }
+                                        });
+                                    });
+                                });
+                        
+                                observer.observe(document.body, { childList: true, subtree: true });
+                                window.__adObserverAdded = true;
                             }
-                        });
-            
-                        console.log('✅ Inline ads cleaned up');
-                    })();
-                    """.trimIndent(), null
-                )
+                        
+                            console.log('✅ Safe ad cleanup executed');
+                        })();
+                    """.trimIndent(),
+                        null
+                    )
+                }, 6000L) // ⏱️ 2-second delay */
+
+
 
                 // Wait for page to render, then simulate a few center clicks
                 webView.postDelayed({
-                    simulateRepeatedCenterClicks(webView, repeatCount = 3, intervalMs = 1200L)
-                }, 2000)
+                    simulateRepeatedCenterClicks(webView, repeatCount = 10, intervalMs = 1200L)
+                }, 3000)
             }
 
             override fun shouldInterceptRequest(
@@ -136,16 +171,6 @@ class Play : AppCompatActivity() {
                     }
                 }
 
-                /*
-                if (url.endsWith(".mp4") || url.endsWith(".m3u8")
-                    || url.endsWith(".webm") || url.endsWith(".mov")
-                ) {
-                    runOnUiThread {
-                        playVideoExternally(url)
-                    }
-                }
-
-                 */
 
                 if (url.contains("doubleclick.net") ||
                     url.contains("googlesyndication.com") ||
@@ -166,15 +191,17 @@ class Play : AppCompatActivity() {
                 request: WebResourceRequest?
             ): Boolean {
                 val url = request?.url.toString()
-                return if (url.startsWith("https://vidsrc.to/") || 
+                return if (url.startsWith("https://vidsrc.to/") ||
                           url.startsWith("https://player.embed-api.stream/") ||
                           url.startsWith("https://www.2embed.skin/") ||
                           url.startsWith("https://www.2embed.cc/") ||
                           url.startsWith("https://embed.su/") ||
-                          url.startsWith("https://www.primewire.tf/")) {
-                    false // allow server navigation
+                          url.startsWith("https://www.primewire.tf/") ||
+                          url.startsWith("https://www.vidking.net/")
+                    ) {
+                    false
                 } else {
-                    Toast.makeText(this@Play, "Blocked $url", Toast.LENGTH_SHORT).show()
+                    //Toast.makeText(this@Play, "Blocked $url", Toast.LENGTH_SHORT).show()
                     true
                 }
             }
@@ -201,6 +228,9 @@ class Play : AppCompatActivity() {
         webView.loadUrl(url)
         Log.d("DEBUG_WEBVIEW", "imdbCode: $imdbCode - type: $type -seasonNo:  $seasonNo - episodeNo: $episodeNo - server: $server ")
         Log.d("DEBUG_WEBVIEW", "url: $url ")
+
+
+
 
 
     }
@@ -276,6 +306,7 @@ class Play : AppCompatActivity() {
                 3 -> "https://www.2embed.skin/embed/$showId"
                 4 -> "https://embed.su/embed/movie/$showId"
                 5 -> "https://www.primewire.tf/embed/movie?tmdb=$showId"
+                6 -> "https://www.vidking.net/embed/movie/$showId"
                 else -> "https://vidsrc.to/embed/movie/$showId"
             }
         } else {
@@ -285,6 +316,7 @@ class Play : AppCompatActivity() {
                 3 -> "https://www.2embed.cc/embedtv/$showId&s=$seasonNo&e=$episodeNo"
                 4 -> "https://embed.su/embed/tv/$showId/$seasonNo/$episodeNo"
                 5 -> "https://www.primewire.tf/embed/tv?tmdb=$showId&season=$seasonNo&episode=$episodeNo"
+                6 -> "https://www.vidking.net/embed/tv/$showId/$seasonNo/$episodeNo"
                 else -> "https://vidsrc.to/embed/tv/$showId/$seasonNo/$episodeNo"
             }
         }
@@ -297,6 +329,7 @@ class Play : AppCompatActivity() {
             "2Embed" -> 3
             "Embed.su" -> 4
             "PrimeWire" -> 5
+            "vidking" -> 6
             else -> 1 // Default to VidSrc.to
         }
     }

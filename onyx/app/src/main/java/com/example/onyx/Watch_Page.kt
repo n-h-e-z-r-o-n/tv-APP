@@ -7,6 +7,7 @@ import android.graphics.Typeface
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import android.util.TypedValue
 import android.view.KeyEvent
 import android.widget.ImageView
 import android.widget.TextView
@@ -47,7 +48,8 @@ class Watch_Page : AppCompatActivity() {
         "Embed API Stream",
         "2Embed",
         "Embed.su",
-        "PrimeWire"
+        "PrimeWire",
+        "vidking"
     )
     
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -62,9 +64,8 @@ class Watch_Page : AppCompatActivity() {
         if(!imdbCode.isNullOrEmpty()){
             fetchData(imdbCode.toString(), type.toString())
         }else{
-            fetchData("110316", "tv")
+            fetchData("1311031 ", "movie")
         }
-
 
     }
 
@@ -352,8 +353,8 @@ class Watch_Page : AppCompatActivity() {
                     marginEnd = dpToPx(8) // 8dp margin at the end
                 }
 
-                setTextColor(ContextCompat.getColor(context, android.R.color.white))
-                //setBackgroundColor(Color.parseColor("#3D5AFE"))
+                setTextColor(resolveAttrColor(context, R.attr.FG_color))
+
             }
 
             SeasonButton.setOnClickListener {
@@ -368,6 +369,13 @@ class Watch_Page : AppCompatActivity() {
             track++
         }
 
+    }
+
+    //setBackgroundColor(Color.parseColor("#3D5AFE"))
+    private fun resolveAttrColor(context: Context, attr: Int): Int {
+        val typedValue = TypedValue()
+        context.theme.resolveAttribute(attr, typedValue, true)
+        return typedValue.data
     }
 
     private fun dpToPx(dp: Int): Int {
