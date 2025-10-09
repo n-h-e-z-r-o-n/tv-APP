@@ -6,7 +6,7 @@
                 android:type="radial"
                 android:centerX="50%"
                 android:centerY="50%"
-                android:gradientRadius="180dp"
+                android:gradientRadius="190dp"
                 android:startColor="@android:color/transparent"
                 android:endColor="?attr/AccentColor"
                 />

@@ -297,6 +297,7 @@ class CastAdapter(
         notifyItemInserted(items.size - 1)
 
     }
+
 }
 
 
@@ -359,13 +360,18 @@ class FavAdapter(
                         favTitleView.text    = item.title
                         favGenreView.text    = item.genres
                         favTypeView.text     = item.showType          // ensure you have a `type` field
-                        favRatingView.text   = item.voteAverage.toString()
+                        favRatingView.text   = "IMDB ${item.voteAverage}"
                         favYearView.text     = item.releaseDate
                         favOverviewView.text = item.overview
 
 
                         RemoveFaveItemBtn.setOnClickListener {
                             FavoritesManager.removeFavorite( RemoveFaveItemBtn.context, item.imdbCode, item.showType)
+                            val pos = bindingAdapterPosition
+                            if (pos != RecyclerView.NO_POSITION) {
+                                items.removeAt(pos)
+                                notifyItemRemoved(pos)
+                            }
                         }
 
 
@@ -421,6 +427,7 @@ class FavAdapter(
         notifyItemInserted(items.size - 1)
 
     }
+
 }
 
 
@@ -436,7 +443,7 @@ data class FavItem(
     val production: String,
     val parentalGuide: String,
     val imdbCode: String,
-    val showType : String
+    val showType : String,
 )
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////

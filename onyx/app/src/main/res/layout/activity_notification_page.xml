@@ -21,17 +21,18 @@
             android:overScrollMode="never"
             android:scrollbars="none"
             android:paddingStart="41dp"
+            android:gravity="center"
             tools:layout_editor_absoluteY="8dp"
             tools:ignore="RtlSymmetry">
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/notification_widget"
                 android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1"
+                android:layout_height="wrap_content"
                 android:clipToPadding="false"
                 android:overScrollMode="never"
                 android:scrollbars="none"
+
                 tools:ignore="NestedWeights"
                 android:nextFocusLeft="@id/btnNotification"/>
 

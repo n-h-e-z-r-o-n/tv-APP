@@ -9,6 +9,7 @@
         <item name="AccentColor">#DAA520</item>
         <item name="SidebarFocus">#3D5AFE</item>
         <item name="SidebarDefault">#FFFFFF</item>
+        <item name="notBudge">#3D5AFE</item>
     </style>
 
     <!-- Light Theme -->
@@ -19,6 +20,7 @@
         <item name="AccentColor">#3D5AFE</item>
         <item name="SidebarFocus">#3D5AFE</item>
         <item name="SidebarDefault">#0C0404</item>
+        <item name="notBudge">#3D5AFE</item>
     </style>
 
     <!-- AMOLED Pure Black Theme -->
@@ -29,6 +31,7 @@
         <item name="AccentColor">#FF0266</item>
         <item name="SidebarFocus">#FF0266</item>
         <item name="SidebarDefault">#B0B0B0</item>
+        <item name="notBudge">#3D5AFE</item>
     </style>
 
     <!-- High Contrast Theme -->
@@ -39,6 +42,7 @@
         <item name="AccentColor">#FFFF00</item>
         <item name="SidebarFocus">#FFFF00</item>
         <item name="SidebarDefault">#FFFFFF</item>
+        <item name="notBudge">#3D5AFE</item>
 
     </style>
 
@@ -50,6 +54,7 @@
         <item name="AccentColor">#00C853</item>
         <item name="SidebarFocus">#00C853</item>
         <item name="SidebarDefault">#A5D6A7</item>
+        <item name="notBudge">#3D5AFE</item>
     </style>
 
     <!-- Custom Red Theme -->
@@ -60,6 +65,7 @@
         <item name="AccentColor">#E53935</item>
         <item name="SidebarFocus">#E53935</item>
         <item name="SidebarDefault">#FFCDD2</item>
+        <item name="notBudge">#3D5AFE</item>
     </style>
 
     <style name="Theme.Onyx.Purple" parent="Theme.AppCompat.DayNight.NoActionBar">
@@ -69,6 +75,7 @@
         <item name="AccentColor">#86608E</item>
         <item name="SidebarFocus">#512888</item>
         <item name="SidebarDefault">#FFFFFF</item>
+        <item name="notBudge">#3D5AFE</item>
     </style>
 
 

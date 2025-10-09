@@ -32,65 +32,6 @@
                 android:paddingBottom="20dp"
                 tools:ignore="RtlSymmetry">
 
-                <!-- Profile Header -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:paddingBottom="30dp">
-
-                    <ImageView
-                        android:id="@+id/profileAvatar"
-                        android:layout_width="50dp"
-                        android:layout_height="50dp"
-                        android:background="@drawable/ic_person"
-                        android:scaleType="centerCrop"
-                        android:backgroundTint="?attr/FG_color"
-                        android:contentDescription="Profile Avatar"
-                        android:alpha="0.8"
-                        tools:ignore="HardcodedText" />
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical"
-                        android:layout_marginStart="20dp">
-
-                        <TextView
-                            android:id="@+id/profileName"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="User Profile"
-                            android:textColor="?attr/FG_color"
-                            android:textSize="24sp"
-                            android:textStyle="bold"
-                            android:alpha="0.8"
-                            tools:ignore="HardcodedText" />
-
-                        <TextView
-                            android:id="@+id/profileEmail"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:textColor="?attr/FG_color"
-                            android:textSize="16sp"
-                            android:layout_marginTop="4dp" />
-
-                    </LinearLayout>
-
-                </LinearLayout>
-
-                <!-- Statistics Section -->
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Statistics"
-                    android:textColor="?attr/FG_color"
-                    android:textSize="20sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="15dp"
-                    tools:ignore="HardcodedText" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -183,6 +124,7 @@
                         android:padding="15dp"
                         android:background="@drawable/setting_item_background"
                         android:layout_marginBottom="8dp"
+                        android:layout_marginTop="8dp"
                         android:focusable="true"
                         android:clickable="true">
 

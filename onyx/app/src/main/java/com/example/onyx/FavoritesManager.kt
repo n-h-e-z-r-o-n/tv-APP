@@ -29,6 +29,7 @@ object FavoritesManager {
             oid == id && otype == type
         }
         saveFavorites(context, list)
+
     }
 
     fun isFavorite(context: Context, id: String, type: String): Boolean {

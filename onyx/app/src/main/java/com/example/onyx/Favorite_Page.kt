@@ -70,7 +70,7 @@ class Favorite_Page : AppCompatActivity() {
                     val posterUrl =    "https://image.tmdb.org/t/p/w780${obj.optString("poster_path", "")}"
                     val originalTitle = obj.optString("name",  obj.optString("title", ""))
 
-                    val voteAverage = obj.optString("vote_average", " ")
+                    val voteAverage = obj.optString("vote_average", " ").substring(0, 3)
 
                     // Genres
                     val genresList = mutableListOf<String>()
@@ -100,7 +100,7 @@ class Favorite_Page : AppCompatActivity() {
                         title = originalTitle,
                         posterUrl = posterUrl,
                         backdropUrl = backdropUrl,
-                        releaseDate = releaseDate,
+                        releaseDate = releaseDate.substring(0, 4),
                         runtime = runtime,
                         overview = overview,
                         voteAverage = voteAverage,
