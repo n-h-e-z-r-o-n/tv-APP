@@ -1,6 +1,5 @@
 package com.example.onyx
 
-import android.net.http.SslError
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -15,10 +14,10 @@ import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.util.UnstableApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import org.json.JSONObject
 
 class Play : AppCompatActivity() {
 
+    @Volatile
     private var isVideoLaunching = false
 
     @RequiresApi(Build.VERSION_CODES.N)
@@ -235,29 +234,31 @@ class Play : AppCompatActivity() {
 
     }
 
+
     @OptIn(UnstableApi::class)
     private fun playVideoExternally(videoUrl: String) {
-        if (isVideoLaunching) {
-            Log.d("DEBUG_TAG_PlayActivity", "Video launch ignored: already launching.")
-            return
+        synchronized(this) {
+            if (isVideoLaunching) {
+                Log.d("DEBUG_TAG_PlayActivity", "Video launch ignored: already launching.")
+                return
+            }
+            isVideoLaunching = true
         }
-        isVideoLaunching = true
+
         Log.d("DEBUG_TAG_PlayActivity", "Launching external video: $videoUrl")
 
         try {
-        PlayerManager.playVideoExternally(this, videoUrl)
-
-            // Finish safely after short delay
-            lifecycleScope.launch {
-                delay(500)
-        finish()
-    }
+            PlayerManager.releasePlayer()
+            PlayerManager.playVideoExternally(this, videoUrl)
+            finish()
         } catch (e: Exception) {
-            isVideoLaunching = false
-            Toast.makeText(this, "Failed to launch player", Toast.LENGTH_SHORT).show()
-            Log.e("DEBUG_TAG_PlayActivity", "Error launching video", e)
+            Log.e("DEBUG_TAG_PlayActivity", "Failed to launch external video", e)
+            synchronized(this) {
+                isVideoLaunching = false
+            }
         }
     }
+
 
     private fun simulateRepeatedCenterClicks(
         webView: WebView,

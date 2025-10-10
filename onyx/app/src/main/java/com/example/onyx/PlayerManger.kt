@@ -4,8 +4,10 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
+import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
+import androidx.media3.common.Tracks
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.DefaultRenderersFactory
@@ -15,38 +17,40 @@ import androidx.media3.datasource.DefaultHttpDataSource
 
 @UnstableApi
 object PlayerManager {
-    
+
     private var exoPlayer: ExoPlayer? = null
     private var currentVideoUrl: String? = null
+    private var availableQualities: List<String> = listOf("Auto")
 
     fun playVideoExternally(context: Context, videoUrl: String) {
-        Log.d("PlayerManager", "Playing video: $videoUrl")
-        
+
         val intent = Intent(context, Video_payer::class.java).apply {
             putExtra("video_url", videoUrl)
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
         }
         context.startActivity(intent)
     }
-    
+
     fun initializePlayer(context: Context, videoUrl: String): ExoPlayer {
         releasePlayer()
-        
+
         val trackSelector = DefaultTrackSelector(context).apply {
             setParameters(
                 buildUponParameters()
                     .setMaxVideoSize(1920, 1080) // Allow up to 1080p by default
                     .setPreferredVideoMimeType("video/mp4")
                     .setAllowVideoMixedMimeTypeAdaptiveness(true)
-                    .setAllowAudioMixedMimeTypeAdaptiveness(true)
                     .setAllowVideoNonSeamlessAdaptiveness(true)
-                    .setAllowAudioNonSeamlessAdaptiveness(true)
+                    .setMaxAudioChannelCount(2) // Limit to stereo audio
+                    .setPreferredAudioLanguage("en") // Prefer English audio
+                    .setSelectUndeterminedTextLanguage(true) // Select first available audio track
+                    .setForceHighestSupportedBitrate(true) // Force single track selection
             )
         }
-        
+
         val renderersFactory = DefaultRenderersFactory(context)
             .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER)
-        
+
         exoPlayer = ExoPlayer.Builder(context)
             .setRenderersFactory(renderersFactory)
             .setTrackSelector(trackSelector)
@@ -54,72 +58,52 @@ object PlayerManager {
             .apply {
                 val mediaItem = MediaItem.fromUri(videoUrl)
                 setMediaItem(mediaItem)
+                addListener(object : Player.Listener {
+                    override fun onTracksChanged(tracks: Tracks) {
+                        updateAvailableQualities(tracks)
+                    }
+                })
                 prepare()
                 playWhenReady = true
             }
-        
+
         currentVideoUrl = videoUrl
         return exoPlayer!!
     }
-    
-    fun getPlayer(): ExoPlayer? = exoPlayer
-    
-    fun isPlayerInitialized(): Boolean = exoPlayer != null
-    
-    fun getCurrentPosition(): Long = exoPlayer?.currentPosition ?: 0L
-    
-    fun getDuration(): Long = exoPlayer?.duration ?: 0L
-    
-    fun isPlaying(): Boolean = exoPlayer?.isPlaying ?: false
-    
-    fun pause() {
-        exoPlayer?.pause()
-    }
-    
+
+
+
     fun play() {
         exoPlayer?.play()
     }
-    
-    fun seekTo(position: Long) {
-        exoPlayer?.seekTo(position)
-    }
-    
-    fun setPlaybackSpeed(speed: Float) {
-        exoPlayer?.setPlaybackSpeed(speed)
-    }
-    
-    fun setVolume(volume: Float) {
-        exoPlayer?.volume = volume
-    }
-    
-    fun getVolume(): Float = exoPlayer?.volume ?: 1.0f
-    
-    fun addPlayerListener(listener: Player.Listener) {
-        exoPlayer?.addListener(listener)
-    }
-    
-    fun removePlayerListener(listener: Player.Listener) {
-        exoPlayer?.removeListener(listener)
-    }
-    
+
+
     fun releasePlayer() {
         exoPlayer?.let { player ->
             player.release()
             exoPlayer = null
             currentVideoUrl = null
+            availableQualities = listOf("Auto")
         }
     }
-    
+
     fun getCurrentVideoUrl(): String? = currentVideoUrl
-    
+
     fun setVideoQuality(qualityIndex: Int) {
         exoPlayer?.let { player ->
             val trackSelector = player.trackSelector as? DefaultTrackSelector ?: return
-            
+
             Log.d("PlayerManager", "Setting video quality to index: $qualityIndex")
-            
-            when (qualityIndex) {
-                0 -> { // Auto
+
+            if (qualityIndex >= availableQualities.size) {
+                Log.w("PlayerManager", "Quality index $qualityIndex out of bounds")
+                return
+            }
+
+            val selectedQuality = availableQualities[qualityIndex]
+
+            when (selectedQuality) {
+                "Auto" -> {
                     trackSelector.setParameters(
                         trackSelector.buildUponParameters()
                             .clearVideoSizeConstraints()
@@ -128,7 +112,7 @@ object PlayerManager {
                             .setAllowVideoNonSeamlessAdaptiveness(true)
                     )
                 }
-                1 -> { // 1080p
+                "1080p" -> {
                     trackSelector.setParameters(
                         trackSelector.buildUponParameters()
                             .setMaxVideoSize(1920, 1080)
@@ -137,7 +121,7 @@ object PlayerManager {
                             .setAllowVideoNonSeamlessAdaptiveness(false)
                     )
                 }
-                2 -> { // 720p
+                "720p" -> {
                     trackSelector.setParameters(
                         trackSelector.buildUponParameters()
                             .setMaxVideoSize(1280, 720)
@@ -146,7 +130,7 @@ object PlayerManager {
                             .setAllowVideoNonSeamlessAdaptiveness(false)
                     )
                 }
-                3 -> { // 480p
+                "480p" -> {
                     trackSelector.setParameters(
                         trackSelector.buildUponParameters()
                             .setMaxVideoSize(854, 480)
@@ -155,7 +139,7 @@ object PlayerManager {
                             .setAllowVideoNonSeamlessAdaptiveness(false)
                     )
                 }
-                4 -> { // 360p
+                "360p" -> {
                     trackSelector.setParameters(
                         trackSelector.buildUponParameters()
                             .setMaxVideoSize(640, 360)
@@ -164,7 +148,7 @@ object PlayerManager {
                             .setAllowVideoNonSeamlessAdaptiveness(false)
                     )
                 }
-                5 -> { // 240p
+                "240p" -> {
                     trackSelector.setParameters(
                         trackSelector.buildUponParameters()
                             .setMaxVideoSize(426, 240)
@@ -173,19 +157,43 @@ object PlayerManager {
                             .setAllowVideoNonSeamlessAdaptiveness(false)
                     )
                 }
+                else -> {
+                    // Handle custom resolutions (e.g., "1440p", "2160p", etc.)
+                    val resolution = selectedQuality.replace("p", "").toIntOrNull()
+                    if (resolution != null) {
+                        val width = when {
+                            resolution >= 2160 -> 3840 // 4K
+                            resolution >= 1440 -> 2560 // 1440p
+                            resolution >= 1080 -> 1920 // 1080p
+                            resolution >= 720 -> 1280  // 720p
+                            resolution >= 480 -> 854   // 480p
+                            resolution >= 360 -> 640   // 360p
+                            else -> 426                // 240p
+                        }
+                        val height = resolution
+                        
+                        trackSelector.setParameters(
+                            trackSelector.buildUponParameters()
+                                .setMaxVideoSize(width, height)
+                                .setMinVideoSize(width, height)
+                                .setAllowVideoMixedMimeTypeAdaptiveness(false)
+                                .setAllowVideoNonSeamlessAdaptiveness(false)
+                        )
+                    }
+                }
             }
-            
-            Log.d("PlayerManager", "Quality parameters applied successfully")
+
+            Log.d("PlayerManager", "Quality parameters applied successfully for: $selectedQuality")
         }
     }
-    
+
     fun getCurrentVideoQuality(): String {
         exoPlayer?.let { player ->
             val videoFormat = player.videoFormat
             if (videoFormat != null) {
                 val width = videoFormat.width
                 val height = videoFormat.height
-                
+
                 return when {
                     width >= 1920 && height >= 1080 -> "1080p"
                     width >= 1280 && height >= 720 -> "720p"
@@ -198,7 +206,7 @@ object PlayerManager {
         }
         return "Auto"
     }
-    
+
     fun getVideoInfo(): String {
         exoPlayer?.let { player ->
             val videoFormat = player.videoFormat
@@ -211,10 +219,56 @@ object PlayerManager {
         }
         return "Video info not available"
     }
-    
+
+    private fun updateAvailableQualities(tracks: Tracks) {
+        val qualities = mutableListOf("Auto")
+        
+        // Get video tracks
+        val videoTrackGroup = tracks.groups.find { it.type == C.TRACK_TYPE_VIDEO }
+        
+        if (videoTrackGroup != null) {
+            val uniqueResolutions = mutableSetOf<Pair<Int, Int>>()
+            
+            // Extract unique resolutions from available tracks
+            for (i in 0 until videoTrackGroup.length) {
+                val format = videoTrackGroup.getTrackFormat(i)
+                val width = format.width
+                val height = format.height
+                
+                if (width > 0 && height > 0) {
+                    uniqueResolutions.add(Pair(width, height))
+                }
+            }
+            
+            // Convert resolutions to quality labels and sort by resolution (highest first)
+            val qualityLabels = uniqueResolutions.map { (width, height) ->
+                when {
+                    width >= 1920 && height >= 1080 -> "1080p"
+                    width >= 1280 && height >= 720 -> "720p"
+                    width >= 854 && height >= 480 -> "480p"
+                    width >= 640 && height >= 360 -> "360p"
+                    width >= 426 && height >= 240 -> "240p"
+                    else -> "${width}p"
+                }
+            }.distinct().sortedWith(compareByDescending { 
+                when (it) {
+                    "1080p" -> 1080
+                    "720p" -> 720
+                    "480p" -> 480
+                    "360p" -> 360
+                    "240p" -> 240
+                    else -> it.replace("p", "").toIntOrNull() ?: 0
+                }
+            })
+            
+            qualities.addAll(qualityLabels)
+        }
+        
+        availableQualities = qualities
+        Log.d("PlayerManager", "Available qualities updated: $availableQualities")
+    }
+
     fun getAvailableQualities(): List<String> {
-        // This would ideally get the actual available qualities from the media
-        // For now, return the standard options
-        return listOf("Auto", "1080p", "720p", "480p", "360p", "240p")
+        return availableQualities
     }
 }

@@ -17,6 +17,7 @@ import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
+import androidx.media3.common.Tracks
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 import androidx.media3.common.util.UnstableApi
@@ -25,13 +26,13 @@ import java.util.*
 
 @UnstableApi
 class Video_payer : AppCompatActivity(), Player.Listener {
-    
+
     private lateinit var playerView: PlayerView
     private lateinit var progressBar: ProgressBar
     private lateinit var overlayContainer: View
     private lateinit var bottomBar: LinearLayout
     private lateinit var centerOverlay: FrameLayout
-    
+
     // Control buttons
     private lateinit var btnPlayPause: ImageButton
     private lateinit var btnRewind: ImageButton
@@ -44,13 +45,13 @@ class Video_payer : AppCompatActivity(), Player.Listener {
     private lateinit var btnSettings: ImageButton
     private lateinit var btnClose: ImageButton
     private lateinit var btnFullscreen: ImageButton
-    
-    
+
+
     // Seek bar and time displays
     private lateinit var seekBar: SeekBar
     private lateinit var txtCurrentTime: TextView
     private lateinit var txtDuration: TextView
-    
+
     private var exoPlayer: ExoPlayer? = null
     private var isControlsVisible = true
     private var isFullscreen = false
@@ -60,13 +61,13 @@ class Video_payer : AppCompatActivity(), Player.Listener {
     private var tapCount = 0
     private var progressHandler = Handler(Looper.getMainLooper())
     private var progressRunnable: Runnable? = null
-    
+
     // Playback speeds
     private val playbackSpeeds = listOf(0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 2.0f)
     private var currentSpeedIndex = 2 // Default to 1.0x
-    
+
     // Quality options - will be populated from PlayerManager
-    private var qualityOptions = listOf("Auto", "1080p", "720p", "480p", "360p", "240p")
+    private var qualityOptions = listOf("Auto")
     private var currentQualityIndex = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -83,14 +84,14 @@ class Video_payer : AppCompatActivity(), Player.Listener {
         setupGestures()
         setupBackPressedCallback()
     }
-    
+
     private fun initializeViews() {
         playerView = findViewById(R.id.player_view)
         progressBar = findViewById(R.id.progress_bar)
         overlayContainer = findViewById(R.id.overlay_container)
         bottomBar = findViewById(R.id.bottom_bar)
         centerOverlay = findViewById(R.id.center_overlay)
-        
+
         // Control buttons
         btnPlayPause = findViewById(R.id.btn_play_pause)
         btnRewind = findViewById(R.id.btn_rewind)
@@ -103,13 +104,13 @@ class Video_payer : AppCompatActivity(), Player.Listener {
         btnSettings = findViewById(R.id.btn_settings)
         btnClose = findViewById(R.id.btn_close)
         btnFullscreen = findViewById(R.id.btn_fullscreen)
-        
+
         // Seek bar and time displays
         seekBar = findViewById(R.id.seek_bar)
         txtCurrentTime = findViewById(R.id.txt_current_time)
         txtDuration = findViewById(R.id.txt_duration)
     }
-    
+
     private fun setupPlayer() {
         val videoUrl = intent.getStringExtra("video_url")
         if (videoUrl != null) {
@@ -121,7 +122,7 @@ class Video_payer : AppCompatActivity(), Player.Listener {
                 updateMuteButton()
                 updateSpeedButton()
                 updateQualityButton()
-                // Get available qualities from PlayerManager
+                // Initial quality options - will be updated when tracks are available
                 qualityOptions = PlayerManager.getAvailableQualities()
             }
         } else {
@@ -129,58 +130,58 @@ class Video_payer : AppCompatActivity(), Player.Listener {
             finish()
         }
     }
-    
+
     private fun setupControls() {
         // Play/Pause button
         btnPlayPause.setOnClickListener {
             togglePlayPause()
         }
-        
+
         // Rewind button (10 seconds)
         btnRewind.setOnClickListener {
             seekRelative(-10000)
         }
-        
+
         // Fast forward button (10 seconds)
         btnFastForward.setOnClickListener {
             seekRelative(10000)
         }
-        
+
         // Mute button
         btnMute.setOnClickListener {
             toggleMute()
         }
-        
+
         // Speed button
         btnSpeed.setOnClickListener {
             showSpeedDialog()
         }
-        
+
         // Quality button
         btnQuality.setOnClickListener {
             showQualityDialog()
         }
-        
+
         // Refresh button
         btnRefresh.setOnClickListener {
             refreshVideo()
         }
-        
+
         // Settings button
         btnSettings.setOnClickListener {
             showSettingsDialog()
         }
-        
+
         // Close button
         btnClose.setOnClickListener {
             finish()
         }
-        
+
         // Fullscreen button
         btnFullscreen.setOnClickListener {
             toggleFullscreen()
         }
-        
+
         // Seek bar
         seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
@@ -190,11 +191,11 @@ class Video_payer : AppCompatActivity(), Player.Listener {
                     txtCurrentTime.text = formatTime(position)
                 }
             }
-            
+
             override fun onStartTrackingTouch(seekBar: SeekBar?) {
                 // No auto-hide during seek
             }
-            
+
             override fun onStopTrackingTouch(seekBar: SeekBar?) {
                 val duration = exoPlayer?.duration ?: 0L
                 val position = (seekBar?.progress ?: 0) * duration / 1000
@@ -202,7 +203,7 @@ class Video_payer : AppCompatActivity(), Player.Listener {
             }
         })
     }
-    
+
     private fun setupGestures() {
         playerView.setOnTouchListener { _, event ->
             when (event.action) {
@@ -238,7 +239,7 @@ class Video_payer : AppCompatActivity(), Player.Listener {
             true
         }
     }
-    
+
     private fun setupBackPressedCallback() {
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
@@ -252,7 +253,7 @@ class Video_payer : AppCompatActivity(), Player.Listener {
             }
         })
     }
-    
+
     private fun togglePlayPause() {
         exoPlayer?.let { player ->
             if (player.isPlaying) {
@@ -262,7 +263,7 @@ class Video_payer : AppCompatActivity(), Player.Listener {
             }
         }
     }
-    
+
     private fun seekRelative(offsetMs: Long) {
         exoPlayer?.let { player ->
             val currentPosition = player.currentPosition
@@ -270,7 +271,7 @@ class Video_payer : AppCompatActivity(), Player.Listener {
             player.seekTo(newPosition)
         }
     }
-    
+
     private fun toggleMute() {
         exoPlayer?.let { player ->
             isMuted = !isMuted
@@ -278,7 +279,7 @@ class Video_payer : AppCompatActivity(), Player.Listener {
             updateMuteButton()
         }
     }
-    
+
     private fun showSpeedDialog() {
         val speedOptions = arrayOf("0.5x", "0.75x", "1.0x", "1.25x", "1.5x", "2.0x")
         val builder = android.app.AlertDialog.Builder(this, R.style.CustomDialogTheme)
@@ -293,7 +294,7 @@ class Video_payer : AppCompatActivity(), Player.Listener {
             .setNegativeButton("Cancel", null)
             .show()
     }
-    
+
     private fun showQualityDialog() {
         val builder = android.app.AlertDialog.Builder(this, R.style.CustomDialogTheme)
         builder.setTitle("Video Quality")
@@ -307,23 +308,22 @@ class Video_payer : AppCompatActivity(), Player.Listener {
             .setNegativeButton("Cancel", null)
             .show()
     }
-    
+
     private fun showSettingsDialog() {
-        val settings = arrayOf("Subtitles", "Audio Track", "Video Info")
+        val settings = arrayOf("Subtitles", "Video Info")
         val builder = android.app.AlertDialog.Builder(this, R.style.CustomDialogTheme)
         builder.setTitle("Settings")
             .setItems(settings) { dialog, which ->
                 when (which) {
                     0 -> Toast.makeText(this, "Subtitles not available", Toast.LENGTH_SHORT).show()
-                    1 -> Toast.makeText(this, "Audio track selection not available", Toast.LENGTH_SHORT).show()
-                    2 -> showVideoInfo()
+                    1 -> showVideoInfo()
                 }
                 dialog.dismiss() // Auto-close dialog when option is selected
             }
             .setNegativeButton("Cancel", null)
             .show()
     }
-    
+
     private fun showVideoInfo() {
         exoPlayer?.let { player ->
             val duration = formatTime(player.duration)
@@ -334,7 +334,7 @@ class Video_payer : AppCompatActivity(), Player.Listener {
             Toast.makeText(this, info, Toast.LENGTH_LONG).show()
         }
     }
-    
+
     private fun refreshVideo() {
         val videoUrl = intent.getStringExtra("video_url")
         if (videoUrl != null) {
@@ -347,7 +347,7 @@ class Video_payer : AppCompatActivity(), Player.Listener {
             }
         }
     }
-    
+
     private fun toggleControls() {
         if (isControlsVisible) {
             hideControls()
@@ -355,17 +355,17 @@ class Video_payer : AppCompatActivity(), Player.Listener {
             showControls()
         }
     }
-    
+
     private fun showControls() {
         isControlsVisible = true
         bottomBar.visibility = View.VISIBLE
     }
-    
+
     private fun hideControls() {
         isControlsVisible = false
         bottomBar.visibility = View.GONE
     }
-    
+
     private fun toggleFullscreen() {
         isFullscreen = !isFullscreen
         if (isFullscreen) {
@@ -384,8 +384,8 @@ class Video_payer : AppCompatActivity(), Player.Listener {
             btnFullscreen.setImageResource(android.R.drawable.ic_menu_crop)
         }
     }
-    
-    
+
+
     private fun showSeekFeedback(text: String) {
         centerOverlay.removeAllViews()
         val textView = TextView(this).apply {
@@ -397,7 +397,7 @@ class Video_payer : AppCompatActivity(), Player.Listener {
         }
         centerOverlay.addView(textView)
         centerOverlay.visibility = View.VISIBLE
-        
+
         val fadeOut = AlphaAnimation(1.0f, 0.0f).apply {
             duration = 1000
             setAnimationListener(object : Animation.AnimationListener {
@@ -410,7 +410,7 @@ class Video_payer : AppCompatActivity(), Player.Listener {
         }
         textView.startAnimation(fadeOut)
     }
-    
+
     private fun updatePlayPauseButton() {
         exoPlayer?.let { player ->
             btnPlayPause.setImageResource(
@@ -418,29 +418,29 @@ class Video_payer : AppCompatActivity(), Player.Listener {
             )
         }
     }
-    
+
     private fun updateMuteButton() {
         btnMute.setImageResource(
             if (isMuted) android.R.drawable.ic_lock_silent_mode else android.R.drawable.ic_lock_silent_mode_off
         )
     }
-    
+
     private fun updateSpeedButton() {
         btnSpeed.text = "${currentSpeed}x"
     }
-    
+
     private fun updateQualityButton() {
         // Get the current quality from the player
         val currentQuality = PlayerManager.getCurrentVideoQuality()
         btnQuality.text = currentQuality
     }
-    
+
     private fun formatTime(timeMs: Long): String {
         val date = Date(timeMs)
         val formatter = SimpleDateFormat("mm:ss", Locale.getDefault())
         return formatter.format(date)
     }
-    
+
     // Player.Listener implementation
     override fun onIsPlayingChanged(isPlaying: Boolean) {
         runOnUiThread {
@@ -453,7 +453,7 @@ class Video_payer : AppCompatActivity(), Player.Listener {
             }
         }
     }
-    
+
     override fun onPlaybackStateChanged(playbackState: Int) {
         runOnUiThread {
             when (playbackState) {
@@ -481,7 +481,7 @@ class Video_payer : AppCompatActivity(), Player.Listener {
             }
         }
     }
-    
+
     override fun onPositionDiscontinuity(
         oldPosition: Player.PositionInfo,
         newPosition: Player.PositionInfo,
@@ -491,14 +491,21 @@ class Video_payer : AppCompatActivity(), Player.Listener {
             updateSeekBar()
         }
     }
-    
+
     override fun onVideoSizeChanged(videoSize: androidx.media3.common.VideoSize) {
         runOnUiThread {
             // Update quality display when video size changes
             updateQualityButton()
         }
     }
-    
+
+    override fun onTracksChanged(tracks: Tracks) {
+        runOnUiThread {
+            // Update quality options when tracks are available
+            qualityOptions = PlayerManager.getAvailableQualities()
+        }
+    }
+
     private fun startProgressTracking() {
         stopProgressTracking() // Stop any existing tracking
         progressRunnable = object : Runnable {
@@ -509,12 +516,12 @@ class Video_payer : AppCompatActivity(), Player.Listener {
         }
         progressHandler.post(progressRunnable!!)
     }
-    
+
     private fun stopProgressTracking() {
         progressRunnable?.let { progressHandler.removeCallbacks(it) }
         progressRunnable = null
     }
-    
+
     private fun updateSeekBar() {
         exoPlayer?.let { player ->
             val duration = player.duration
@@ -526,25 +533,26 @@ class Video_payer : AppCompatActivity(), Player.Listener {
             }
         }
     }
-    
+
     override fun onDestroy() {
         super.onDestroy()
         stopProgressTracking()
         PlayerManager.releasePlayer()
+        finish()
     }
-    
+
     override fun onPause() {
         super.onPause()
         exoPlayer?.pause()
         stopProgressTracking()
     }
-    
+
     override fun onResume() {
         super.onResume()
         exoPlayer?.play()
         // Progress tracking will start automatically when onIsPlayingChanged is called
     }
-    
+
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
         when (keyCode) {
             KeyEvent.KEYCODE_DPAD_UP -> {
