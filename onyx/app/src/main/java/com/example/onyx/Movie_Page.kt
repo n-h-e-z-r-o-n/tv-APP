@@ -2,6 +2,7 @@ package com.example.onyx
 
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 
@@ -19,6 +20,14 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 class Movie_Page : AppCompatActivity() {
+
+    private var currentPage = 1
+    private var isLoadingMore = false
+    private lateinit var adapter: GridAdapter
+    private lateinit var recyclerView : RecyclerView
+
+    private var lastRefreshTime: Long = 0L
+
     override fun onCreate(savedInstanceState: Bundle?) {
         GlobalUtils.applyTheme(this)
         super.onCreate(savedInstanceState)
@@ -27,41 +36,53 @@ class Movie_Page : AppCompatActivity() {
 
         NavAction.setupSidebar(this)
         LoadingAnimation.setup(this@Movie_Page)
-
         LoadingAnimation.show(this@Movie_Page)
-        Movies()
 
+        adapter = GridAdapter(mutableListOf(), R.layout.item_grid)
+        adapter.onAddMoreClicked = {
+            loadMoreMovies()
+        }
+
+        // Calculate span count dynamically
+        val widthInPixels = this@Movie_Page.resources.getDimension(R.dimen.grid_item_width)
+        val density = this@Movie_Page.resources.displayMetrics.density
+        val widthInDp = widthInPixels / density
+        val displayMetrics = resources.displayMetrics
+        val screenWidthPx = displayMetrics.widthPixels
+        val itemMinWidthPx = ((widthInDp + 15) * displayMetrics.density).toInt() // 160dp per item
+        val spanCount = maxOf(1, screenWidthPx / itemMinWidthPx)
+
+        recyclerView    = findViewById<RecyclerView>(R.id.Movies)
+        recyclerView.layoutManager = GridLayoutManager(this@Movie_Page, spanCount)
+        recyclerView.adapter = adapter
+        val spacing = (19 * resources.displayMetrics.density).toInt()
+        recyclerView.addItemDecoration(EqualSpaceItemDecoration(spacing))
+
+        fetchMovies()
+
+    }
+
+    override fun onResume() {
+        super.onResume()
+        val currentTime = System.currentTimeMillis()
+        val oneHourMillis = 60 * 60 * 1000  // 1 hour
+
+        if (currentTime - lastRefreshTime > oneHourMillis) {
+            //refreshData()
+        }
     }
 
 
 
 
-    private fun Movies() {
+    private fun fetchMovies() {
+        isLoadingMore = true
         CoroutineScope(Dispatchers.IO).launch {
 
-            val adapter = GridAdapter(mutableListOf(), R.layout.item_grid)
-            withContext(Dispatchers.Main) {
-                val recyclerView = findViewById<RecyclerView>(R.id.Movies)
-
-                // Calculate span count dynamically
-                val widthInPixels = this@Movie_Page.resources.getDimension(R.dimen.grid_item_width)
-                val density = this@Movie_Page.resources.displayMetrics.density
-                val widthInDp = widthInPixels / density
-                val displayMetrics = resources.displayMetrics
-                val screenWidthPx = displayMetrics.widthPixels
-                val itemMinWidthPx = ((widthInDp + 15) * displayMetrics.density).toInt() // 160dp per item
-                val spanCount = maxOf(1, screenWidthPx / itemMinWidthPx)
-
-                recyclerView.layoutManager = GridLayoutManager(this@Movie_Page, spanCount)
-                recyclerView.adapter = adapter
-                val spacing = (19 * resources.displayMetrics.density).toInt()
-                recyclerView.addItemDecoration(EqualSpaceItemDecoration(spacing))
-            }
-            while(true) {
+            repeat(5) { attempt ->
                 try {
-                    val url = "https://vidsrc.xyz/movies/latest/page-1.json"
-                    val url2 = "https://vidsrc.xyz/movies/latest/page-2.json"
-                    val url3 = "https://vidsrc.xyz/movies/latest/page-3.json"
+                    val url = "https://vidsrc.xyz/movies/latest/page-$currentPage.json"
+
 
                     val connection = URL(url).openConnection() as HttpURLConnection
                     connection.requestMethod = "GET"
@@ -71,34 +92,6 @@ class Movie_Page : AppCompatActivity() {
 
                     val finalArray = JSONArray()
 
-                    /*
-
-                    val connection2 = URL(url2).openConnection() as HttpURLConnection
-                    connection2.requestMethod = "GET"
-                    val response2 = connection2.inputStream.bufferedReader().use { it.readText() }
-                    val jsonObject2 = JSONObject(response2)
-                    val moviesArray2 = jsonObject2.getJSONArray("result")
-
-                    val connection3 = URL(url3).openConnection() as HttpURLConnection
-                    connection3.requestMethod = "GET"
-                    val response3 = connection3.inputStream.bufferedReader().use { it.readText() }
-                    val jsonObject3 = JSONObject(response3)
-                    val moviesArray3 = jsonObject3.getJSONArray("result")
-
-
-
-                    for (i in 0 until moviesArray.length()) {
-                        finalArray.put(moviesArray.getJSONObject(i))
-                    }
-
-                    for (i in 0 until moviesArray2.length()) {
-                        finalArray.put(moviesArray2.getJSONObject(i))
-                    }
-
-                    for (i in 0 until moviesArray3.length()) {
-                        finalArray.put(moviesArray3.getJSONObject(i))
-                    }
-                    */
 
                     for (i in 0 until moviesArray.length()) {
                         finalArray.put(moviesArray.getJSONObject(i))
@@ -150,18 +143,34 @@ class Movie_Page : AppCompatActivity() {
                         val movieItem = MovieItem(title=title, imageUrl=imgUrl, imdbCode=id, type=type, year=year, rating=voteAverage, runtime=runtime)
 
                         withContext(Dispatchers.Main) {
-                            LoadingAnimation.hide(this@Movie_Page)
                             adapter.addItem(movieItem)
+                            isLoadingMore = false
                         }
                     }
 
-                    break
+                    return@launch // exit on success
                 } catch (e: Exception) {
-                    LoadingAnimation.show(this@Movie_Page)
                     delay(10_000)
-                    Log.e("DEBUG_TAG_Movies", "Error fetching data", e)
+                    Log.e("DEBUG_TAG_TvShows", "Attempt ${attempt+1} failed", e)
+                    currentPage--
                 }
             }
         }
+    }
+
+    private fun loadMoreMovies() {
+
+        if (isLoadingMore) return // Prevent multiple rapid clicks
+        currentPage++
+        fetchMovies()
+
+    }
+
+    private fun refreshData() {
+        Toast.makeText(this, "Refreshing movies...", Toast.LENGTH_SHORT).show()
+        currentPage = 1
+        adapter.clearItems()   // we'll add this helper in GridAdapter
+        lastRefreshTime = System.currentTimeMillis()
+        fetchMovies()
     }
 }

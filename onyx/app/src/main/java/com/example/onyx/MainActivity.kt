@@ -28,7 +28,7 @@ class MainActivity : ComponentActivity() {
         Handler(Looper.getMainLooper()).postDelayed({
             startActivity(Intent(this, Home_Page::class.java))
             finish()
-        }, 500)
+        }, 10500)
 
     }
 

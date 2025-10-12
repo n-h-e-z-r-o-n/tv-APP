@@ -36,7 +36,7 @@ class Actor_Page : AppCompatActivity() {
 
     }
     private fun fetchActorShows(id: String){
-        val adapter = GridAdapter(mutableListOf(), R.layout.item_grid)
+        val adapter = GridAdapter2(mutableListOf(), R.layout.item_grid)
         CoroutineScope(Dispatchers.IO).launch {
             withContext(Dispatchers.Main) {
                 val recyclerView = findViewById<RecyclerView>(R.id.Actor_Results)

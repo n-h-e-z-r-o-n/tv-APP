@@ -62,7 +62,7 @@
             android:layout_gravity="bottom"
             android:orientation="vertical"
             android:gravity="bottom"
-            android:visibility="visible"
+            android:visibility="gone"
             android:paddingBottom="2dp"
             android:paddingTop="14dp"
             android:paddingStart="8dp"
@@ -90,7 +90,6 @@
                 android:layout_gravity="center"
                 android:gravity="center"
                 android:weightSum="3"
-
                 >
 
 

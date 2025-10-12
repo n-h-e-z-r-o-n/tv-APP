@@ -18,21 +18,222 @@ import com.bumptech.glide.Glide
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 class GridAdapter(
-      private val  items: MutableList<MovieItem>,   // ✅ mutable now,
-      private val layoutResId: Int   // 👈 pass in the layout resource
-    ) :  RecyclerView.Adapter<GridAdapter.ViewHolder>() {
+    private val items: MutableList<MovieItem>,
+    private val layoutResId: Int
+) : RecyclerView.Adapter<GridAdapter.ViewHolder>() {
+
+    companion object {
+        private const val VIEW_TYPE_MOVIE = 0
+        private const val VIEW_TYPE_ADD_BUTTON = 1
+    }
+
+    // Callback for the "Add More" button
+    var onAddMoreClicked: (() -> Unit)? = null
+
+    inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        val Movie_image: ImageView? = view.findViewById(R.id.itemImage)
+        val showYear: TextView? = view.findViewById(R.id.itemText)
+        val showTitle: TextView? = view.findViewById(R.id.showTitle)
+        val showRating: TextView? = view.findViewById(R.id.showRating)
+        val showRS: TextView? = view.findViewById(R.id.showRS)
+        val showType: TextView? = view.findViewById(R.id.showType)
+
+        init {
+            itemView.setOnFocusChangeListener { v, hasFocus ->
+                v.animate()
+                    .scaleX(if (hasFocus) 1.02f else 1f)
+                    .scaleY(if (hasFocus) 1.02f else 1f)
+                    .setDuration(150)
+                    .start()
+
+                try {
+                    val overlay: View = itemView.findViewById(R.id.focusOverlay)
+                    if (hasFocus) {
+                        overlay.apply {
+                            alpha = 0f
+                            visibility = View.VISIBLE
+                            animate().alpha(1f).setDuration(150).start()
+                        }
+                    } else {
+                        overlay.animate()
+                            .alpha(0f)
+                            .setDuration(150)
+                            .withEndAction { overlay.visibility = View.GONE }
+                            .start()
+                    }
+                } catch (e: Exception) {
+                    // Safe catch for add button layout which has no overlay
+                }
+            }
+        }
+    }
+
+    override fun getItemViewType(position: Int): Int {
+        // The last item is the "Add More" button
+        return if (position == items.size) VIEW_TYPE_ADD_BUTTON else VIEW_TYPE_MOVIE
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val layoutId = if (viewType == VIEW_TYPE_ADD_BUTTON) {
+            R.layout.item_add_more // 👈 Create this layout separately
+        } else {
+            layoutResId
+        }
+
+        val view = LayoutInflater.from(parent.context).inflate(layoutId, parent, false)
+        return ViewHolder(view)
+    }
+
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        if (getItemViewType(position) == VIEW_TYPE_ADD_BUTTON) {
+            // Handle the Add More button
+            holder.itemView.setOnClickListener {
+                onAddMoreClicked?.invoke()
+            }
+            return
+        }
+
+        val currentItem = items[position]
+        val title = currentItem.title
+        val imageUrl = currentItem.imageUrl
+        val imdbCode = currentItem.imdbCode
+        val type = currentItem.type
+        val year = currentItem.year
+        val rating = currentItem.rating
+        val runtime = currentItem.runtime
+
+        holder.showYear?.text = year
+        holder.showTitle?.text = title
+        holder.showRating?.text = rating
+        holder.showRS?.text = runtime
+        holder.showType?.text = type
+
+        Glide.with(holder.itemView.context)
+            .load(imageUrl)
+            .centerInside()
+            .into(holder.Movie_image!!)
+
+        holder.itemView.setOnClickListener {
+            val context = holder.itemView.context
+            val intent = Intent(context, Watch_Page::class.java)
+            intent.putExtra("imdb_code", imdbCode)
+            intent.putExtra("type", type)
+            context.startActivity(intent)
+        }
+    }
+
+    override fun getItemCount(): Int {
+        // Total items = movies + the add button
+        return items.size + 1
+    }
+
+    fun addItem(item: MovieItem) {
+        items.add(item)
+        notifyItemInserted(items.size - 1)
+    }
+
+    fun addItems(newItems: List<MovieItem>) {
+        val startPos = items.size
+        items.addAll(newItems)
+        notifyItemRangeInserted(startPos, newItems.size)
+    }
+    fun clearItems() {
+        items.clear()
+        notifyDataSetChanged()
+    }
+}
+
+
+
+class OtherAdapter(
+    private val  items: MutableList<MovieItem>,   // ✅ mutable now,
+    private val layoutResId: Int   // 👈 pass in the layout resource
+) :  RecyclerView.Adapter<OtherAdapter.ViewHolder>() {
+
+    inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+
+
+        val CardViewSquare: CardView = view.findViewById(R.id.CardViewSquare)
+        val Movie_image: ImageView = view.findViewById(R.id.itemImage)
+        val itemText: TextView = view.findViewById(R.id.itemText)
+
+
+
+        init {
+            itemView.setOnFocusChangeListener { v, hasFocus ->
+                // Scale animation
+                v.animate()
+                    .scaleX(if (hasFocus) 1.02f else 1f)
+                    .scaleY(if (hasFocus) 1.02f else 1f)
+                    .setDuration(150)
+                    .start()
+            }
+        }
+
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val view = LayoutInflater.from(parent.context)
+            .inflate(layoutResId, parent, false)
+        return ViewHolder(view)
+    }
+
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+
+        val currentItem = items[position]
+
+        val title = currentItem.title
+        val imageUrl = currentItem.imageUrl
+        val imdbCode = currentItem.imdbCode
+        val type = currentItem.type
+
+
+        Glide.with(holder.itemView.context)
+            .load(imageUrl)
+            .centerCrop()
+            .into(holder.Movie_image)
+
+
+        holder.CardViewSquare.setOnClickListener {
+            val context = holder.itemView.context
+            val intent = Intent(context, Watch_Page::class.java).apply {
+                putExtra("imdb_code", imdbCode)
+                putExtra("type", type)
+            }
+            context.startActivity(intent)
+            Log.e("OtherAdapter", "clicked ${intent.toString()}")
+        }
+
+    }
+
+    override fun getItemCount() = items.size
+
+    fun addItem(item: MovieItem) {
+        items.add(item)
+        notifyItemInserted(items.size - 1)
+
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+class GridAdapter2(
+    private val  items: MutableList<MovieItem>,   // ✅ mutable now,
+    private val layoutResId: Int   // 👈 pass in the layout resource
+) :  RecyclerView.Adapter<GridAdapter2.ViewHolder>() {
 
     inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val Movie_image: ImageView = view.findViewById(R.id.itemImage)
         val showYear: TextView = view.findViewById(R.id.itemText)
 
 
-            val showTitle: TextView = view.findViewById(R.id.showTitle)
-            val showRating: TextView = view.findViewById(R.id.showRating)
-            val showRS: TextView = view.findViewById(R.id.showRS)
-            val showType: TextView = view.findViewById(R.id.showType)
+        val showTitle: TextView = view.findViewById(R.id.showTitle)
+        val showRating: TextView = view.findViewById(R.id.showRating)
+        val showRS: TextView = view.findViewById(R.id.showRS)
+        val showType: TextView = view.findViewById(R.id.showType)
 
 
 
@@ -137,77 +338,6 @@ class GridAdapter(
     }
 }
 
-
-
-class OtherAdapter(
-    private val  items: MutableList<MovieItem>,   // ✅ mutable now,
-    private val layoutResId: Int   // 👈 pass in the layout resource
-) :  RecyclerView.Adapter<OtherAdapter.ViewHolder>() {
-
-    inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-
-
-        val CardViewSquare: CardView = view.findViewById(R.id.CardViewSquare)
-        val Movie_image: ImageView = view.findViewById(R.id.itemImage)
-        val itemText: TextView = view.findViewById(R.id.itemText)
-
-
-
-        init {
-            itemView.setOnFocusChangeListener { v, hasFocus ->
-                // Scale animation
-                v.animate()
-                    .scaleX(if (hasFocus) 1.02f else 1f)
-                    .scaleY(if (hasFocus) 1.02f else 1f)
-                    .setDuration(150)
-                    .start()
-            }
-        }
-
-    }
-
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val view = LayoutInflater.from(parent.context)
-            .inflate(layoutResId, parent, false)
-        return ViewHolder(view)
-    }
-
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-
-        val currentItem = items[position]
-
-        val title = currentItem.title
-        val imageUrl = currentItem.imageUrl
-        val imdbCode = currentItem.imdbCode
-        val type = currentItem.type
-
-
-        Glide.with(holder.itemView.context)
-            .load(imageUrl)
-            .centerCrop()
-            .into(holder.Movie_image)
-
-
-        holder.CardViewSquare.setOnClickListener {
-            val context = holder.itemView.context
-            val intent = Intent(context, Watch_Page::class.java).apply {
-                putExtra("imdb_code", imdbCode)
-                putExtra("type", type)
-            }
-            context.startActivity(intent)
-            Log.e("OtherAdapter", "clicked ${intent.toString()}")
-        }
-
-    }
-
-    override fun getItemCount() = items.size
-
-    fun addItem(item: MovieItem) {
-        items.add(item)
-        notifyItemInserted(items.size - 1)
-
-    }
-}
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 

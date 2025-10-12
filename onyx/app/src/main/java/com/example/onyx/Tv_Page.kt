@@ -2,6 +2,7 @@ package com.example.onyx
 
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
@@ -20,62 +21,73 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 class Tv_Page : AppCompatActivity() {
+
+    private var currentPage = 1
+    private var isLoadingMore = false
+    private lateinit var adapter: GridAdapter
+    private lateinit var recyclerView : RecyclerView
+
+    private var lastRefreshTime: Long = 0L
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         GlobalUtils.applyTheme(this)
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_tv_page)
+
         NavAction.setupSidebar(this@Tv_Page)
         LoadingAnimation.setup(this@Tv_Page)
-
         LoadingAnimation.show(this@Tv_Page)
-        TvShows()
+
+        adapter = GridAdapter(mutableListOf(), R.layout.item_grid)
+        adapter.onAddMoreClicked = {
+            loadMoreMovies()
+        }
+
+        // Calculate span count dynamically
+        val widthInPixels = this@Tv_Page.resources.getDimension(R.dimen.grid_item_width)
+        val density = this@Tv_Page.resources.displayMetrics.density
+        val widthInDp = widthInPixels / density
+        val displayMetrics = resources.displayMetrics
+        val screenWidthPx = displayMetrics.widthPixels
+        val itemMinWidthPx = ((widthInDp + 15) * displayMetrics.density).toInt() // 160dp per item
+        val spanCount = maxOf(1, screenWidthPx / itemMinWidthPx)
+
+        recyclerView    = findViewById<RecyclerView>(R.id.TvShows_RecyclerView)
+        recyclerView.layoutManager = GridLayoutManager(this@Tv_Page, spanCount)
+        recyclerView.adapter = adapter
+        val spacing = (19 * resources.displayMetrics.density).toInt()
+        recyclerView.addItemDecoration(EqualSpaceItemDecoration(spacing))
+
+
+
+
+        fetchTvShows()
     }
 
-    private fun TvShows() {
+    override fun onResume() {
+        super.onResume()
+        val currentTime = System.currentTimeMillis()
+        val oneHourMillis = 60 * 60 * 1000  // 1 hour
+
+        if (currentTime - lastRefreshTime > oneHourMillis) {
+            //refreshData()
+        }
+    }
+
+    private fun fetchTvShows() {
+        isLoadingMore = true
         CoroutineScope(Dispatchers.IO).launch {
 
-            val adapter = GridAdapter(mutableListOf(), R.layout.item_grid)
-            withContext(Dispatchers.Main) {
-                val recyclerView = findViewById<RecyclerView>(R.id.TvShows)
-
-                // Calculate span count dynamically
-                val widthInPixels = this@Tv_Page.resources.getDimension(R.dimen.grid_item_width)
-                val density = this@Tv_Page.resources.displayMetrics.density
-                val widthInDp = widthInPixels / density
-                val displayMetrics = resources.displayMetrics
-                val screenWidthPx = displayMetrics.widthPixels
-                val itemMinWidthPx = ((widthInDp + 15) * displayMetrics.density).toInt() // 160dp per item
-                val spanCount = maxOf(1, screenWidthPx / itemMinWidthPx)
-
-                recyclerView.layoutManager = GridLayoutManager(this@Tv_Page, spanCount)
-                recyclerView.adapter = adapter
-                val spacing = (19 * resources.displayMetrics.density).toInt()
-                recyclerView.addItemDecoration(EqualSpaceItemDecoration(spacing))
-            }
-            while(true) {
+            repeat(5) { attempt ->
                 try {
-                    val url = "https://vidsrc.xyz/episodes/latest/page-1.json"
-                    val url2 = "https://vidsrc.xyz/episodes/latest/page-2.json"
-                    val url3 = "https://vidsrc.xyz/episodes/latest/page-3.json"
-
+                    val url = "https://vidsrc.xyz/episodes/latest/page-$currentPage.json"
                     val connection = URL(url).openConnection() as HttpURLConnection
                     connection.requestMethod = "GET"
                     val response = connection.inputStream.bufferedReader().use { it.readText() }
                     val jsonObject = JSONObject(response)
                     val moviesArray = jsonObject.getJSONArray("result")
-
-                    val connection2 = URL(url2).openConnection() as HttpURLConnection
-                    connection2.requestMethod = "GET"
-                    val response2 = connection2.inputStream.bufferedReader().use { it.readText() }
-                    val jsonObject2 = JSONObject(response2)
-                    val moviesArray2 = jsonObject2.getJSONArray("result")
-
-                    val connection3 = URL(url3).openConnection() as HttpURLConnection
-                    connection3.requestMethod = "GET"
-                    val response3 = connection3.inputStream.bufferedReader().use { it.readText() }
-                    val jsonObject3 = JSONObject(response3)
-                    val moviesArray3 = jsonObject3.getJSONArray("result")
 
                     val finalArray = JSONArray()
 
@@ -83,13 +95,7 @@ class Tv_Page : AppCompatActivity() {
                         finalArray.put(moviesArray.getJSONObject(i))
                     }
 
-                    for (i in 0 until moviesArray2.length()) {
-                        finalArray.put(moviesArray2.getJSONObject(i))
-                    }
 
-                    for (i in 0 until moviesArray3.length()) {
-                        finalArray.put(moviesArray3.getJSONObject(i))
-                    }
 
                     Log.e("DEBUG_TAG_TvShows 1", finalArray.toString())
 
@@ -140,31 +146,39 @@ class Tv_Page : AppCompatActivity() {
 
                         withContext(Dispatchers.Main) {
                             LoadingAnimation.hide(this@Tv_Page)
-                            adapter.addItem(movieItem)  // 👈 add one at a time
+                            adapter.addItem(movieItem)
+                            isLoadingMore = false
                         }
 
 
                     }
                     Log.e("DEBUG_TAG_TvShows 4", movies.toString())
 
-
-                    /*
-                     withContext(Dispatchers.Main) {
-                        val recyclerView = findViewById<RecyclerView>(R.id.TvShows)
-                        recyclerView.layoutManager = GridLayoutManager(this@MainActivity, 5)
-                        recyclerView.adapter = GridAdapter(movies,  R.layout.item_grid)
-                        val spacing = (19 * resources.displayMetrics.density).toInt() // 16dp to px
-                        recyclerView.addItemDecoration(EqualSpaceItemDecoration(spacing))
-                    }
-                     */
-                    break
+                    return@launch
                 } catch (e: Exception) {
                     LoadingAnimation.show(this@Tv_Page)
+                    Log.e("DEBUG_TAG_TvShows", "Attempt ${attempt+1} failed", e)
                     delay(10_000)
-                    Log.e("DEBUG_TAG_TvShows", "Error fetching data", e)
-                    //break
+                    currentPage--
                 }
             }
         }
     }
+
+    private fun loadMoreMovies() {
+
+        if (isLoadingMore) return // Prevent multiple rapid clicks
+        currentPage++
+        fetchTvShows()
+
+    }
+
+    private fun refreshData() {
+        Toast.makeText(this, "Refreshing movies...", Toast.LENGTH_SHORT).show()
+        currentPage = 1
+        adapter.clearItems()   // we'll add this helper in GridAdapter
+        lastRefreshTime = System.currentTimeMillis()
+        fetchTvShows()
+    }
+
 }
