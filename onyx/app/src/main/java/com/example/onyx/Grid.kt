@@ -1,11 +1,12 @@
 package com.example.onyx
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.util.Log
+import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -13,8 +14,6 @@ import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
-import com.squareup.picasso.Picasso
-import org.json.JSONObject
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -117,23 +116,15 @@ class GridAdapter(
             .centerInside()
             .into(holder.Movie_image)
 
-        if(currentItem.type == "Actor"){
-            holder.Movie_image.setOnClickListener {
-                val context = holder.itemView.context
-                val intent = android.content.Intent(context, Actor_Page::class.java)
-                intent.putExtra("imdb_code", currentItem.imdbCode)
-                intent.putExtra("type", currentItem.type)
-                context.startActivity(intent)
-            }
-        }else {
-            holder.itemView.setOnClickListener {
-                val context = holder.itemView.context
-                val intent = android.content.Intent(context, Watch_Page::class.java)
-                intent.putExtra("imdb_code", currentItem.imdbCode)
-                intent.putExtra("type", currentItem.type)
-                context.startActivity(intent)
-            }
+
+        holder.itemView.setOnClickListener {
+            val context = holder.itemView.context
+            val intent = Intent(context, Watch_Page::class.java)
+            intent.putExtra("imdb_code", currentItem.imdbCode)
+            intent.putExtra("type", currentItem.type)
+            context.startActivity(intent)
         }
+
     }
 
     override fun getItemCount() = items.size
@@ -217,11 +208,84 @@ class OtherAdapter(
 
     }
 }
-//////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 
+class RecommendAdapter(
+    private val  items: MutableList<MovieItem>,   // ✅ mutable now,
+    private val layoutResId: Int   // 👈 pass in the layout resource
+) :  RecyclerView.Adapter<RecommendAdapter.ViewHolder>() {
+
+    inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+
+
+        val CardViewSquare: CardView = view.findViewById(R.id.CardViewSquare)
+        val Movie_image: ImageView = view.findViewById(R.id.itemImage)
+        val itemText: TextView = view.findViewById(R.id.itemText)
+
+
+
+        init {
+            itemView.setOnFocusChangeListener { v, hasFocus ->
+                // Scale animation
+                v.animate()
+                    .scaleX(if (hasFocus) 1.02f else 1f)
+                    .scaleY(if (hasFocus) 1.02f else 1f)
+                    .setDuration(150)
+                    .start()
+            }
+        }
+
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val view = LayoutInflater.from(parent.context)
+            .inflate(layoutResId, parent, false)
+        return ViewHolder(view)
+    }
+
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+
+        val currentItem = items[position]
+
+        val title = currentItem.title
+        val imageUrl = currentItem.imageUrl
+        val imdbCode = currentItem.imdbCode
+        val type = currentItem.type
+
+        holder.itemText.text = title
+
+
+        Glide.with(holder.itemView.context)
+            .load(imageUrl)
+            .centerCrop()
+            .into(holder.Movie_image)
+
+
+        holder.CardViewSquare.setOnClickListener {
+            val context = holder.itemView.context
+            val intent = Intent(context, Watch_Page::class.java).apply {
+                putExtra("imdb_code", imdbCode)
+                putExtra("type", type)
+            }
+            context.startActivity(intent)
+            Log.e("OtherAdapter", "clicked ${intent.toString()}")
+        }
+
+    }
+
+    override fun getItemCount() = items.size
+
+    fun addItem(item: MovieItem) {
+        items.add(item)
+        notifyItemInserted(items.size - 1)
+
+    }
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class CastAdapter(
     private val  items: MutableList<CastItem>,   // ✅ mutable now,
@@ -284,6 +348,27 @@ class CastAdapter(
             intent.putExtra("imdb_code", imdbCode)
             intent.putExtra("type", type)
             context.startActivity(intent)
+        }
+
+        holder.CardViewcontiner.setOnKeyListener { v, keyCode, event ->
+            if (event.action != KeyEvent.ACTION_DOWN) return@setOnKeyListener false
+
+            when (keyCode) {
+                KeyEvent.KEYCODE_DPAD_LEFT -> {
+                    if (position == 0) {
+                        // First item - stop focus from moving out to the left
+                        return@setOnKeyListener true
+                    }
+                }
+                KeyEvent.KEYCODE_DPAD_RIGHT -> {
+                    if (position == items.size - 1) {
+                        // Last item - stop focus from moving out to the right
+                        return@setOnKeyListener true
+                    }
+                }
+            }
+
+            false
         }
 
 
@@ -484,6 +569,7 @@ class EpisodesAdapter(
 ) : RecyclerView.Adapter<EpisodesAdapter.EpisodeViewHolder>() {
 
     inner class EpisodeViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        val epNoView: TextView = view.findViewById(R.id.episode_Number)
         val titleView: TextView = view.findViewById(R.id.episode_title)
         val durationView: TextView = view.findViewById(R.id.episode_duration)
         val ratingView: TextView = view.findViewById(R.id.episode_Rating)
@@ -495,22 +581,26 @@ class EpisodesAdapter(
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.item_episode, parent, false)
         return EpisodeViewHolder(view)
+
     }
 
+    @SuppressLint("SetTextI18n")
     override fun onBindViewHolder(holder: EpisodeViewHolder, position: Int) {
         val ep = episodes[position]
 
-        holder.titleView.text = "Eps ${ep.episodesNumber}: ${ep.episodesName}"
+
+        holder.epNoView.text = "Eps ${ep.episodesNumber}"
+        holder.titleView.text = ep.episodesName
         holder.durationView.text = "⏱ ${ep.episodesRuntime} min"
-        holder.ratingView.text = "⬤ IMDb ${ep.episodesRating}"
+        holder.ratingView.text = "★ ${ep.episodesRating}"
         holder.descView.text = ep.episodesDescription
 
 
-            val url = "https://image.tmdb.org/t/p/w500${ep.episodesImage}"
-            Glide.with(holder.itemView.context)
-                .load(url)
-                .centerInside()
-                .into(holder.epsImg)
+        val url = "https://image.tmdb.org/t/p/w500${ep.episodesImage}"
+        Glide.with(holder.itemView.context)
+            .load(url)
+            .centerInside()
+            .into(holder.epsImg)
 
 
         holder.itemView.setOnClickListener {view ->
@@ -527,6 +617,33 @@ class EpisodesAdapter(
                 view.isEnabled = true
             }, 5000)
         }
+        Log.e("DEBUG_Each E grid", "Eps ${ep.episodesNumber}")
+        Log.e("DEBUG_Each E size", "${episodes.size}")
+
+
+        // ✅ Attach the KeyListener here
+        holder.itemView.setOnKeyListener { v, keyCode, event ->
+            if (event.action != KeyEvent.ACTION_DOWN) return@setOnKeyListener false
+
+            when (keyCode) {
+                KeyEvent.KEYCODE_DPAD_LEFT -> {
+                    if (position == 0) {
+                        // First item - stop focus from moving out to the left
+                        return@setOnKeyListener true
+                    }
+                }
+                KeyEvent.KEYCODE_DPAD_RIGHT -> {
+                    if (position == episodes.size - 1) {
+                        // Last item - stop focus from moving out to the right
+                        return@setOnKeyListener true
+                    }
+                }
+            }
+
+            false
+        }
+
+
     }
 
     override fun getItemCount(): Int = episodes.size

@@ -100,6 +100,7 @@ class Home_Page : AppCompatActivity() {
                         } else { "" }
 
                         val PG = if (item.optString("adult") == "true") "PG-18 +" else "PG-13"
+                        if(PG =="PG-18 +"){continue}
 
                         val id = item.getString("id")
                         val type = "movie"

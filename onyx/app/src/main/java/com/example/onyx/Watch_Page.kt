@@ -64,7 +64,7 @@ class Watch_Page : AppCompatActivity() {
         if(!imdbCode.isNullOrEmpty()){
             fetchData(imdbCode.toString(), type.toString())
         }else{
-            fetchData("1311031 ", "movie")
+            fetchData("10160 ", "tv")
         }
 
     }
@@ -318,58 +318,115 @@ class Watch_Page : AppCompatActivity() {
         }
     }
 
-    private fun createSeasonButtons(noOfSeasons: Int, seasonData : MutableList<JSONObject> , seasonID: String, seasonAllData : JSONObject) {
-        val container = findViewById<LinearLayout>(R.id.season_selector_container)
-        container.removeAllViews() // Clear old buttons if any
-        var track = 0
-        while (track < noOfSeasons){
 
+
+    private var selectedSeasonButton: Button? = null
+
+    private fun createSeasonButtons(
+        noOfSeasons: Int,
+        seasonData: MutableList<JSONObject>,
+        seasonID: String,
+        seasonAllData: JSONObject
+    ) {
+        val container = findViewById<LinearLayout>(R.id.season_selector_container)
+        container.removeAllViews()
+        var track = 0
+
+        while (track < noOfSeasons) {
             val selectedSeason = seasonData[track]
             val season_no = selectedSeason.optInt("season_number")
-            val s_name: String
-
-
-            if(season_no==0){
-                s_name = selectedSeason.getString("name")
-            } else{
-                s_name = "Season $season_no"
+            val s_name = if (season_no == 0) {
+                selectedSeason.getString("name")
+            } else {
+                "Season $season_no"
             }
 
-            val SeasonButton = Button(this).apply {
+            val seasonButton = Button(this).apply {
                 text = s_name
                 textSize = 14f
                 isFocusable = true
                 isFocusableInTouchMode = true
                 isClickable = true
-                setTypeface(typeface, Typeface.BOLD) //textStyle =  bold
+                setTypeface(typeface, Typeface.BOLD)
                 stateListAnimator = null
-
                 background = ContextCompat.getDrawable(context, R.drawable.tv_button_selector)
-
                 layoutParams = LinearLayout.LayoutParams(
-                    dpToPx(120), // 120dp converted to pixels
-                    dpToPx(48)   // 48dp converted to pixels
+                    dpToPx(120),
+                    dpToPx(48)
                 ).apply {
-                    marginEnd = dpToPx(8) // 8dp margin at the end
+                    marginEnd = dpToPx(8)
                 }
-
                 setTextColor(resolveAttrColor(context, R.attr.FG_color))
-
             }
 
-            SeasonButton.setOnClickListener {
-                SeasonButton.isEnabled = false
-                ShowSeasonEpisodes(season_no,  seasonData, seasonID, seasonAllData)
-                SeasonButton.postDelayed({
-                    SeasonButton.isEnabled = true
-                }, 3000) // 1 second
+            seasonButton.setOnClickListener {
+                // Reset previous selected button background
+                selectedSeasonButton?.background = ContextCompat.getDrawable(
+                    this,
+                    R.drawable.tv_button_selector
+                )
+
+
+                seasonButton.setTextColor(resolveAttrColor(this, R.attr.AccentColor))
+
+                selectedSeasonButton = seasonButton
+
+                seasonButton.isEnabled = false
+                ShowSeasonEpisodes(season_no, seasonData, seasonID, seasonAllData)
+                seasonButton.postDelayed({
+                    seasonButton.isEnabled = true
+                }, 3000)
             }
 
-            container.addView(SeasonButton)
+            // Handle D-Pad navigation
+            seasonButton.setOnKeyListener { v, keyCode, event ->
+                if (event.action == KeyEvent.ACTION_DOWN) {
+                    val index = container.indexOfChild(v)
+                    when (keyCode) {
+                        KeyEvent.KEYCODE_DPAD_LEFT -> {
+                            // Move left unless it's the first button
+                            if (index > 0) {
+                                container.getChildAt(index - 1).requestFocus()
+                            }
+                            return@setOnKeyListener true
+                        }
+
+                        KeyEvent.KEYCODE_DPAD_RIGHT -> {
+                            // Move right unless it's the last button
+                            if (index < container.childCount - 1) {
+                                container.getChildAt(index + 1).requestFocus()
+                            }
+                            return@setOnKeyListener true
+                        }
+
+                        KeyEvent.KEYCODE_DPAD_DOWN -> {
+                            // Move focus to episode RecyclerView when pressing down
+                            val episodesRecycler = findViewById<RecyclerView>(R.id.episodes_recycler)
+                            val castRecycler = findViewById<RecyclerView>(R.id.Cast_widget)
+                            if (episodesRecycler.childCount > 0) {
+                                episodesRecycler.getChildAt(0)?.requestFocus()
+                            }// Else if cast list has items, focus first item there
+                            else if (castRecycler.childCount > 0) {
+                                castRecycler.getChildAt(0)?.requestFocus()
+                            }
+                            return@setOnKeyListener true
+                        }
+
+                        KeyEvent.KEYCODE_DPAD_UP -> {
+                            val trailerButton = findViewById<ImageButton>(R.id.TrailerButton) // Use your actual ID
+                            trailerButton?.requestFocus()
+                            return@setOnKeyListener true
+                        }
+                    }
+                }
+                false
+            }
+
+            container.addView(seasonButton)
             track++
         }
-
     }
+
 
     //setBackgroundColor(Color.parseColor("#3D5AFE"))
     private fun resolveAttrColor(context: Context, attr: Int): Int {
@@ -382,13 +439,22 @@ class Watch_Page : AppCompatActivity() {
         return (dp * resources.displayMetrics.density).toInt()
     }
 
-    private fun ShowSeasonEpisodes(SelectedSeasons: Int, seasonData : MutableList<JSONObject>, seriesId: String, seasonAllData:  JSONObject){
+    private fun ShowSeasonEpisodes(SelectedSeasons: Int, seasonData : MutableList<JSONObject>, seriesId: String, seasonAllData:  JSONObject) {
 
-        LoadingAnimation.setup(this, R.raw.grey )
+        LoadingAnimation.setup(this, R.raw.grey)
         LoadingAnimation.show(this)
 
         val recyclerView = findViewById<RecyclerView>(R.id.episodes_recycler)
-        recyclerView.layoutManager = GridLayoutManager(this@Watch_Page, 5)
+        //recyclerView.layoutManager = GridLayoutManager(this@Watch_Page, 4)
+
+        recyclerView.layoutManager = LinearLayoutManager(
+            this@Watch_Page,
+            LinearLayoutManager.HORIZONTAL,
+            false
+        )
+
+
+
         recyclerView.removeAllViews()
 
 
@@ -399,7 +465,6 @@ class Watch_Page : AppCompatActivity() {
         val season_CWidget = findViewById<TextView>(R.id.season_C)
 
 
-
         val currentSeasonTitle = findViewById<TextView>(R.id.current_season_title)
         val episodeCountText = findViewById<TextView>(R.id.episode_count_text)
         val seasonYearText = findViewById<TextView>(R.id.season_year_text)
@@ -407,11 +472,13 @@ class Watch_Page : AppCompatActivity() {
         //Log.e("DEBUG_Each Selecteds", SelectedSeasons.toString())
         //Log.e("DEBUG_Each seasonData", seasonData.toString())
 
-       // val selectedSeason = seasonData[SelectedSeasons]
+        // val selectedSeason = seasonData[SelectedSeasons]
         val selectedSeason = seasonData.firstOrNull {
             it.optInt("season_number") == SelectedSeasons
         }
-        if (selectedSeason == null) {return}
+        if (selectedSeason == null) {
+            return
+        }
 
         val episodeCount = selectedSeason.optInt("episode_count", 0)
         val airDate = selectedSeason.optString("air_date", "")
@@ -433,12 +500,12 @@ class Watch_Page : AppCompatActivity() {
         seasonYearText.text = airDate.take(4)
 
 
-        ratingWidget.text  = "$selectedSeasonRating/10"
+        ratingWidget.text = "$selectedSeasonRating/10"
 
-        if(selectedSeasonOverview !== ""){
+        if (selectedSeasonOverview !== "") {
             overviewWidget.text = selectedSeasonOverview
         }
-        if(selectedSeasonPoster !== ""){
+        if (selectedSeasonPoster !== "") {
             selectedSeasonPoster = "https://image.tmdb.org/t/p/w780$selectedSeasonPoster"
             Glide.with(posterWidget.context)
                 .load(selectedSeasonPoster)
@@ -455,51 +522,64 @@ class Watch_Page : AppCompatActivity() {
 
 
         CoroutineScope(Dispatchers.IO).launch {
-            val url =
-                "https://api.themoviedb.org/3/tv/$seriesId/season/${SelectedSeasons}?language=en-US"
-            val connection = URL(url).openConnection() as HttpURLConnection
-            connection.requestMethod = "GET"
-            connection.setRequestProperty("accept", "application/json")
-            connection.setRequestProperty(
-                "Authorization",
-                "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJhZjliMmUyN2MxYTZiYzMyMzNhZjE4MzJmNGFjYzg1MCIsIm5iZiI6MTcxOTY3NDUxNy4xOTYsInN1YiI6IjY2ODAyNjk1ZWZhYTI1ZjBhOGE4NGE3MyIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.RTms-g8dzOl3WwCeJ7WNLq3i2kXxl3T7gOTa8POcxcw"
-            )
-            val response = connection.inputStream.bufferedReader().use { it.readText() }
-            val jsonObject = JSONObject(response)
+            while (true) {
+
+                try {
 
 
-            val episodesArray  = jsonObject.getJSONArray("episodes")
-
-            Log.e("DEBUG_Each E--- S 3", jsonObject.toString())
-            Log.e("DEBUG_Each E--- S 3", episodesArray.toString())
-
-
-            val episodesList = mutableListOf<EpisodeItem>()
-            for (i in 0 until episodesArray.length()) {
-                val episodes = episodesArray.getJSONObject(i)
-
-                episodesList.add(
-
-                    EpisodeItem(
-                            episodesName =  episodes.optString("name", ""),
-                            episodesImage = episodes.optString("still_path", ""),
-                            episodesNumber = episodes.optString("episode_number", ""),
-                            episodesRating = episodes.optString("vote_average", "0.0"),
-                            episodesRuntime = episodes.optString("runtime", ""),
-                            episodesDescription = episodes.optString("overview", ""),
-                            seriesId = seriesId,
-                            seasonNumber = episodes.optString("season_number", ""),
+                    val url =
+                        "https://api.themoviedb.org/3/tv/$seriesId/season/${SelectedSeasons}?language=en-US"
+                    val connection = URL(url).openConnection() as HttpURLConnection
+                    connection.requestMethod = "GET"
+                    connection.setRequestProperty("accept", "application/json")
+                    connection.setRequestProperty(
+                        "Authorization",
+                        "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJhZjliMmUyN2MxYTZiYzMyMzNhZjE4MzJmNGFjYzg1MCIsIm5iZiI6MTcxOTY3NDUxNy4xOTYsInN1YiI6IjY2ODAyNjk1ZWZhYTI1ZjBhOGE4NGE3MyIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.RTms-g8dzOl3WwCeJ7WNLq3i2kXxl3T7gOTa8POcxcw"
                     )
-                )
+                    val response = connection.inputStream.bufferedReader().use { it.readText() }
+                    val jsonObject = JSONObject(response)
 
 
+                    val episodesArray = jsonObject.getJSONArray("episodes")
+
+                    Log.e("DEBUG_Each E json", jsonObject.toString())
+                    Log.e("DEBUG_Each E data", episodesArray.toString())
+                    Log.e("DEBUG_Each E leng", "${episodesArray.length()}")
+
+
+                    val episodesList = mutableListOf<EpisodeItem>()
+                    for (i in 0 until episodesArray.length()) {
+                        val episodes = episodesArray.getJSONObject(i)
+
+                        episodesList.add(
+
+                            EpisodeItem(
+                                episodesName = episodes.optString("name", ""),
+                                episodesImage = episodes.optString("still_path", ""),
+                                episodesNumber = episodes.optString("episode_number", ""),
+                                episodesRating = episodes.optString("vote_average", "0.0"),
+                                episodesRuntime = episodes.optString("runtime", ""),
+                                episodesDescription = episodes.optString("overview", ""),
+                                seriesId = seriesId,
+                                seasonNumber = episodes.optString("season_number", ""),
+                            )
+                        )
+
+
+                    }
+                    withContext(Dispatchers.Main) {
+                        Log.e("DEBUG_Each E list", "${episodesList.size}")
+                        recyclerView.adapter = EpisodesAdapter(episodesList)
+                        LoadingAnimation.hide(this@Watch_Page)
+
+                    }
+                    break
+                } catch (e: Exception) {
+                }
+
             }
-            withContext(Dispatchers.Main) {
-                recyclerView.adapter = EpisodesAdapter(episodesList)
-                LoadingAnimation.hide(this@Watch_Page)
-            }
+
         }
-
     }
 
 
@@ -607,12 +687,19 @@ class Watch_Page : AppCompatActivity() {
                         val item = dmoviesArray.getJSONObject(i)
                         //val title = item.getString("original_title")
 
-                        val title = if (item.optString("name").isNotEmpty()) {
-                            jsonObject.optString("name")
+                        val title = if (item.has("name") && !item.isNull("name")) {
+                            item.optString("name")
                         } else {
-                            jsonObject.optString("title")
+                            item.optString("title")
                         }
-                        val imgUrl = "https://image.tmdb.org/t/p/w780" + item.getString("poster_path")
+                        //val imgUrl = "https://image.tmdb.org/t/p/w780" + item.getString("backdrop_path")
+
+                        val imgUrl = if (item.has("backdrop_path") && !item.isNull("backdrop_path")) {
+                            "https://image.tmdb.org/t/p/w1280${item.getString("backdrop_path")}"
+                        } else if (item.has("poster_path") && !item.isNull("poster_path")) {
+                            "https://image.tmdb.org/t/p/w780${item.getString("poster_path")}"
+                        } else { "" }
+
                         val imdb_code = item.getString("id")
                         val type = item.getString("media_type")
                         movies.add(MovieItem(title, imgUrl, imdb_code, type))
@@ -624,8 +711,8 @@ class Watch_Page : AppCompatActivity() {
 
 
 
-                        recyclerView.layoutManager = GridLayoutManager(this@Watch_Page, 6)
-                        recyclerView.adapter = OtherAdapter(movies,  R.layout.square_card)
+                        recyclerView.layoutManager = GridLayoutManager(this@Watch_Page, 3)
+                        recyclerView.adapter = RecommendAdapter(movies,  R.layout.recomendation_card)
                         val spacing = (19 * resources.displayMetrics.density).toInt() // 16dp to px
                         recyclerView.addItemDecoration(EqualSpaceItemDecoration(spacing))
 
