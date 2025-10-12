@@ -7,17 +7,37 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.LinearSnapHelper
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import android.os.Handler
+import android.os.Looper
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.Calendar
 
 class Home_Page : AppCompatActivity() {
+    
+    private var autoScrollHandler: Handler? = null
+    private var autoScrollRunnable: Runnable? = null
+    private var currentPosition = 0
+    private var sliderAdapter: CardSwiper? = null
+    private var sliderRecyclerView: RecyclerView? = null
+    private var isUserInteracting = false
+    private var interactionPauseTime = 20000L // Pause for 10 seconds after user interaction
+    private var autoScrollInterval = 15000L // 5 seconds between slides
+    private var initialDelay = 12000L // 2 seconds before starting auto-scroll
+    private var lastInteractionTime = 0L
+    private var userScrollDirection = 0 // -1 for left, 1 for right, 0 for none
+    private var interactionCount = 0
+    private var isUserScrolling = false
+    private var lastFocusTime = 0L
+    private var focusChangeCount = 0
+    
     override fun onCreate(savedInstanceState: Bundle?) {
         GlobalUtils.applyTheme(this)
         super.onCreate(savedInstanceState)
@@ -29,6 +49,22 @@ class Home_Page : AppCompatActivity() {
         NavAction.setupSidebar(this)
 
         SliderData()
+    }
+    
+    override fun onResume() {
+        super.onResume()
+        resetInteractionCounters()
+        startAutoScroll()
+    }
+    
+    override fun onPause() {
+        super.onPause()
+        stopAutoScroll()
+    }
+    
+    override fun onDestroy() {
+        super.onDestroy()
+        stopAutoScroll()
     }
 
 
@@ -239,13 +275,104 @@ class Home_Page : AppCompatActivity() {
                         val recyclerView = findViewById<RecyclerView>(R.id.Slider_widget)
                         val adapter = CardSwiper(movies, R.layout.card_layout)
 
+                        // Store references for auto-scroll
+                        sliderRecyclerView = recyclerView
+                        sliderAdapter = adapter
 
-                        recyclerView.layoutManager = LinearLayoutManager(
+                        val layoutManager = LinearLayoutManager(
                             this@Home_Page,
                             LinearLayoutManager.HORIZONTAL, // 👈 makes it horizontal
                             false
                         )
+                        recyclerView.layoutManager = layoutManager
+                        
+                        // Add snap behavior for better auto-scroll experience
+                        recyclerView.addItemDecoration(object : RecyclerView.ItemDecoration() {
+                            override fun getItemOffsets(
+                                outRect: android.graphics.Rect,
+                                view: android.view.View,
+                                parent: RecyclerView,
+                                state: RecyclerView.State
+                            ) {
+                                val position = parent.getChildAdapterPosition(view)
+                                if (position == 0) {
+                                    outRect.left = 0
+                                } else {
+                                    outRect.left = 0
+                                }
+                                outRect.right = 0
+                            }
+                        })
+                        
+                        // Add snap helper for smooth snapping to items
+                        val snapHelper = LinearSnapHelper()
+                        snapHelper.attachToRecyclerView(recyclerView)
+                        
+                        // Enhanced scroll listener for better user interaction detection
+                        recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+                            private var lastScrollX = 0
+                            private var scrollStartTime = 0L
+                            
+                            override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
+                                super.onScrollStateChanged(recyclerView, newState)
+                                when (newState) {
+                                    RecyclerView.SCROLL_STATE_DRAGGING -> {
+                                        // User started manually scrolling
+                                        handleUserInteractionStart()
+                                        scrollStartTime = System.currentTimeMillis()
+                                        Log.d("AutoScroll", "User started dragging - pausing auto-scroll")
+                                    }
+                                    RecyclerView.SCROLL_STATE_SETTLING -> {
+                                        // User released but still scrolling
+                                        isUserScrolling = true
+                                        Log.d("AutoScroll", "User released - settling")
+                                    }
+                                    RecyclerView.SCROLL_STATE_IDLE -> {
+                                        // Scrolling completely stopped
+                                        handleUserInteractionEnd()
+                                        Log.d("AutoScroll", "Scrolling stopped - will resume auto-scroll")
+                                    }
+                                }
+                            }
+                            
+                            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                                super.onScrolled(recyclerView, dx, dy)
+                                
+                                if (isUserInteracting || isUserScrolling) {
+                                    // Detect scroll direction
+                                    userScrollDirection = when {
+                                        dx > 0 -> 1  // Scrolling right
+                                        dx < 0 -> -1 // Scrolling left
+                                        else -> 0
+                                    }
+                                    
+                                    // Update current position based on visible item
+                                    val layoutManager = recyclerView.layoutManager as? LinearLayoutManager
+                                    layoutManager?.let { lm ->
+                                        val firstVisible = lm.findFirstCompletelyVisibleItemPosition()
+                                        if (firstVisible != RecyclerView.NO_POSITION) {
+                                            currentPosition = firstVisible
+                                        }
+                                    }
+                                    
+                                    // Update last interaction time
+                                    lastInteractionTime = System.currentTimeMillis()
+                                }
+                            }
+                        })
+                        
+                        // Setup touch listener for better interaction detection
+                        setupTouchListener(recyclerView)
+                        
+                        // Setup focus change listener for TV remote interactions
+                        setupFocusListener(recyclerView)
+                        
                         recyclerView.adapter = adapter
+                        
+                        // Start auto-scrolling after a short delay
+                        Handler(Looper.getMainLooper()).postDelayed({
+                            startAutoScroll()
+                        }, initialDelay)
 
                     }
 
@@ -255,6 +382,211 @@ class Home_Page : AppCompatActivity() {
                     Log.e("DEBUG_MAINSliderPage", "Error fetching data", e)
                 }
             }
+        }
+    }
+    
+    private fun startAutoScroll() {
+        if (isUserInteracting) {
+            Log.d("AutoScroll", "Skipping auto-scroll start - user is interacting")
+            return
+        }
+        
+        stopAutoScroll() // Stop any existing auto-scroll
+        
+        autoScrollHandler = Handler(Looper.getMainLooper())
+        autoScrollRunnable = object : Runnable {
+            override fun run() {
+                if (isUserInteracting) {
+                    Log.d("AutoScroll", "Skipping auto-scroll - user is interacting")
+                    return
+                }
+                
+                sliderRecyclerView?.let { recyclerView ->
+                    sliderAdapter?.let { adapter ->
+                        if (adapter.itemCount > 1) {
+                            currentPosition = (currentPosition + 1) % adapter.itemCount
+                            
+                            // Use custom smooth scroller for better animation
+                            val smoothScroller = SmoothScroller(this@Home_Page)
+                            smoothScroller.targetPosition = currentPosition
+                            recyclerView.layoutManager?.startSmoothScroll(smoothScroller)
+                            
+                            Log.d("AutoScroll", "Scrolling to position: $currentPosition")
+                        }
+                    }
+                }
+                
+                // Schedule next auto-scroll
+                autoScrollHandler?.postDelayed(this, autoScrollInterval)
+            }
+        }
+        
+        // Start the auto-scroll
+        autoScrollRunnable?.let { runnable ->
+            autoScrollHandler?.postDelayed(runnable, autoScrollInterval)
+        }
+    }
+    
+    private fun stopAutoScroll() {
+        autoScrollRunnable?.let { runnable ->
+            autoScrollHandler?.removeCallbacks(runnable)
+        }
+        autoScrollHandler = null
+        autoScrollRunnable = null
+    }
+    
+    // Public methods for external control
+    fun setAutoScrollInterval(interval: Long) {
+        autoScrollInterval = interval
+    }
+    
+    fun setInitialDelay(delay: Long) {
+        initialDelay = delay
+    }
+    
+    fun setInteractionPauseTime(pauseTime: Long) {
+        interactionPauseTime = pauseTime
+    }
+    
+    fun isAutoScrolling(): Boolean {
+        return autoScrollHandler != null && !isUserInteracting
+    }
+    
+    fun getUserInteractionStatus(): String {
+        return when {
+            isUserActivelyBrowsing() -> "Actively Browsing"
+            isUserInteracting -> "Interacting"
+            isUserScrolling -> "Scrolling"
+            else -> "Watching"
+        }
+    }
+    
+    private fun handleUserInteractionStart() {
+        isUserInteracting = true
+        isUserScrolling = false
+        interactionCount++
+        lastInteractionTime = System.currentTimeMillis()
+        stopAutoScroll()
+        
+        Log.d("AutoScroll", "User interaction #$interactionCount detected")
+    }
+    
+    private fun handleUserInteractionEnd() {
+        isUserScrolling = false
+        
+        // Calculate dynamic pause time based on user behavior
+        val dynamicPauseTime = calculateDynamicPauseTime()
+        
+        Handler(Looper.getMainLooper()).postDelayed({
+            if (isUserInteracting) {
+                isUserInteracting = false
+                startAutoScroll()
+                Log.d("AutoScroll", "Resuming auto-scroll after ${dynamicPauseTime}ms pause")
+            }
+        }, dynamicPauseTime)
+    }
+    
+    private fun calculateDynamicPauseTime(): Long {
+        // Base pause time
+        var pauseTime = interactionPauseTime
+        
+        // If user has interacted multiple times recently, increase pause time
+        if (interactionCount > 3) {
+            pauseTime = (pauseTime * 1.5).toLong()
+        }
+        
+        // If user scrolled in opposite direction, give them more time
+        if (userScrollDirection != 0) {
+            pauseTime = (pauseTime * 1.2).toLong()
+        }
+        
+        // If user is actively browsing (multiple focus changes), give more time
+        if (focusChangeCount > 2) {
+            pauseTime = (pauseTime * 1.3).toLong()
+        }
+        
+        // If user is rapidly interacting, extend pause significantly
+        if (isUserActivelyBrowsing()) {
+            pauseTime = (pauseTime * 2.0).toLong()
+        }
+        
+        // Cap the maximum pause time
+        return pauseTime.coerceAtMost(30000L) // Max 30 seconds
+    }
+    
+    private fun isUserActivelyBrowsing(): Boolean {
+        val currentTime = System.currentTimeMillis()
+        val timeSinceLastInteraction = currentTime - lastInteractionTime
+        
+        // User is actively browsing if they've had multiple interactions in the last 30 seconds
+        return interactionCount > 2 && timeSinceLastInteraction < 30000L
+    }
+    
+    // Add touch listener for better interaction detection
+    private fun setupTouchListener(recyclerView: RecyclerView) {
+        recyclerView.setOnTouchListener { _, event ->
+            when (event.action) {
+                android.view.MotionEvent.ACTION_DOWN -> {
+                    handleUserInteractionStart()
+                    Log.d("AutoScroll", "Touch detected - pausing auto-scroll")
+                }
+                android.view.MotionEvent.ACTION_UP, 
+                android.view.MotionEvent.ACTION_CANCEL -> {
+                    // Don't immediately resume, let the scroll listener handle it
+                    Log.d("AutoScroll", "Touch released")
+                }
+            }
+            false // Don't consume the event
+        }
+    }
+    
+    // Add focus change listener for TV remote interactions
+    private fun setupFocusListener(recyclerView: RecyclerView) {
+        recyclerView.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus) {
+                lastFocusTime = System.currentTimeMillis()
+                focusChangeCount++
+                
+                // If user is actively using the remote, pause auto-scroll
+                if (focusChangeCount > 1) {
+                    handleUserInteractionStart()
+                    Log.d("AutoScroll", "Focus change detected - pausing auto-scroll")
+                }
+            }
+        }
+        
+        // Add child focus change listener
+        recyclerView.addOnChildAttachStateChangeListener(object : RecyclerView.OnChildAttachStateChangeListener {
+            override fun onChildViewAttachedToWindow(view: android.view.View) {
+                view.setOnFocusChangeListener { _, hasFocus ->
+                    if (hasFocus) {
+                        lastFocusTime = System.currentTimeMillis()
+                        focusChangeCount++
+                        
+                        if (focusChangeCount > 1) {
+                            handleUserInteractionStart()
+                            Log.d("AutoScroll", "Child focus change detected - pausing auto-scroll")
+                        }
+                    }
+                }
+            }
+            
+            override fun onChildViewDetachedFromWindow(view: android.view.View) {
+                // Clean up if needed
+            }
+        })
+    }
+    
+    // Reset interaction counters periodically
+    private fun resetInteractionCounters() {
+        val currentTime = System.currentTimeMillis()
+        
+        // Reset counters if it's been more than 5 minutes since last interaction
+        if (currentTime - lastInteractionTime > 300000L) { // 5 minutes
+            interactionCount = 0
+            focusChangeCount = 0
+            userScrollDirection = 0
+            Log.d("AutoScroll", "Interaction counters reset")
         }
     }
 
