@@ -72,8 +72,8 @@
                     android:textSize="10sp"
                     tools:ignore="HardcodedText,RtlSymmetry,SmallSp"
                     android:shadowColor="?attr/AccentColor"
-                    android:shadowDx="5"
-                    android:shadowDy="6"
+                    android:shadowDx="2"
+                    android:shadowDy="4"
                     android:shadowRadius="4"/>
 
                 <TextView

@@ -1,6 +1,5 @@
 package com.example.onyx
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.graphics.Typeface
@@ -35,9 +34,9 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.widget.TooltipCompat
 import androidx.core.content.ContextCompat
-import androidx.core.view.marginEnd
 import com.bumptech.glide.Glide
 import org.json.JSONObject
+import java.time.LocalDate
 import kotlin.text.ifEmpty
 
 class Watch_Page : AppCompatActivity() {
@@ -51,12 +50,26 @@ class Watch_Page : AppCompatActivity() {
         "PrimeWire",
         "vidking"
     )
-    
+
+    private lateinit var episodes_recycler : RecyclerView
+
+
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         GlobalUtils.applyTheme(this)
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_watch_page)
+
+
+        episodes_recycler = findViewById<RecyclerView>(R.id.episodes_recycler)
+        //episodes_recycler.layoutManager = GridLayoutManager(this@Watch_Page, 4)
+        episodes_recycler.layoutManager = LinearLayoutManager(
+            this@Watch_Page,
+            LinearLayoutManager.HORIZONTAL,
+            false
+        )
+
 
         // Get extras from Intent
         val imdbCode = intent.getStringExtra("imdb_code")
@@ -64,13 +77,14 @@ class Watch_Page : AppCompatActivity() {
         if(!imdbCode.isNullOrEmpty()){
             fetchData(imdbCode.toString(), type.toString())
         }else{
-            fetchData("10160 ", "tv")
+            fetchData("63926 ", "tv")
         }
 
     }
 
 
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun fetchData(id:String, type: String) {
         CoroutineScope(Dispatchers.IO).launch {
             var tmdbId = id // mutable copy
@@ -322,6 +336,7 @@ class Watch_Page : AppCompatActivity() {
 
     private var selectedSeasonButton: Button? = null
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun createSeasonButtons(
         noOfSeasons: Int,
         seasonData: MutableList<JSONObject>,
@@ -330,7 +345,9 @@ class Watch_Page : AppCompatActivity() {
     ) {
         val container = findViewById<LinearLayout>(R.id.season_selector_container)
         container.removeAllViews()
+
         var track = 0
+        var firstButton: Button? = null  // 👈 Keep a reference to the first
 
         while (track < noOfSeasons) {
             val selectedSeason = seasonData[track]
@@ -353,68 +370,57 @@ class Watch_Page : AppCompatActivity() {
                 layoutParams = LinearLayout.LayoutParams(
                     dpToPx(120),
                     dpToPx(48)
-                ).apply {
-                    marginEnd = dpToPx(8)
-                }
+                ).apply { marginEnd = dpToPx(8) }
                 setTextColor(resolveAttrColor(context, R.attr.FG_color))
             }
 
             seasonButton.setOnClickListener {
-                // Reset previous selected button background
-                selectedSeasonButton?.background = ContextCompat.getDrawable(
-                    this,
-                    R.drawable.tv_button_selector
-                )
-
+                selectedSeasonButton?.let { previous ->
+                    previous.background = ContextCompat.getDrawable(
+                        this,
+                        R.drawable.tv_button_selector
+                    )
+                    previous.setTextColor(resolveAttrColor(this, R.attr.FG_color))
+                }
 
                 seasonButton.setTextColor(resolveAttrColor(this, R.attr.AccentColor))
-
                 selectedSeasonButton = seasonButton
 
                 seasonButton.isEnabled = false
                 ShowSeasonEpisodes(season_no, seasonData, seasonID, seasonAllData)
-                seasonButton.postDelayed({
-                    seasonButton.isEnabled = true
-                }, 3000)
+                seasonButton.postDelayed({ seasonButton.isEnabled = true }, 3000)
             }
 
-            // Handle D-Pad navigation
+            // DPAD navigation
             seasonButton.setOnKeyListener { v, keyCode, event ->
                 if (event.action == KeyEvent.ACTION_DOWN) {
                     val index = container.indexOfChild(v)
                     when (keyCode) {
                         KeyEvent.KEYCODE_DPAD_LEFT -> {
-                            // Move left unless it's the first button
-                            if (index > 0) {
-                                container.getChildAt(index - 1).requestFocus()
-                            }
+                            if (index > 0) container.getChildAt(index - 1).requestFocus()
                             return@setOnKeyListener true
                         }
 
                         KeyEvent.KEYCODE_DPAD_RIGHT -> {
-                            // Move right unless it's the last button
-                            if (index < container.childCount - 1) {
-                                container.getChildAt(index + 1).requestFocus()
-                            }
+                            if (index < container.childCount - 1) container.getChildAt(index + 1).requestFocus()
                             return@setOnKeyListener true
                         }
 
                         KeyEvent.KEYCODE_DPAD_DOWN -> {
-                            // Move focus to episode RecyclerView when pressing down
                             val episodesRecycler = findViewById<RecyclerView>(R.id.episodes_recycler)
                             val castRecycler = findViewById<RecyclerView>(R.id.Cast_widget)
-                            if (episodesRecycler.childCount > 0) {
-                                episodesRecycler.getChildAt(0)?.requestFocus()
-                            }// Else if cast list has items, focus first item there
-                            else if (castRecycler.childCount > 0) {
-                                castRecycler.getChildAt(0)?.requestFocus()
+                            val recommendationRecycler = findViewById<RecyclerView>(R.id.Recommendation_widget)
+
+                            when {
+                                episodesRecycler.childCount > 0 -> episodesRecycler.getChildAt(0)?.requestFocus()
+                                castRecycler.childCount > 0 -> castRecycler.getChildAt(0)?.requestFocus()
+                                recommendationRecycler.childCount > 0 -> recommendationRecycler.getChildAt(0)?.requestFocus()
                             }
                             return@setOnKeyListener true
                         }
 
                         KeyEvent.KEYCODE_DPAD_UP -> {
-                            val trailerButton = findViewById<ImageButton>(R.id.TrailerButton) // Use your actual ID
-                            trailerButton?.requestFocus()
+                            findViewById<ImageButton>(R.id.TrailerButton)?.requestFocus()
                             return@setOnKeyListener true
                         }
                     }
@@ -423,9 +429,21 @@ class Watch_Page : AppCompatActivity() {
             }
 
             container.addView(seasonButton)
+
+            if (track == 0) {
+                firstButton = seasonButton  // 👈 store reference to first button
+            }
+
             track++
         }
+
+        // 👇 Auto-click the first button after layout is done
+        firstButton?.post {
+            firstButton?.performClick()
+            firstButton?.requestFocus()  // optional: also focus it visually
+        }
     }
+
 
 
     //setBackgroundColor(Color.parseColor("#3D5AFE"))
@@ -439,24 +457,11 @@ class Watch_Page : AppCompatActivity() {
         return (dp * resources.displayMetrics.density).toInt()
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun ShowSeasonEpisodes(SelectedSeasons: Int, seasonData : MutableList<JSONObject>, seriesId: String, seasonAllData:  JSONObject) {
 
         LoadingAnimation.setup(this, R.raw.grey)
         LoadingAnimation.show(this)
-
-        val recyclerView = findViewById<RecyclerView>(R.id.episodes_recycler)
-        //recyclerView.layoutManager = GridLayoutManager(this@Watch_Page, 4)
-
-        recyclerView.layoutManager = LinearLayoutManager(
-            this@Watch_Page,
-            LinearLayoutManager.HORIZONTAL,
-            false
-        )
-
-
-
-        recyclerView.removeAllViews()
-
 
         val overviewWidget = findViewById<TextView>(R.id.overview_widget)
         val ratingWidget = findViewById<TextView>(R.id.Rating_widget)
@@ -526,7 +531,6 @@ class Watch_Page : AppCompatActivity() {
 
                 try {
 
-
                     val url =
                         "https://api.themoviedb.org/3/tv/$seriesId/season/${SelectedSeasons}?language=en-US"
                     val connection = URL(url).openConnection() as HttpURLConnection
@@ -541,6 +545,7 @@ class Watch_Page : AppCompatActivity() {
 
 
                     val episodesArray = jsonObject.getJSONArray("episodes")
+                    val today = LocalDate.now()
 
                     Log.e("DEBUG_Each E json", jsonObject.toString())
                     Log.e("DEBUG_Each E data", episodesArray.toString())
@@ -550,6 +555,17 @@ class Watch_Page : AppCompatActivity() {
                     val episodesList = mutableListOf<EpisodeItem>()
                     for (i in 0 until episodesArray.length()) {
                         val episodes = episodesArray.getJSONObject(i)
+
+                        val airDateString = episodes.optString("air_date", "")
+                        if (airDateString.isNullOrEmpty()) continue
+
+
+                        if (episodes.optString("still_path", "").isBlank() || episodes.optString("still_path", "").equals("null", true) ||
+                            episodes.optString("runtime", "").isBlank() || episodes.optString("runtime", "").equals("null", true)) {
+                            continue
+                        }
+
+
 
                         episodesList.add(
 
@@ -567,9 +583,12 @@ class Watch_Page : AppCompatActivity() {
 
 
                     }
+
+
                     withContext(Dispatchers.Main) {
                         Log.e("DEBUG_Each E list", "${episodesList.size}")
-                        recyclerView.adapter = EpisodesAdapter(episodesList)
+                        episodes_recycler.removeAllViews()
+                        episodes_recycler.adapter = EpisodesAdapter(episodesList)
                         LoadingAnimation.hide(this@Watch_Page)
 
                     }

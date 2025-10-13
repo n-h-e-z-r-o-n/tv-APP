@@ -31,7 +31,6 @@
             android:descendantFocusability="beforeDescendants"
             android:nextFocusLeft="@id/btnTvShow"/>
 
-        <include layout="@layout/laod_animation"/>
         <include layout="@layout/side_bar"/>
 
 

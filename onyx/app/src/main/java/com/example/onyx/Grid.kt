@@ -782,7 +782,17 @@ class EpisodesAdapter(
         episodes.add(item)
         notifyItemInserted(episodes.size - 1)
     }
+
+    fun clearEpisodes() {
+        val size = episodes.size
+        if (size > 0) {
+            episodes.clear()
+            notifyItemRangeRemoved(0, size)
+        }
+    }
 }
+
+
 
 data class EpisodeItem(
     val episodesName: String = "",

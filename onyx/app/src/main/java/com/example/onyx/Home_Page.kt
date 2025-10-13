@@ -72,8 +72,7 @@ class Home_Page : AppCompatActivity() {
         LoadingAnimation.show(this@Home_Page)
         CoroutineScope(Dispatchers.IO).launch {
 
-            repeat(5) { attempt ->
-
+            repeat(10) { attempt ->
                 try {
                     val url = "https://api.themoviedb.org/3/discover/movie?include_adult=true"
                     val connection = URL(url).openConnection() as HttpURLConnection
@@ -378,7 +377,7 @@ class Home_Page : AppCompatActivity() {
 
                     return@launch
                 } catch (e: Exception) {
-                    delay(10_000)
+                    delay(20_000)
                     Log.e("DEBUG_MAINSliderPage", "Error fetching data", e)
                 }
             }

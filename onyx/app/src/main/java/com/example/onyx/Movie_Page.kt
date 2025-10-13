@@ -35,8 +35,6 @@ class Movie_Page : AppCompatActivity() {
         setContentView(R.layout.activity_movie_page)
 
         NavAction.setupSidebar(this)
-        LoadingAnimation.setup(this@Movie_Page)
-        LoadingAnimation.show(this@Movie_Page)
 
         adapter = GridAdapter(mutableListOf(), R.layout.item_grid)
         adapter.onAddMoreClicked = {

@@ -13,8 +13,6 @@
 
 
 
-
-
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/Movies"
             android:layout_height="match_parent"
@@ -30,7 +28,6 @@
             android:nextFocusLeft="@id/btnMovies"
             tools:ignore="RtlSymmetry" />
 
-        <include layout="@layout/laod_animation"/>
         <include layout="@layout/side_bar"/>
 
 

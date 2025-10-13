@@ -99,6 +99,7 @@
                         app:cardCornerRadius="100dp"
                         android:layout_gravity="center_horizontal"
                         app:cardBackgroundColor="?attr/AccentColor"
+                        android:elevation="0dp"
                         >
 
                         <TextView

@@ -480,7 +480,7 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:padding="16dp"
-                    android:visibility="visible">
+                    android:visibility="gone">
 
                     <!-- Season Header -->
                     <LinearLayout
@@ -536,7 +536,11 @@
                         android:layout_height="wrap_content"
                         app:cardCornerRadius="20dp"
                         android:layout_gravity="center_horizontal"
+                        android:elevation="0dp"
                         android:padding="20dp"
+                        android:descendantFocusability="afterDescendants"
+                        android:focusable="true"
+                        android:focusableInTouchMode="true"
                         app:cardBackgroundColor="?attr/BG_color_up">
 
                         <LinearLayout

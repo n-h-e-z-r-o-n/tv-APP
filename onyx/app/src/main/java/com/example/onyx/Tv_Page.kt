@@ -37,8 +37,6 @@ class Tv_Page : AppCompatActivity() {
         setContentView(R.layout.activity_tv_page)
 
         NavAction.setupSidebar(this@Tv_Page)
-        LoadingAnimation.setup(this@Tv_Page)
-        LoadingAnimation.show(this@Tv_Page)
 
         adapter = GridAdapter(mutableListOf(), R.layout.item_grid)
         adapter.onAddMoreClicked = {
@@ -145,7 +143,6 @@ class Tv_Page : AppCompatActivity() {
                         val movieItem = MovieItem(title=title, imageUrl=imgUrl, imdbCode=id, type=type, year=firstAirDate, rating=voteAverage, runtime=showD)
 
                         withContext(Dispatchers.Main) {
-                            LoadingAnimation.hide(this@Tv_Page)
                             adapter.addItem(movieItem)
                             isLoadingMore = false
                         }
@@ -156,7 +153,6 @@ class Tv_Page : AppCompatActivity() {
 
                     return@launch
                 } catch (e: Exception) {
-                    LoadingAnimation.show(this@Tv_Page)
                     Log.e("DEBUG_TAG_TvShows", "Attempt ${attempt+1} failed", e)
                     delay(10_000)
                     currentPage--
