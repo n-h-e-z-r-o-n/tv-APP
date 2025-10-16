@@ -527,8 +527,7 @@
 
 
                     <!-- Episodes List -->
-                    <include android:layout_height="50dp" layout="@layout/laod_animation"
-                        tools:ignore="IncludeLayoutParam" />
+
 
 
                     <androidx.cardview.widget.CardView
@@ -643,6 +642,9 @@
                                 android:layout_marginBottom="6dp"
                                 android:background="?attr/AccentColor"
                                 android:alpha="0.3" />
+
+                            <include android:layout_height="50dp" layout="@layout/laod_animation"
+                                tools:ignore="IncludeLayoutParam" />
 
                             <!-- Episodes Recycler -->
                             <androidx.recyclerview.widget.RecyclerView
