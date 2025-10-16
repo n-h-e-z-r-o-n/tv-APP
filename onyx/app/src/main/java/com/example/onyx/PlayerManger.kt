@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
+import android.media.AudioManager
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
@@ -23,16 +24,36 @@ object PlayerManager {
     private var availableQualities: List<String> = listOf("Auto")
 
     fun playVideoExternally(context: Context, videoUrl: String) {
-
+        // If a player is already active for the same URL, don't create a new one
+        if (isPlayerActive() && currentVideoUrl == videoUrl) {
+            Log.d("PlayerManager", "Player already active for this URL, not creating new instance")
+            return
+        }
+        
+        // Release any existing player before starting a new one
+        releasePlayer()
+        
         val intent = Intent(context, Video_payer::class.java).apply {
             putExtra("video_url", videoUrl)
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
         }
         context.startActivity(intent)
     }
 
     fun initializePlayer(context: Context, videoUrl: String): ExoPlayer {
         releasePlayer()
+        
+        // Request audio focus to prevent multiple audio streams
+        val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        val result = audioManager.requestAudioFocus(
+            null,
+            AudioManager.STREAM_MUSIC,
+            AudioManager.AUDIOFOCUS_GAIN
+        )
+        
+        if (result != AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+            Log.w("PlayerManager", "Audio focus not granted, but continuing with playback")
+        }
 
         val trackSelector = DefaultTrackSelector(context).apply {
             setParameters(
@@ -86,8 +107,25 @@ object PlayerManager {
             availableQualities = listOf("Auto")
         }
     }
+    
+    fun releasePlayerWithAudioFocus(context: Context) {
+        exoPlayer?.let { player ->
+            player.release()
+            exoPlayer = null
+            currentVideoUrl = null
+            availableQualities = listOf("Auto")
+        }
+        
+        // Abandon audio focus when releasing player
+        val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        audioManager.abandonAudioFocus(null)
+    }
 
     fun getCurrentVideoUrl(): String? = currentVideoUrl
+    
+    fun getCurrentPlayer(): ExoPlayer? = exoPlayer
+    
+    fun isPlayerActive(): Boolean = exoPlayer != null
 
     fun setVideoQuality(qualityIndex: Int) {
         exoPlayer?.let { player ->

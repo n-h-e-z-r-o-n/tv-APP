@@ -20,6 +20,7 @@ object NavAction {
         val btnHome = activity.findViewById<ImageButton>(R.id.btnHome)
         val btnMovies = activity.findViewById<ImageButton>(R.id.btnMovies)
         val btnTvShows = activity.findViewById<ImageButton>(R.id.btnTvShow)
+        val btnAnime = activity.findViewById<ImageButton>(R.id.btnAnime)
         val btnSearch = activity.findViewById<ImageButton>(R.id.btnSearch)
         val btnFav = activity.findViewById<ImageButton>(R.id.btnFav)
         val btnNotification = activity.findViewById<ImageButton>(R.id.btnNotification)
@@ -30,18 +31,20 @@ object NavAction {
         val labelHome = activity.findViewById<TextView>(R.id.labelHome)
         val labelMovies = activity.findViewById<TextView>(R.id.labelMovies)
         val labelTvShow = activity.findViewById<TextView>(R.id.labelTvShow)
+        val labelAnime = activity.findViewById<TextView>(R.id.labelAnime)
         val labelSearch = activity.findViewById<TextView>(R.id.labelSearch)
         val labelFav = activity.findViewById<TextView>(R.id.labelFav)
         val labelNotification = activity.findViewById<TextView>(R.id.labelNotification)
         val labelProfile = activity.findViewById<TextView>(R.id.labelProfile)
 
-        val buttons = listOf(btnHome, btnMovies, btnTvShows, btnSearch, btnFav, btnNotification, btnProfile)
-        val labels = listOf(labelHome, labelMovies, labelTvShow, labelSearch,labelFav, labelNotification, labelProfile )
+        val buttons = listOf(btnHome, btnMovies, btnTvShows,btnAnime, btnSearch, btnFav, btnNotification, btnProfile)
+        val labels = listOf(labelHome, labelMovies, labelTvShow, labelAnime,  labelSearch,labelFav, labelNotification, labelProfile )
 
         val navigationMap = mapOf(
             btnHome to Home_Page::class.java,
             btnMovies to Movie_Page::class.java,
             btnTvShows to Tv_Page::class.java,
+            btnAnime to Anime_Page::class.java,
             btnSearch to Search_Page::class.java,
             btnFav to Favorite_Page::class.java,
             btnNotification to Notification_Page::class.java,
@@ -57,6 +60,7 @@ object NavAction {
             is Home_Page -> btnHome
             is Movie_Page -> btnMovies
             is Tv_Page -> btnTvShows
+            is Anime_Page -> btnAnime
             is Search_Page -> btnSearch
             is Favorite_Page -> btnFav
             is Notification_Page -> btnNotification

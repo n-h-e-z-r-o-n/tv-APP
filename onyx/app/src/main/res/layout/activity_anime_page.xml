@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+xmlns:tools="http://schemas.android.com/tools"
+android:id="@+id/main"
+
+android:layout_width="match_parent"
+android:layout_height="match_parent"
+tools:context=".Anime_Page"
+android:background="?attr/BG_color">
+
+<FrameLayout
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal">
+
+
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/AnimeRecyclerView"
+        android:layout_height="match_parent"
+        android:layout_width="match_parent"
+        android:clipToPadding="false"
+        android:overScrollMode="never"
+        android:padding="10dp"
+        android:scrollbars="none"
+        android:paddingStart="41dp"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:descendantFocusability="beforeDescendants"
+        android:nextFocusLeft="@id/btnMovies"
+        tools:ignore="RtlSymmetry" />
+
+    <include layout="@layout/side_bar"/>
+
+
+</FrameLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

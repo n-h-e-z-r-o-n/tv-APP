@@ -17,3 +17,4 @@ class SmoothScroller(context: Context) : LinearSmoothScroller(context) {
         return super.calculateTimeForScrolling(dx).coerceAtMost(1000) // Max 1 second
     }
 }
+

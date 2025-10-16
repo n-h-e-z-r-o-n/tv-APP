@@ -114,7 +114,14 @@ class Video_payer : AppCompatActivity(), Player.Listener {
     private fun setupPlayer() {
         val videoUrl = intent.getStringExtra("video_url")
         if (videoUrl != null) {
-            exoPlayer = PlayerManager.initializePlayer(this, videoUrl)
+            // Check if we already have a player for this URL to prevent duplicates
+            val currentUrl = PlayerManager.getCurrentVideoUrl()
+            if (currentUrl != videoUrl) {
+                exoPlayer = PlayerManager.initializePlayer(this, videoUrl)
+            } else {
+                exoPlayer = PlayerManager.getCurrentPlayer()
+            }
+            
             exoPlayer?.let { player ->
                 playerView.player = player
                 player.addListener(this)
@@ -537,7 +544,7 @@ class Video_payer : AppCompatActivity(), Player.Listener {
     override fun onDestroy() {
         super.onDestroy()
         stopProgressTracking()
-        PlayerManager.releasePlayer()
+        PlayerManager.releasePlayerWithAudioFocus(this)
         finish()
     }
 

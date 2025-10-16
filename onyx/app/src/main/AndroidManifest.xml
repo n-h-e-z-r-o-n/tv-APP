@@ -25,6 +25,9 @@
         android:theme="@style/Theme.Onyx.Dark"
         android:usesCleartextTraffic="true">
         <activity
+            android:name=".Anime_Page"
+            android:exported="false" />
+        <activity
             android:name=".PayWall"
             android:exported="false" />
         <activity
@@ -68,11 +71,10 @@
         <activity
             android:name=".Play"
             android:exported="false"
-            android:launchMode="singleTop"/>
+            android:launchMode="singleTop" />
         <activity
             android:name=".Watch_Page"
-            android:exported="true"
-            />
+            android:exported="true" />
         <activity
             android:name=".MainActivity"
             android:exported="true">
@@ -82,9 +84,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
                 <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
             </intent-filter>
-        </activity>
-        
-        <!-- FileProvider for secure file sharing -->
+        </activity> <!-- FileProvider for secure file sharing -->
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
