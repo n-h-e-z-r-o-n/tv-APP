@@ -130,6 +130,7 @@ class Play : AppCompatActivity() {
                 }, 3000)
             }
 
+            @OptIn(UnstableApi::class)
             override fun shouldInterceptRequest(
                 view: WebView?,
                 request: WebResourceRequest?
@@ -166,7 +167,10 @@ class Play : AppCompatActivity() {
 
                 if (isVideo) {
                     runOnUiThread {
-                        playVideoExternally(url)
+                        // Clear WebView data and cookies before launching video player
+                        clearWebViewData()
+                        Video_payer.playVideoExternally(this@Play, url)
+                        finish()
                     }
                 }
 
@@ -248,14 +252,51 @@ class Play : AppCompatActivity() {
         Log.d("DEBUG_TAG_PlayActivity", "Launching external video: $videoUrl")
 
         try {
-            PlayerManager.releasePlayer()
-            PlayerManager.playVideoExternally(this, videoUrl)
+            // Clear WebView data and cookies before launching video player
+            clearWebViewData()
+            Video_payer.playVideoExternally(this, videoUrl)
             finish()
         } catch (e: Exception) {
             Log.e("DEBUG_TAG_PlayActivity", "Failed to launch external video", e)
+        } finally {
             synchronized(this) {
                 isVideoLaunching = false
             }
+        }
+    }
+    
+    private fun clearWebViewData() {
+        try {
+            // Clear WebView cache, cookies, and data
+            val webView = findViewById<WebView>(R.id.webView)
+            webView?.let { wv ->
+                // Stop loading
+                wv.stopLoading()
+                
+                // Clear cache
+                wv.clearCache(true)
+                
+                // Clear history
+                wv.clearHistory()
+                
+                // Clear form data
+                wv.clearFormData()
+                
+                // Clear cookies
+                val cookieManager = CookieManager.getInstance()
+                cookieManager.removeAllCookies(null)
+                cookieManager.flush()
+                
+                // Clear WebView storage
+                wv.clearMatches()
+                
+                // Load blank page
+                wv.loadUrl("about:blank")
+                
+                Log.d("DEBUG_TAG_PlayActivity", "WebView data cleared successfully")
+            }
+        } catch (e: Exception) {
+            Log.e("DEBUG_TAG_PlayActivity", "Failed to clear WebView data", e)
         }
     }
 

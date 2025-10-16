@@ -11,6 +11,8 @@ class Anime_Page : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_anime_page)
+        NavAction.setupSidebar(this@Anime_Page)
+
 
 
     }

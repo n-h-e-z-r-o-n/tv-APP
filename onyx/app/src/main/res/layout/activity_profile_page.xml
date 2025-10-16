@@ -188,7 +188,7 @@
                         <ImageView
                             android:layout_width="24dp"
                             android:layout_height="24dp"
-                            android:src="@drawable/ic_notifications"
+                            android:src="@drawable/ic_notification"
                             android:contentDescription="Notifications"
                             app:tint="?attr/FG_color"
                             tools:ignore="HardcodedText" />

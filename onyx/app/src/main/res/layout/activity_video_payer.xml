@@ -30,6 +30,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
+        android:indeterminateTint="?attr/AccentColor"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -133,7 +134,7 @@
                             android:focusable="true"
                             android:focusableInTouchMode="true"
                             android:clickable="true"
-                            android:src="@android:drawable/ic_media_rew"
+                            android:src="@drawable/ic_rewind_back"
                             app:tint="@android:color/white"
                             android:scaleType="fitCenter"
                             tools:ignore="ContentDescription" />
@@ -149,7 +150,7 @@
                             android:focusableInTouchMode="true"
                             android:clickable="true"
                             app:tint="@android:color/white"
-                            android:src="@android:drawable/ic_media_play"
+                            android:src="@drawable/ic_play"
                             android:scaleType="fitCenter"
                             tools:ignore="ContentDescription" />
 
@@ -163,7 +164,7 @@
                             android:focusable="true"
                             android:focusableInTouchMode="true"
                             android:clickable="true"
-                            android:src="@android:drawable/ic_media_ff"
+                            android:src="@drawable/ic_rewind_forward"
                             app:tint="@android:color/white"
                             android:scaleType="fitCenter"
                             tools:ignore="ContentDescription" />
@@ -253,7 +254,7 @@
                     android:clickable="true"
                     android:focusable="true"
                     android:focusableInTouchMode="true"
-                    android:src="@android:drawable/ic_popup_sync"
+                    android:src="@drawable/ic_refresh"
                     app:tint="@android:color/white" />
 
                 <!-- Settings button -->
@@ -266,7 +267,7 @@
                     android:clickable="true"
                     android:focusable="true"
                     android:focusableInTouchMode="true"
-                    android:src="@drawable/setting"
+                    android:src="@drawable/ic_setting"
                     app:tint="@android:color/white" />
 
                 <!-- Fullscreen button -->
@@ -293,7 +294,7 @@
                     android:clickable="true"
                     android:focusable="true"
                     android:focusableInTouchMode="true"
-                    android:src="@drawable/close_small"
+                    android:src="@drawable/ic_close"
                     app:tint="@color/nav_icon_color_selector" />
 
             </LinearLayout>
