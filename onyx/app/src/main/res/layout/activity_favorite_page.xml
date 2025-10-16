@@ -50,6 +50,7 @@
                     android:layout_gravity="start" />
 
                 <LinearLayout
+                    android:id="@+id/FaveData"
                     android:layout_width="400dp"
                     android:layout_height="wrap_content"
 
@@ -220,11 +221,21 @@
 
             <TextView
                 android:id="@+id/emptyState"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="No favorites yet. Add some from a show page."
-                android:textColor="?attr/FG_color"
-                android:visibility="gone"/>
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:padding="150dp"
+                android:textSize="35sp"
+                android:text="Your favorites list is feeling a little lonely. Discover shows and add them to your favorites!"
+                android:gravity="center"
+                android:fontFamily="@font/i"
+                android:textColor="?attr/AccentColor"
+                android:visibility="gone"
+                android:background="?attr/BG_color"
+                android:shadowColor="?attr/FG_color"
+                android:shadowDx="2"
+                android:shadowDy="3"
+                android:shadowRadius="4"
+                tools:ignore="HardcodedText" />
 
             <TextView
                 android:id="@+id/titleFavorites"

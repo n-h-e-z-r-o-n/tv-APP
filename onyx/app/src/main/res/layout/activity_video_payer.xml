@@ -69,15 +69,16 @@
                 android:gravity="center_vertical">
 
 
-
                 <TextView
                     android:id="@+id/txt_current_time"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
+                    android:fontFamily="@font/c"
+                    android:text="00:00"
                     android:textColor="@android:color/white"
-                    android:textSize="14sp"
-                    android:text="00:00" />
+                    android:textSize="13sp"
+                    tools:ignore="HardcodedText,TextContrastCheck" />
 
 
 
@@ -102,9 +103,11 @@
                     android:id="@+id/txt_duration"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:fontFamily="@font/c"
+                    android:text="00:00"
                     android:textColor="@android:color/white"
-                    android:textSize="14sp"
-                    android:text="00:00" />
+                    android:textSize="13sp"
+                    tools:ignore="HardcodedText,TextContrastCheck" />
             </LinearLayout>
 
 
@@ -115,7 +118,8 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center"
-                android:weightSum="2">
+                android:weightSum="2"
+                tools:ignore="DisableBaselineAlignment">
 
                 <LinearLayout
                     android:layout_width="wrap_content"
@@ -125,49 +129,49 @@
                     android:padding="1dp"
                     android:layout_gravity="center">
 
-                        <ImageButton
-                            android:id="@+id/btn_rewind"
-                            android:layout_width="40dp"
-                            android:layout_height="40dp"
-                            android:padding="5dp"
-                            android:background="@drawable/tv_button_selector"
-                            android:focusable="true"
-                            android:focusableInTouchMode="true"
-                            android:clickable="true"
-                            android:src="@drawable/ic_rewind_back"
-                            app:tint="@android:color/white"
-                            android:scaleType="fitCenter"
-                            tools:ignore="ContentDescription" />
+                    <ImageButton
+                        android:id="@+id/btn_rewind"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="@drawable/tv_button_selector"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:focusableInTouchMode="true"
+                        android:padding="5dp"
+                        android:scaleType="fitCenter"
+                        android:src="@drawable/ic_rewind_back"
+                        app:tint="@android:color/white"
+                        tools:ignore="ContentDescription,SpeakableTextPresentCheck,TouchTargetSizeCheck" />
 
-                        <ImageButton
-                            android:id="@+id/btn_play_pause"
-                            android:layout_width="40dp"
-                            android:layout_height="40dp"
-                            android:padding="5dp"
-                            android:layout_marginStart="4dp"
-                            android:background="@drawable/tv_button_selector"
-                            android:focusable="true"
-                            android:focusableInTouchMode="true"
-                            android:clickable="true"
-                            app:tint="@android:color/white"
-                            android:src="@drawable/ic_play"
-                            android:scaleType="fitCenter"
-                            tools:ignore="ContentDescription" />
+                    <ImageButton
+                        android:id="@+id/btn_play_pause"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:layout_marginStart="4dp"
+                        android:background="@drawable/tv_button_selector"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:focusableInTouchMode="true"
+                        android:padding="5dp"
+                        android:scaleType="fitCenter"
+                        android:src="@drawable/ic_play"
+                        app:tint="@android:color/white"
+                        tools:ignore="ContentDescription,SpeakableTextPresentCheck,TouchTargetSizeCheck" />
 
-                        <ImageButton
-                            android:id="@+id/btn_fast_forward"
-                            android:layout_width="40dp"
-                            android:layout_height="40dp"
-                            android:padding="5dp"
-                            android:layout_marginStart="4dp"
-                            android:background="@drawable/tv_button_selector"
-                            android:focusable="true"
-                            android:focusableInTouchMode="true"
-                            android:clickable="true"
-                            android:src="@drawable/ic_rewind_forward"
-                            app:tint="@android:color/white"
-                            android:scaleType="fitCenter"
-                            tools:ignore="ContentDescription" />
+                    <ImageButton
+                        android:id="@+id/btn_fast_forward"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:layout_marginStart="4dp"
+                        android:background="@drawable/tv_button_selector"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:focusableInTouchMode="true"
+                        android:padding="5dp"
+                        android:scaleType="fitCenter"
+                        android:src="@drawable/ic_rewind_forward"
+                        app:tint="@android:color/white"
+                        tools:ignore="ContentDescription,SpeakableTextPresentCheck,TouchTargetSizeCheck,VisualLintBounds" />
 
                 </LinearLayout>
 
@@ -195,7 +199,7 @@
                     android:textColor="@android:color/white"
                     android:textSize="12sp"
                     android:textStyle="bold"
-                    tools:ignore="HardcodedText" />
+                    tools:ignore="HardcodedText,TouchTargetSizeCheck" />
 
                 <!-- Mute button -->
                 <ImageButton
@@ -209,7 +213,7 @@
                     android:focusableInTouchMode="true"
                     android:src="@android:drawable/ic_lock_silent_mode_off"
                     app:tint="@android:color/white"
-                    tools:ignore="ContentDescription" />
+                    tools:ignore="ContentDescription,SpeakableTextPresentCheck,TouchTargetSizeCheck" />
 
                 <!-- Subtitles button -->
                 <ImageButton
@@ -232,17 +236,17 @@
                     android:layout_width="wrap_content"
                     android:layout_height="36dp"
                     android:layout_marginEnd="8dp"
+                    android:background="@drawable/tv_button_selector"
                     android:clickable="true"
                     android:focusable="true"
                     android:focusableInTouchMode="true"
-                    android:background="@drawable/tv_button_selector"
+                    android:gravity="center"
                     android:paddingStart="16dp"
                     android:paddingEnd="16dp"
                     android:text="Auto"
                     android:textColor="@android:color/white"
                     android:textSize="14sp"
-                    android:gravity="center"
-                    tools:ignore="HardcodedText" />
+                    tools:ignore="HardcodedText,TouchTargetSizeCheck" />
 
                 <!-- Refresh button -->
                 <ImageButton
@@ -255,7 +259,8 @@
                     android:focusable="true"
                     android:focusableInTouchMode="true"
                     android:src="@drawable/ic_refresh"
-                    app:tint="@android:color/white" />
+                    app:tint="@android:color/white"
+                    tools:ignore="ContentDescription,SpeakableTextPresentCheck,TouchTargetSizeCheck" />
 
                 <!-- Settings button -->
                 <ImageButton
@@ -268,7 +273,8 @@
                     android:focusable="true"
                     android:focusableInTouchMode="true"
                     android:src="@drawable/ic_setting"
-                    app:tint="@android:color/white" />
+                    app:tint="@android:color/white"
+                    tools:ignore="ContentDescription,SpeakableTextPresentCheck,TouchTargetSizeCheck" />
 
                 <!-- Fullscreen button -->
                 <ImageButton
@@ -283,7 +289,7 @@
                     android:src="@android:drawable/ic_menu_crop"
                     app:tint="@android:color/white"
                     android:visibility="gone"
-                    />
+                    tools:ignore="ContentDescription" />
 
                 <!-- Close button -->
                 <ImageButton
@@ -295,7 +301,8 @@
                     android:focusable="true"
                     android:focusableInTouchMode="true"
                     android:src="@drawable/ic_close"
-                    app:tint="@color/nav_icon_color_selector" />
+                    app:tint="@color/nav_icon_color_selector"
+                    tools:ignore="ContentDescription,SpeakableTextPresentCheck,TouchTargetSizeCheck" />
 
             </LinearLayout>
             </LinearLayout>

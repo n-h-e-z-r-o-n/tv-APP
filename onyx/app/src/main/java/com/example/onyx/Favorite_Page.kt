@@ -22,6 +22,8 @@ class Favorite_Page : AppCompatActivity() {
         NavAction.setupSidebar(this@Favorite_Page)
 
         val recyclerView = findViewById<RecyclerView>(R.id.favoritesRecycler)
+        val FaveData = findViewById<LinearLayout>(R.id.FaveData)
+
         val emptyState = findViewById<TextView>(R.id.emptyState)
 
 
@@ -36,8 +38,10 @@ class Favorite_Page : AppCompatActivity() {
 
         if (favorites.isEmpty()) {
             recyclerView.visibility = View.GONE
+            FaveData.visibility = View.GONE
             emptyState.visibility = View.VISIBLE
         } else {
+            FaveData.visibility = View.VISIBLE
             recyclerView.visibility = View.VISIBLE
             emptyState.visibility = View.GONE
 
