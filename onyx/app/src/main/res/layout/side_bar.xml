@@ -13,316 +13,331 @@
         android:layout_height="match_parent"
         android:gravity="center"
         android:orientation="vertical"
-        android:paddingTop="24dp"
-        android:paddingBottom="24dp"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         android:background="@drawable/overlay_left_gradient">
 
-        <LinearLayout
+        <ScrollView
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="24dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal" >
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:fillViewport="true">
 
-
-
-            <ImageButton
-                android:id="@+id/btnHome"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:background="@android:color/transparent"
-                android:contentDescription="Home"
-                android:nextFocusUp="@id/btnProfile"
-                android:nextFocusDown="@id/btnMovies"
-                android:src="@drawable/ic_home"
-                app:tint="@color/nav_icon_color_selector"
-                android:clickable="true"
-                android:focusable="true"
-                tools:ignore="HardcodedText" />
-
-            <TextView
-                android:id="@+id/labelHome"
-                android:layout_width="0dp"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
-                android:layout_weight="1"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:text="Home"
-                android:textColor="?attr/FG_color"
-                android:textSize="14sp"
-                android:visibility="gone"
-                tools:ignore="HardcodedText" />
-        </LinearLayout>
+                android:orientation="vertical"
+                android:gravity="center">
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="24dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <ImageButton
-                android:id="@+id/btnMovies"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:background="@android:color/transparent"
-                android:contentDescription="Movies"
-                android:nextFocusUp="@id/btnHome"
-                android:nextFocusDown="@id/btnTvShow"
-                android:src="@drawable/ic_movie"
-                app:tint="@color/nav_icon_color_selector"
-                android:clickable="true"
-                android:focusable="true"
-                tools:ignore="HardcodedText" />
-
-            <TextView
-                android:id="@+id/labelMovies"
-                android:layout_width="0dp"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
-                android:layout_weight="1"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:text="Movies"
-                android:textColor="?attr/FG_color"
-                android:textSize="14sp"
-                android:visibility="gone"
-                tools:ignore="HardcodedText" />
-        </LinearLayout>
+                android:layout_marginBottom="14dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal" >
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="24dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <ImageButton
-                android:id="@+id/btnTvShow"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:background="@android:color/transparent"
-                android:contentDescription="Tv"
-                android:nextFocusUp="@id/btnMovies"
-                android:nextFocusDown="@id/btnAnime"
-                android:src="@drawable/ic_tv"
-                app:tint="@color/nav_icon_color_selector"
-                android:clickable="true"
-                android:focusable="true"
-                tools:ignore="HardcodedText" />
-
-            <TextView
-                android:id="@+id/labelTvShow"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
-                android:layout_weight="1"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:text="TV Shows"
-                android:textColor="?attr/FG_color"
-                android:textSize="14sp"
-                android:visibility="gone"
-                tools:ignore="HardcodedText" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="24dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <ImageButton
-                android:id="@+id/btnAnime"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:background="@android:color/transparent"
-                android:contentDescription="Tv"
-                android:nextFocusUp="@id/btnMovies"
-                android:nextFocusDown="@id/btnSearch"
-                android:src="@drawable/ic_anime"
-                app:tint="@color/nav_icon_color_selector"
-                android:clickable="true"
-                android:focusable="true"
-                tools:ignore="HardcodedText" />
-
-            <TextView
-                android:id="@+id/labelAnime"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
-                android:layout_weight="1"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:text="Anime"
-                android:textColor="?attr/FG_color"
-                android:textSize="14sp"
-                android:visibility="gone"
-                tools:ignore="HardcodedText" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="24dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <ImageButton
-                android:id="@+id/btnSearch"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:background="@android:color/transparent"
-                android:contentDescription="Search"
-                android:nextFocusUp="@id/btnAnime"
-                android:nextFocusDown="@id/btnFav"
-                android:src="@drawable/ic_search"
-                app:tint="@color/nav_icon_color_selector"
-                android:clickable="true"
-                android:focusable="true"
-                tools:ignore="HardcodedText" />
-
-            <TextView
-                android:id="@+id/labelSearch"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
-                android:layout_weight="1"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:text="Search"
-                android:textColor="?attr/FG_color"
-                android:textSize="14sp"
-                android:visibility="gone"
-                tools:ignore="HardcodedText" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="24dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <ImageButton
-                android:id="@+id/btnFav"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:background="@android:color/transparent"
-                android:importantForAccessibility="no"
-                android:nextFocusUp="@id/btnSearch"
-                android:nextFocusDown="@id/btnNotification"
-                android:src="@drawable/ic_fave"
-                app:tint="@color/nav_icon_color_selector"
-                android:clickable="true"
-                android:focusable="true"/>
-
-            <TextView
-                android:id="@+id/labelFav"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
-                android:layout_weight="1"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:text="Favorites"
-                android:textColor="?attr/FG_color"
-                android:textSize="14sp"
-                android:visibility="gone"/>
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="24dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            >
-            <FrameLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content">
 
 
                 <ImageButton
-                    android:id="@+id/btnNotification"
+                    android:id="@+id/btnHome"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:background="@android:color/transparent"
+                    android:contentDescription="Home"
+                    android:nextFocusUp="@id/btnProfile"
+                    android:nextFocusDown="@id/btnMovies"
+                    android:src="@drawable/ic_home"
+                    app:tint="@color/nav_icon_color_selector"
+                    android:clickable="true"
+                    android:focusable="true"
+                    tools:ignore="HardcodedText" />
+
+                <TextView
+                    android:id="@+id/labelHome"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_weight="1"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:text="Home"
+                    android:textColor="?attr/FG_color"
+                    android:textSize="14sp"
+                    android:visibility="gone"
+                    tools:ignore="HardcodedText" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="14dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <ImageButton
+                    android:id="@+id/btnMovies"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:background="@android:color/transparent"
+                    android:contentDescription="Movies"
+                    android:nextFocusUp="@id/btnHome"
+                    android:nextFocusDown="@id/btnTvShow"
+                    android:src="@drawable/ic_movie"
+                    app:tint="@color/nav_icon_color_selector"
+                    android:clickable="true"
+                    android:focusable="true"
+                    tools:ignore="HardcodedText" />
+
+                <TextView
+                    android:id="@+id/labelMovies"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_weight="1"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:text="Movies"
+                    android:textColor="?attr/FG_color"
+                    android:textSize="14sp"
+                    android:visibility="gone"
+                    tools:ignore="HardcodedText" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="14dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <ImageButton
+                    android:id="@+id/btnTvShow"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:background="@android:color/transparent"
+                    android:contentDescription="Tv"
+                    android:nextFocusUp="@id/btnMovies"
+                    android:nextFocusDown="@id/btnAnime"
+                    android:src="@drawable/ic_tv"
+                    app:tint="@color/nav_icon_color_selector"
+                    android:clickable="true"
+                    android:focusable="true"
+                    tools:ignore="HardcodedText" />
+
+                <TextView
+                    android:id="@+id/labelTvShow"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_weight="1"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:text="TV Shows"
+                    android:textColor="?attr/FG_color"
+                    android:textSize="14sp"
+                    android:visibility="gone"
+                    tools:ignore="HardcodedText" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="14dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <ImageButton
+                    android:id="@+id/btnAnime"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:background="@android:color/transparent"
+                    android:contentDescription="Tv"
+                    android:nextFocusUp="@id/btnMovies"
+                    android:nextFocusDown="@id/btnSearch"
+                    android:src="@drawable/ic_anime"
+                    app:tint="@color/nav_icon_color_selector"
+                    android:clickable="true"
+                    android:focusable="true"
+                    tools:ignore="HardcodedText" />
+
+                <TextView
+                    android:id="@+id/labelAnime"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_weight="1"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:text="Anime"
+                    android:textColor="?attr/FG_color"
+                    android:textSize="14sp"
+                    android:visibility="gone"
+                    tools:ignore="HardcodedText" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="14dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <ImageButton
+                    android:id="@+id/btnSearch"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:background="@android:color/transparent"
+                    android:contentDescription="Search"
+                    android:nextFocusUp="@id/btnAnime"
+                    android:nextFocusDown="@id/btnFav"
+                    android:src="@drawable/ic_search"
+                    app:tint="@color/nav_icon_color_selector"
+                    android:clickable="true"
+                    android:focusable="true"
+                    tools:ignore="HardcodedText" />
+
+                <TextView
+                    android:id="@+id/labelSearch"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_weight="1"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:text="Search"
+                    android:textColor="?attr/FG_color"
+                    android:textSize="14sp"
+                    android:visibility="gone"
+                    tools:ignore="HardcodedText" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="14dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <ImageButton
+                    android:id="@+id/btnFav"
                     android:layout_width="48dp"
                     android:layout_height="48dp"
                     android:background="@android:color/transparent"
                     android:importantForAccessibility="no"
-                    android:nextFocusUp="@id/btnFav"
-                    android:nextFocusDown="@id/btnProfile"
-                    android:src="@drawable/ic_notification"
+                    android:nextFocusUp="@id/btnSearch"
+                    android:nextFocusDown="@id/btnNotification"
+                    android:src="@drawable/ic_fave"
                     app:tint="@color/nav_icon_color_selector"
                     android:clickable="true"
                     android:focusable="true"/>
 
-                <androidx.cardview.widget.CardView
-                    android:id="@+id/notificationBadge"
-                    android:layout_width="10dp"
-                    android:layout_height="10dp"
-                    android:layout_gravity="end|top"
-                    android:layout_marginTop="12dp"
-                    android:layout_marginEnd="6dp"
-                    app:cardCornerRadius="5dp"
-                    app:cardBackgroundColor="?attr/notBudge"
+                <TextView
+                    android:id="@+id/labelFav"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_weight="1"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:text="Favorites"
+                    android:textColor="?attr/FG_color"
+                    android:textSize="14sp"
                     android:visibility="gone"/>
-            </FrameLayout>
+            </LinearLayout>
 
-
-            <TextView
-                android:id="@+id/labelNotification"
-                android:layout_width="0dp"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
-                android:layout_weight="1"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:text="Notification"
-                android:textColor="?attr/FG_color"
-                android:textSize="14sp"
-                android:visibility="gone"
-                tools:ignore="HardcodedText" />
-        </LinearLayout>
+                android:layout_marginBottom="14dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                >
+                <FrameLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
 
-            <ImageButton
-                android:id="@+id/btnProfile"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:background="@android:color/transparent"
-                android:importantForAccessibility="no"
-                android:nextFocusUp="@id/btnNotification"
-                android:nextFocusDown="@id/btnHome"
-                android:src="@drawable/ic_person"
-                app:tint="@color/nav_icon_color_selector"
-                android:clickable="true"
-                android:focusable="true"/>
+                    <ImageButton
+                        android:id="@+id/btnNotification"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:background="@android:color/transparent"
+                        android:importantForAccessibility="no"
+                        android:nextFocusUp="@id/btnFav"
+                        android:nextFocusDown="@id/btnProfile"
+                        android:src="@drawable/ic_notification"
+                        app:tint="@color/nav_icon_color_selector"
+                        android:clickable="true"
+                        android:focusable="true"/>
 
-            <TextView
-                android:id="@+id/labelProfile"
-                android:layout_width="0dp"
+                    <androidx.cardview.widget.CardView
+                        android:id="@+id/notificationBadge"
+                        android:layout_width="10dp"
+                        android:layout_height="10dp"
+                        android:layout_gravity="end|top"
+                        android:layout_marginTop="12dp"
+                        android:layout_marginEnd="6dp"
+                        app:cardCornerRadius="5dp"
+                        app:cardBackgroundColor="?attr/notBudge"
+                        android:visibility="gone"/>
+                </FrameLayout>
+
+
+                <TextView
+                    android:id="@+id/labelNotification"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_weight="1"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:text="Notification"
+                    android:textColor="?attr/FG_color"
+                    android:textSize="14sp"
+                    android:visibility="gone"
+                    tools:ignore="HardcodedText" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
-                android:layout_weight="1"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:text="Profile"
-                android:textColor="?attr/FG_color"
-                android:textSize="14sp"
-                android:visibility="gone"
-                tools:ignore="HardcodedText" />
-        </LinearLayout>
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:layout_marginBottom="14dp">
 
+                <ImageButton
+                    android:id="@+id/btnProfile"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:background="@android:color/transparent"
+                    android:importantForAccessibility="no"
+                    android:nextFocusUp="@id/btnNotification"
+                    android:nextFocusDown="@id/btnHome"
+                    android:src="@drawable/ic_person"
+                    app:tint="@color/nav_icon_color_selector"
+                    android:clickable="true"
+                    android:focusable="true"/>
+
+                <TextView
+                    android:id="@+id/labelProfile"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_weight="1"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:text="Profile"
+                    android:textColor="?attr/FG_color"
+                    android:textSize="14sp"
+                    android:visibility="gone"
+                    tools:ignore="HardcodedText" />
+            </LinearLayout>
+
+            </LinearLayout>
+        </ScrollView>
     </LinearLayout>
 
 
