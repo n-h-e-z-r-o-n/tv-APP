@@ -3,4 +3,12 @@
     <string name="trending">Trending</string>
     <string name="Popular">Populor</string>
     <string name="seasons_episodes">Seasons / Episodes</string>
+
+
+<string-array name="payment_countries">
+    <item>Kenya (KES)</item>
+    <item>Uganda (UGX)</item>
+    <item>Tanzania (TZS)</item>
+</string-array>
+
 </resources>

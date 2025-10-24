@@ -35,6 +35,8 @@ class Play : AppCompatActivity() {
 
 
 
+
+
         // Increment watch statistics using GlobalUtils
         if(type == "movie"){
             GlobalUtils.incrementMoviesWatched(this)

@@ -2,6 +2,7 @@ package com.example.onyx
 
 import android.Manifest
 import android.app.ProgressDialog
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -83,6 +84,8 @@ class Profile_Page : AppCompatActivity() {
         
         // Setup focus handling for TV remote
         setupFocusHandling()
+
+        getRemainingDays()
     }
     
     private fun initializeViews() {
@@ -424,5 +427,36 @@ class Profile_Page : AppCompatActivity() {
         super.onDestroy()
         progressDialog?.dismiss()
     }
+
+
+    private fun getRemainingDays() {
+        val subscriptionWidget =  findViewById<TextView>(R.id.SubscriptionLeft)
+        val prefs = getSharedPreferences("SubscriptionPrefs", Context.MODE_PRIVATE)
+        val lastPaymentTime = prefs.getLong("lastPaymentTime", 0L)
+
+        if (lastPaymentTime == 0L) {
+            // No record found (user never paid)
+            subscriptionWidget.text = "(user never paid)"
+        }
+
+        // Subscription duration: 30 days (in milliseconds)
+        val subscriptionDuration = 30L * 24 * 60 * 60 * 1000
+
+        val currentTime = System.currentTimeMillis()
+        val expiryTime = lastPaymentTime + subscriptionDuration
+
+        // If already expired
+        if (currentTime >= expiryTime) {
+            subscriptionWidget.text = "expired"
+        }
+
+        // Calculate remaining time in days
+        val remainingMillis = expiryTime - currentTime
+        val remainingDays = (remainingMillis / (24 * 60 * 60 * 1000)).toInt()
+
+
+        subscriptionWidget.text = remainingDays.toString()
+    }
+
 
 }

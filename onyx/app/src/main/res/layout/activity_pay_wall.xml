@@ -9,10 +9,34 @@
     android:background="?attr/BG_color"
     tools:context=".PayWall">
 
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <FrameLayout
+            android:layout_width="700dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="end"
+            android:orientation="vertical">
+
+            <ImageView
+                android:id="@+id/paywallShow"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="?attr/FG_color"
+                android:clipToPadding="false"
+                android:scrollbars="vertical" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/overlay_left_gradient"/>
+        </FrameLayout>
+
     <LinearLayout
-        android:layout_width="0dp"
+        android:id="@+id/payInfo"
+        android:layout_width="370dp"
         android:layout_height="match_parent"
-        android:layout_weight="0.5"
         android:orientation="vertical"
         android:paddingStart="10dp"
         tools:ignore="RtlSymmetry">
@@ -80,7 +104,8 @@
                         android:paddingVertical="4dp"
                         android:text="BEST VALUE"
                         android:textColor="?attr/FG_color"
-                        android:textSize="10sp" />
+                        android:textSize="10sp"
+                        tools:ignore="SmallSp" />
 
                 </LinearLayout>
 
@@ -96,26 +121,29 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="sans-serif-medium"
-                        android:text="$"
+                        android:text="ksh"
                         android:textColor="?attr/FG_color"
-                        android:textSize="24sp" />
+                        android:textSize="24sp"
+                        tools:ignore="HardcodedText" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="sans-serif-medium"
-                        android:text="9.99"
+                        android:text="20"
                         android:textColor="?attr/FG_color"
-                        android:textSize="36sp" />
+                        android:textSize="36sp"
+                        tools:ignore="HardcodedText" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="4dp"
                         android:alpha="0.7"
-                        android:text=" / lifetime"
+                        android:text=" / months"
                         android:textColor="?attr/FG_color"
-                        android:textSize="16sp" />
+                        android:textSize="16sp"
+                        tools:ignore="HardcodedText" />
 
                 </LinearLayout>
 
@@ -123,7 +151,7 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="24dp"
+                    android:layout_marginBottom="14dp"
                     android:orientation="vertical">
 
                     <LinearLayout
@@ -140,14 +168,16 @@
                             android:fontFamily="sans-serif-medium"
                             android:text="✓"
                             android:textColor="?attr/BG_color_up"
-                            android:textSize="16sp" />
+                            android:textSize="16sp"
+                            tools:ignore="HardcodedText" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Unlimited Movies &amp; TV Shows"
                             android:textColor="?attr/FG_color"
-                            android:textSize="14sp" />
+                            android:textSize="14sp"
+                            tools:ignore="HardcodedText" />
 
                     </LinearLayout>
 
@@ -165,45 +195,23 @@
                             android:fontFamily="sans-serif-medium"
                             android:text="✓"
                             android:textColor="?attr/BG_color_up"
-                            android:textSize="16sp" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="4K Ultra HD Quality"
-                            android:textColor="?attr/FG_color"
-                            android:textSize="14sp" />
-
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginBottom="8dp"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginEnd="12dp"
-                            android:fontFamily="sans-serif-medium"
-                            android:text="✓"
-                            android:textColor="?attr/BG_color_up"
-                            android:textSize="16sp" />
+                            android:textSize="16sp"
+                            tools:ignore="HardcodedText" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="No Ads Experience"
                             android:textColor="?attr/FG_color"
-                            android:textSize="14sp" />
+                            android:textSize="14sp"
+                            tools:ignore="HardcodedText" />
 
                     </LinearLayout>
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:layout_marginBottom="8dp"
                         android:gravity="center_vertical"
                         android:orientation="horizontal">
 
@@ -214,14 +222,16 @@
                             android:fontFamily="sans-serif-medium"
                             android:text="✓"
                             android:textColor="?attr/BG_color_up"
-                            android:textSize="16sp" />
+                            android:textSize="16sp"
+                            tools:ignore="HardcodedText" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Multiple Device Support"
+                            android:text="Software Update Support"
                             android:textColor="?attr/FG_color"
-                            android:textSize="14sp" />
+                            android:textSize="14sp"
+                            tools:ignore="HardcodedText" />
 
                     </LinearLayout>
 
@@ -239,7 +249,8 @@
                     android:text="Buy App"
                     android:textColor="#FFFFFF"
                     android:textSize="16sp"
-                    android:elevation="5dp"/>
+                    android:elevation="5dp"
+                    tools:ignore="HardcodedText" />
 
             </LinearLayout>
 
@@ -259,93 +270,334 @@
             android:clickable="true"
             android:focusable="true"
             android:focusableInTouchMode="true"
-            tools:ignore="SmallSp" />
+            tools:ignore="HardcodedText,SmallSp" />
 
     </LinearLayout>
 
-    <FrameLayout
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_weight="0.8"
-        android:orientation="vertical">
 
-                <ImageView
-                    android:id="@+id/paywallShow"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:background="?attr/FG_color"
-                    android:clipToPadding="false"
-                    android:scrollbars="vertical" />
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:background="@drawable/overlay_left_gradient"/>
+    <androidx.cardview.widget.CardView
+        android:id="@+id/PaymentContainer"
+        android:layout_width="450dp"
+        android:layout_height="450dp"
+        app:cardBackgroundColor="?attr/BG_color_up"
+        android:layout_gravity="center_vertical"
+        android:layout_marginStart="20dp"
+        android:elevation="5dp"
+        app:cardCornerRadius="15dp"
+        android:visibility="visible">
 
-        <androidx.cardview.widget.CardView
-            android:id="@+id/PaymentContainer"
-            android:layout_width="450dp"
-            android:layout_height="450dp"
-            app:cardBackgroundColor="?attr/BG_color_up"
-            android:layout_gravity="center"
-            android:elevation="5dp"
-            app:cardCornerRadius="15dp"
-            android:visibility="visible">
-
-            <ScrollView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:padding="20dp"
-                android:scrollbars="none"
-                >
-
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="20dp"
+            android:scrollbars="none">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                >
+                android:orientation="vertical">
 
                 <!-- Close Button -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:gravity="end"
+                    android:orientation="horizontal"
                     android:layout_marginBottom="16dp">
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:gravity="center"
+                        android:text="ONYX"
+                        android:fontFamily="@font/a"
+                        android:textSize="45sp"
+                        android:textColor="?attr/FG_color"
+                        tools:ignore="HardcodedText"
+                        android:layout_weight="1"/>
 
                     <TextView
                         android:id="@+id/btnClosePayment"
                         android:layout_width="32dp"
                         android:layout_height="32dp"
                         android:background="@drawable/circle_background"
-                        android:gravity="center"
                         android:text="×"
+                        android:gravity="center"
                         android:textColor="?attr/FG_color"
                         android:textSize="20sp"
                         android:clickable="true"
                         android:focusable="true"
-                        android:elevation="4dp"
-                        android:nextFocusUp="@id/btnCompletePayment"
-                        tools:ignore="HardcodedText" />
-
+                        android:elevation="2dp"
+                        android:layout_gravity="end"
+                        tools:ignore="HardcodedText"
+                        android:nextFocusDown="@+id/rbMpesa"
+                        android:nextFocusLeft="@+id/btnClosePayment"
+                        android:nextFocusRight="@+id/btnClosePayment"
+                        android:nextFocusUp="@+id/btnClosePayment"/>
                 </LinearLayout>
 
-                <!-- Card Information Section -->
+                <!-- PAYMENT METHOD SELECTION -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Payment Method"
+                    android:textColor="?attr/FG_color"
+                    android:textSize="16sp"
+                    android:layout_marginBottom="12dp"
+                    android:fontFamily="@font/d"
+                    tools:ignore="HardcodedText" />
+
                 <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+
+
+
+                <LinearLayout
+                    android:id="@+id/paymentMethodGroup"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="20dp">
+
+
+                    <LinearLayout
+                        android:id="@+id/rbMpesa"
+                        android:layout_width="90dp"
+                        android:layout_height="30dp"
+                        android:focusable="true"
+                        android:focusableInTouchMode="true"
+                        android:clickable="true"
+                        android:background="@drawable/tv_button_selector"
+                        android:nextFocusLeft="@+id/rbGooglePay"
+                        android:nextFocusRight="@+id/rbCard"
+                        android:nextFocusUp="@+id/btnClosePayment"
+                        android:gravity="center">
+
+                        <ImageView
+                            android:layout_width="15dp"
+                            android:layout_height="15dp"
+                            android:src="@drawable/ic_mpesa"
+                            tools:ignore="ContentDescription" />
+
+
+                        <TextView
+
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="M-Pesa / XB"
+                            android:textColor="@android:color/white"
+                            android:textSize="8sp"
+                            android:fontFamily="@font/i"
+                            android:layout_marginStart="2dp"
+                            tools:ignore="HardcodedText,SmallSp"
+                            />
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/rbCard"
+                        android:layout_width="90dp"
+                        android:layout_height="30dp"
+                        android:focusable="true"
+                        android:focusableInTouchMode="true"
+                        android:clickable="true"
+                        android:background="@drawable/tv_button_selector"
+                        android:nextFocusLeft="@+id/rbMpesa"
+                        android:nextFocusRight="@+id/rbGooglePay"
+                        android:nextFocusUp="@+id/btnClosePayment"
+                        android:gravity="center">
+
+                        <ImageView
+                            android:layout_width="15dp"
+                            android:layout_height="15dp"
+                            android:src="@drawable/master_card"
+                            tools:ignore="ContentDescription" />
+
+
+                        <TextView
+
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Credit Card"
+                            android:textColor="@android:color/white"
+                            android:textSize="8sp"
+                            android:fontFamily="@font/i"
+                            android:layout_marginStart="2dp"
+                            tools:ignore="HardcodedText,SmallSp"
+                            />
+
+                    </LinearLayout>
+
+
+
+
+
+                    <LinearLayout
+                        android:id="@+id/rbGooglePay"
+                        android:layout_width="90dp"
+                        android:layout_height="30dp"
+                        android:focusable="true"
+                        android:focusableInTouchMode="true"
+                        android:clickable="true"
+                        android:background="@drawable/tv_button_selector"
+                        android:nextFocusLeft="@+id/rbCard"
+                        android:nextFocusRight="@+id/rbMpesa"
+                        android:nextFocusUp="@+id/btnClosePayment"
+                        android:gravity="center">
+
+                        <ImageView
+                            android:layout_width="15dp"
+                            android:layout_height="15dp"
+                            android:src="@drawable/google_pay"
+                            tools:ignore="ContentDescription" />
+
+
+                        <TextView
+
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Google Pay"
+                            android:textColor="@android:color/white"
+                            android:textSize="8sp"
+                            android:fontFamily="@font/i"
+                            android:layout_marginStart="2dp"
+                            tools:ignore="HardcodedText,SmallSp"
+                            />
+
+                    </LinearLayout>
+
+
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- M-PESA PAYMENT FIELDS -->
+                <LinearLayout
+                    android:id="@+id/mpesaSection"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:layout_marginBottom="20dp">
+                    android:layout_marginBottom="20dp"
+                    android:visibility="visible">
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Card information"
+                        android:text="M-Pesa Information"
+                        android:fontFamily="@font/g"
                         android:textColor="?attr/FG_color"
                         android:textSize="14sp"
-                        android:layout_marginBottom="8dp" />
+                        android:layout_marginBottom="8dp"
+                        tools:ignore="HardcodedText" />
 
-                    <!-- Card Number Input with Icons -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Enter your M-Pesa phone number"
+                        android:textColor="?attr/FG_color"
+                        android:textSize="9sp"
+                        android:layout_marginTop="8dp"
+                        tools:ignore="HardcodedText" />
+
+                    <EditText
+                        android:id="@+id/etMpesaPhone"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:background="@drawable/input_background"
+                        android:hint="07XX XXX XXX"
+                        android:textColorHint="#666666"
+                        android:textColor="?attr/FG_color"
+                        android:textSize="14sp"
+                        android:inputType="phone"
+                        android:paddingHorizontal="12dp"
+                        android:gravity="center_vertical"
+                        tools:ignore="Autofill,HardcodedText"
+                        android:nextFocusUp="@+id/rbMpesa"
+                        android:nextFocusDown="@+id/spCountry"
+                        android:nextFocusRight="@+id/etMpesaPhone"
+                        android:nextFocusLeft="@+id/etMpesaPhone"/>
+
+                    <Spinner
+                        android:id="@+id/spCountry"
+                        android:layout_width="match_parent"
+                        android:layout_height="25dp"
+                        android:background="@drawable/tv_button_selector"
+                        android:spinnerMode="dropdown"
+                        android:entries="@array/payment_countries"
+                        android:paddingHorizontal="2dp"
+                        android:gravity="center_vertical"
+                        android:layout_marginTop="16dp"
+                        android:focusable="true"
+                        android:focusableInTouchMode="true"
+                        android:clickable="true"
+                        android:nextFocusUp="@+id/etMpesaPhone"
+                        android:nextFocusDown="@+id/btnMpesaPayment"
+                        android:nextFocusRight="@+id/spCountry"
+                        android:nextFocusLeft="@+id/spCountry"/>
+
+                    <ProgressBar
+                        android:id="@+id/MpesaProgressBar"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:indeterminateTint="?attr/AccentColor"
+                        android:layout_marginTop="16dp"
+                        android:layout_gravity="center"
+                        android:visibility="gone"
+                        android:indeterminate="true" />
+
+                    <!-- PAYMENT BUTTON -->
+                    <Button
+                        android:id="@+id/btnMpesaPayment"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:background="@drawable/button_gradient"
+                        android:text="Initiate payment"
+                        android:textColor="#FFFFFF"
+                        android:textSize="16sp"
+                        android:fontFamily="sans-serif-medium"
+                        android:layout_marginTop="24dp"
+                        android:elevation="2dp"
+                        tools:ignore="HardcodedText"
+                        android:nextFocusUp="@+id/spCountry"
+                        android:nextFocusDown="@+id/rbMpesa"
+                        android:nextFocusRight="@+id/btnMpesaPayment"
+                        android:nextFocusLeft="@+id/btnMpesaPayment"/>
+
+                      <TextView
+                          android:id="@+id/mpesaFeedbackBox"
+                          android:layout_height="wrap_content"
+                          android:layout_width="wrap_content"
+                          android:layout_gravity="center"
+                          android:maxLines="3"
+                          android:layout_marginTop="8dp"
+                          android:text=""
+                          android:textSize="10dp"
+                          android:textColor="?attr/FG_color"
+                          android:alpha="0.6"
+                          tools:ignore="SpUsage"/>
+
+                </LinearLayout>
+
+                <!-- CARD PAYMENT SECTION -->
+                <LinearLayout
+                    android:id="@+id/cardSection"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Card Information"
+                        android:fontFamily="@font/g"
+                        android:textColor="?attr/FG_color"
+                        android:textSize="14sp"
+                        android:layout_marginBottom="8dp"
+                        tools:ignore="HardcodedText" />
+
+                    <!-- Card Number -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="48dp"
@@ -365,52 +617,27 @@
                             android:textColor="?attr/FG_color"
                             android:textSize="14sp"
                             android:inputType="number"
-                            android:maxLength="19" />
+                            android:maxLength="19"
+                            android:nextFocusDown="@+id/etExpiryDate"
+                            android:nextFocusLeft="@+id/etCardNumber"
+                            android:nextFocusRight="@+id/etCardNumber"
 
-                        <!-- Payment Method Icons -->
-                        <LinearLayout
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:gravity="center_vertical">
+                            tools:ignore="Autofill,HardcodedText" />
 
-                            <ImageView
-                                android:layout_width="32dp"
-                                android:layout_height="20dp"
-                                android:layout_marginEnd="4dp"
-                                android:src="@drawable/visa"/>
-
-                            <ImageView
-                                android:layout_width="32dp"
-                                android:layout_height="20dp"
-                                android:layout_marginEnd="4dp"
-                                android:src="@drawable/master_card" />
-
-                            <ImageView
-                                android:layout_width="32dp"
-                                android:layout_height="20dp"
-                                android:layout_marginEnd="4dp"
-                                android:src="@drawable/master_card_2"
-                                />
-
-                            <ImageView
-                                android:layout_width="32dp"
-                                android:layout_height="20dp"
-                                android:src="@drawable/google_pay"
-                                 />
-
-                        </LinearLayout>
-
+                        <ImageView
+                            android:layout_width="32dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/visa"
+                            tools:ignore="ContentDescription" />
                     </LinearLayout>
 
-                    <!-- Expiry and CVC Row -->
+                    <!-- Expiry and CVC -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="48dp"
                         android:orientation="horizontal"
                         android:layout_marginTop="1dp">
 
-                        <!-- Expiry Date -->
                         <EditText
                             android:id="@+id/etExpiryDate"
                             android:layout_width="0dp"
@@ -424,134 +651,84 @@
                             android:inputType="number"
                             android:maxLength="5"
                             android:paddingHorizontal="12dp"
-                            android:gravity="center_vertical" />
+                            android:gravity="center_vertical"
+                            tools:ignore="HardcodedText,TextFields"
+                            android:nextFocusUp="@+id/etCardNumber"
+                            android:nextFocusDown="@+id/etCardholderName"
+                            android:nextFocusLeft="@+id/etCVC"
+                            android:nextFocusRight="@+id/etCVC"/>
 
-                        <!-- CVC -->
-                        <LinearLayout
+                        <EditText
+                            android:id="@+id/etCVC"
                             android:layout_width="0dp"
                             android:layout_height="match_parent"
                             android:layout_weight="1"
                             android:layout_marginStart="1dp"
                             android:background="@drawable/input_background"
-                            android:orientation="horizontal"
+                            android:hint="CVC"
+                            android:textColorHint="#666666"
+                            android:textColor="?attr/FG_color"
+                            android:textSize="14sp"
+                            android:inputType="number"
+                            android:maxLength="4"
+                            android:paddingHorizontal="12dp"
                             android:gravity="center_vertical"
-                            android:paddingHorizontal="12dp">
-
-                            <EditText
-                                android:id="@+id/etCVC"
-                                android:layout_width="0dp"
-                                android:layout_height="match_parent"
-                                android:layout_weight="1"
-                                android:background="@android:color/transparent"
-                                android:hint="CVC"
-                                android:textColorHint="#666666"
-                                android:textColor="?attr/FG_color"
-                                android:textSize="14sp"
-                                android:inputType="number"
-                                android:maxLength="4"
-                                android:gravity="center_vertical" />
-
-                            <TextView
-                                android:layout_width="20dp"
-                                android:layout_height="20dp"
-                                android:background="@drawable/circle_background"
-                                android:elevation="4dp"
-                                android:gravity="center"
-                                android:text="123"
-                                android:textColor="?attr/BG_color_up"
-                                android:textSize="8sp" />
-
-                        </LinearLayout>
-
+                            tools:ignore="Autofill,HardcodedText"
+                            android:nextFocusUp="@+id/etCardNumber"
+                            android:nextFocusDown="@+id/etCardholderName"
+                            android:nextFocusLeft="@+id/etExpiryDate"
+                            android:nextFocusRight="@+id/etExpiryDate"/>
                     </LinearLayout>
 
-                </LinearLayout>
-
-                <!-- Cardholder Name Section -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:layout_marginBottom="20dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Cardholder name"
-                        android:textColor="?attr/FG_color"
-                        android:textSize="14sp"
-                        android:layout_marginBottom="8dp" />
-
+                    <!-- Cardholder Name -->
                     <EditText
                         android:id="@+id/etCardholderName"
                         android:layout_width="match_parent"
                         android:layout_height="48dp"
+                        android:layout_marginTop="8dp"
                         android:background="@drawable/input_background"
-                        android:hint="Full name on card"
+                        android:hint="Cardholder Name"
                         android:textColorHint="#666666"
                         android:textColor="?attr/FG_color"
                         android:textSize="14sp"
                         android:inputType="textPersonName"
                         android:paddingHorizontal="12dp"
-                        android:gravity="center_vertical" />
+                        android:gravity="center_vertical"
+                        tools:ignore="Autofill,HardcodedText"
+                        android:nextFocusUp="@+id/etExpiryDate"
+                        android:nextFocusDown="@+id/btnVisaCompletePayment"
+                        android:nextFocusLeft="@+id/etCardholderName"
+                        android:nextFocusRight="@+id/etCardholderName"/>
 
-                </LinearLayout>
 
-                <!-- Country Section -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:layout_marginBottom="24dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Country or region"
-                        android:textColor="?attr/FG_color"
-                        android:textSize="14sp"
-                        android:layout_marginBottom="8dp" />
-
-                    <EditText
-                        android:id="@+id/etCountry"
+                    <!-- PAYMENT BUTTON -->
+                    <Button
+                        android:id="@+id/btnVisaCompletePayment"
+                        android:visibility="gone"
                         android:layout_width="match_parent"
                         android:layout_height="48dp"
-                        android:background="@drawable/input_background"
-                        android:hint="Country"
-                        android:textColorHint="#666666"
-                        android:textColor="?attr/FG_color"
-                        android:textSize="14sp"
-                        android:inputType="textPersonName"
-                        android:paddingHorizontal="12dp"
-                        android:gravity="center_vertical" />
-
-
-
+                        android:background="@drawable/button_gradient"
+                        android:text="Complete Payment"
+                        android:textColor="#FFFFFF"
+                        android:textSize="16sp"
+                        android:fontFamily="sans-serif-medium"
+                        android:layout_marginTop="24dp"
+                        android:elevation="2dp"
+                        tools:ignore="HardcodedText"
+                        android:nextFocusUp="@+id/etCardholderName"
+                        android:nextFocusDown="@+id/rbCard"
+                        android:nextFocusLeft="@+id/btnVisaCompletePayment"
+                        android:nextFocusRight="@+id/btnVisaCompletePayment"
+                        />
                 </LinearLayout>
 
-                <!-- Payment Button -->
-                <Button
-                    android:id="@+id/btnCompletePayment"
-                    android:layout_width="match_parent"
-                    android:layout_height="48dp"
-                    android:background="@drawable/button_gradient"
-                    android:text="Complete Payment"
-                    android:textColor="#FFFFFF"
-                    android:textSize="16sp"
-                    android:fontFamily="sans-serif-medium"
-                    android:layout_margin = "15dp"
-                    android:elevation="2dp"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:nextFocusDown="@id/btnClosePayment"
-                    tools:ignore="HardcodedText" />
+
 
             </LinearLayout>
-            </ScrollView>
+        </ScrollView>
 
-        </androidx.cardview.widget.CardView>
 
+    </androidx.cardview.widget.CardView>
 
     </FrameLayout>
-
 </LinearLayout>
