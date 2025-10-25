@@ -14,21 +14,118 @@ android:background="?attr/BG_color">
     android:orientation="horizontal">
 
 
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/AnimeRecyclerView"
-        android:layout_height="match_parent"
+    <LinearLayout
         android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:clipToPadding="false"
+        android:orientation="vertical"
         android:overScrollMode="never"
-        android:padding="10dp"
         android:scrollbars="none"
         android:paddingStart="41dp"
-        android:focusable="true"
-        android:focusableInTouchMode="true"
-        android:descendantFocusability="beforeDescendants"
-        android:nextFocusLeft="@id/btnMovies"
-        tools:ignore="RtlSymmetry" />
+        tools:layout_editor_absoluteY="8dp"
+        tools:ignore="RtlSymmetry"
+        android:nextFocusLeft="@id/btnHome">
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fillViewport="true"
+            android:scrollbars="none"
+            android:overScrollMode="never">
+
+
+
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+
+                <LinearLayout
+                    android:id="@+id/Section1"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/spotlightAnimes"
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:minHeight="400dp"
+                        android:layout_weight="1"
+                        android:focusable="true"
+                        android:focusableInTouchMode="true"
+                        android:descendantFocusability="beforeDescendants"
+                        android:nextFocusLeft="@id/btnMovies"
+                        tools:ignore="RtlSymmetry"
+                        android:clipToPadding="false"
+                        android:scrollbars="none"
+                        android:overScrollMode="never"
+                        android:nextFocusDown="@+id/Anime_Trending_widget"/>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:orientation="vertical"
+                        android:layout_height="wrap_content">
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="15dp"
+                            android:text=" Trending"
+                            android:textStyle="bold"
+                            android:fontFamily="@font/d"
+                            android:textSize="13sp"
+                            android:textColor="?attr/AccentColor"
+                            tools:ignore="HardcodedText" />
+
+
+                        <androidx.recyclerview.widget.RecyclerView
+                            android:id="@+id/Anime_Trending_widget"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:clipToPadding="false"
+                            android:overScrollMode="never"
+                            android:scrollbars="none"
+                            tools:ignore="NestedWeights"
+                            android:nextFocusUp="@+id/spotlightAnimes"
+                            android:nextFocusDown="@+id/Anime_Airing_widget"/>
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text=" Top Airing"
+                            android:textStyle="bold"
+                            android:fontFamily="@font/d"
+                            android:textSize="13sp"
+                            android:textColor="?attr/AccentColor"
+                            tools:ignore="HardcodedText"
+                            android:layout_marginTop="10dp"/>
+
+                        <androidx.recyclerview.widget.RecyclerView
+                            android:id="@+id/Anime_Airing_widget"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:clipToPadding="false"
+                            android:overScrollMode="never"
+                            android:scrollbars="none"
+                            tools:ignore="NestedWeights"
+                            android:nextFocusUp="@+id/Anime_Trending_widget"
+                            android:nextFocusDown="@+id/Anime_Airing_widget"/>
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+
+
+
+
+
+
+            </LinearLayout>
+        </ScrollView>
+    </LinearLayout>
 
     <include layout="@layout/side_bar"/>
 

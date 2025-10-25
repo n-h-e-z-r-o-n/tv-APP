@@ -5,10 +5,10 @@
     <string name="seasons_episodes">Seasons / Episodes</string>
 
 
-<string-array name="payment_countries">
-    <item>Kenya (KES)</item>
-    <item>Uganda (UGX)</item>
-    <item>Tanzania (TZS)</item>
-</string-array>
+    <string-array name="payment_countries">
+        <item>Kenya (KES)</item>
+        <item>Uganda (UGX)</item>
+        <item>Tanzania (TZS)</item>
+    </string-array>
 
 </resources>

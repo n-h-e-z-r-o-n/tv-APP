@@ -1,0 +1,351 @@
+<!-- res/layout/item_grid.xml -->
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:focusable="true"
+    android:focusableInTouchMode="true"
+    android:nextFocusDown="@id/cardButton"
+    android:nextFocusUp="@id/Anime_Trending_widget">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        android:background="?attr/BG_color"
+        >
+
+        <FrameLayout
+            android:layout_width="800dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="end">
+
+
+
+        <ImageView
+            android:id="@+id/SliderBackdrop"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:adjustViewBounds="true"
+            android:scaleType="centerCrop"
+            tools:ignore="ContentDescription" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="30dp"
+            android:background="@drawable/overlay_bottom_gradient"
+            android:orientation="horizontal"
+            android:layout_gravity="bottom" />
+
+        <LinearLayout
+            android:layout_width="450dp"
+            android:layout_height="match_parent"
+            android:background="@drawable/overlay_left_gradient"
+            android:orientation="horizontal"
+            android:layout_gravity="start" />
+        </FrameLayout>
+
+
+
+        <LinearLayout
+            android:layout_width="400dp"
+            android:layout_height="wrap_content"
+
+            android:layout_gravity="bottom"
+            android:layout_marginBottom="10dp"
+            android:layout_marginStart="20dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/cardTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                android:ellipsize="end"
+                android:maxLines="3"
+                android:singleLine="false"
+                android:text="Sakamoto Days Part 2"
+                android:textColor="?attr/FG_color"
+                android:textSize="30sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="5dp"
+                android:fontFamily="@font/tre"
+                android:shadowColor="#80000000"
+                android:shadowDx="5"
+                android:shadowDy="6"
+                android:shadowRadius="4"
+                tools:ignore="HardcodedText,Suspicious0dp"/>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="10dp"
+
+                android:gravity="center">
+
+
+
+
+
+
+                <TextView
+                    android:id="@+id/cardPg"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:text="PG-13"
+                    android:singleLine="true"
+                    android:textColor="?attr/FG_color"
+                    android:textSize="10sp"
+                    tools:ignore="HardcodedText,SmallSp,Suspicious0dp"
+                    android:gravity="center"
+                    android:layout_gravity="center"
+                    android:textStyle="bold"
+                    android:layout_marginStart="9dp"
+
+
+                    />
+
+
+
+
+                <TextView
+                    android:id="@+id/cardType"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:text="Mv"
+                    android:singleLine="true"
+                    android:textColor="?attr/FG_color"
+                    android:textSize="13sp"
+                    tools:ignore="HardcodedText,Suspicious0dp"
+                    android:gravity="center"
+                    android:layout_gravity="center"
+                    android:layout_marginStart="9dp"
+                    />
+
+
+
+                    <TextView
+                        android:id="@+id/cardRuntime"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:layout_gravity="bottom"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:layout_marginStart="9dp"
+                        android:text="9.7"
+                        android:singleLine="false"
+                        android:textColor="?attr/FG_color"
+                        android:textSize="13sp"
+                        tools:ignore="HardcodedText,Suspicious0dp"
+                        android:gravity="center"/>
+
+
+
+                <TextView
+                    android:id="@+id/cardYear"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="bottom"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:text="2025"
+                    android:singleLine="false"
+                    android:textColor="?attr/FG_color"
+                    android:textSize="13sp"
+                    tools:ignore="HardcodedText,Suspicious0dp"
+                    android:gravity="center"
+                    android:layout_marginStart="9dp"/>
+
+                <androidx.cardview.widget.CardView
+                    android:layout_width="30dp"
+                    android:layout_height="match_parent"
+                    app:cardCornerRadius="5dp"
+                    android:layout_gravity="center_horizontal"
+                    app:cardBackgroundColor="?attr/AccentColor"
+                    android:elevation="0dp"
+                    android:layout_marginStart="10dp"
+                    >
+
+                    <TextView
+                        android:id="@+id/cardQuality" android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:text="HD"
+                        android:singleLine="true"
+                        android:textColor="?attr/BG_color"
+                        android:textSize="11sp"
+                        tools:ignore="HardcodedText,Suspicious0dp"
+                        android:gravity="center"
+                        android:layout_gravity="center"
+                        android:textStyle="bold"
+                        />
+
+                </androidx.cardview.widget.CardView>
+
+
+
+                <androidx.cardview.widget.CardView
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    app:cardCornerRadius="5dp"
+                    android:layout_gravity="center_horizontal"
+                    app:cardBackgroundColor="?attr/BG_color_up"
+                    android:elevation="0dp"
+                    android:layout_marginStart="5dp">
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:paddingHorizontal="5dp"
+                        android:gravity="center"
+                        android:layout_gravity="center"
+                        android:orientation="horizontal"
+                        >
+
+
+                    <ImageView
+                        android:layout_width="14dp"
+                        android:layout_height="14dp"
+                        android:src="@drawable/ic_sub"
+                        app:tint="?attr/FG_color"
+                        tools:ignore="ContentDescription" />
+
+                    <TextView
+                        android:id="@+id/cardSub"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:text="2"
+                        android:singleLine="true"
+                        android:textColor="?attr/FG_color"
+                        android:textSize="10sp"
+                        tools:ignore="HardcodedText,Suspicious0dp"
+                        android:gravity="center"
+                        android:layout_gravity="center"
+                        android:textStyle="bold"
+                        />
+
+                    </LinearLayout>
+
+                </androidx.cardview.widget.CardView>
+
+                <androidx.cardview.widget.CardView
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    app:cardCornerRadius="5dp"
+                    android:layout_gravity="center_horizontal"
+                    app:cardBackgroundColor="?attr/SidebarFocus"
+                    android:elevation="0dp"
+                    android:layout_marginStart="5dp">
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:paddingHorizontal="5dp"
+                        android:gravity="center"
+                        android:layout_gravity="center"
+                        android:orientation="horizontal"
+                        >
+
+
+                        <ImageView
+                            android:layout_width="10dp"
+                            android:layout_height="10dp"
+                            android:src="@drawable/ic_dub"
+                            app:tint="?attr/FG_color"
+                            tools:ignore="ContentDescription" />
+
+                        <TextView
+                            android:id="@+id/cardDub"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:ellipsize="end"
+                            android:maxLines="1"
+                            android:text="2"
+                            android:singleLine="true"
+                            android:textColor="?attr/FG_color"
+                            android:textSize="10sp"
+                            tools:ignore="HardcodedText,Suspicious0dp"
+                            android:gravity="center"
+                            android:layout_gravity="center"
+                            android:textStyle="bold"
+                            />
+
+                    </LinearLayout>
+
+                </androidx.cardview.widget.CardView>
+
+
+            </LinearLayout>
+
+
+
+
+            <TextView
+                android:id="@+id/cardOverview"
+                android:layout_width="match_parent"
+                android:layout_height="100dp"
+                android:layout_gravity="bottom"
+                android:ellipsize="end"
+                android:maxLines="5"
+                android:singleLine="false"
+                android:textColor="?attr/FG_color"
+                android:textSize="14sp"
+                android:layout_marginBottom="20dp"
+                tools:ignore="Suspicious0dp"
+                />
+
+
+
+            <LinearLayout
+                android:id="@+id/cardButton"
+                android:layout_width="90dp"
+                android:layout_height="30dp"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:clickable="true"
+                android:background="@drawable/tv_button_selector"
+                android:nextFocusUp="@+id/sideBar"
+                android:nextFocusDown="@+id/Anime_Trending_widget"
+                android:gravity="center">
+
+                <ImageView
+                    android:layout_width="15dp"
+                    android:layout_height="15dp"
+                    android:src="@drawable/ic_play"
+                    app:tint="?attr/FG_color"
+                    tools:ignore="ContentDescription" />
+
+
+                <TextView
+
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Watch Now"
+                    android:textColor="@android:color/white"
+                    android:textSize="8sp"
+                    android:layout_marginStart="2dp"
+                    tools:ignore="HardcodedText,SmallSp"
+                    />
+
+            </LinearLayout>
+
+
+
+
+
+
+        </LinearLayout>
+
+
+    </FrameLayout>
+
+
+
+</androidx.cardview.widget.CardView>

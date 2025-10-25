@@ -5,7 +5,7 @@
     <style name="Theme.Onyx.Dark" parent="Theme.AppCompat.DayNight.NoActionBar">
         <item name="BG_color">#000000</item>
         <item name="FG_color">#FFFFFF</item>
-        <item name="BG_color_up">#1A1110</item>
+        <item name="BG_color_up">#0C0404</item>
         <item name="AccentColor">#DAA520</item>
         <item name="SidebarFocus">#3D5AFE</item>
         <item name="SidebarDefault">#FFFFFF</item>
