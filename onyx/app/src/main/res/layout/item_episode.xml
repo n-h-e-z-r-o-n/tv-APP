@@ -5,6 +5,7 @@
     android:layout_height="140dp"
     android:layout_margin="6dp"
     android:focusable="true"
+    android:focusableInTouchMode="true"
     android:clickable="true"
     android:foreground="@drawable/item_episode_focus"
     app:cardCornerRadius="12dp"

@@ -23,8 +23,9 @@ import java.util.Calendar
 import kotlin.String
 
 class Anime_Page : AppCompatActivity() {
-    private var urlHome = "http://192.168.100.22:4000"
-    //https://corsproxy.io/https://aniwatch-api-r4uo.vercel.app/
+    //private var urlHome = "http://192.168.100.22:4000"
+    private var urlHome ="https://corsproxy.io/https://aniwatch-api-r4uo.vercel.app/"
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()

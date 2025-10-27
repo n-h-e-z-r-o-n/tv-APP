@@ -8,9 +8,17 @@
     android:background="?attr/BG_color"
     tools:context=".Watch_Anime_Page">
 
-    <LinearLayout
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:fillViewport="true"
+        android:scrollbars="none"
+        android:overScrollMode="never"
+        android:background="?attr/BG_color">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:orientation="vertical">
 
         <FrameLayout
@@ -306,13 +314,125 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="20dp"
                         android:textColor="?FG_color"
-                        android:textSize="12sp"/>
+                        android:textSize="10sp"/>
 
                 </LinearLayout>
 
             </LinearLayout>
 
         </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/SeasonTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Watch more seasons of this anime"
+                android:textColor="?attr/AccentColor"
+                android:paddingHorizontal="5dp"
+                android:textSize="23sp"
+                android:textStyle="bold"
+                android:fontFamily="@font/e"
+                tools:ignore="HardcodedText" />
+
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:scrollbars="none"
+                android:clipToPadding="false">
+                <LinearLayout
+                    android:id="@+id/anime_season_selector_container"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:padding="5dp"
+                    android:orientation="horizontal"/>
+            </HorizontalScrollView>
+
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="List of episodes ("
+                    android:textColor="?attr/FG_color"
+                    android:paddingStart="5dp"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:fontFamily="@font/e"
+                    tools:ignore="HardcodedText,RtlSymmetry" />
+                <TextView
+                    android:id="@+id/selected_seasonShow"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text=""
+                    android:textColor="?attr/AccentColor"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:fontFamily="@font/e"
+                    tools:ignore="HardcodedText" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text=")"
+                        android:textColor="?attr/FG_color"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:fontFamily="@font/e"
+                        tools:ignore="HardcodedText" />
+            </LinearLayout>
+
+
+
+
+
+            <LinearLayout
+                android:id="@+id/anime_episodes_selector_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="5dp"
+                android:orientation="vertical"/>
+
+
+
+
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:text="Recommended  Animes"
+            android:fontFamily="@font/e"
+            android:textSize="25sp"
+            android:textStyle="bold"
+            android:layout_marginTop="20dp"
+            android:textColor="?attr/AccentColor"
+            tools:ignore="HardcodedText" />
+
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/animeWatchRecommendation"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:clipToPadding="false"
+            android:overScrollMode="never"
+            android:padding="10dp"
+            android:scrollbars="none"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:descendantFocusability="afterDescendants"
+            android:nextFocusLeft="@id/btnMovies"
+            android:nestedScrollingEnabled="false"
+            tools:ignore="RtlSymmetry" />
+
 
 
 
@@ -324,5 +444,7 @@
 
 
     </LinearLayout>
+
+    </ScrollView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

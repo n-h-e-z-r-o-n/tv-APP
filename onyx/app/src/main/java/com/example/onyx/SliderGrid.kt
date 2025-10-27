@@ -200,7 +200,7 @@ class AnimeSwiper(
 
         holder.cardSub.text = sub
 
-        holder.cardDub.text = dub
+        holder.cardDub.text = if (currentItem.dub == "null" || currentItem.dub.isEmpty()) "0" else currentItem.dub
 
         holder.cardOverview.text = overview
 
@@ -382,7 +382,7 @@ class AnimeAiringAdapter(
 
         holder.title.text = title
         holder.cardSub.text = currentItem.sub
-        holder.cardDub.text = currentItem.dub
+        holder.cardDub.text = if (currentItem.dub == "null" || currentItem.dub.isEmpty()) "0" else currentItem.dub
         holder.cardType.text = currentItem.type
 
 

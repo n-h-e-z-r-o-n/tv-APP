@@ -25,6 +25,9 @@
         android:theme="@style/Theme.Onyx.Dark"
         android:usesCleartextTraffic="true">
         <activity
+            android:name=".Anime_Video_Player"
+            android:exported="false" />
+        <activity
             android:name=".Watch_Anime_Page"
             android:exported="false" />
         <activity
