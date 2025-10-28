@@ -7,14 +7,18 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.graphics.Color
+import android.graphics.Typeface
 import android.media.AudioManager
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import android.util.TypedValue
 import android.view.KeyEvent
+import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
+import android.view.ViewGroup
 import android.view.WindowManager
 import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
@@ -22,6 +26,8 @@ import android.widget.*
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
+import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.media3.common.C
@@ -41,6 +47,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.json.JSONArray
 import java.net.HttpURLConnection
 import java.net.URL
 import java.text.SimpleDateFormat
@@ -48,6 +55,11 @@ import java.util.*
 
 @UnstableApi
 class Anime_Video_Player : AppCompatActivity(), Player.Listener {
+
+    private  var urlHome ="https://corsproxy.io/https://aniwatch-api-r4uo.vercel.app/"
+    private var currentEpisodeId: String? = null
+    private var currentEpisodeNumber: String? = null
+    private var currentEpisodeView: View? = null
 
 
     private lateinit var playerView: PlayerView
@@ -57,6 +69,7 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
     private lateinit var centerOverlay: FrameLayout
 
     // Control buttons
+    private lateinit var videoUrl:String
     private lateinit var btnPlayPause: ImageButton
     private lateinit var btnRewind: ImageButton
     private lateinit var btnFastForward: ImageButton
@@ -138,36 +151,30 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
         txtDuration = findViewById(R.id.txt_duration)
     }
 
-    private fun setupPlayert() {
-        val videoUrl = intent.getStringExtra("video_url")
-        if (videoUrl != null) {
-            exoPlayer = initializePlayer(videoUrl)
 
-            exoPlayer?.let { player ->
-                playerView.player = player
-                player.addListener(this)
-                updatePlayPauseButton()
-                updateMuteButton()
-                updateSpeedButton()
-                updateQualityButton()
-                qualityOptions = availableQualities
-            }
+
+    private fun setupPlayer() {
+        val episodeId = intent.getStringExtra("episodeId")
+        val episodesJson = intent.getStringExtra("episodes")
+        val episodesNumber = intent.getStringExtra("episodesNumber")
+
+        val episodesArray = if (episodesJson != null) {
+            JSONArray(episodesJson)
         } else {
-            Toast.makeText(this, "No video URL provided", Toast.LENGTH_SHORT).show()
-            finish()
+            JSONArray()
         }
+        Log.d("ANIME WATCH id", "$episodeId")
+        Log.d("ANIME WATCH number", "$episodesNumber")
+        Log.d("ANIME WATCH Array", "$episodesArray")
+
+        fetchStreamingLinks(episodeId.toString())
+        displayEpisode(episodesArray, episodesNumber.toString())
     }
 
-    private fun setupPlayer(){
-        val episodeId = intent.getStringExtra("episodeId")
-        Log.d("ANIME WATCH id-r", "$episodeId")
-
-        val urlHome ="https://corsproxy.io/https://aniwatch-api-r4uo.vercel.app/"
-
+    private fun fetchStreamingLinks(episodeId: String) {
         CoroutineScope(Dispatchers.IO).launch {
-            repeat(1) { attempt ->
+            repeat(10) {
                 try {
-
                     val url_servers = "$urlHome/api/v2/hianime/episode/servers?animeEpisodeId=$episodeId"
                     val connection_servers = URL(url_servers).openConnection() as HttpURLConnection
                     connection_servers.requestMethod = "GET"
@@ -176,81 +183,297 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
                     val jsonObjectServerInfo = org.json.JSONObject(response_server)
                     val dataServers = jsonObjectServerInfo.getJSONObject("data")
 
-                    val  subServers = dataServers.getJSONArray("sub")
-                    val  dubServers = dataServers.getJSONArray("dub")
-                    val  rawServers = dataServers.getJSONArray("raw")
+                    val subServers = dataServers.getJSONArray("sub")
+                    val dubServers = dataServers.getJSONArray("dub")
+                    val rawServers = dataServers.getJSONArray("raw")
 
-                    val chosenServer: String
-                    val serverCategory: String
-
-                   if (dubServers.length() > 0){
-                        chosenServer = dubServers.getJSONObject(0).getString("serverName")
-                        serverCategory = "dub"
-                   }else if(subServers.length() > 0){
-                       chosenServer = subServers.getJSONObject(0).getString("serverName")
-                       serverCategory = "sub"
-                   }else if(rawServers.length() > 0){
-                       chosenServer = rawServers.getJSONObject(0).getString("serverName")
-                       serverCategory = "raw"
-                   }else{
-                       finish()
-                       return@launch
-                   }
-
-                    val url ="$urlHome/api/v2/hianime/episode/sources?animeEpisodeId=$episodeId?server=$chosenServer&category=$serverCategory"
-
-
-                    val connection = URL(url).openConnection() as HttpURLConnection
-                    connection.requestMethod = "GET"
-                    connection.setRequestProperty("accept", "application/json")
-                    val response = connection.inputStream.bufferedReader().use { it.readText() }
-                    val jsonObject = org.json.JSONObject(response)
-                    val data = jsonObject.getJSONObject("data")
-                    val  tracksInfo = data.getJSONArray("tracks")
-                    val  introStart = data.getJSONObject("intro").getString("start")
-                    val  introEnd = data.getJSONObject("intro").getString("end")
-                    val  outroStart = data.getJSONObject("outro").getString("start")
-                    val  outroEnd = data.getJSONObject("outro").getString("end")
-                    val  sources = data.getJSONArray("sources")
-
-                    val  vidUrl = sources.getJSONObject(0).getString("url")
-                    val  Referer = data.getJSONObject("headers").optString("Referer")
-
-
-
-                    Log.d("ANIME WATCH sources", "$sources")
-                    Log.d("ANIME WATCH vidUrl", "$vidUrl")
-
-
-                    withContext(Dispatchers.Main) {
-
-                        val btnServer = findViewById<TextView>(R.id.btn_server)
-
-                        //exoPlayer = initializePlayer(vidUrl)
-                        exoPlayer = initializePlayer(vidUrl, Referer)
-
-                        exoPlayer?.let { player ->
-                            playerView.player = player
-                            player.addListener(this@Anime_Video_Player)
-                            updatePlayPauseButton()
-                            updateMuteButton()
-                            updateSpeedButton()
-                            updateQualityButton()
-                            qualityOptions = availableQualities
-                        }
-
-
+                    // Determine initial default
+                    val (defaultServerName, defaultCategory) = when {
+                        dubServers.length() > 0 -> dubServers.getJSONObject(0).getString("serverName") to "dub"
+                        subServers.length() > 0 -> subServers.getJSONObject(0).getString("serverName") to "sub"
+                        rawServers.length() > 0 -> rawServers.getJSONObject(0).getString("serverName") to "raw"
+                        else -> return@launch
                     }
 
+                    // ✅ Function to fetch sources for given server
+                    suspend fun fetchServerSources(serverName: String, category: String) {
+                        var attempt = 1
+                        while(true) {
+                        try{
+                            attempt++
+                            val url = "$urlHome/api/v2/hianime/episode/sources?animeEpisodeId=$episodeId&server=$serverName&category=$category"
+                            val connection = URL(url).openConnection() as HttpURLConnection
+                            connection.requestMethod = "GET"
+                            connection.setRequestProperty("accept", "application/json")
+                            val response = connection.inputStream.bufferedReader().use { it.readText() }
+                            val responseCode = connection.responseCode
+
+                            val jsonObject = org.json.JSONObject(response)
+                            val data = jsonObject.getJSONObject("data")
+
+                            val sources = data.getJSONArray("sources")
+                            val vidUrl = sources.getJSONObject(0).getString("url")
+                            videoUrl = vidUrl
+                            val referer = data.getJSONObject("headers").optString("Referer")
+
+                            Log.d("ANIME WATCH", "Loaded server=$serverName category=$category vidUrl=$vidUrl")
+
+                            withContext(Dispatchers.Main) {
+                                val btnServer = findViewById<TextView>(R.id.btn_server)
+                                btnServer.text = "$category: $serverName"
+
+                                // (Re)initialize player with new stream
+                                exoPlayer?.release()
+                                exoPlayer = initializePlayer(vidUrl, referer)
+                                exoPlayer?.let { player ->
+                                    playerView.player = player
+                                    player.addListener(this@Anime_Video_Player)
+                                    updatePlayPauseButton()
+                                    updateMuteButton()
+                                    updateSpeedButton()
+                                    updateQualityButton()
+                                }
+                            }
+                            break
+                        }catch (e: Exception){
+
+                            if (attempt>5){break}
+                            Log.e("ANIME WATCH error", "fetchServerSources()", e)
+                            delay(5_000)
+
+                        }
+                    }
+                    }
+
+                    fetchServerSources(defaultServerName, defaultCategory)
+
+                    withContext(Dispatchers.Main) {
+                        val btnServer = findViewById<TextView>(R.id.btn_server)
+
+                        btnServer.setOnClickListener {
+                            val builder = android.app.AlertDialog.Builder(this@Anime_Video_Player, R.style.CustomDialogTheme)
+                            builder.setTitle("Select Server")
+
+                            val container = LinearLayout(this@Anime_Video_Player).apply {
+                                orientation = LinearLayout.VERTICAL
+                                setPadding(40, 24, 40, 24)
+                                setBackgroundColor(Color.TRANSPARENT)
+                            }
+
+                            val scrollView = ScrollView(this@Anime_Video_Player).apply {
+                                addView(container)
+                            }
+
+                            var dialog: android.app.AlertDialog? = null
+
+                            fun addServerSection(title: String, servers: JSONArray) {
+                                val label = TextView(this@Anime_Video_Player).apply {
+                                    text = "$title:"
+                                    setTextColor(ContextCompat.getColor(context, android.R.color.white))
+                                    textSize = 18f
+                                    setTypeface(typeface, Typeface.BOLD)
+                                    setPadding(0, 20, 0, 10)
+                                }
+                                container.addView(label)
+
+                                for (i in 0 until servers.length()) {
+                                    val server = servers.getJSONObject(i)
+                                    val serverName = server.getString("serverName")
+
+                                    val serverBtn = Button(this@Anime_Video_Player).apply {
+                                        text = serverName
+                                        setAllCaps(false)
+                                        textSize = 14f
+                                        background = ContextCompat.getDrawable(context, R.drawable.item_anime_episode_focus)
+                                        setTextColor(ContextCompat.getColor(context, android.R.color.white))
+                                        setOnClickListener {
+                                            Toast.makeText(context, "Switching to $title → $serverName", Toast.LENGTH_SHORT).show()
+                                            dialog?.dismiss()
+
+                                            // ✅ Refetch sources for the newly selected server
+                                            CoroutineScope(Dispatchers.IO).launch {
+                                                fetchServerSources(serverName, title)
+                                            }
+                                        }
+                                    }
+                                    container.addView(serverBtn)
+                                }
+                            }
+
+                            // Add sections
+                            addServerSection("sub", subServers)
+                            addServerSection("dub", dubServers)
+                            addServerSection("raw", rawServers)
+
+                            builder.setView(scrollView)
+                            builder.setNegativeButton("Cancel", null)
+
+                            dialog = builder.create()
+                            dialog.show()
+                        }
+                    }
 
                     return@launch
                 } catch (e: Exception) {
-                    delay(20_000)
-
+                    Log.e("ANIME WATCH error", "fetchStreamingLinks()", e)
+                    delay(5_000)
                 }
             }
         }
     }
+
+
+
+
+
+
+
+    private fun displayEpisode(episodes: JSONArray, currentEpisode: String) {
+
+        val container = findViewById<LinearLayout>(R.id.EpisodeContiner)
+        container.removeAllViews()
+
+        val inflater = LayoutInflater.from(this@Anime_Video_Player)
+
+        for (i in 0 until episodes.length()) {
+
+            val episode = episodes.getJSONObject(i)
+
+            val cardView = inflater.inflate(R.layout.anime_item_episode, container, false) as FrameLayout
+
+            // Set fixed size and margins
+            val layoutParams = ViewGroup.MarginLayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            ).apply {
+                width = TypedValue.applyDimension(
+                    TypedValue.COMPLEX_UNIT_DIP, 100f, resources.displayMetrics
+                ).toInt()
+                height = TypedValue.applyDimension(
+                    TypedValue.COMPLEX_UNIT_DIP, 60f, resources.displayMetrics
+                ).toInt()
+                setMargins(8, 8, 8, 8)
+            }
+
+            cardView.layoutParams = layoutParams
+
+            val epTitle = cardView.findViewById<TextView>(R.id.episode_name)
+            val epNumber = cardView.findViewById<TextView>(R.id.episode_Number)
+
+            val title = episode.optString("title", "${i + 1}")
+            val number = episode.optString("number", "")
+            val episodeId = episode.optString("episodeId", "")
+
+            epTitle.text = title
+            epNumber.text = number
+
+            // ✅ Apply custom font
+            val customFont = ResourcesCompat.getFont(this, R.font.f)
+            epTitle.typeface = customFont
+            epNumber.typeface = customFont
+
+            // Highlight the currently active episode if it matches
+            if (number == currentEpisode) {
+                cardView.setBackgroundResource(R.drawable.episode_selected)
+                currentEpisodeId = episodeId
+                currentEpisodeView = cardView
+                currentEpisodeNumber = currentEpisode
+            } else {
+                cardView.setBackgroundResource(R.drawable.item_anime_episode_focus)
+            }
+
+
+            cardView.setOnKeyListener { v, keyCode, event ->
+                if (event.action == KeyEvent.ACTION_DOWN) {
+                    val index = container.indexOfChild(v)
+
+                    when (keyCode) {
+                        KeyEvent.KEYCODE_DPAD_LEFT -> {
+                            if (index > 0) container.getChildAt(index - 1)?.requestFocus()
+                            return@setOnKeyListener true
+                        }
+
+                        KeyEvent.KEYCODE_DPAD_RIGHT -> {
+                            if (index < container.childCount - 1) container.getChildAt(index + 1)?.requestFocus()
+                            return@setOnKeyListener true
+                        }
+
+                        KeyEvent.KEYCODE_DPAD_DOWN -> {
+                            return@setOnKeyListener true
+                        }
+
+                        KeyEvent.KEYCODE_DPAD_UP -> {
+                            // Move focus up (e.g. to Season Buttons)
+                            val seasonContainer = findViewById<LinearLayout>(R.id.playerControls)
+                            if (seasonContainer.childCount > 0) seasonContainer.getChildAt(0)?.requestFocus()
+                            return@setOnKeyListener true
+                        }
+
+                        KeyEvent.KEYCODE_DPAD_CENTER,
+                        KeyEvent.KEYCODE_ENTER -> {
+                            // Simulate OK / click
+                            currentEpisodeView?.setBackgroundResource(R.drawable.item_anime_episode_focus)
+                            cardView.setBackgroundResource(R.drawable.episode_selected)
+                            currentEpisodeId = episodeId
+                            currentEpisodeView = cardView
+                            currentEpisodeNumber = number
+                            fetchStreamingLinks(episodeId)
+                            return@setOnKeyListener true
+                        }
+                    }
+                }
+                false
+            }
+
+            container.addView(cardView)
+        }
+
+        // Focus handling (unchanged)
+        for (i in 0 until container.childCount) {
+            val child = container.getChildAt(i)
+            child.isFocusable = true
+            child.isFocusableInTouchMode = true
+
+            child.setOnFocusChangeListener { _, hasFocus ->
+                if (hasFocus) {
+                    setContainerExpanded(true)
+                } else {
+                    child.postDelayed({
+                        val anyFocused = (0 until container.childCount).any {
+                            container.getChildAt(it).hasFocus()
+                        }
+                        if (!anyFocused) setContainerExpanded(false)
+                    }, 50)
+                }
+            }
+        }
+
+        setContainerExpanded(false)
+    }
+
+
+    private fun setContainerExpanded(expand: Boolean) {
+        val serverContainer = findViewById<LinearLayout>(R.id.EpisodeContiner)
+        val params = serverContainer.layoutParams
+
+        // Set height: wrap_content when expanded, 0dp when collapsed
+        params.height = if (expand) ViewGroup.LayoutParams.WRAP_CONTENT else 0
+        serverContainer.layoutParams = params
+    }
+
+    private fun focusEpisode() {
+        val episodeContainer = findViewById<LinearLayout>(R.id.EpisodeContiner)
+        if (episodeContainer.childCount == 0) return
+
+        val serverContainer = findViewById<LinearLayout>(R.id.EpisodeContiner)
+        if (serverContainer.childCount > 0) {
+            var episodeNum = currentEpisodeNumber?.toIntOrNull() ?: 0
+            episodeNum = episodeNum-1
+            serverContainer.getChildAt(episodeNum)?.requestFocus()
+        }
+    }
+
+
 
     private fun setupControls() {
         // Play/Pause button
@@ -258,19 +481,30 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
             togglePlayPause()
         }
 
-        // Rewind button (10 seconds)
-        btnRewind.setOnClickListener {
-            seekRelative(-10000)
+
+        btnMute.setOnClickListener {
+            toggleMute()
         }
 
         // Fast forward button (10 seconds)
-        btnFastForward.setOnClickListener {
-            seekRelative(10000)
+        btnFastForward.setOnKeyListener { _, keyCode, event ->
+            if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER) {
+                if (event.action == KeyEvent.ACTION_DOWN) {
+                    if (event.isLongPress) seekRelative(10000) // repeat every long press interval
+                    else seekRelative(10000)
+                }
+                true
+            } else false
         }
 
-        // Mute button
-        btnMute.setOnClickListener {
-            toggleMute()
+        btnRewind.setOnKeyListener { _, keyCode, event ->
+            if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER) {
+                if (event.action == KeyEvent.ACTION_DOWN) {
+                    if (event.isLongPress) seekRelative(-10000)
+                    else seekRelative(-10000)
+                }
+                true
+            } else false
         }
 
         // Speed button
@@ -456,16 +690,22 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
         }
     }
 
+
     private fun refreshVideo() {
-        val videoUrl = intent.getStringExtra("video_url")
-        if (videoUrl != null) {
-            exoPlayer?.let { player ->
-                player.stop()
-                player.clearMediaItems()
-                player.setMediaItem(MediaItem.fromUri(videoUrl))
-                player.prepare()
-                player.play()
-            }
+        exoPlayer?.let { player ->
+            val currentItem = player.currentMediaItem ?: return
+            val currentPosition = player.currentPosition
+            val wasPlaying = player.isPlaying
+
+            // 🧹 Rebuild from existing item (same URL + headers)
+            player.stop()
+            player.clearMediaItems()
+            player.setMediaItem(currentItem)
+            player.prepare()
+
+            // ⏩ Restore position and playback
+            player.seekTo(currentPosition)
+            if (wasPlaying) player.play()
         }
     }
 
@@ -556,10 +796,17 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
         btnQuality.text = currentQuality
     }
 
-    private fun formatTime(timeMs: Long): String {
-        val date = Date(timeMs)
-        val formatter = SimpleDateFormat("mm:ss", Locale.getDefault())
-        return formatter.format(date)
+    private fun formatTime(milliseconds: Long): String {
+        val totalSeconds = milliseconds / 1000
+        val hours = totalSeconds / 3600
+        val minutes = (totalSeconds % 3600) / 60
+        val seconds = totalSeconds % 60
+
+        return if (hours > 0) {
+            String.format("%d:%02d:%02d", hours, minutes, seconds)
+        } else {
+            String.format("%02d:%02d", minutes, seconds)
+        }
     }
 
     // Player.Listener implementation
@@ -594,6 +841,7 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
                         startProgressTracking()
                     }
                 }
+
                 Player.STATE_ENDED -> {
                     // Video ended, could restart or show next video
                     stopProgressTracking()
@@ -684,6 +932,16 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
                     return true
                 }
             }
+            KeyEvent.KEYCODE_DPAD_DOWN -> {
+                // Expand episodes list and move focus into it when navigating down from controls
+                val serverContainer = findViewById<LinearLayout>(R.id.EpisodeContiner)
+                val anyControlFocused = bottomBar.findFocus() != null
+                if (anyControlFocused && serverContainer.childCount > 0) {
+                    setContainerExpanded(true)
+                    focusEpisode()
+                    return true
+                }
+            }
         }
         return super.onKeyDown(keyCode, event)
     }
@@ -691,9 +949,11 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
     // ===== PlayerManager functionality merged into this class =====
 
     companion object {
-        fun playVideoExternally(context: Context, episodeId: String) {
+        fun playVideoExternally(context: Context, episodeId: String, episodes: JSONArray, episodesNumber: String) {
             val intent = Intent(context, Anime_Video_Player::class.java).apply {
                 putExtra("episodeId", episodeId)
+                putExtra("episodes", episodes.toString())
+                putExtra("episodesNumber", episodesNumber.toString())
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
             }
             context.startActivity(intent)

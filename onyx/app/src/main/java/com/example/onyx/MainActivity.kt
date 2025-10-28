@@ -36,7 +36,9 @@ class MainActivity : ComponentActivity() {
                 startActivity(Intent(this, Anime_Page::class.java))
                 finish()
             }else{
-                startActivity(Intent(this, PayWall::class.java))
+                startActivity(Intent(this, Anime_Page::class.java))
+
+                //startActivity(Intent(this, PayWall::class.java))
                 finish()
             }
 

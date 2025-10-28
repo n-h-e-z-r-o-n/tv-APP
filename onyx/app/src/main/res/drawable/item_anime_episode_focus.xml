@@ -2,9 +2,9 @@
     <!-- Focused state -->
     <item android:state_focused="true">
         <shape android:shape="rectangle">
-            <corners android:radius="1dp" />
+            <corners android:radius="5dp" />
             <stroke
-                android:width="1dp"
+                android:width="2dp"
                 android:color="?attr/AccentColor" />
         </shape>
     </item>
@@ -13,9 +13,9 @@
     <item>
         <shape android:shape="rectangle">
             <solid android:color="@android:color/transparent" />
-            <corners android:radius="1dp" />
+            <corners android:radius="5dp" />
             <stroke
-                android:width="0dp"
+                android:width="2dp"
                 android:color="@android:color/transparent" />
         </shape>
     </item>

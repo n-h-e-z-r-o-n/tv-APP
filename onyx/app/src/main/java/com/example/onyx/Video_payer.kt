@@ -447,10 +447,17 @@ class Video_payer : AppCompatActivity(), Player.Listener {
         btnQuality.text = currentQuality
     }
 
-    private fun formatTime(timeMs: Long): String {
-        val date = Date(timeMs)
-        val formatter = SimpleDateFormat("mm:ss", Locale.getDefault())
-        return formatter.format(date)
+    private fun formatTime(milliseconds: Long): String {
+        val totalSeconds = milliseconds / 1000
+        val hours = totalSeconds / 3600
+        val minutes = (totalSeconds % 3600) / 60
+        val seconds = totalSeconds % 60
+
+        return if (hours > 0) {
+            String.format("%d:%02d:%02d", hours, minutes, seconds)
+        } else {
+            String.format("%02d:%02d", minutes, seconds)
+        }
     }
 
     // Player.Listener implementation

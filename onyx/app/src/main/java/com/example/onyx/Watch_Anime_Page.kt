@@ -53,6 +53,7 @@ class Watch_Anime_Page : AppCompatActivity() {
 
 
 
+        //getInfo("my-status-as-an-assassin-obviously-exceeds-the-heros-19922")
         getInfo(animeCode.toString())
 
     }
@@ -228,17 +229,9 @@ class Watch_Anime_Page : AppCompatActivity() {
 
                             cardView.setOnClickListener {
                                 Log.e("ANIME_episodeId ", "episodeId: $episodeId")
-                                //streamingLink(episodeId)
 
-                                Anime_Video_Player.playVideoExternally(this@Watch_Anime_Page, episodeId)
+                                Anime_Video_Player.playVideoExternally(this@Watch_Anime_Page, episodeId, episodes, number)
 
-                                /*
-                                val intent = Intent(this@Watch_Anime_Page, Watch_Page::class.java).apply {
-                                    putExtra("episodeId", episodeId)
-                                }
-                                this@Watch_Anime_Page.startActivity(intent)
-
-                                 */
                             }
 
                             container.addView(cardView)
