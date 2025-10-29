@@ -14,8 +14,6 @@ import com.bumptech.glide.Glide
 
 class MainActivity : ComponentActivity() {
 
-    private val SUBSCRIPTION_DURATION_MS = 30L * 24 * 60 * 60 * 1000 // 30 days in ms
-
     override fun onCreate(savedInstanceState: Bundle?) {
         GlobalUtils.applyTheme(this)
         super.onCreate(savedInstanceState)
@@ -31,32 +29,35 @@ class MainActivity : ComponentActivity() {
             .into(loadingImageView)
 
         Handler(Looper.getMainLooper()).postDelayed({
-
             if (isSubscriptionActive()) {
-                startActivity(Intent(this, PayWall::class.java))
-                finish()
-            }else{
-                startActivity(Intent(this, PayWall::class.java))
-
-                //startActivity(Intent(this, PayWall::class.java))
-                finish()
+                startActivity(Intent(this, Home_Page::class.java))
+            } else {
+                startActivity(Intent(this, Home_Page::class.java))
             }
-
+            finish()
         }, 500)
 
     }
 
     private fun isSubscriptionActive(): Boolean {
         val prefs = getSharedPreferences("SubscriptionPrefs", Context.MODE_PRIVATE)
-        val lastPaymentTime = prefs.getLong("lastPaymentTime", 0L)
         val now = System.currentTimeMillis()
 
+        val expiryTime = prefs.getLong("expiryTime", 0L)
+        if (expiryTime > 0L) {
+            val active = now < expiryTime
+            val daysLeft = ((expiryTime - now) / (1000 * 60 * 60 * 24)).coerceAtLeast(0)
+            Log.d("SUBSCRIPTION", "Active: $active | Days left: $daysLeft (from expiryTime)")
+            return active
+        }
+
+        // Fallback for legacy data: use lastPaymentTime + 30 days
+        val lastPaymentTime = prefs.getLong("lastPaymentTime", 0L)
         if (lastPaymentTime == 0L) return false
-
-        val timePassed = now - lastPaymentTime
-        val active = timePassed < SUBSCRIPTION_DURATION_MS
-
-        Log.d("SUBSCRIPTION", "Active: $active | Days left: ${(SUBSCRIPTION_DURATION_MS - timePassed) / (1000 * 60 * 60 * 24)}")
+        val subscriptionDurationMs = 30L * 24 * 60 * 60 * 1000
+        val active = now - lastPaymentTime < subscriptionDurationMs
+        val daysLeft = ((subscriptionDurationMs - (now - lastPaymentTime)) / (1000 * 60 * 60 * 24)).coerceAtLeast(0)
+        Log.d("SUBSCRIPTION", "Active: $active | Days left: $daysLeft (legacy)")
         return active
     }
 

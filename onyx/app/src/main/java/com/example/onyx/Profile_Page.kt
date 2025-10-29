@@ -432,30 +432,32 @@ class Profile_Page : AppCompatActivity() {
     private fun getRemainingDays() {
         val subscriptionWidget =  findViewById<TextView>(R.id.SubscriptionLeft)
         val prefs = getSharedPreferences("SubscriptionPrefs", Context.MODE_PRIVATE)
-        val lastPaymentTime = prefs.getLong("lastPaymentTime", 0L)
+        val now = System.currentTimeMillis()
 
-        if (lastPaymentTime == 0L) {
-            // No record found (user never paid)
-            subscriptionWidget.text = "(user never paid)"
+        val storedExpiry = prefs.getLong("expiryTime", 0L)
+        val displayText = if (storedExpiry > 0L) {
+            if (now >= storedExpiry) {
+                "expired"
+            } else {
+                val remainingDays = ((storedExpiry - now) / (24L * 60L * 60L * 1000L)).toInt()
+                remainingDays.toString()
+            }
+        } else {
+            val lastPaymentTime = prefs.getLong("lastPaymentTime", 0L)
+            if (lastPaymentTime == 0L) {
+                "(user never paid)"
+            } else {
+                val fallbackExpiry = lastPaymentTime + 30L * 24L * 60L * 60L * 1000L
+                if (now >= fallbackExpiry) {
+                    "expired"
+                } else {
+                    val remainingDays = ((fallbackExpiry - now) / (24L * 60L * 60L * 1000L)).toInt()
+                    remainingDays.toString()
+                }
+            }
         }
 
-        // Subscription duration: 30 days (in milliseconds)
-        val subscriptionDuration = 30L * 24 * 60 * 60 * 1000
-
-        val currentTime = System.currentTimeMillis()
-        val expiryTime = lastPaymentTime + subscriptionDuration
-
-        // If already expired
-        if (currentTime >= expiryTime) {
-            subscriptionWidget.text = "expired"
-        }
-
-        // Calculate remaining time in days
-        val remainingMillis = expiryTime - currentTime
-        val remainingDays = (remainingMillis / (24 * 60 * 60 * 1000)).toInt()
-
-
-        subscriptionWidget.text = remainingDays.toString()
+        subscriptionWidget.text = displayText
     }
 
 

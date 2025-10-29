@@ -96,6 +96,7 @@
                         android:textSize="20sp" />
 
                     <TextView
+                        android:id="@+id/headerBadgeText"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="8dp"
@@ -310,7 +311,7 @@
         android:layout_marginStart="0dp"
         android:elevation="6dp"
         app:cardCornerRadius="16dp"
-        android:visibility="visible">
+        android:visibility="gone">
 
         <ScrollView
             android:layout_width="match_parent"
@@ -425,15 +426,31 @@
                         android:nextFocusRight="@+id/planYearly"
                         android:nextFocusLeft="@+id/planMonthly">
 
-                        <TextView
+                        <LinearLayout
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Quarterly\nKSh 50"
-                            android:textColor="@android:color/white"
-                            android:textSize="12sp"
-                            android:gravity="center"
-                            android:fontFamily="@font/i"
-                            tools:ignore="HardcodedText,SmallSp" />
+                            android:orientation="vertical"
+                            android:gravity="center">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Quarterly\nKSh 50"
+                                android:textColor="@android:color/white"
+                                android:textSize="12sp"
+                                android:gravity="center"
+                                android:fontFamily="@font/i"
+                                tools:ignore="HardcodedText,SmallSp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Save 9%"
+                                android:textColor="@android:color/white"
+                                android:alpha="0.8"
+                                android:textSize="10sp"
+                                tools:ignore="HardcodedText,SmallSp" />
+                        </LinearLayout>
                     </LinearLayout>
 
                     <LinearLayout
@@ -453,15 +470,31 @@
                         android:nextFocusRight="@+id/planMonthly"
                         android:nextFocusLeft="@+id/planQuarterly">
 
-                        <TextView
+                        <LinearLayout
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Yearly\nKSh 180"
-                            android:textColor="@android:color/white"
-                            android:textSize="12sp"
-                            android:gravity="center"
-                            android:fontFamily="@font/i"
-                            tools:ignore="HardcodedText,SmallSp" />
+                            android:orientation="vertical"
+                            android:gravity="center">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Yearly\nKSh 180"
+                                android:textColor="@android:color/white"
+                                android:textSize="12sp"
+                                android:gravity="center"
+                                android:fontFamily="@font/i"
+                                tools:ignore="HardcodedText,SmallSp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Save 17%"
+                                android:textColor="@android:color/white"
+                                android:alpha="0.8"
+                                android:textSize="10sp"
+                                tools:ignore="HardcodedText,SmallSp" />
+                        </LinearLayout>
                     </LinearLayout>
 
                 </LinearLayout>

@@ -47,6 +47,7 @@ class PayWall : AppCompatActivity() {
     private lateinit var btnMpesaPayment: Button
     private lateinit var etMpesaPhone: EditText
     private lateinit var progressBar: ProgressBar
+    private lateinit var spCountry: Spinner
 
     private lateinit var mpesaFeedbackBox: TextView
     private val INTASEND_SECRET_KEY = "Bearer ISSecretKey_live_e9d3162e-95cb-42a4-b64b-ee378525ca5a"
@@ -85,6 +86,7 @@ class PayWall : AppCompatActivity() {
         val priceCurrencyText = findViewById<TextView>(R.id.priceCurrencyText)
         val priceAmountText = findViewById<TextView>(R.id.priceAmountText)
         val pricePeriodText = findViewById<TextView>(R.id.pricePeriodText)
+        val headerBadgeText = findViewById<TextView>(R.id.headerBadgeText)
 
         // Initialize payment method views and country spinner early (used below)
         val rbMpesa = findViewById<LinearLayout>(R.id.rbMpesa)
@@ -94,7 +96,7 @@ class PayWall : AppCompatActivity() {
         val cardSection = findViewById<LinearLayout>(R.id.cardSection)
         btnMpesaPayment = findViewById<Button>(R.id.btnMpesaPayment)
         etMpesaPhone  = findViewById<EditText>(R.id.etMpesaPhone)
-        val spCountry  = findViewById<Spinner>(R.id.spCountry)
+        spCountry  = findViewById<Spinner>(R.id.spCountry)
 
 
 
@@ -118,6 +120,13 @@ class PayWall : AppCompatActivity() {
                 Plan.MONTHLY -> "/ month"
                 Plan.QUARTERLY -> "/ 3 months"
                 Plan.YEARLY -> "/ year"
+            }
+
+            // Mirror selected plan on header badge
+            headerBadgeText.text = when (selectedPlan) {
+                Plan.MONTHLY -> "MONTHLY"
+                Plan.QUARTERLY -> "QUARTERLY • SAVE 17%"
+                Plan.YEARLY -> "YEARLY • SAVE 17%"
             }
         }
 
@@ -532,6 +541,8 @@ class PayWall : AppCompatActivity() {
             findViewById<LinearLayout>(R.id.planMonthly)?.isEnabled = !show
             findViewById<LinearLayout>(R.id.planQuarterly)?.isEnabled = !show
             findViewById<LinearLayout>(R.id.planYearly)?.isEnabled = !show
+            // Disable country spinner as well
+            spCountry.isEnabled = !show
         } else {
             // Switch to main thread
             Handler(Looper.getMainLooper()).post {
