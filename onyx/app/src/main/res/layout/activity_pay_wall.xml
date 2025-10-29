@@ -35,10 +35,11 @@
 
     <LinearLayout
         android:id="@+id/payInfo"
-        android:layout_width="370dp"
+        android:layout_width="420dp"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        android:paddingStart="10dp"
+        android:paddingStart="16dp"
+        android:paddingEnd="12dp"
         tools:ignore="RtlSymmetry">
 
         <!-- App Logo -->
@@ -57,11 +58,11 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="32dp"
+            android:layout_marginBottom="28dp"
             android:gravity="center"
             android:text="Unlimited Movies &amp; TV Shows"
-            android:textColor="?attr/BG_color_up"
-            android:textSize="16sp" />
+            android:textColor="?attr/FG_color"
+            android:textSize="18sp" />
 
         <!-- Payment Card -->
         <androidx.cardview.widget.CardView
@@ -81,7 +82,7 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp"
+                    android:layout_marginBottom="14dp"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
@@ -100,11 +101,13 @@
                         android:layout_marginStart="8dp"
                         android:background="?attr/BG_color_up"
                         android:fontFamily="sans-serif-medium"
-                        android:paddingHorizontal="8dp"
-                        android:paddingVertical="4dp"
+                        android:paddingStart="10dp"
+                        android:paddingEnd="10dp"
+                        android:paddingTop="4dp"
+                        android:paddingBottom="4dp"
                         android:text="BEST VALUE"
                         android:textColor="?attr/FG_color"
-                        android:textSize="10sp"
+                        android:textSize="11sp"
                         tools:ignore="SmallSp" />
 
                 </LinearLayout>
@@ -118,31 +121,34 @@
                     android:orientation="horizontal">
 
                     <TextView
+                        android:id="@+id/priceCurrencyText"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="sans-serif-medium"
-                        android:text="ksh"
+                        android:text="KSh"
                         android:textColor="?attr/FG_color"
-                        android:textSize="24sp"
+                        android:textSize="22sp"
                         tools:ignore="HardcodedText" />
 
                     <TextView
+                        android:id="@+id/priceAmountText"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="sans-serif-medium"
                         android:text="20"
                         android:textColor="?attr/FG_color"
-                        android:textSize="36sp"
+                        android:textSize="34sp"
                         tools:ignore="HardcodedText" />
 
                     <TextView
+                        android:id="@+id/pricePeriodText"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="4dp"
+                        android:layout_marginStart="6dp"
                         android:alpha="0.7"
-                        android:text=" / months"
+                        android:text="/ month"
                         android:textColor="?attr/FG_color"
-                        android:textSize="16sp"
+                        android:textSize="14sp"
                         tools:ignore="HardcodedText" />
 
                 </LinearLayout>
@@ -246,11 +252,29 @@
                     android:clickable="true"
                     android:focusable="true"
                     android:fontFamily="sans-serif-medium"
-                    android:text="Buy App"
+                    android:text="Unlock Premium"
                     android:textColor="#FFFFFF"
                     android:textSize="16sp"
                     android:elevation="5dp"
                     tools:ignore="HardcodedText" />
+
+                <!-- Secure payments line -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Secure payments by IntaSend"
+                        android:textColor="?attr/FG_color"
+                        android:alpha="0.6"
+                        android:textSize="11sp"
+                        tools:ignore="HardcodedText,SmallSp" />
+                </LinearLayout>
 
             </LinearLayout>
 
@@ -259,6 +283,7 @@
 
         <!-- Terms and Privacy -->
         <TextView
+            android:id="@+id/termsText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
@@ -279,12 +304,12 @@
     <androidx.cardview.widget.CardView
         android:id="@+id/PaymentContainer"
         android:layout_width="450dp"
-        android:layout_height="450dp"
+        android:layout_height="wrap_content"
         app:cardBackgroundColor="?attr/BG_color_up"
         android:layout_gravity="center_vertical"
-        android:layout_marginStart="20dp"
-        android:elevation="5dp"
-        app:cardCornerRadius="15dp"
+        android:layout_marginStart="0dp"
+        android:elevation="6dp"
+        app:cardCornerRadius="16dp"
         android:visibility="visible">
 
         <ScrollView
@@ -330,10 +355,115 @@
                         android:elevation="2dp"
                         android:layout_gravity="end"
                         tools:ignore="HardcodedText"
-                        android:nextFocusDown="@+id/rbMpesa"
+                        android:nextFocusDown="@+id/planMonthly"
                         android:nextFocusLeft="@+id/btnClosePayment"
                         android:nextFocusRight="@+id/btnClosePayment"
                         android:nextFocusUp="@+id/btnClosePayment"/>
+                </LinearLayout>
+
+                <!-- PLAN SELECTION -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Choose your plan"
+                    android:textColor="?attr/FG_color"
+                    android:textSize="17sp"
+                    android:layout_marginBottom="8dp"
+                    android:fontFamily="@font/d"
+                    tools:ignore="HardcodedText" />
+
+                <LinearLayout
+                    android:id="@+id/planGroup"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="20dp">
+
+                    <LinearLayout
+                        android:id="@+id/planMonthly"
+                        android:layout_width="0dp"
+                        android:layout_height="56dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/tv_button_selector"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:focusableInTouchMode="true"
+                        android:gravity="center"
+                        android:padding="6dp"
+                        android:nextFocusDown="@+id/rbMpesa"
+                        android:nextFocusUp="@+id/btnClosePayment"
+                        android:nextFocusRight="@+id/planQuarterly"
+                        android:nextFocusLeft="@+id/planYearly"
+                        >
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Monthly\nKSh 20"
+                            android:textColor="@android:color/white"
+                            android:textSize="12sp"
+                            android:gravity="center"
+                            android:fontFamily="@font/i"
+                            tools:ignore="HardcodedText,SmallSp"
+                            />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/planQuarterly"
+                        android:layout_width="0dp"
+                        android:layout_height="56dp"
+                        android:layout_weight="1"
+                        android:layout_marginStart="8dp"
+                        android:background="@drawable/tv_button_selector"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:focusableInTouchMode="true"
+                        android:gravity="center"
+                        android:padding="6dp"
+                        android:nextFocusDown="@+id/rbMpesa"
+                        android:nextFocusUp="@+id/btnClosePayment"
+                        android:nextFocusRight="@+id/planYearly"
+                        android:nextFocusLeft="@+id/planMonthly">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Quarterly\nKSh 50"
+                            android:textColor="@android:color/white"
+                            android:textSize="12sp"
+                            android:gravity="center"
+                            android:fontFamily="@font/i"
+                            tools:ignore="HardcodedText,SmallSp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/planYearly"
+                        android:layout_width="0dp"
+                        android:layout_height="56dp"
+                        android:layout_weight="1"
+                        android:layout_marginStart="8dp"
+                        android:background="@drawable/tv_button_selector"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:focusableInTouchMode="true"
+                        android:gravity="center"
+                        android:padding="6dp"
+                        android:nextFocusDown="@+id/rbMpesa"
+                        android:nextFocusUp="@+id/btnClosePayment"
+                        android:nextFocusRight="@+id/planMonthly"
+                        android:nextFocusLeft="@+id/planQuarterly">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Yearly\nKSh 180"
+                            android:textColor="@android:color/white"
+                            android:textSize="12sp"
+                            android:gravity="center"
+                            android:fontFamily="@font/i"
+                            tools:ignore="HardcodedText,SmallSp" />
+                    </LinearLayout>
+
                 </LinearLayout>
 
                 <!-- PAYMENT METHOD SELECTION -->
@@ -342,7 +472,7 @@
                     android:layout_height="wrap_content"
                     android:text="Payment Method"
                     android:textColor="?attr/FG_color"
-                    android:textSize="16sp"
+                    android:textSize="17sp"
                     android:layout_marginBottom="12dp"
                     android:fontFamily="@font/d"
                     tools:ignore="HardcodedText" />
@@ -372,7 +502,7 @@
                         android:background="@drawable/tv_button_selector"
                         android:nextFocusLeft="@+id/rbGooglePay"
                         android:nextFocusRight="@+id/rbCard"
-                        android:nextFocusUp="@+id/btnClosePayment"
+                        android:nextFocusUp="@+id/planMonthly"
                         android:gravity="center">
 
                         <ImageView
@@ -406,7 +536,7 @@
                         android:background="@drawable/tv_button_selector"
                         android:nextFocusLeft="@+id/rbMpesa"
                         android:nextFocusRight="@+id/rbGooglePay"
-                        android:nextFocusUp="@+id/btnClosePayment"
+                        android:nextFocusUp="@+id/planMonthly"
                         android:gravity="center">
 
                         <ImageView
@@ -444,7 +574,7 @@
                         android:background="@drawable/tv_button_selector"
                         android:nextFocusLeft="@+id/rbCard"
                         android:nextFocusRight="@+id/rbMpesa"
-                        android:nextFocusUp="@+id/btnClosePayment"
+                        android:nextFocusUp="@+id/planMonthly"
                         android:gravity="center">
 
                         <ImageView

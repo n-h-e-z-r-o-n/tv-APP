@@ -33,10 +33,10 @@ class MainActivity : ComponentActivity() {
         Handler(Looper.getMainLooper()).postDelayed({
 
             if (isSubscriptionActive()) {
-                startActivity(Intent(this, Anime_Page::class.java))
+                startActivity(Intent(this, PayWall::class.java))
                 finish()
             }else{
-                startActivity(Intent(this, Anime_Page::class.java))
+                startActivity(Intent(this, PayWall::class.java))
 
                 //startActivity(Intent(this, PayWall::class.java))
                 finish()

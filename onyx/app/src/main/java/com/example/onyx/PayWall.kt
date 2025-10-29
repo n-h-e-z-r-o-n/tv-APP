@@ -16,6 +16,7 @@ import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -31,9 +32,11 @@ import android.widget.RadioButton
 import android.widget.Spinner
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.core.content.ContextCompat
 import org.json.JSONObject
 import kotlin.concurrent.thread
 import android.os.Handler
+import android.widget.AdapterView
 import java.util.concurrent.Executor
 
 class PayWall : AppCompatActivity() {
@@ -46,7 +49,10 @@ class PayWall : AppCompatActivity() {
     private lateinit var progressBar: ProgressBar
 
     private lateinit var mpesaFeedbackBox: TextView
-    private val INTASEND_SECRET_KEY = "Bearer -95cb-42a4-b64b-ee378525ca5a"
+    private val INTASEND_SECRET_KEY = "Bearer ISSecretKey_live_e9d3162e-95cb-42a4-b64b-ee378525ca5a"
+
+    private enum class Plan { MONTHLY, QUARTERLY, YEARLY }
+    private var selectedPlan: Plan = Plan.MONTHLY
 
 
 
@@ -72,6 +78,23 @@ class PayWall : AppCompatActivity() {
         val btnPurchase = findViewById<Button>(R.id.btnPurchase)
         val btnClosePayment = findViewById<TextView>(R.id.btnClosePayment)
         val payInfo = findViewById<LinearLayout>(R.id.payInfo)
+        val termsText = findViewById<TextView>(R.id.termsText)
+        val planMonthly = findViewById<LinearLayout>(R.id.planMonthly)
+        val planQuarterly = findViewById<LinearLayout>(R.id.planQuarterly)
+        val planYearly = findViewById<LinearLayout>(R.id.planYearly)
+        val priceCurrencyText = findViewById<TextView>(R.id.priceCurrencyText)
+        val priceAmountText = findViewById<TextView>(R.id.priceAmountText)
+        val pricePeriodText = findViewById<TextView>(R.id.pricePeriodText)
+
+        // Initialize payment method views and country spinner early (used below)
+        val rbMpesa = findViewById<LinearLayout>(R.id.rbMpesa)
+        val rbCard = findViewById<LinearLayout>(R.id.rbCard)
+        val rbGooglePay = findViewById<LinearLayout>(R.id.rbGooglePay)
+        val mpesaSection = findViewById<LinearLayout>(R.id.mpesaSection)
+        val cardSection = findViewById<LinearLayout>(R.id.cardSection)
+        btnMpesaPayment = findViewById<Button>(R.id.btnMpesaPayment)
+        etMpesaPhone  = findViewById<EditText>(R.id.etMpesaPhone)
+        val spCountry  = findViewById<Spinner>(R.id.spCountry)
 
 
 
@@ -79,11 +102,85 @@ class PayWall : AppCompatActivity() {
             PaymentContainer.visibility = View.VISIBLE
             payInfo.visibility = View.GONE
         }
+
+        fun updateDisplayedPrice(country: String) {
+            // Currency label
+            val currencyLabel = when {
+                country.contains("Uganda", true) -> "UGX"
+                country.contains("Tanzania", true) -> "TZS"
+                else -> "KSh"
+            }
+            priceCurrencyText.text = currencyLabel
+
+            // Amount and period by plan
+            priceAmountText.text = getPriceAmount(country, selectedPlan)
+            pricePeriodText.text = when (selectedPlan) {
+                Plan.MONTHLY -> "/ month"
+                Plan.QUARTERLY -> "/ 3 months"
+                Plan.YEARLY -> "/ year"
+            }
+        }
+
+        // Reflect price when country changes
+        spCountry.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                val country = spCountry.selectedItem?.toString() ?: return
+                updateDisplayedPrice(country)
+            }
+            override fun onNothingSelected(parent: AdapterView<*>?) { }
+        }
         btnClosePayment.setOnClickListener {
             PaymentContainer.visibility = View.GONE
             payInfo.visibility = View.VISIBLE
 
         }
+        termsText.setOnClickListener {
+            try {
+                startActivity(Intent(this, TermsAndConditionsActivity::class.java))
+            } catch (_: Exception) { }
+        }
+
+        fun updatePlanSelectionUI() {
+            // Visual selection: stronger outline for selected, normal selector for others
+            fun applySelected(v: LinearLayout, selected: Boolean) {
+                v.isSelected = selected
+                if (selected) {
+                    v.background = ContextCompat.getDrawable(this, R.drawable.episode_selected)
+                    v.elevation = 4f
+                    v.alpha = 1f
+                } else {
+                    v.background = ContextCompat.getDrawable(this, R.drawable.tv_button_selector)
+                    v.elevation = 0f
+                    v.alpha = 0.95f
+                }
+            }
+
+            applySelected(planMonthly, selectedPlan == Plan.MONTHLY)
+            applySelected(planQuarterly, selectedPlan == Plan.QUARTERLY)
+            applySelected(planYearly, selectedPlan == Plan.YEARLY)
+
+            // Reflect price on main card based on current country selection
+            val country = spCountry.selectedItem?.toString() ?: "Kenya"
+            updateDisplayedPrice(country)
+        }
+
+        planMonthly.setOnClickListener {
+            if (isProcessing) return@setOnClickListener
+            selectedPlan = Plan.MONTHLY
+            updatePlanSelectionUI()
+        }
+        planQuarterly.setOnClickListener {
+            if (isProcessing) return@setOnClickListener
+            selectedPlan = Plan.QUARTERLY
+            updatePlanSelectionUI()
+        }
+        planYearly.setOnClickListener {
+            if (isProcessing) return@setOnClickListener
+            selectedPlan = Plan.YEARLY
+            updatePlanSelectionUI()
+        }
+        // Initialize selection visuals
+        updatePlanSelectionUI()
         ////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -91,15 +188,7 @@ class PayWall : AppCompatActivity() {
 
 
 
-        val rbMpesa = findViewById<LinearLayout>(R.id.rbMpesa)
-        val rbCard = findViewById<LinearLayout>(R.id.rbCard)
-        val rbGooglePay = findViewById<LinearLayout>(R.id.rbGooglePay)
-        val mpesaSection = findViewById<LinearLayout>(R.id.mpesaSection)
-        val cardSection = findViewById<LinearLayout>(R.id.cardSection)
-
-        btnMpesaPayment = findViewById<Button>(R.id.btnMpesaPayment)
-        etMpesaPhone  = findViewById<EditText>(R.id.etMpesaPhone)
-        val spCountry  = findViewById<Spinner>(R.id.spCountry)
+        
 
 
         rbMpesa.setOnClickListener() {
@@ -122,12 +211,14 @@ class PayWall : AppCompatActivity() {
 
 
 
+        
+
         btnMpesaPayment.setOnClickListener {
             if (isProcessing) return@setOnClickListener
             showLoading(true)
             val phone = etMpesaPhone.text.toString().trim()
-            val amount = "1"
             val country = spCountry.selectedItem.toString()
+            val amount = getPriceAmount(country, selectedPlan)
 
             if (phone.isEmpty() || phone.length < 10) {
                 Toast.makeText(this, "Enter a valid phone number", Toast.LENGTH_SHORT).show()
@@ -155,6 +246,22 @@ class PayWall : AppCompatActivity() {
     }
 
     
+
+
+
+    private fun getPriceAmount(country: String, plan: Plan): String {
+        val isKenya = country.contains("Kenya", true)
+        val isUganda = country.contains("Uganda", true)
+        val isTanzania = country.contains("Tanzania", true)
+
+        return when {
+            isKenya -> when (plan) { Plan.MONTHLY -> "20"; Plan.QUARTERLY -> "50"; Plan.YEARLY -> "180" }
+            isUganda -> when (plan) { Plan.MONTHLY -> "5000"; Plan.QUARTERLY -> "12000"; Plan.YEARLY -> "42000" }
+            isTanzania -> when (plan) { Plan.MONTHLY -> "5000"; Plan.QUARTERLY -> "12000"; Plan.YEARLY -> "42000" }
+            else -> when (plan) { Plan.MONTHLY -> "20"; Plan.QUARTERLY -> "50"; Plan.YEARLY -> "180" }
+        }
+    }
+
 
 
 
@@ -204,6 +311,7 @@ class PayWall : AppCompatActivity() {
                                     Glide.with(this@PayWall)
                                         .load(imgUrl)
                                         .centerCrop()
+                                        .transition(DrawableTransitionOptions.withCrossFade(500))
                                         .into(displaySection)
 
                                     delay(20500)
@@ -420,6 +528,10 @@ class PayWall : AppCompatActivity() {
             btnMpesaPayment.isEnabled = !show
             btnMpesaPayment.text = if (show) "Processing..." else "Initiate payment"
             progressBar.visibility = if (show) View.VISIBLE else View.GONE
+            // Disable plan changes while processing
+            findViewById<LinearLayout>(R.id.planMonthly)?.isEnabled = !show
+            findViewById<LinearLayout>(R.id.planQuarterly)?.isEnabled = !show
+            findViewById<LinearLayout>(R.id.planYearly)?.isEnabled = !show
         } else {
             // Switch to main thread
             Handler(Looper.getMainLooper()).post {
@@ -436,15 +548,27 @@ class PayWall : AppCompatActivity() {
 
     private fun navigateToHome() {
         showLoading(false)
-        saveSubscriptionTime()
+        // compute expiry based on selected plan
+        val days = when (selectedPlan) {
+            Plan.MONTHLY -> 30
+            Plan.QUARTERLY -> 90
+            Plan.YEARLY -> 365
+        }
+        saveSubscriptionTime(days)
         val intent = Intent(this, Home_Page::class.java)
         startActivity(intent)
         finish()
     }
 
-    private fun saveSubscriptionTime() {
+    private fun saveSubscriptionTime(planDays: Int) {
+        val now = System.currentTimeMillis()
+        val expiry = now + planDays * 24L * 60L * 60L * 1000L
         val prefs = getSharedPreferences("SubscriptionPrefs", Context.MODE_PRIVATE)
-        prefs.edit().putLong("lastPaymentTime", System.currentTimeMillis()).apply()
+        prefs.edit()
+            .putLong("lastPaymentTime", now)
+            .putLong("expiryTime", expiry)
+            .putString("plan", selectedPlan.name)
+            .apply()
     }
 
 
