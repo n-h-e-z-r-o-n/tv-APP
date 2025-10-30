@@ -11,6 +11,19 @@
         android:layout_height="match_parent"
         android:orientation="horizontal">
 
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text=" Movies"
+            android:paddingStart="55dp"
+            android:height="13sp"
+            android:textStyle="bold"
+            android:fontFamily="@font/d"
+            android:textSize="13sp"
+            android:textColor="?attr/AccentColor"
+            tools:ignore="HardcodedText,RtlSymmetry"
+            />
+
 
 
         <androidx.recyclerview.widget.RecyclerView
@@ -25,6 +38,7 @@
             android:focusable="true"
             android:focusableInTouchMode="true"
             android:descendantFocusability="beforeDescendants"
+            android:layout_marginTop="13sp"
             android:nextFocusLeft="@id/btnMovies"
             tools:ignore="RtlSymmetry" />
 

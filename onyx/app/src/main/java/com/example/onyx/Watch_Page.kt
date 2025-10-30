@@ -420,7 +420,7 @@ class Watch_Page : AppCompatActivity() {
                         }
 
                         KeyEvent.KEYCODE_DPAD_UP -> {
-                            findViewById<ImageButton>(R.id.TrailerButton)?.requestFocus()
+                            findViewById<ImageButton>(R.id.serverButton)?.requestFocus()
                             return@setOnKeyListener true
                         }
                     }
@@ -516,7 +516,6 @@ class Watch_Page : AppCompatActivity() {
                 .load(selectedSeasonPoster)
                 .centerCrop()
                 .into(posterWidget)
-
         }
 
 
@@ -524,6 +523,8 @@ class Watch_Page : AppCompatActivity() {
 
         Log.e("DEBUG_Each E--- S 1", seasonData.toString())
         Log.e("DEBUG_Each E--- S 2", seasonAllData.toString())
+
+        val tempImg = seasonAllData.getString("backdrop_path")
 
 
         CoroutineScope(Dispatchers.IO).launch {
@@ -556,14 +557,25 @@ class Watch_Page : AppCompatActivity() {
                     for (i in 0 until episodesArray.length()) {
                         val episodes = episodesArray.getJSONObject(i)
 
-                        val airDateString = episodes.optString("air_date", "")
-                        if (airDateString.isNullOrEmpty()) continue
 
-
+                        /*
                         if (episodes.optString("still_path", "").isBlank() || episodes.optString("still_path", "").equals("null", true) ||
                             episodes.optString("runtime", "").isBlank() || episodes.optString("runtime", "").equals("null", true)) {
                             continue
                         }
+
+                         */
+
+                        if (airDate.isNullOrEmpty() || airDate.equals("null", true) || episodeCount == 0) {
+                            continue // Skip unreleased
+                        }
+
+                        val stillPathRaw = episodes.optString("still_path", "")
+                        val runtimeRaw = episodes.optString("runtime", "")
+
+                        val stillPath = if (stillPathRaw.isNullOrEmpty() || runtimeRaw == "null") tempImg  else stillPathRaw
+                        val runtime = if (runtimeRaw.isNullOrEmpty() || runtimeRaw == "null") "0" else runtimeRaw
+
 
 
 
@@ -571,10 +583,10 @@ class Watch_Page : AppCompatActivity() {
 
                             EpisodeItem(
                                 episodesName = episodes.optString("name", ""),
-                                episodesImage = episodes.optString("still_path", ""),
+                                episodesImage = stillPath,
                                 episodesNumber = episodes.optString("episode_number", ""),
                                 episodesRating = episodes.optString("vote_average", "0.0"),
-                                episodesRuntime = episodes.optString("runtime", ""),
+                                episodesRuntime = runtime,
                                 episodesDescription = episodes.optString("overview", ""),
                                 seriesId = seriesId,
                                 seasonNumber = episodes.optString("season_number", ""),

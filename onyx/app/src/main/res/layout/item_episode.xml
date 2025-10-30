@@ -24,7 +24,7 @@
             android:scaleType="centerCrop"
             android:adjustViewBounds="true"
             android:background="?attr/BG_color_up"
-            tools:srcCompat="@tools:sample/backgrounds/scenic"
+            android:src="@raw/test2"
             tools:ignore="ContentDescription" />
 
 

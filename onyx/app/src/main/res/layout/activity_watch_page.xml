@@ -420,7 +420,8 @@
                                 android:nextFocusRight="@+id/favoriteButton"
                                 android:tooltipText="Trailer"
                                 android:elevation="2dp"
-                                tools:ignore="UnusedAttribute" />
+                                tools:ignore="UnusedAttribute"
+                                android:visibility="gone"/>
 
                             <ImageButton
                                 android:id="@+id/favoriteButton"
@@ -540,13 +541,13 @@
                         android:descendantFocusability="afterDescendants"
                         android:focusable="true"
                         android:focusableInTouchMode="true"
-                        app:cardBackgroundColor="?attr/BG_color_up">
+                        app:cardBackgroundColor="?attr/BG_color">
 
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
                             android:orientation="vertical"
-                            android:background="?attr/BG_color_up"
+                            android:background="?attr/BG_color"
                             android:paddingStart="10dp"
                             android:paddingEnd="10dp">
 

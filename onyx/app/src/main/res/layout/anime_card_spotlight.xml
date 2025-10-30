@@ -2,12 +2,13 @@
 <androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/spotlightAnimesCard"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:focusable="true"
-    android:focusableInTouchMode="true"
     android:nextFocusDown="@id/cardButton"
-    android:nextFocusUp="@id/Anime_Trending_widget">
+    android:nextFocusUp="@+id/AnimeSearchInput"
+    android:focusable="true"
+    android:descendantFocusability="beforeDescendants">
 
     <FrameLayout
         android:layout_width="match_parent"
@@ -199,6 +200,7 @@
                     app:cardBackgroundColor="?attr/BG_color_up"
                     android:elevation="0dp"
                     android:layout_marginStart="5dp">
+
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
@@ -206,7 +208,7 @@
                         android:gravity="center"
                         android:layout_gravity="center"
                         android:orientation="horizontal"
-                        >
+                        tools:ignore="UseCompoundDrawables">
 
 
                     <ImageView
@@ -311,8 +313,10 @@
                 android:focusableInTouchMode="true"
                 android:clickable="true"
                 android:background="@drawable/tv_button_selector"
-                android:nextFocusUp="@+id/sideBar"
+                android:nextFocusUp="@+id/AnimeSearchInput"
                 android:nextFocusDown="@+id/Anime_Trending_widget"
+                android:nextFocusRight="@+id/spotlightAnimesCard"
+                android:nextFocusLeft="@+id/spotlightAnimesCard"
                 android:gravity="center">
 
                 <ImageView

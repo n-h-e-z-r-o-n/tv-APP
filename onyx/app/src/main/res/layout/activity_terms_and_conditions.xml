@@ -243,8 +243,6 @@ You agree to indemnify and hold harmless [Company/App], its affiliates, and lice
         </ScrollView>
 
         <include layout="@layout/laod_animation"/>
-        <include layout="@layout/side_bar"/>
-
     </FrameLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

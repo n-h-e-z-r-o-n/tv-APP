@@ -149,14 +149,25 @@ class Video_payer : AppCompatActivity(), Player.Listener {
             togglePlayPause()
         }
 
-        // Rewind button (10 seconds)
-        btnRewind.setOnClickListener {
-            seekRelative(-10000)
+
+        btnFastForward.setOnKeyListener { _, keyCode, event ->
+            if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER) {
+                if (event.action == KeyEvent.ACTION_DOWN) {
+                    if (event.isLongPress) seekRelative(10000) // repeat every long press interval
+                    else seekRelative(10000)
+                }
+                true
+            } else false
         }
 
-        // Fast forward button (10 seconds)
-        btnFastForward.setOnClickListener {
-            seekRelative(10000)
+        btnRewind.setOnKeyListener { _, keyCode, event ->
+            if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER) {
+                if (event.action == KeyEvent.ACTION_DOWN) {
+                    if (event.isLongPress) seekRelative(-10000)
+                    else seekRelative(-10000)
+                }
+                true
+            } else false
         }
 
         // Mute button

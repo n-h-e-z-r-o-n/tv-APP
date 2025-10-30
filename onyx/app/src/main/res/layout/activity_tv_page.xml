@@ -12,6 +12,19 @@
         android:layout_height="match_parent"
         android:orientation="horizontal">
 
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text=" Tv Shows"
+            android:paddingStart="55dp"
+            android:height="13sp"
+            android:textStyle="bold"
+            android:fontFamily="@font/d"
+            android:textSize="13sp"
+            android:textColor="?attr/AccentColor"
+            tools:ignore="HardcodedText,RtlSymmetry"
+            />
+
 
 
         <androidx.recyclerview.widget.RecyclerView
@@ -29,7 +42,8 @@
             android:focusable="true"
             android:focusableInTouchMode="true"
             android:descendantFocusability="beforeDescendants"
-            android:nextFocusLeft="@id/btnTvShow"/>
+            android:nextFocusLeft="@id/btnTvShow"
+            android:layout_marginTop="14sp"/>
 
         <include layout="@layout/side_bar"/>
 

@@ -32,10 +32,10 @@ class MainActivity : ComponentActivity() {
             if (isSubscriptionActive()) {
                 startActivity(Intent(this, Home_Page::class.java))
             } else {
-                startActivity(Intent(this, Home_Page::class.java))
+                startActivity(Intent(this, PayWall::class.java))
             }
             finish()
-        }, 500)
+        }, 10500)
 
     }
 
