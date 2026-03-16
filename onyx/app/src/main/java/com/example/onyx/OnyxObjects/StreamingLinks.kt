@@ -40,18 +40,40 @@ import android.widget.FrameLayout
 
 object StreamingLinks {
 
-    suspend fun extractStreamFromServer ( context: Context,  Weburl: String): String? =
+    suspend fun extractStreamFromServer ( context: Context,  Weburl: String, container: ViewGroup): String? =
 
         withContext(Dispatchers.Main) {
 
             val result = CompletableDeferred<String?>()
 
-
-
             val webView = WebView(context)
+
+            /*
+            val root = (context as Activity).findViewById<ViewGroup>(android.R.id.content)
+            val params = FrameLayout.LayoutParams(1, 1)
+            webView.visibility = View.INVISIBLE
+            root.addView(webView, params)
+
+
             val container = FrameLayout(context)
             container.addView(webView)
             (context as Activity).setContentView(container)
+
+
+
+
+
+
+
+
+
+
+            */
+
+            val params = FrameLayout.LayoutParams(100, 100)
+            webView.layoutParams = params
+            //webView.visibility = View.INVISIBLE
+            container.addView(webView)
 
 
             // Setup WebView
@@ -199,6 +221,7 @@ object StreamingLinks {
                             webView.clearFormData()
                             webView.clearCache(false)
                             webView.destroy()
+                            container.removeView(webView)
                         }
 
                         result.complete(url)
@@ -217,7 +240,6 @@ object StreamingLinks {
                     ) {
                         return WebResourceResponse("text/plain", "utf-8", null) // block
                     }
-
                     return super.shouldInterceptRequest(view, request)
                 }
 
@@ -261,7 +283,7 @@ object StreamingLinks {
             //result.await()
 
             // ⬇️ Prevent infinite suspension
-            val streamUrl = withTimeoutOrNull(25000) {
+            val streamUrl = withTimeoutOrNull(35000) {
                 result.await()
             }
 
@@ -273,6 +295,7 @@ object StreamingLinks {
                     webView.clearFormData()
                     webView.clearCache(true)
                     webView.destroy()
+                    container.removeView(webView)
                 }
             }
 
@@ -283,7 +306,7 @@ object StreamingLinks {
 
     fun WebView.performCenterClick(
         repeat: Int = 50,
-        interval: Long = 3000
+        interval: Long = 5000
     ) {
 
         var count = 0
@@ -326,6 +349,7 @@ object StreamingLinks {
 
     suspend fun extractAllStreams(
         context: Context,
+        container: ViewGroup,
         imdb: String,
         type: String,
         seasonNo: String = "",
@@ -340,8 +364,7 @@ object StreamingLinks {
         for ((name, url) in servers) {
 
             try {
-
-                val stream =  extractStreamFromServer(context, url)
+                val stream =  extractStreamFromServer(context, url, container)
 
                 if (stream != null) {
                     Log.e("Stream-Result", "Server : $name  , VideoUrl : $stream")
@@ -349,9 +372,7 @@ object StreamingLinks {
                 }
 
             } catch (e: Exception) {
-
                 Log.e("Stream-Result", " extractAll  Error: $e")
-
             }
         }
 
@@ -360,6 +381,7 @@ object StreamingLinks {
 
     suspend fun extractAllStreamsParallel(
         context: Context,
+        container: ViewGroup,
         imdb: String,
         type: String,
         seasonNo: String = "",
@@ -377,7 +399,7 @@ object StreamingLinks {
 
                 try {
 
-                    val stream = extractStreamFromServer(context, url)
+                    val stream = extractStreamFromServer(context, url, container)
 
                     if (stream != null) {
                         Log.e("Stream-Result", "Server : $name  , VideoUrl : $stream")
@@ -416,12 +438,14 @@ object StreamingLinks {
             servers["vidsrc"] = "https://vidsrc.to/embed/movie/$showId"
             servers["primewire"] = "https://primewire.si/embed/movie?tmdb=$showId"
             servers["vidking"] = "https://www.vidking.net/embed/movie/$showId"
+            servers["player"] = "https://player.embed-api.stream/?id=$showId&type=movie"
 
 
         } else {
             servers["vidsrc"] =  "https://vidsrc.to/embed/tv/$showId/$seasonNo/$episodeNo"
             servers["primewire"] = "https://www.primewire.si/embed/tv?tmdb=$showId&season=$seasonNo&episode=$episodeNo"
             servers["vidking"] = "https://www.vidking.net/embed/tv/$showId/$seasonNo/$episodeNo"
+            servers["player"] = "https://player.embed-api.stream/?id=$showId&s=$seasonNo&e=$episodeNo"
 
         }
 

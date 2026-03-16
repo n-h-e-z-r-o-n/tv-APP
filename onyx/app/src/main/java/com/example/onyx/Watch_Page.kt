@@ -2,6 +2,7 @@ package com.example.onyx
 
 import android.content.Context
 import android.content.Intent
+import android.content.res.ColorStateList
 import android.graphics.Typeface
 import android.os.Build
 import android.os.Bundle
@@ -51,7 +52,11 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.format.DateTimeFormatter
 import android.graphics.Color
+import android.view.LayoutInflater
 import android.webkit.WebView
+import androidx.annotation.OptIn
+import androidx.media3.common.util.UnstableApi
+import com.example.onyx.OnyxObjects.StreamingLinks
 
 class Watch_Page : AppCompatActivity() {
 
@@ -66,6 +71,7 @@ class Watch_Page : AppCompatActivity() {
     private var showPoster: String = ""
     private var showBackdrop: String = ""
     private var trailerOn = false
+    private var streamLinksFetched = false
     private var currentServerIndex = 0
     private lateinit var episodes_recycler : RecyclerView
     private lateinit var episodesAdapter: EpisodesAdapter
@@ -345,13 +351,14 @@ class Watch_Page : AppCompatActivity() {
                 //val season_count_widget = findViewById<TextView>(R.id.season_count_text)
                 //season_count_widget.text = "$no_of_season Seasons"
                 createSeasonButtons(no_of_season, validSeasons, showId)
+            }else{
+                fetchStreamLinks(showId, showType, showTitle, showPoster, showBackdrop, showSno="0", showEno="0")
             }
 
             // ---------- BUTTONS ------------------------------------------------------------------
 
-
-
             watchButton.setOnClickListener {
+                /*
                 val intent = Intent(this@Watch_Page, Play::class.java)
                 intent.putExtra("imdb_code", showId)
                 intent.putExtra("type", showType)
@@ -361,7 +368,11 @@ class Watch_Page : AppCompatActivity() {
                 intent.putExtra("seasonNo", "0")
                 intent.putExtra("EpisodeNo", "0")
                 startActivity(intent)
-            }
+                 */
+
+                findViewById<FrameLayout>(R.id.stream_main).visibility = View.VISIBLE
+                fetchStreamLinks(showId, showType, showTitle, showPoster, showBackdrop, showSno="0", showEno="0")
+                }
 
             serverButton.setOnClickListener {
                 showServerDialog()
@@ -630,6 +641,134 @@ class Watch_Page : AppCompatActivity() {
         }
     }
 
+    @OptIn(UnstableApi::class)
+    private fun fetchStreamLinks(showId:String, showType:String, showTitle:String, showPoster:String, showBackdrop:String, showSno: String, showEno:String) {
+        lifecycleScope.launch {
+
+            val loadingImageView = findViewById<ImageView>(R.id.stream_links_animation)
+            Glide.with(this@Watch_Page)
+                .asGif()
+                .load(R.raw.grey)
+                .into(loadingImageView)
+
+            val stream_main = findViewById<FrameLayout>(R.id.stream_main)
+            val container_server = findViewById<LinearLayout>(R.id.container_server)
+            val container = findViewById<LinearLayout>(R.id.stream_links_container)
+            if(!streamLinksFetched) {
+
+                container.removeAllViews()
+                val inflater = LayoutInflater.from(this@Watch_Page)
+
+                val result = withContext(Dispatchers.IO) {
+                    StreamingLinks.extractAllStreamsParallel(
+                    this@Watch_Page,
+                    container_server,
+                    showId,
+                    showType,
+                    showSno,
+                    showEno
+                )
+                }
+
+
+                Log.d("Stream-Result", " extractAll : $result")
+
+
+
+                val keys = result.keys()
+                var i = 0
+
+                if (result.length() == 0) {
+                    // show "No streams found"
+                    streamLinksFetched = false
+
+                    return@launch
+                }else{
+                    loadingImageView.visibility = View.GONE
+                    streamLinksFetched = true
+
+                }
+
+
+
+                while (keys.hasNext()) {
+                    val serverName = keys.next()
+                    val streamUrl = result.getString(serverName)
+
+                    val streamBtn =
+                        inflater.inflate(R.layout.item_stream, container, false) as LinearLayout
+
+                    streamBtn.findViewById<TextView>(R.id.stream_title).text =  "$serverName Server"
+                    streamBtn.findViewById<TextView>(R.id.stream_message).text = showTitle
+
+
+                    streamBtn.setOnClickListener {
+                        Log.d("Stream-Result", "Play == serverName : $serverName,  Url: $streamUrl ")
+                        Video_payer.playVideoExternally(
+                            this@Watch_Page,
+                            streamUrl,
+                            showId,
+                            showType,
+                            showTitle,
+                            showPoster,
+                            showBackdrop,
+                            showSno,
+                            showEno
+                        )
+                    }
+
+                    streamBtn.setOnKeyListener { v, keyCode, event ->
+                        if (event.action == KeyEvent.ACTION_DOWN) {
+                            val index = container.indexOfChild(v)
+                            val count = container.childCount
+
+                            when (keyCode) {
+
+                                KeyEvent.KEYCODE_DPAD_DOWN -> {
+                                    val nextIndex = (index + 1) % count
+                                    container.getChildAt(nextIndex).requestFocus()
+                                    return@setOnKeyListener true
+                                }
+
+                                KeyEvent.KEYCODE_DPAD_UP -> {
+                                    val nextIndex = (index - 1 + count) % count
+                                    container.getChildAt(nextIndex).requestFocus()
+                                    return@setOnKeyListener true
+                                }
+                                KeyEvent.KEYCODE_DPAD_LEFT -> {
+                                    stream_main.visibility = View.GONE
+                                    watchButton.requestFocus()
+                                    return@setOnKeyListener true
+
+                                }
+                                KeyEvent.KEYCODE_DPAD_RIGHT -> {
+                                    stream_main.visibility = View.GONE
+                                    watchButton.requestFocus()
+                                    return@setOnKeyListener true
+                                }
+                            }
+                        }
+                        false
+                    }
+
+                    container.addView(streamBtn)
+                    if (i == 0) {
+                        streamBtn.post { streamBtn.requestFocus() }
+                    }
+                    i++
+
+                }
+            }else{
+                if (container.childCount > 0) {
+                    container.getChildAt(0).requestFocus()
+                }
+            }
+
+
+        }
+    }
+
+
 
     private fun Cast_Data(show_id: String, type: String) {
 
@@ -705,8 +844,6 @@ class Watch_Page : AppCompatActivity() {
                         movies.add(MovieItem(title, imgUrl, imdb_code, type))
                     }
 
-
-
                         val recyclerView = findViewById<RecyclerView>(R.id.Recommendation_widget)
                         recyclerView.isNestedScrollingEnabled = false
 
@@ -754,7 +891,6 @@ class Watch_Page : AppCompatActivity() {
     ) {
 
         val faveButtonImg = findViewById<ImageView>(R.id.favoriteButtonImg)
-        val faveButtonText = findViewById<TextView>(R.id.favoriteButtonText)
 
         val userId = sm.getUserId()
 
@@ -764,10 +900,12 @@ class Watch_Page : AppCompatActivity() {
             val isFav = db.isFavoriteShow(userId, showId, type)
             if (isFav) {
                 faveButtonImg.setImageResource(R.drawable.ic_tickfave)
-                faveButtonText.text = "Remove Favorite"
+                faveButtonImg.imageTintList =
+                    ColorStateList.valueOf(ContextCompat.getColor(this, R.color.fav))
             } else {
                 faveButtonImg.setImageResource(R.drawable.ic_addfave)
-                faveButtonText.text = "Add Favorites"
+                faveButtonImg.imageTintList =
+                    ColorStateList.valueOf(ContextCompat.getColor(this, R.color.white))
             }
         }
 

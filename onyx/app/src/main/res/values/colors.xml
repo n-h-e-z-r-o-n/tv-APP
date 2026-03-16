@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-        <!-- Default Dark Theme -->
+        <color name="green">#4CAF50</color>
+        <color name="fav">#ff9966</color>
+        <color name="white">#FFFFFF</color>
 </resources>

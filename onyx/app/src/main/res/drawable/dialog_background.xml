@@ -10,9 +10,9 @@
     <!-- Main background -->
     <item android:bottom="2dp" android:right="2dp">
         <shape>
-            <solid android:color="?attr/BG_color_up" />
+            <solid android:color="?attr/transparentEffect" />
             <corners android:radius="16dp" />
-            <stroke android:width="1dp" android:color="?attr/BG_color" />
+            <stroke android:width="1dp" android:color="?attr/transparentEffect" />
         </shape>
     </item>
 </layer-list>

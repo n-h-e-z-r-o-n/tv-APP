@@ -36,6 +36,9 @@ import com.example.onyx.Database.AppDatabase
 import com.example.onyx.Database.SessionManger
 import com.example.onyx.OnyxObjects.GlobalUtils
 import kotlin.text.toLongOrNull
+import androidx.media3.datasource.DefaultHttpDataSource
+import androidx.media3.datasource.DefaultDataSource
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 
 @UnstableApi
 class Video_payer : AppCompatActivity(), Player.Listener {
@@ -739,9 +742,82 @@ class Video_payer : AppCompatActivity(), Player.Listener {
             context.startActivity(intent)
         }
     }
-    
+
     private fun initializePlayer(videoUrl: String): ExoPlayer {
+
         releasePlayer()
+
+        val userAgent =
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36"
+
+        // HTTP datasource with custom User-Agent
+        val httpDataSourceFactory = DefaultHttpDataSource.Factory()
+            .setUserAgent(userAgent)
+            .setAllowCrossProtocolRedirects(true)
+
+        val dataSourceFactory = DefaultDataSource.Factory(this, httpDataSourceFactory)
+
+        val mediaSourceFactory = DefaultMediaSourceFactory(dataSourceFactory)
+
+        // Request audio focus
+        val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        val result = audioManager.requestAudioFocus(
+            null,
+            AudioManager.STREAM_MUSIC,
+            AudioManager.AUDIOFOCUS_GAIN
+        )
+
+        if (result != AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+            Log.w("Video_payer", "Audio focus not granted, but continuing playback")
+        }
+
+        val trackSelector = DefaultTrackSelector(this).apply {
+            setParameters(
+                buildUponParameters()
+                    .setMaxVideoSize(1920, 1080)
+                    .setPreferredVideoMimeType("video/mp4")
+                    .setAllowVideoMixedMimeTypeAdaptiveness(true)
+                    .setAllowVideoNonSeamlessAdaptiveness(true)
+                    .setMaxAudioChannelCount(2)
+                    .setPreferredAudioLanguage("en")
+                    .setSelectUndeterminedTextLanguage(true)
+                    .setForceHighestSupportedBitrate(true)
+            )
+        }
+
+        val renderersFactory = DefaultRenderersFactory(this)
+            .setExtensionRendererMode(
+                DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER
+            )
+
+        val player = ExoPlayer.Builder(this)
+            .setRenderersFactory(renderersFactory)
+            .setTrackSelector(trackSelector)
+            .setMediaSourceFactory(mediaSourceFactory)
+            .build()
+
+        val mediaItem = MediaItem.fromUri(videoUrl)
+
+        player.setMediaItem(mediaItem)
+
+        player.addListener(object : Player.Listener {
+            override fun onTracksChanged(tracks: Tracks) {
+                updateAvailableQualities(tracks)
+            }
+        })
+
+        player.prepare()
+        player.playWhenReady = true
+
+        currentVideoUrl = videoUrl
+
+        return player
+    }
+
+    private fun initializePlayer_old(videoUrl: String): ExoPlayer {
+        releasePlayer()
+
+        val userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36"
         
         // Request audio focus to prevent multiple audio streams
         val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager

@@ -510,7 +510,7 @@
                                 android:focusableInTouchMode="true"
                                 android:focusable="true"
                                 android:clickable="true"
-                                android:paddingVertical="4dp"
+                                android:paddingVertical="8dp"
                                 android:paddingHorizontal="8dp"
                                 android:nextFocusLeft="@+id/serverButton"
                                 android:nextFocusRight="@+id/TrailerButton"
@@ -550,7 +550,7 @@
                                 android:focusableInTouchMode="true"
                                 android:focusable="true"
                                 android:clickable="true"
-                                android:paddingVertical="4dp"
+                                android:paddingVertical="8dp"
                                 android:paddingHorizontal="8dp"
                                 android:nextFocusLeft="@+id/watchNowButton"
                                 android:nextFocusRight="@+id/favoriteButton"
@@ -593,8 +593,8 @@
                                 android:focusable="true"
                                 android:clickable="true"
                                 android:layout_marginEnd="10dp"
-                                android:paddingVertical="4dp"
-                                android:paddingHorizontal="9dp"
+                                android:paddingVertical="8dp"
+                                android:paddingHorizontal="8dp"
                                 android:nextFocusLeft="@+id/TrailerButton"
                                 android:nextFocusRight="@+id/serverButton"
                                 android:elevation="2dp" >
@@ -605,7 +605,6 @@
                                     android:id="@+id/favoriteButtonImg"
                                     android:layout_width="22dp"
                                     android:layout_height="22dp"
-                                    android:layout_marginEnd="4dp"
                                     android:src="@drawable/ic_addfave"
                                     app:tint="#FFFFFF"
                                     android:focusable="false"
@@ -616,16 +615,6 @@
                                     android:tooltipText="Add to Favorites"
                                     tools:ignore="UnusedAttribute" />
 
-                                <TextView
-                                    android:id="@+id/favoriteButtonText"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="favorite"
-                                    android:textSize="15sp"
-                                    android:fontFamily="@font/o"
-                                    android:textColor="#FFFFFF"
-                                    android:shadowColor="#000000"
-                                    tools:ignore="HardcodedText" />
 
                             </LinearLayout>
 
@@ -639,7 +628,7 @@
                                 android:focusableInTouchMode="true"
                                 android:focusable="true"
                                 android:clickable="true"
-                                android:paddingVertical="4dp"
+                                android:paddingVertical="8dp"
                                 android:paddingHorizontal="8dp"
                                 android:nextFocusLeft="@+id/favoriteButton"
                                 android:nextFocusRight="@+id/watchNowButton"
@@ -649,7 +638,6 @@
                                 <ImageView
                                     android:layout_width="22dp"
                                     android:layout_height="22dp"
-                                    android:layout_marginEnd="4dp"
                                     android:background="@android:color/transparent"
                                     android:src="@drawable/ic_server"
                                     app:tint="#FFFFFF"
@@ -658,15 +646,6 @@
                                     android:clickable="false"
                                     android:textAllCaps="false"
                                     tools:ignore="ContentDescription" />
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="Server"
-                                    android:textSize="15sp"
-                                    android:fontFamily="@font/o"
-                                    android:textColor="#FFFFFF"
-                                    tools:ignore="HardcodedText" />
 
                             </LinearLayout>
 
@@ -791,6 +770,7 @@
                 android:text=" You may also like"
                 android:fontFamily="@font/p"
                 android:textColor="#FFFFFF"
+                android:visibility="gone"
                 android:shadowColor="#000000"
                 android:shadowDx="2"
                 android:shadowDy="2"
@@ -808,6 +788,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:clipToPadding="false"
+                    android:layout_marginTop="20dp"
                     android:overScrollMode="never"
                     android:padding="10dp"
                     android:paddingHorizontal="32dp"
@@ -822,6 +803,71 @@
 
         </LinearLayout>
     </ScrollView>
+
+    <FrameLayout
+        android:id="@+id/stream_main"
+        android:visibility="gone"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#99000000">
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="#99000000"
+            android:layout_gravity="center"
+            android:layout_marginVertical="50dp"
+            android:layout_marginHorizontal="300dp">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:orientation="vertical"
+                app:cardBackgroundColor="#99000000"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="select a streaming Server"
+                    android:gravity="center"
+                    android:textSize="17sp"
+                    android:fontFamily="@font/p"
+                    android:paddingVertical="3dp"
+                    android:textColor="?attr/FG_color"
+                    tools:ignore="HardcodedText" />
+
+                <ImageView
+                    android:id="@+id/stream_links_animation"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:src="@raw/grey"
+                    android:layout_gravity="center"/>
+
+                <ScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+                    <LinearLayout
+                        android:id="@+id/stream_links_container"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+
+
+                    </LinearLayout>
+                </ScrollView>
+
+            </LinearLayout>
+
+        </androidx.cardview.widget.CardView>
+
+    </FrameLayout>
+
+    <LinearLayout
+        android:id="@+id/container_server"
+        android:visibility="invisible"
+        android:layout_width="500dp"
+        android:layout_height="150dp"/>
 
     <include layout="@layout/laod_animation"/>
 

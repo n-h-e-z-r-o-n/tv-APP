@@ -2,6 +2,7 @@ package com.example.onyx
 
 import android.os.Build
 import android.os.Bundle
+import android.os.SystemClock
 import android.util.Log
 import android.util.TypedValue
 import android.view.MotionEvent
@@ -14,6 +15,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.util.UnstableApi
 import com.example.onyx.OnyxObjects.GlobalUtils
+import com.example.onyx.OnyxObjects.StreamingLinks.performCenterClick
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -158,11 +160,17 @@ class Play : AppCompatActivity() {
                 }, 6000L) // ⏱️ 2-second delay */
 
 
-
+                /*
                 // Wait for page to render, then simulate a few center clicks
                 webView.postDelayed({
                     simulateRepeatedCenterClicks(webView, repeatCount = 10, intervalMs = 1200L)
                 }, 3000)
+
+                 */
+
+                webView.postDelayed({
+                    webView.performCenterClick()
+                }, 6000)
             }
 
             @OptIn(UnstableApi::class)
@@ -264,6 +272,8 @@ class Play : AppCompatActivity() {
         webView.settings.javaScriptCanOpenWindowsAutomatically = false
         webView.settings.setSupportMultipleWindows(false)
 
+
+
         // Get complete URL based on server selection and content type
         val url = GlobalUtils.getServerUrl(this, showType, showId.trim(), showSNo.trim(), showENo.trim())
 
@@ -274,6 +284,51 @@ class Play : AppCompatActivity() {
 
         setupBackPressedCallback()
 
+    }
+
+
+
+    fun WebView.performCenterClick(
+        repeat: Int = 50,
+        interval: Long = 5000
+    ) {
+
+        var count = 0
+
+        fun click() {
+            if (count >= repeat) return
+            val x = width / 2f
+            val y = height / 2f
+            val downTime = SystemClock.uptimeMillis()
+
+            val downEvent = MotionEvent.obtain(
+                downTime,
+                downTime,
+                MotionEvent.ACTION_DOWN,
+                x,
+                y,
+                0
+            )
+
+            val upEvent = MotionEvent.obtain(
+                downTime,
+                downTime + 50,
+                MotionEvent.ACTION_UP,
+                x,
+                y,
+                0
+            )
+
+            dispatchTouchEvent(downEvent)
+            dispatchTouchEvent(upEvent)
+
+            downEvent.recycle()
+            upEvent.recycle()
+
+            count++
+            postDelayed({ click() }, interval)
+        }
+        click()
     }
 
 

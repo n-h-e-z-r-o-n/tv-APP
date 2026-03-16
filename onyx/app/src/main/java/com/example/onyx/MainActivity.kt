@@ -118,7 +118,7 @@ class MainActivity : AppCompatActivity() {
 
 
 
-        /*
+        /* */
         lifecycleScope.launch {
 
             // 1️⃣ Wait until restore finishes (runs on IO thread)
@@ -148,9 +148,9 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-         */
 
-        startActivity(Intent(this@MainActivity, Watch_Page::class.java))
+
+        //startActivity(Intent(this@MainActivity, Watch_Anime_Page::class.java))
 
 
     }
