@@ -60,6 +60,7 @@ import androidx.media3.common.util.UnstableApi
 import com.example.onyx.OnyxObjects.StreamingLinks
 import com.example.onyx.OnyxObjects.StreamingLinks.extractStreamFromServer
 import com.example.onyx.OnyxObjects.StreamingLinks.getServerUrls
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelChildren
 
 class Watch_Page : AppCompatActivity() {
@@ -84,7 +85,7 @@ class Watch_Page : AppCompatActivity() {
     private lateinit var trailerButton :LinearLayout
     private lateinit var serverButton: LinearLayout
     private lateinit var UIsection1: FrameLayout
-
+    private var episodesJob: Job? = null
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -549,6 +550,11 @@ class Watch_Page : AppCompatActivity() {
 
     private fun ShowSeasonEpisodes(SelectedSeasons: Int, seasonData : MutableList<JSONObject>, seriesId: String) {
 
+        // Create a unique cache key
+        val cacheKey = "${seriesId}_${SelectedSeasons}"
+
+
+
         val today = LocalDate.now()
         val formatter = DateTimeFormatter.ISO_LOCAL_DATE
 
@@ -579,13 +585,21 @@ class Watch_Page : AppCompatActivity() {
                 .into(posterWidget)
         }
 
-        lifecycleScope.launch {
+        episodesJob?.cancel()
+        episodesJob = lifecycleScope.launch {
+            try {
+
+
 
                 val jsonObject = withContext(Dispatchers.IO) {fetch.fetchSeasonInfo(seriesId.toString(), SelectedSeasons.toString())}
 
                 if (jsonObject != null) {
 
                     val episodesArray = jsonObject.getJSONArray("episodes") ?: return@launch
+
+                    if (episodesArray == null) {
+                        return@launch
+                    }
 
                     Log.e("DEBUG_Each E json", jsonObject.toString())
                     Log.e("DEBUG_Each E data", episodesArray.toString())
@@ -594,7 +608,7 @@ class Watch_Page : AppCompatActivity() {
 
                     val episodesList = mutableListOf<EpisodeItem>()
                     for (i in 0 until episodesArray.length()) {
-                        val episodes = episodesArray.getJSONObject(i)
+                        val episodes = episodesArray.getJSONObject(i)?: continue
 
                         val episodesAirDate = episodes.optString("air_date", "")
                         try {
@@ -647,8 +661,17 @@ class Watch_Page : AppCompatActivity() {
                     Log.e("DEBUG_Each E list", "${episodesList.size}")
                     //episodes_recycler.removeAllViews()
                     //episodes_recycler.adapter = EpisodesAdapter(episodesList)
-                    episodesAdapter.updateData(episodesList)
+                    //episodesAdapter.updateData(episodesList)
+                    withContext(Dispatchers.Main) {
+                        episodesAdapter.updateData(episodesList)
+                    }
                 }
+            } catch (e: Exception){
+
+                Log.e("DEBUG_Each E Crush", "${e}")
+
+
+            }
         }
     }
 
