@@ -2,6 +2,8 @@ package com.example.onyx
 
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -11,11 +13,13 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.SeekBar
 import android.widget.TextView
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.OptIn
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
+import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.util.UnstableApi
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -37,6 +41,7 @@ import com.example.onyx.OnyxClasses.AnimeAiringAdapter
 import com.example.onyx.OnyxClasses.EqualSpaceItemDecoration
 import com.example.onyx.OnyxObjects.GlobalUtils
 import com.example.onyx.OnyxObjects.LoadingAnimation
+import kotlinx.coroutines.cancelChildren
 import kotlin.collections.mutableListOf
 
 
@@ -70,6 +75,8 @@ class Watch_Anime_Page : AppCompatActivity() {
         GlobalUtils.applyTheme(this)
         enableEdgeToEdge()
         setContentView(R.layout.activity_watch_anime_page)
+
+        setupBackPressedCallback()
 
         db = AppDatabase(this)
         sm = SessionManger(this)
@@ -118,6 +125,20 @@ class Watch_Anime_Page : AppCompatActivity() {
 
         }
     }
+
+
+    override fun onDestroy() {
+        super.onDestroy()
+
+        // Cancel any running coroutines
+        lifecycleScope.coroutineContext.cancelChildren()
+
+        // Remove all handler callbacks
+        Handler(Looper.getMainLooper()).removeCallbacksAndMessages(null)
+
+        finish()
+    }
+
 
 
 
@@ -534,6 +555,26 @@ class Watch_Anime_Page : AppCompatActivity() {
             }
             applyIcon()
         }
+    }
+
+
+    private fun setupBackPressedCallback() {
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+
+
+                // Cancel any running coroutines
+                lifecycleScope.coroutineContext.cancelChildren()
+
+                // Remove all handler callbacks
+                Handler(Looper.getMainLooper()).removeCallbacksAndMessages(null)
+
+
+                // If controls are hidden, exit the video player
+                finish()
+
+            }
+        })
     }
 
 

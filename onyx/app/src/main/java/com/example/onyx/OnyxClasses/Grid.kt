@@ -56,7 +56,7 @@ class GridAdapter(
         private const val VIEW_TYPE_MOVIE = 0
         private const val VIEW_TYPE_ADD_BUTTON = 1
         private var lastKeyTime = 0L
-        private val KEY_DEBOUNCE_DELAY = 350L // ms
+        private val KEY_DEBOUNCE_DELAY = 150L // ms
     }
 
     var onAddMoreClicked: (() -> Unit)? = null
@@ -238,7 +238,7 @@ class FilterAdapter(
         private const val VIEW_TYPE_MOVIE = 0
         private const val VIEW_TYPE_ADD_BUTTON = 1
         private var lastKeyTime = 0L
-        private val KEY_DEBOUNCE_DELAY = 270L // ms
+        private val KEY_DEBOUNCE_DELAY = 170L // ms
     }
 
     var onAddMoreClicked: (() -> Unit)? = null
@@ -479,7 +479,7 @@ class CategoryAdapter(
 
     companion object {
         private var lastKeyTime = 0L
-        private val KEY_DEBOUNCE_DELAY = 200L // ms
+        private val KEY_DEBOUNCE_DELAY = 150L // ms
     }
 
     inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -1354,9 +1354,12 @@ class EpisodesAdapter(
             .override(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL)
             .into(holder.epsImg)
 
-
+        var lastClickTime = 0L
         holder.itemView.setOnClickListener {view ->
-            view.isEnabled = false
+            val now = System.currentTimeMillis()
+            if (now - lastClickTime < 1000) return@setOnClickListener
+            lastClickTime = now
+
             val context = holder.itemView.context
             val intent = Intent(context, Play::class.java).apply {
                 Log.e("DEBUG_Each EpisodeWatch", "Eps ${ep.episodesNumber} Season ${ep.seasonNumber}")
@@ -1369,9 +1372,6 @@ class EpisodesAdapter(
                 putExtra("title", ep.showTitle)
             }
             context.startActivity(intent)
-            view.postDelayed({
-                view.isEnabled = true
-            }, 5000)
         }
 
 

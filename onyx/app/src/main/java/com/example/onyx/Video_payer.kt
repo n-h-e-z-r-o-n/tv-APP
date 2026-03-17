@@ -20,6 +20,7 @@ import android.view.animation.Animation
 import android.widget.*
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
@@ -40,6 +41,7 @@ import kotlin.text.toLongOrNull
 import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
+import kotlinx.coroutines.cancelChildren
 
 @UnstableApi
 class Video_payer : AppCompatActivity(), Player.Listener {
@@ -332,6 +334,9 @@ class Video_payer : AppCompatActivity(), Player.Listener {
                     // If controls are visible, hide them
                     hideControls()
                 } else {
+
+                    Handler(Looper.getMainLooper()).removeCallbacksAndMessages(null)
+
                     // If controls are hidden, exit the video player
                     finish()
                 }
@@ -702,6 +707,32 @@ class Video_payer : AppCompatActivity(), Player.Listener {
         saveContinueWatching() // Save progress before destroying
         stopProgressTracking()
         releasePlayerWithAudioFocus()
+
+        progressHandler.removeCallbacksAndMessages(null)
+
+        // Release player properly
+        exoPlayer?.let { player ->
+            player.stop()
+            player.clearMediaItems()
+            player.release()
+            exoPlayer = null
+        }
+
+        // Cancel all coroutines
+        lifecycleScope.coroutineContext.cancelChildren()
+
+        // Remove all handler callbacks
+        Handler(Looper.getMainLooper()).removeCallbacksAndMessages(null)
+
+        // Abandon audio focus
+        val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        audioManager.abandonAudioFocus(null)
+
+        // Clear player view
+        playerView.player = null
+
+        Handler(Looper.getMainLooper()).removeCallbacksAndMessages(null)
+
         finish()
     }
 

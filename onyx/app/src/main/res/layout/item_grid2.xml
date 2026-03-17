@@ -50,6 +50,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:ellipsize="end"
+                android:visibility="gone"
                 android:text="2015"
                 android:background="?attr/transparentEffect"
                 android:shadowColor="#80000000"

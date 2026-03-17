@@ -54,11 +54,13 @@ import java.time.format.DateTimeFormatter
 import android.graphics.Color
 import android.view.LayoutInflater
 import android.webkit.WebView
+import androidx.activity.OnBackPressedCallback
 import androidx.annotation.OptIn
 import androidx.media3.common.util.UnstableApi
 import com.example.onyx.OnyxObjects.StreamingLinks
 import com.example.onyx.OnyxObjects.StreamingLinks.extractStreamFromServer
 import com.example.onyx.OnyxObjects.StreamingLinks.getServerUrls
+import kotlinx.coroutines.cancelChildren
 
 class Watch_Page : AppCompatActivity() {
 
@@ -90,6 +92,8 @@ class Watch_Page : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_watch_page)
+
+        setupBackPressedCallback()
 
         LoadingAnimation.setup(this@Watch_Page, R.raw.b)
         LoadingAnimation.show(this@Watch_Page)
@@ -581,7 +585,7 @@ class Watch_Page : AppCompatActivity() {
 
                 if (jsonObject != null) {
 
-                    val episodesArray = jsonObject.getJSONArray("episodes")
+                    val episodesArray = jsonObject.getJSONArray("episodes") ?: return@launch
 
                     Log.e("DEBUG_Each E json", jsonObject.toString())
                     Log.e("DEBUG_Each E data", episodesArray.toString())
@@ -596,8 +600,13 @@ class Watch_Page : AppCompatActivity() {
                         try {
                             Log.e("DEBUG_Each E date", "airDate: $episodesAirDate,  today $today")
                             val airLocalDate = LocalDate.parse(episodesAirDate, formatter)
-                            if (airLocalDate.isAfter(today)) {
-                                continue
+                            if (episodesAirDate.isNotBlank() && episodesAirDate != "null") {
+                                try {
+                                    val airLocalDate = LocalDate.parse(episodesAirDate, formatter)
+                                    if (airLocalDate.isAfter(today)) continue
+                                } catch (_: Exception) {
+                                    // ignore invalid date
+                                }
                             }
                         } catch (e: Exception) {
                             Log.e(
@@ -1123,6 +1132,26 @@ class Watch_Page : AppCompatActivity() {
             }
             .setNegativeButton("Cancel", null)
             .show()
+    }
+
+
+    private fun setupBackPressedCallback() {
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+
+
+                     // Cancel any running coroutines
+                     lifecycleScope.coroutineContext.cancelChildren()
+
+                     // Remove all handler callbacks
+                     Handler(Looper.getMainLooper()).removeCallbacksAndMessages(null)
+
+
+                    // If controls are hidden, exit the video player
+                    finish()
+
+            }
+        })
     }
 
 

@@ -2,10 +2,13 @@ package com.example.onyx
 
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.os.SystemClock
 import android.util.Log
 import android.util.TypedValue
 import android.view.MotionEvent
+import android.view.ViewGroup
 import android.webkit.*
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.enableEdgeToEdge
@@ -16,6 +19,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.util.UnstableApi
 import com.example.onyx.OnyxObjects.GlobalUtils
 import com.example.onyx.OnyxObjects.StreamingLinks.performCenterClick
+import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -30,6 +34,7 @@ class Play : AppCompatActivity() {
     private var showBackdrop: String = ""
     private var showSNo: String = ""
     private var showENo: String = ""
+
 
 
     @RequiresApi(Build.VERSION_CODES.N)
@@ -216,6 +221,7 @@ class Play : AppCompatActivity() {
                     runOnUiThread {
                         // Clear WebView data and cookies before launching video player
                         clearWebViewData()
+                        //Video_payer.playVideoExternally(this@Play, url)
                         Video_payer.playVideoExternally(this@Play, url, referer, ua, showId, showType, showTitle, showPoster, showBackdrop, showSNo, showENo)
 
                         finish()
@@ -288,6 +294,7 @@ class Play : AppCompatActivity() {
         setupBackPressedCallback()
 
     }
+
 
 
     fun WebView.performCenterClick(
@@ -363,8 +370,12 @@ class Play : AppCompatActivity() {
                 // Load blank page
                 wv.loadUrl("about:blank")
 
+                wv.destroy()
+
+
                 Log.d("DEBUG_TAG_PlayActivity", "WebView data cleared successfully")
             }
+
         } catch (e: Exception) {
             Log.e("DEBUG_TAG_PlayActivity", "Failed to clear WebView data", e)
         }
@@ -414,7 +425,6 @@ class Play : AppCompatActivity() {
             this,
             object : OnBackPressedCallback(true) {
                 override fun handleOnBackPressed() {
-
                     clearWebViewData()
                     finish()
                 }
@@ -424,7 +434,29 @@ class Play : AppCompatActivity() {
 
     override fun onStop() {
         super.onStop()
-        clearWebViewData()
-        finish()
+
     }
+
+    override fun onDestroy() {
+
+        // Clear WebView data and destroy it
+        clearWebViewData()
+
+        isVideoLaunching = false
+
+        // Cancel any running coroutines
+        lifecycleScope.coroutineContext.cancelChildren()
+
+        Handler(Looper.getMainLooper()).removeCallbacksAndMessages(null)
+
+
+        // Finish activity
+        finish()
+
+        super.onDestroy()
+    }
+
+
+
+
 }

@@ -4,6 +4,8 @@ import android.content.Context
 import android.content.Intent
 import android.content.res.Resources
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.util.TypedValue
 import android.view.LayoutInflater
@@ -57,6 +59,7 @@ import com.example.onyx.OnyxObjects.GlobalUtils
 import com.example.onyx.OnyxObjects.LoadingAnimation
 import com.example.onyx.OnyxObjects.NavAction
 import kotlinx.coroutines.async
+import kotlinx.coroutines.cancelChildren
 import java.io.IOException
 import java.util.Calendar
 
@@ -211,11 +214,16 @@ class Shows_Page : AppCompatActivity() {
             cNotificationBtn.isSelected = false
         }
         MoviesBtn.setOnFocusChangeListener { v, hasFocus ->
-            Log.e("AUTO CLICK", "MoviesBtn : " + hasFocus )
+            Log.e("AUTO CLICK", "MoviesBtn : " + hasFocus)
             if (hasFocus) {
-                v.performClick()
+                // Use post to delay the click until after focus is fully set
+                v.post {
+                    v.performClick()
+                }
             }
         }
+
+
 
 
         seriesBtn.setOnClickListener {
@@ -420,6 +428,14 @@ class Shows_Page : AppCompatActivity() {
         tvAdapter.clearItems()
         searchAdapter.clearItems()
         filterAdapter.clearItems()
+
+        // Cancel any running coroutines
+        lifecycleScope.coroutineContext.cancelChildren()
+
+        // Remove all handler callbacks
+        Handler(Looper.getMainLooper()).removeCallbacksAndMessages(null)
+
+        finish()
     }
 
 
@@ -467,7 +483,7 @@ class Shows_Page : AppCompatActivity() {
         movieRecyclerView.adapter = movieAdapter
         movieAdapter.onAddMoreClicked = { loadMoreMovies() }
         movieAdapter.onItemFocused = { view, item ->
-            showPopupBeside(view, item.posterUlr, 165)
+            //showPopupBeside(view, item.posterUlr, 165)
         }
         movieAdapter.onItemFocusLost = {
             hidePopup()
@@ -510,7 +526,7 @@ class Shows_Page : AppCompatActivity() {
         tvRecyclerView.adapter = tvAdapter
         tvAdapter.onAddMoreClicked = { loadMoreTv() }
         tvAdapter.onItemFocused = { view, item ->
-            showPopupBeside(view, item.posterUlr, 165)
+           // showPopupBeside(view, item.posterUlr, 165)
         }
         tvAdapter.onItemFocusLost = {
             hidePopup()
@@ -528,7 +544,7 @@ class Shows_Page : AppCompatActivity() {
         // Filter  ---------------------------------------------------------------------------------
         filterAdapter = FilterAdapter(mutableListOf(), R.layout.item_filter)
         filterAdapter.onItemFocused = { view, item ->
-            showPopupBeside(view, item.posterUlr, 240)
+            //showPopupBeside(view, item.posterUlr, 240)
         }
         filterAdapter.onItemFocusLost = {
             hidePopup()
@@ -712,8 +728,8 @@ class Shows_Page : AppCompatActivity() {
                     //item.getString("first_air_date").substring(0, 4)
                     item.optString("first_air_date", "")
                 }
-                val vote_average = item.getString("vote_average").substring(0, 3)
-                val poster_path = item.getString("poster_path")
+                val vote_average = item.optString("vote_average", "").substring(0, 3)
+                val poster_path = item.optString("poster_path", "")
                 val genreIdsJson = item.getJSONArray("genre_ids")
                 val genreIds: List<Int> = List(genreIdsJson.length()) { idx ->
                     genreIdsJson.getInt(idx)
@@ -1279,6 +1295,7 @@ class Shows_Page : AppCompatActivity() {
         )
 
         val yearOptions = listOf(
+            FilterChoice("2025", "2026"),
             FilterChoice("2025", "2025"),
             FilterChoice("2024", "2024"),
             FilterChoice("2023", "2023"),

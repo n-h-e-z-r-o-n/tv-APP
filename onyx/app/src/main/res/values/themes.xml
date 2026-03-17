@@ -8,7 +8,7 @@
         <item name="FG_color">#FFFFFF</item>
         <item name="BG_color_up">#001e35</item>
         <item name="AccentColor">#54becb</item>
-        <item name="transparentEffect">#40042c40</item>
+        <item name="transparentEffect">#80042c40</item>
         <item name="notBudge">#290e05</item>
 
         <!-- Theme image -->
@@ -20,7 +20,7 @@
         <item name="FG_color">#FFFFFF</item>
         <item name="BG_color_up">#2b1b12</item>
         <item name="AccentColor">#d6cfc4</item>
-        <item name="transparentEffect">#401d0f08</item>
+        <item name="transparentEffect">#801d0f08</item>
         <item name="notBudge">#707000</item>
     </style>
 
@@ -30,7 +30,7 @@
         <item name="FG_color">#FFFFFF</item>
         <item name="BG_color_up">#1A1A1A</item>
         <item name="AccentColor">#ffcc00</item>
-        <item name="transparentEffect">#40000000</item>
+        <item name="transparentEffect">#80000000</item>
         <item name="notBudge">#FF0266</item>
 
         <!-- Theme image -->
@@ -45,7 +45,7 @@
         <item name="FG_color">#FFFFFF</item>
         <item name="BG_color_up">#5b4d0e</item>
         <item name="AccentColor">#8BC34A</item>
-        <item name="transparentEffect">#404d440c</item>
+        <item name="transparentEffect">#804d440c</item>
         <item name="notBudge">#3D5AFE</item>
 
         <!-- Theme image -->
@@ -85,7 +85,7 @@
         <item name="FG_color">#FFF5F5</item>
         <item name="BG_color_up">#5b1119</item>
         <item name="AccentColor">#f5d3e0</item>
-        <item name="transparentEffect">#402e0a0e</item>
+        <item name="transparentEffect">#802e0a0e</item>
         <item name="notBudge">#66ff33</item>
 
         <!-- Theme image -->
@@ -98,7 +98,7 @@
         <item name="FG_color">#FFFFFF </item>
         <item name="BG_color_up">#5e1d69</item>
         <item name="AccentColor">#f1a7c6</item>
-        <item name="transparentEffect">#403b0e3c</item>
+        <item name="transparentEffect">#803b0e3c</item>
         <item name="notBudge">#3D5AFE</item>
 
         <!-- Theme image -->

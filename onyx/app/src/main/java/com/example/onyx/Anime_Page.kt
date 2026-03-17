@@ -2,6 +2,8 @@ package com.example.onyx
 
 
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.View
 import androidx.activity.enableEdgeToEdge
@@ -51,6 +53,7 @@ import com.example.onyx.OnyxObjects.GlobalUtils
 import com.example.onyx.OnyxObjects.LoadingAnimation
 import com.example.onyx.OnyxObjects.NavAction
 import kotlinx.coroutines.async
+import kotlinx.coroutines.cancelChildren
 
 
 class Anime_Page : AppCompatActivity() {
@@ -503,6 +506,25 @@ class Anime_Page : AppCompatActivity() {
             notificationS()
             LoadingAnimation.hide(this@Anime_Page)
 
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+
+        // Clear all adapters
+        dubbedAdapter.clearItems()
+        popularAdapter.clearItems()
+        searchAdapter.clearItems()
+        watchAdapter.clearItems()
+        faveAdapter.clearItems()
+
+        // Cancel any running coroutines
+        lifecycleScope.coroutineContext.cancelChildren()
+
+        // Remove all handler callbacks
+        Handler(Looper.getMainLooper()).removeCallbacksAndMessages(null)
+
+        finish()
     }
 
 
