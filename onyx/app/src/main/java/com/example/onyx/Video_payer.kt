@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.graphics.Color
 import android.media.AudioManager
+import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -55,6 +56,11 @@ class Video_payer : AppCompatActivity(), Player.Listener {
     private var showSNo: String = ""
     private var showENo: String = ""
     private var videoUrl: String = ""
+
+    private var userAgent: String = ""
+
+    private var referer: String = ""
+
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -165,6 +171,8 @@ class Video_payer : AppCompatActivity(), Player.Listener {
 
 
         videoUrl = intent.getStringExtra("video_url")?: ""
+        referer = intent.getStringExtra("referer")?: ""
+        userAgent = intent.getStringExtra("userAgent")?: ""
         showId = intent.getStringExtra("showId")?: ""
         showType = intent.getStringExtra("showType")?: ""
         showTitle = intent.getStringExtra("showTitle")?: ""
@@ -726,9 +734,11 @@ class Video_payer : AppCompatActivity(), Player.Listener {
     // ===== PlayerManager functionality merged into this class =====
     
     companion object {
-        fun playVideoExternally(context: Context, videoUrl: String,showId: String,showType: String,showTitle: String, showPoster: String, showBackdrop: String, showSNo: String,showENo: String,) {
+        fun playVideoExternally(context: Context, videoUrl: String, referer: String?, userAgent: String?, showId: String,showType: String,showTitle: String, showPoster: String, showBackdrop: String, showSNo: String,showENo: String,) {
             val intent = Intent(context, Video_payer::class.java).apply {
                 putExtra("video_url", videoUrl)
+                putExtra("referer", referer)
+                putExtra("userAgent", userAgent)
                 putExtra("showId", showId)
                 putExtra("showType", showType)
                 putExtra("showTitle", showTitle)
@@ -747,12 +757,25 @@ class Video_payer : AppCompatActivity(), Player.Listener {
 
         releasePlayer()
 
-        val userAgent =
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36"
+
+        val headers = mutableMapOf<String, String>()
+
+        headers["User-Agent"] = userAgent
+        headers["Referer"] = referer
+
+
+        val uri = Uri.parse(referer)
+        headers["Origin"] = "${uri.scheme}://${uri.host}"
+
+        Log.d("EXPO", " $userAgent \n referer: $referer \n Origin: ${headers["Origin"]}")
+
+        //userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36"
 
         // HTTP datasource with custom User-Agent
         val httpDataSourceFactory = DefaultHttpDataSource.Factory()
-            .setUserAgent(userAgent)
+            //.setUserAgent(userAgent)
+
+            .setDefaultRequestProperties(headers)
             .setAllowCrossProtocolRedirects(true)
 
         val dataSourceFactory = DefaultDataSource.Factory(this, httpDataSourceFactory)

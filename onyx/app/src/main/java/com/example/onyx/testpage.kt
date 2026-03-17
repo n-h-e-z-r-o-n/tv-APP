@@ -33,8 +33,8 @@ class testpage : AppCompatActivity() {
             Log.e("Stream-Result", "Server : $stream")
 
             //val result = StreamingLinks.extractAllStreams(this@testpage, container, "533444", "movie", "", "")
-            val result = StreamingLinks.extractAllStreamsParallel(this@testpage, container, "533444", "movie", "", "")
-            Log.d("Stream-Result", " extractAll : $result")
+            //val result = StreamingLinks.extractAllStreamsParallel(this@testpage, container, "533444", "movie", "", "")
+            //Log.d("Stream-Result", " extractAll : $result")
 
         }
     }

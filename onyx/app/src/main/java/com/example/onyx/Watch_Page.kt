@@ -57,6 +57,8 @@ import android.webkit.WebView
 import androidx.annotation.OptIn
 import androidx.media3.common.util.UnstableApi
 import com.example.onyx.OnyxObjects.StreamingLinks
+import com.example.onyx.OnyxObjects.StreamingLinks.extractStreamFromServer
+import com.example.onyx.OnyxObjects.StreamingLinks.getServerUrls
 
 class Watch_Page : AppCompatActivity() {
 
@@ -645,6 +647,158 @@ class Watch_Page : AppCompatActivity() {
     private fun fetchStreamLinks(showId:String, showType:String, showTitle:String, showPoster:String, showBackdrop:String, showSno: String, showEno:String) {
         lifecycleScope.launch {
 
+            val stream_main = findViewById<FrameLayout>(R.id.stream_main)
+            val container_server = findViewById<LinearLayout>(R.id.container_server)
+            val container = findViewById<LinearLayout>(R.id.stream_links_container)
+
+            if(!streamLinksFetched) {
+
+                streamLinksFetched = true
+
+                val loadingImageView = findViewById<ImageView>(R.id.stream_links_animation)
+                Glide.with(this@Watch_Page)
+                    .asGif()
+                    .load(R.raw.grey)
+                    .into(loadingImageView)
+
+
+
+
+                container.removeAllViews()
+                val inflater = LayoutInflater.from(this@Watch_Page)
+
+
+                val servers = StreamingLinks.getServerUrls(showId,
+                    showType,
+                    showSno,
+                    showEno)
+
+                for ((serverName, webUrl) in servers) {
+                    try {
+
+                        val streamUrl =  StreamingLinks.extractStreamFromServer(this@Watch_Page, webUrl, container_server)
+                        if (streamUrl != null) {
+                            val streamBtn =
+                                inflater.inflate(R.layout.item_stream, container, false) as LinearLayout
+
+                            streamBtn.findViewById<TextView>(R.id.stream_title).text =  "$serverName Server"
+                            streamBtn.findViewById<TextView>(R.id.stream_message).text = showTitle
+
+
+                            streamBtn.setOnClickListener {
+                                Log.d("Stream-Result", "Play == serverName : $serverName,  Url: $streamUrl ")
+                                Video_payer.playVideoExternally(
+                                    this@Watch_Page,
+                                    streamUrl.url,
+                                    streamUrl.referer,
+                                    streamUrl.userAgent,
+                                    showId,
+                                    showType,
+                                    showTitle,
+                                    showPoster,
+                                    showBackdrop,
+                                    showSno,
+                                    showEno
+                                )
+                            }
+
+                            streamBtn.setOnKeyListener { v, keyCode, event ->
+                                if (event.action == KeyEvent.ACTION_DOWN) {
+                                    val index = container.indexOfChild(v)
+                                    val count = container.childCount
+
+                                    when (keyCode) {
+
+                                        KeyEvent.KEYCODE_DPAD_DOWN -> {
+                                            val nextIndex = (index + 1) % count
+                                            container.getChildAt(nextIndex).requestFocus()
+                                            return@setOnKeyListener true
+                                        }
+
+                                        KeyEvent.KEYCODE_DPAD_UP -> {
+                                            val nextIndex = (index - 1 + count) % count
+                                            container.getChildAt(nextIndex).requestFocus()
+                                            return@setOnKeyListener true
+                                        }
+
+                                        KeyEvent.KEYCODE_DPAD_LEFT,
+                                        KeyEvent.KEYCODE_DPAD_RIGHT -> {
+                                            stream_main.visibility = View.GONE
+                                            watchButton.requestFocus()
+                                            return@setOnKeyListener true
+                                        }
+                                    }
+                                }
+                                false
+                            }
+                            container.addView(streamBtn)
+                        }
+
+                    }catch (e: Exception) {
+                        Log.e("Stream-Result", " extractAll  Error: $e")
+                        streamLinksFetched = false
+                        loadingImageView.visibility = View.VISIBLE
+                    }
+                }
+
+                loadingImageView.visibility = View.GONE
+                if (container.childCount > 0) {
+                    container_server.removeAllViews()
+                    if (stream_main.visibility == View.VISIBLE) {
+                        container.getChildAt(0).requestFocus()
+                    }
+                }else{
+                    val streamBtn = inflater.inflate(R.layout.item_stream, container, false) as LinearLayout
+                    streamBtn.findViewById<TextView>(R.id.stream_title).text =  "VIDEO NOT AVAILABLE"
+                     streamBtn.findViewById<TextView>(R.id.stream_title).setTextColor(Color.RED)
+                    streamBtn.findViewById<TextView>(R.id.stream_message).text = showTitle
+                    streamBtn.isClickable = false
+                    streamBtn.setOnKeyListener { v, keyCode, event ->
+                        if (event.action == KeyEvent.ACTION_DOWN) {
+                            val index = container.indexOfChild(v)
+                            val count = container.childCount
+
+                            when (keyCode) {
+
+                                    KeyEvent.KEYCODE_DPAD_UP,
+                                    KeyEvent.KEYCODE_DPAD_DOWN,
+                                    KeyEvent.KEYCODE_DPAD_LEFT,
+                                    KeyEvent.KEYCODE_DPAD_RIGHT -> {
+                                        stream_main.visibility = View.GONE
+                                        watchButton.requestFocus()
+                                        return@setOnKeyListener true
+                                    }
+                            }
+                        }
+                        false
+                    }
+                    container.addView(streamBtn)
+                }
+
+                container.viewTreeObserver.addOnGlobalFocusChangeListener { oldFocus, newFocus ->
+                    stream_main.visibility = if (newFocus != null && container.indexOfChild(newFocus) >= 0) {
+                        View.VISIBLE // a child of container has focus
+                    } else {
+                        View.GONE    // no child focused
+                    }
+                }
+
+            }else{
+                if (container.childCount > 0) {
+                    container.getChildAt(0).requestFocus()
+                }
+            }
+        }
+    }
+
+
+
+
+
+
+    private fun fetchStreamLinks_old(showId:String, showType:String, showTitle:String, showPoster:String, showBackdrop:String, showSno: String, showEno:String) {
+        lifecycleScope.launch {
+
             val loadingImageView = findViewById<ImageView>(R.id.stream_links_animation)
             Glide.with(this@Watch_Page)
                 .asGif()
@@ -661,13 +815,13 @@ class Watch_Page : AppCompatActivity() {
 
                 val result = withContext(Dispatchers.IO) {
                     StreamingLinks.extractAllStreamsParallel(
-                    this@Watch_Page,
-                    container_server,
-                    showId,
-                    showType,
-                    showSno,
-                    showEno
-                )
+                        this@Watch_Page,
+                        container_server,
+                        showId,
+                        showType,
+                        showSno,
+                        showEno
+                    )
                 }
 
 
@@ -704,7 +858,7 @@ class Watch_Page : AppCompatActivity() {
 
                     streamBtn.setOnClickListener {
                         Log.d("Stream-Result", "Play == serverName : $serverName,  Url: $streamUrl ")
-                        Video_payer.playVideoExternally(
+                        /*Video_payer.playVideoExternally(
                             this@Watch_Page,
                             streamUrl,
                             showId,
@@ -715,6 +869,8 @@ class Watch_Page : AppCompatActivity() {
                             showSno,
                             showEno
                         )
+
+                         */
                     }
 
                     streamBtn.setOnKeyListener { v, keyCode, event ->
@@ -764,14 +920,12 @@ class Watch_Page : AppCompatActivity() {
                 }
             }
 
-
         }
     }
 
 
 
     private fun Cast_Data(show_id: String, type: String) {
-
 
                 val jsonObject = fetch.fetchShowCast(show_id, type)
 
@@ -950,7 +1104,6 @@ class Watch_Page : AppCompatActivity() {
         val servers = listOf(
             "VidSrc",
             "Embed API",
-            "2Embed",
             "embedmaster",
             "PrimeWire",
             "vidking"

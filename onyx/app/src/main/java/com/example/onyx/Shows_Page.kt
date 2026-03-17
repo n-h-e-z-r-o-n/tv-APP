@@ -703,12 +703,14 @@ class Shows_Page : AppCompatActivity() {
                     }
 
                 val pg = if (item.optString("adult") == "true") "PG-18 +" else "PG-13"
-                val id = item.getString("id")
-                val overview = item.getString("overview")
+                val id = item.optString("id", "")
+                val overview = item.optString("overview", "")
                 val release_date = try {
-                    item.getString("release_date").substring(0, 4)
+                    //item.getString("release_date").substring(0, 4)
+                    item.optString("first_air_date", "")
                 } catch (e: Exception) {
-                    item.getString("first_air_date").substring(0, 4)
+                    //item.getString("first_air_date").substring(0, 4)
+                    item.optString("first_air_date", "")
                 }
                 val vote_average = item.getString("vote_average").substring(0, 3)
                 val poster_path = item.getString("poster_path")

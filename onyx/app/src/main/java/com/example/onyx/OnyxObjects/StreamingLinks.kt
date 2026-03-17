@@ -40,11 +40,11 @@ import android.widget.FrameLayout
 
 object StreamingLinks {
 
-    suspend fun extractStreamFromServer ( context: Context,  Weburl: String, container: ViewGroup): String? =
+    suspend fun extractStreamFromServer ( context: Context,  Weburl: String, container: ViewGroup): StreamData? =
 
         withContext(Dispatchers.Main) {
 
-            val result = CompletableDeferred<String?>()
+            val result = CompletableDeferred<StreamData?>()
 
             val webView = WebView(context)
 
@@ -177,6 +177,8 @@ object StreamingLinks {
                 ): WebResourceResponse? {
                     val url = request?.url.toString()
 
+
+
                     //Log.d("Stream-Result", "STREAM_REQUEST ALL : $url")
 
                     val videoExtensions = listOf(
@@ -211,6 +213,10 @@ object StreamingLinks {
 
                     if (isVideo) {
 
+                        val headers = request?.requestHeaders
+                        val referer = headers?.get("Referer")
+                        val ua = headers?.get("User-Agent")
+
                         Log.d("Stream-Result", "STREAM_REQUEST FOUND : $url")
 
 
@@ -224,7 +230,15 @@ object StreamingLinks {
                             container.removeView(webView)
                         }
 
-                        result.complete(url)
+                        //result.complete(url)
+                        result.complete(
+                            StreamData(
+                                url = url,
+                                referer = referer,
+                                userAgent = ua
+                            )
+                        )
+
 
 
                     }
@@ -263,18 +277,22 @@ object StreamingLinks {
                 }
 
             }
+            val userAgent ="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36"
 
-            webView.settings.userAgentString = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"
+            webView.settings.userAgentString = userAgent
             webView.settings.javaScriptEnabled = true
             webView.settings.domStorageEnabled = true
             webView.settings.mediaPlaybackRequiresUserGesture = false
             webView.settings.setSupportMultipleWindows(false)
-            webView.settings.userAgentString = WebSettings.getDefaultUserAgent(context)
+            //webView.settings.userAgentString = WebSettings.getDefaultUserAgent(context)
             webView.settings.mediaPlaybackRequiresUserGesture = false //This allows videos to play automatically once loaded
 
             //This prevents most scripts from opening new tabs or windows automatically.
             webView.settings.javaScriptCanOpenWindowsAutomatically = false
             webView.settings.setSupportMultipleWindows(false)
+
+            webView.settings.loadsImagesAutomatically = false //stops automatic image rendering
+            webView.settings.blockNetworkImage = true //prevents images from even being downloaded
 
 
             webView.loadUrl(Weburl)
@@ -282,26 +300,28 @@ object StreamingLinks {
             // Wait until stream found
             //result.await()
 
-            // ⬇️ Prevent infinite suspension
-            val streamUrl = withTimeoutOrNull(35000) {
-                result.await()
-            }
 
-            if (streamUrl == null) {
+
+            try {
+                // ⬇️ Prevent infinite suspension
+                val streamUrl = withTimeoutOrNull(35000) {
+                    result.await()
+                }
+                return@withContext streamUrl
+            } finally {
                 webView.post {
                     webView.stopLoading()
                     webView.loadUrl("about:blank")
                     webView.clearHistory()
-                    webView.clearFormData()
                     webView.clearCache(true)
                     webView.destroy()
                     container.removeView(webView)
                 }
             }
 
-            streamUrl
 
         }
+
 
 
     fun WebView.performCenterClick(
@@ -430,7 +450,7 @@ object StreamingLinks {
 
 
 
-    private fun getServerUrls(showId: String, type: String, seasonNo: String , episodeNo: String): Map<String, String> {
+     fun getServerUrls(showId: String, type: String, seasonNo: String , episodeNo: String): Map<String, String> {
 
         val servers = mutableMapOf<String, String>()
 
@@ -454,3 +474,9 @@ object StreamingLinks {
 
 
 }
+
+data class StreamData(
+    val url: String,
+    val referer: String?,
+    val userAgent: String?
+)

@@ -209,11 +209,14 @@ class Play : AppCompatActivity() {
                         streamingIndicators.any { url.contains(it) }
 
                 if (isVideo) {
+                    val headers = request?.requestHeaders
+                    val referer = headers?.get("Referer")
+                    val ua = headers?.get("User-Agent")
+
                     runOnUiThread {
                         // Clear WebView data and cookies before launching video player
                         clearWebViewData()
-                        //Video_payer.playVideoExternally(this@Play, url)
-                        Video_payer.playVideoExternally(this@Play, url,showId, showType, showTitle, showPoster, showBackdrop, showSNo, showENo)
+                        Video_payer.playVideoExternally(this@Play, url, referer, ua, showId, showType, showTitle, showPoster, showBackdrop, showSNo, showENo)
 
                         finish()
                     }
@@ -285,7 +288,6 @@ class Play : AppCompatActivity() {
         setupBackPressedCallback()
 
     }
-
 
 
     fun WebView.performCenterClick(
