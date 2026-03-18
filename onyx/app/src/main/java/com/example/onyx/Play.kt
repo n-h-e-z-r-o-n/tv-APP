@@ -439,9 +439,6 @@ class Play : AppCompatActivity() {
 
     override fun onDestroy() {
 
-        // Clear WebView data and destroy it
-        clearWebViewData()
-
         isVideoLaunching = false
 
         // Cancel any running coroutines

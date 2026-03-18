@@ -40,9 +40,12 @@ import android.widget.FrameLayout
 
 object StreamingLinks {
 
+
     suspend fun extractStreamFromServer ( context: Context,  Weburl: String, container: ViewGroup): StreamData? =
 
         withContext(Dispatchers.Main) {
+
+            var isWebviewDestroyed = false
 
             val result = CompletableDeferred<StreamData?>()
 
@@ -60,15 +63,30 @@ object StreamingLinks {
             (context as Activity).setContentView(container)
 
 
-
-
-
-
-
-
-
-
             */
+
+            fun webviewCleanUp() {
+                if (isWebviewDestroyed) return
+                isWebviewDestroyed = true
+
+                try {
+
+                    webView.post {
+                        webView.onPause()
+                        webView.stopLoading()
+                        webView.webChromeClient = null
+                        webView.loadUrl("about:blank")
+                        webView.clearHistory()
+                        webView.clearFormData()
+                        webView.clearCache(false)
+                        webView.destroy()
+                        container.removeView(webView)
+                    }
+
+                } catch (e: Exception) {
+                    Log.e("Stream-Result", "WebView cleanup failed", e)
+                }
+            }
 
             val params = FrameLayout.LayoutParams(100, 100)
             webView.layoutParams = params
@@ -83,6 +101,9 @@ object StreamingLinks {
 
                 override fun onPageFinished(view: WebView?, url: String?) {
                     super.onPageFinished(view, url)
+
+                    if (isWebviewDestroyed) return
+                    if (view !== webView) return
 
                     webView.postDelayed({
                         webView.evaluateJavascript(
@@ -155,16 +176,6 @@ object StreamingLinks {
                     }, 6000L)   // ⏱️ 2-second delay */
 
 
-                    // Wait for page to render, then simulate a few center clicks
-                    /*
-                    webView.postDelayed({
-                        CoroutineScope(Dispatchers.Main).launch {
-                            simulateRepeatedCenterClicks(webView, 10, 1200)
-                        }
-                    }, 3000)
-
-                     */
-
                     webView.postDelayed({
                         webView.performCenterClick()
                     }, 6000)
@@ -204,11 +215,6 @@ object StreamingLinks {
                         "master.m3u8", "playlist.m3u8"
                     )
 
-
-                    // Check if URL is a video by extension or indicator
-                    val isVsideo = videoExtensions.any { url.endsWith(it) } ||
-                            streamingIndicators.any { url.contains(it) }
-
                     val isVideo = videoExtensions.any { url.contains(it) }
 
                     if (isVideo) {
@@ -220,16 +226,6 @@ object StreamingLinks {
                         Log.d("Stream-Result", "STREAM_REQUEST FOUND : $url")
 
 
-                        webView.post {
-                            webView.stopLoading()
-                            webView.loadUrl("about:blank")
-                            webView.clearHistory()
-                            webView.clearFormData()
-                            webView.clearCache(false)
-                            webView.destroy()
-                            container.removeView(webView)
-                        }
-
                         //result.complete(url)
                         result.complete(
                             StreamData(
@@ -238,8 +234,6 @@ object StreamingLinks {
                                 userAgent = ua
                             )
                         )
-
-
 
                     }
 
@@ -309,14 +303,8 @@ object StreamingLinks {
                 }
                 return@withContext streamUrl
             } finally {
-                webView.post {
-                    webView.stopLoading()
-                    webView.loadUrl("about:blank")
-                    webView.clearHistory()
-                    webView.clearCache(true)
-                    webView.destroy()
-                    container.removeView(webView)
-                }
+
+                webviewCleanUp()
             }
 
 

@@ -236,15 +236,15 @@ class Watch_Page : AppCompatActivity() {
 
             val backdropUrl =
                 if (jsonObject.has("backdrop_path") && !jsonObject.isNull("backdrop_path")) {
-                    "https://image.tmdb.org/t/p/original/${jsonObject.getString("backdrop_path")}"
+                    "https://image.tmdb.org/t/p/original/${jsonObject.optString("backdrop_path", "")}"
                 } else if (jsonObject.has("poster_path") && !jsonObject.isNull("poster_path")) {
-                    "https://image.tmdb.org/t/p/original/${jsonObject.getString("poster_path")}"
+                    "https://image.tmdb.org/t/p/original/${jsonObject.optString("poster_path", "")}"
                 } else {
                     ""
                 }
 
             val posterUrl =
-                "https://image.tmdb.org/t/p/original/${jsonObject.getString("poster_path")}"
+                "https://image.tmdb.org/t/p/original/${jsonObject.optString("poster_path", "")}"
 
 
             val tmdbId = jsonObject.optString("id")
@@ -548,10 +548,17 @@ class Watch_Page : AppCompatActivity() {
     }
 
 
+    private val seasonEpisodesCache = mutableMapOf<String, List<EpisodeItem>>()
     private fun ShowSeasonEpisodes(SelectedSeasons: Int, seasonData : MutableList<JSONObject>, seriesId: String) {
+
 
         // Create a unique cache key
         val cacheKey = "${seriesId}_${SelectedSeasons}"
+        seasonEpisodesCache[cacheKey]?.let { cachedEpisodes ->
+            episodesAdapter.updateData(cachedEpisodes)
+            Log.e("DEBUG_Each E", "cache key")
+            return
+        }
 
 
 
@@ -589,17 +596,12 @@ class Watch_Page : AppCompatActivity() {
         episodesJob = lifecycleScope.launch {
             try {
 
-
-
                 val jsonObject = withContext(Dispatchers.IO) {fetch.fetchSeasonInfo(seriesId.toString(), SelectedSeasons.toString())}
 
                 if (jsonObject != null) {
 
-                    val episodesArray = jsonObject.getJSONArray("episodes") ?: return@launch
+                    val episodesArray = jsonObject.getJSONArray("episodes")
 
-                    if (episodesArray == null) {
-                        return@launch
-                    }
 
                     Log.e("DEBUG_Each E json", jsonObject.toString())
                     Log.e("DEBUG_Each E data", episodesArray.toString())
@@ -613,7 +615,6 @@ class Watch_Page : AppCompatActivity() {
                         val episodesAirDate = episodes.optString("air_date", "")
                         try {
                             Log.e("DEBUG_Each E date", "airDate: $episodesAirDate,  today $today")
-                            val airLocalDate = LocalDate.parse(episodesAirDate, formatter)
                             if (episodesAirDate.isNotBlank() && episodesAirDate != "null") {
                                 try {
                                     val airLocalDate = LocalDate.parse(episodesAirDate, formatter)
@@ -634,7 +635,7 @@ class Watch_Page : AppCompatActivity() {
                         val runtimeRaw = episodes.optString("runtime", "")
 
                         val stillPath =
-                            if (stillPathRaw.isNullOrEmpty() || runtimeRaw == "null") "" else stillPathRaw
+                            if (stillPathRaw.isNullOrEmpty() || stillPathRaw  == "null") "" else stillPathRaw
                         val runtime =
                             if (runtimeRaw.isNullOrEmpty() || runtimeRaw == "null") "0" else runtimeRaw
 
@@ -659,18 +660,17 @@ class Watch_Page : AppCompatActivity() {
                     }
 
                     Log.e("DEBUG_Each E list", "${episodesList.size}")
-                    //episodes_recycler.removeAllViews()
+                    seasonEpisodesCache[cacheKey] = episodesList
                     //episodes_recycler.adapter = EpisodesAdapter(episodesList)
                     //episodesAdapter.updateData(episodesList)
                     withContext(Dispatchers.Main) {
+                        episodes_recycler.removeAllViews()
                         episodesAdapter.updateData(episodesList)
                     }
                 }
             } catch (e: Exception){
-
                 Log.e("DEBUG_Each E Crush", "${e}")
-
-
+                Toast.makeText(this@Watch_Page, "Episode $e", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -969,9 +969,9 @@ class Watch_Page : AppCompatActivity() {
                     val movies = mutableListOf<CastItem>()
                     for (i in 0 until moviesArray.length()) {
                         val item = moviesArray.getJSONObject(i)
-                        val title = item.getString("original_name")
-                        val imgUrl = "https://image.tmdb.org/t/p/original/" + item.getString("profile_path")
-                        val cast_id = item.getString("id")
+                        val title = item.optString("original_name", "")
+                        val imgUrl = "https://image.tmdb.org/t/p/original/" + item.optString("profile_path", "")
+                        val cast_id = item.optString("id", "")
                         val type = "Actor"
                         movies.add(CastItem(title, imgUrl, cast_id, type))
                     }
@@ -1020,13 +1020,13 @@ class Watch_Page : AppCompatActivity() {
                         //val imgUrl = "https://image.tmdb.org/t/p/w780" + item.getString("backdrop_path")
 
                         val imgUrl = if (item.has("backdrop_path") && !item.isNull("backdrop_path")) {
-                            "https://image.tmdb.org/t/p/original${item.getString("backdrop_path")}"
+                            "https://image.tmdb.org/t/p/original${item.optString("backdrop_path", "")}"
                         } else if (item.has("poster_path") && !item.isNull("poster_path")) {
-                            "https://image.tmdb.org/t/p/original${item.getString("poster_path")}"
+                            "https://image.tmdb.org/t/p/original${item.optString("poster_path", "")}"
                         } else { "" }
 
-                        val imdb_code = item.getString("id")
-                        val type = item.getString("media_type")
+                        val imdb_code = item.optString("id", "")
+                        val type = item.optString("media_type", "")
                         movies.add(MovieItem(title, imgUrl, imdb_code, type))
                     }
 
