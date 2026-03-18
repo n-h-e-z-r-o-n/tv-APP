@@ -111,7 +111,7 @@ class Watch_Page : AppCompatActivity() {
             LinearLayoutManager.HORIZONTAL,
             false
         )
-        episodesAdapter = EpisodesAdapter(mutableListOf())
+        episodesAdapter = EpisodesAdapter(mutableListOf(), db, sm.getUserId())
         episodes_recycler.adapter = episodesAdapter
 
 
@@ -177,8 +177,8 @@ class Watch_Page : AppCompatActivity() {
 
 
         if(showId.isNullOrEmpty()){
-            showId = "533444"
-            showType = "movie"
+            showId = "89456"
+            showType = "tv"
         }
 
         lifecycleScope.launch {
@@ -664,7 +664,7 @@ class Watch_Page : AppCompatActivity() {
                     //episodes_recycler.adapter = EpisodesAdapter(episodesList)
                     //episodesAdapter.updateData(episodesList)
                     withContext(Dispatchers.Main) {
-                        episodes_recycler.removeAllViews()
+                        //episodes_recycler.removeAllViews()
                         episodesAdapter.updateData(episodesList)
                     }
                 }

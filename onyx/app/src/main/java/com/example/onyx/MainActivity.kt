@@ -130,7 +130,7 @@ class MainActivity : AppCompatActivity() {
                 GlobalUtils.autoRestoreDatabaseIfNeeded(this@MainActivity)
             }
 
-            delay(9000)
+            delay(1000)
 
             if (!GlobalUtils.isTv(this@MainActivity)) {
 

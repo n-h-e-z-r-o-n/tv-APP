@@ -60,7 +60,7 @@ class Anime_Page : AppCompatActivity() {
 
      private lateinit var db: AppDatabase
      private lateinit var  sm: SessionManger
-
+    private var lastFocusedView: View? = null
     private lateinit var  fetchAnimeAPI: AnimeApi
      private var userId: Int = -1
      private var urlHome = BuildConfig.A_K      //private var urlHome = "http://192.168.100.22:4000"
@@ -463,7 +463,9 @@ class Anime_Page : AppCompatActivity() {
          val clearBtn = findViewById<TextView>(R.id.clearNotBtn)
 
          clearBtn.setOnClickListener {
-             db.clearAllAnimeNotifications(userId)
+             lifecycleScope.launch(Dispatchers.IO) {
+                 db.clearAllAnimeNotifications(userId)
+             }
              notificationAdapter.clearItems()
          }
 
@@ -497,14 +499,27 @@ class Anime_Page : AppCompatActivity() {
             faveAdapter.clearItems()
         }
 
+        /*
         if(this::notificationAdapter.isInitialized){
             notificationAdapter.clearItems()
         }
+        notificationS()
+         */
 
-            animeWatchedList()
-            animeFavoritesList()
-            notificationS()
-            LoadingAnimation.hide(this@Anime_Page)
+        animeWatchedList()
+        animeFavoritesList()
+
+
+        // Only request focus if nothing has focus
+        window.decorView.post {
+            if (currentFocus == null) {
+                if (lastFocusedView != null && lastFocusedView!!.isShown && lastFocusedView!!.isFocusable) {
+                    lastFocusedView!!.requestFocus()
+                } else {
+                    findViewById<LinearLayout>(R.id.HomeBtn).requestFocus()
+                }
+            }
+        }
 
     }
 
@@ -527,7 +542,13 @@ class Anime_Page : AppCompatActivity() {
         finish()
     }
 
-
+    private fun trackFocus() {
+        window.decorView.viewTreeObserver.addOnGlobalFocusChangeListener { _, newFocus ->
+            if (newFocus != null) {
+                lastFocusedView = newFocus
+            }
+        }
+    }
 
      private fun animeHomeData() {
          lifecycleScope.launch(Dispatchers.Main){
@@ -1175,7 +1196,7 @@ class Anime_Page : AppCompatActivity() {
             }
 
             // Headline
-            findViewById<TextView>(R.id.notificationHeadline).text =  "notifications (${notificationsFromDb.size})"
+            findViewById<TextView>(R.id.notificationHeadline).text =  "notifications"
 
             if (notificationsFromDb.size > 0) findViewById<CardView>(R.id.cNotificationAnimeIcon).visibility = View.VISIBLE
 
@@ -1214,7 +1235,9 @@ class Anime_Page : AppCompatActivity() {
             if (!::notificationAdapter.isInitialized) {
                 notificationAdapter = NotificationAdapter(
                     items = notifications.toMutableList(),
-                    layoutResId = R.layout.item_notification
+                    layoutResId = R.layout.item_notification,
+                    db,
+                    userId
                 )
                 notificationRecyclerView.adapter = notificationAdapter
             } else {
@@ -1222,8 +1245,6 @@ class Anime_Page : AppCompatActivity() {
             }
         }
     }
-
-
 
 
 

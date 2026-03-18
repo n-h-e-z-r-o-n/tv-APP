@@ -42,7 +42,15 @@ import com.example.onyx.Watch_Page
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlin.text.toLongOrNull
-
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.* // Make sure this is imported
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1115,7 +1123,6 @@ class FavAdapter(
         val itemText: TextView = view.findViewById(R.id.itemText)
 
 
-
         init {
             itemView.setOnFocusChangeListener { _, hasFocus ->
 
@@ -1302,9 +1309,12 @@ class EqualSpaceItemDecoration(private val space: Int) : RecyclerView.ItemDecora
 
 
 class EpisodesAdapter(
-    private val episodes: MutableList<EpisodeItem>
+    private val episodes: MutableList<EpisodeItem>,
+    private val db: AppDatabase,
+    private val userId: Int,
 ) : RecyclerView.Adapter<EpisodesAdapter.EpisodeViewHolder>() {
 
+    private val adapterScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     inner class EpisodeViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val epNoView: TextView = view.findViewById(R.id.episode_Number)
         val titleView: TextView = view.findViewById(R.id.episode_title)
@@ -1314,6 +1324,10 @@ class EpisodesAdapter(
         val epsImg: ImageView = view.findViewById(R.id.Ep_IMG)
 
         var cWatchSeek_bar: SeekBar = view.findViewById(R.id.cWatchSeek_bar)
+
+        var job: Job? = null  // Track the coroutine for this ViewHolder
+
+        var lastClickTime = 0L
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): EpisodeViewHolder {
@@ -1327,16 +1341,33 @@ class EpisodesAdapter(
     override fun onBindViewHolder(holder: EpisodeViewHolder, position: Int) {
         val ep = episodes[position]
 
-        val sm = SessionManger(holder.itemView.context)
-        val userId = sm.getUserId()
-        val db = AppDatabase(holder.itemView.context)
+        holder.job?.cancel()  // cancel previous coroutine if any
+        holder.job = adapterScope.launch {
+            val itemId = "${ep.seriesId}_S${ep.seasonNumber}_E${ep.episodesNumber}"
+            //val lastPos = db.getResumePosition(userId, itemId, "tv").toLong()
+            //val durationPos = db.getDurationPosition(userId, itemId, "tv").toLong()
 
-        val itemId = "${ep.seriesId}_S${ep.seasonNumber}_E${ep.episodesNumber}"
-        val lastPos = db.getResumePosition(userId, itemId, "tv").toLong()
-        val durationPos = db.getDurationPosition(userId, itemId, "tv").toLong()
+            /*
+            val lastPos = withContext(Dispatchers.IO) {
+                db.getResumePosition(userId, itemId, "tv").toLong()
+            }
+            val durationPos = withContext(Dispatchers.IO) {
+                db.getDurationPosition(userId, itemId, "tv").toLong()
+            }
+            */
 
-        val progress = ((lastPos.toDouble() / durationPos.toDouble()) * 1000).toInt()
-        holder.cWatchSeek_bar.progress = progress.coerceIn(0, 1000)
+            // Run both DB queries concurrently
+            val lastPosDeferred = async(Dispatchers.IO) { db.getResumePosition(userId, itemId, "tv").toLong() }
+            val durationPosDeferred = async(Dispatchers.IO) { db.getDurationPosition(userId, itemId, "tv").toLong() }
+
+            // Await both results
+            val lastPos = lastPosDeferred.await()
+            val durationPos = durationPosDeferred.await()
+
+            val safeDuration = if (durationPos == 0L) 1L else durationPos
+            val progress = ((lastPos.toDouble() / safeDuration.toDouble()) * 1000).toInt()
+            holder.cWatchSeek_bar.progress = progress.coerceIn(0, 1000)
+        }
 
 
         holder.epNoView.text = "S${ep.seasonNumber}-E${ep.episodesNumber}"
@@ -1354,11 +1385,11 @@ class EpisodesAdapter(
             .override(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL)
             .into(holder.epsImg)
 
-        var lastClickTime = 0L
+        //var lastClickTime = 0L
         holder.itemView.setOnClickListener {view ->
             val now = System.currentTimeMillis()
-            if (now - lastClickTime < 1000) return@setOnClickListener
-            lastClickTime = now
+            if (now - holder.lastClickTime < 1000) return@setOnClickListener
+            holder.lastClickTime = now
 
             val context = holder.itemView.context
             val intent = Intent(context, Play::class.java).apply {
@@ -1371,7 +1402,13 @@ class EpisodesAdapter(
                 putExtra("backdrop", ep.showBackdrop)
                 putExtra("title", ep.showTitle)
             }
-            context.startActivity(intent)
+            //context.startActivity(intent)
+            try {
+                context.startActivity(intent)
+            } catch (e: Exception) {
+                Log.e("EpisodesAdapter", "Play activity not found", e)
+                Toast.makeText(context, "Cannot open player", Toast.LENGTH_SHORT).show()
+            }
         }
 
 
@@ -1400,6 +1437,8 @@ class EpisodesAdapter(
 
 
     }
+
+
 
     override fun getItemCount(): Int = episodes.size
 
@@ -1454,12 +1493,13 @@ data class MovieItem(
 
 class NotificationAdapter(
     private val  items: MutableList<NotificationItem>,   // ✅ mutable now,
-    private val layoutResId: Int   // 👈 pass in the layout resource
+    private val layoutResId: Int,  // 👈 pass in the layout resource
+    private val db: AppDatabase,
+    private val userId: Int
 ) :  RecyclerView.Adapter<NotificationAdapter.ViewHolder>() {
 
-    private lateinit var db: AppDatabase
-    private lateinit var  sm: SessionManger
 
+    private val adapterScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
     inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         //val image: ImageView = view.findViewById(R.id.notification_title)
@@ -1491,11 +1531,6 @@ class NotificationAdapter(
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
 
-        db = AppDatabase(holder.itemView.context)         // Initialize database
-        sm = SessionManger(holder.itemView.context)
-        val userId = sm.getUserId()
-
-
 
         val currentItem = items[position]
 
@@ -1523,18 +1558,37 @@ class NotificationAdapter(
 
         holder.itemView.setOnClickListener {
             val context = holder.itemView.context
-            if(type == "anime"){
-                val intent = Intent(context, Watch_Anime_Page::class.java)
-                db.deleteAnimeNotificationById(userId=userId,animeId =imdbCode,notificationId=currentItem.notificationId)
-                intent.putExtra("anime_code", imdbCode)
-                intent.putExtra("anime_poster", imageUrl)
-                context.startActivity(intent)
-            }else {
-                val intent = Intent(context, Watch_Page::class.java)
-                intent.putExtra("imdb_code", imdbCode)
-                intent.putExtra("type", type)
-                context.startActivity(intent)
-            }
+
+            val adapterPos = holder.bindingAdapterPosition
+            if (adapterPos == RecyclerView.NO_POSITION) return@setOnClickListener
+            items.removeAt(adapterPos)
+            notifyItemRemoved(adapterPos)
+
+
+                if(type == "anime"){
+
+                    adapterScope.launch(Dispatchers.IO) {
+                        db.deleteAnimeNotificationById(
+                            userId = userId,
+                            animeId = imdbCode,
+                            notificationId = currentItem.notificationId
+                        )
+                    }
+
+
+                    val intent = Intent(context, Watch_Anime_Page::class.java)
+
+                    intent.putExtra("anime_code", imdbCode)
+                    intent.putExtra("anime_poster", imageUrl)
+                    context.startActivity(intent)
+
+                }else {
+                    val intent = Intent(context, Watch_Page::class.java)
+                    adapterScope.launch(Dispatchers.IO) { db.deleteTvNotifications(userId, imdbCode)}
+                    intent.putExtra("imdb_code", imdbCode)
+                    intent.putExtra("type", type)
+                    context.startActivity(intent)
+                }
 
             //NotificationHelper.updateNotification(context, imdbCode, updateSeason, updateEpisode)
             //call updateNotification
@@ -1609,9 +1663,6 @@ class cWatchingAdapter(
 ) : RecyclerView.Adapter<cWatchingAdapter.ViewHolder>() {
 
 
-    private lateinit var sm: SessionManger
-
-
     inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
 
         val rootCard: CardView = view.findViewById(R.id.rootCard)
@@ -1669,7 +1720,6 @@ class cWatchingAdapter(
 
             holder.rootCard.setOnClickListener {
                 val context = holder.itemView.context
-                sm = SessionManger(context)
 
                 Anime_Video_Player.Companion.playVideoExternally(context, itemId, episodeNumber, seasonNumber)
             }

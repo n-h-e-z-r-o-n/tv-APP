@@ -7,17 +7,11 @@
             <gradient
                 android:type="linear"
                 android:angle="90"
-                android:startColor="?attr/BG_color"
-                android:centerColor="?attr/AccentColor"
-                android:endColor="?attr/BG_color"/>
+                android:startColor="#80042c40"
+                android:centerColor="#80042c40"
+                android:endColor="#80042c40"/>
         </shape>
     </item>
 
-    <!-- Centered image on top of gradient -->
-    <item>
-        <bitmap
-            android:gravity="fill"
-            android:src="@drawable/splash_img"/>
-    </item>
 
 </layer-list>

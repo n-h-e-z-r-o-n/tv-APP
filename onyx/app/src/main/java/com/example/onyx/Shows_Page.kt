@@ -10,6 +10,7 @@ import android.util.Log
 import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.EditText
 import android.widget.FrameLayout
@@ -60,6 +61,7 @@ import com.example.onyx.OnyxObjects.LoadingAnimation
 import com.example.onyx.OnyxObjects.NavAction
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancelChildren
+import kotlinx.coroutines.coroutineScope
 import java.io.IOException
 import java.util.Calendar
 
@@ -67,8 +69,7 @@ class Shows_Page : AppCompatActivity() {
     private var currentMoviePage = 1
     private var isLoadingMoreMovies = false
 
-
-
+    private var lastFocusedView: View? = null
     private var currentTvPage = 1
     private var isLoadingMoreTv = false
 
@@ -138,6 +139,7 @@ class Shows_Page : AppCompatActivity() {
 
 
         //setupBackPressedCallback()
+        trackFocus()
         ////////////////////////////////////////////////////////////////////////////////////////////
         val navBar = findViewById<LinearLayout>(R.id.NavBar)
 
@@ -189,8 +191,6 @@ class Shows_Page : AppCompatActivity() {
         }
         HomeBtn.performClick()
         HomeBtn.requestFocus()
-
-
 
 
         MoviesBtn.setOnClickListener {
@@ -392,31 +392,38 @@ class Shows_Page : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
 
-        // Only request focus if nothing has focus
-        val rootView = window.decorView.rootView
-        if (rootView.findFocus() == null) {
-            findViewById<LinearLayout>(R.id.HomeBtn).requestFocus()
-        }
 
         if (this::watchAdapter.isInitialized) {
             watchAdapter.clearItems()
         }
 
 
+        /*
         if(this::notificationAdapter.isInitialized){
             notificationAdapter.clearItems()
         }
+        notificationS()
+        */
 
 
         if (this::faveAdapter.isInitialized) {
             faveAdapter.clearItems()
         }
 
+        tvFavoritesList()
+        watchedList()
 
 
-            notificationS()
-            tvFavoritesList()
-            watchedList()
+        // Only request focus if nothing has focus
+        window.decorView.post {
+            if (currentFocus == null) {
+                if (lastFocusedView != null && lastFocusedView!!.isShown && lastFocusedView!!.isFocusable) {
+                    lastFocusedView!!.requestFocus()
+                } else {
+                    findViewById<LinearLayout>(R.id.HomeBtn).requestFocus()
+                }
+            }
+        }
 
     }
 
@@ -439,7 +446,13 @@ class Shows_Page : AppCompatActivity() {
     }
 
 
-
+    private fun trackFocus() {
+        window.decorView.viewTreeObserver.addOnGlobalFocusChangeListener { _, newFocus ->
+            if (newFocus != null) {
+                lastFocusedView = newFocus
+            }
+        }
+    }
 
     private fun setupRecyclerViews() {
 
@@ -476,7 +489,6 @@ class Shows_Page : AppCompatActivity() {
                 }
                 return super.onInterceptFocusSearch(focused, direction)
             }
-
         }
         movieRecyclerView.addItemDecoration(EqualSpaceItemDecoration(Spacing))
         movieAdapter = GridAdapter(mutableListOf(), R.layout.item_grid2,)
@@ -567,7 +579,9 @@ class Shows_Page : AppCompatActivity() {
         val clearBtn = findViewById<TextView>(R.id.clearNotBtn)
 
         clearBtn.setOnClickListener {
-            db.clearAllTvNotifications(userId)
+            lifecycleScope.launch(Dispatchers.IO) {
+                db.clearAllTvNotifications(userId)
+            }
             notificationAdapter.clearItems()
         }
 
@@ -1691,7 +1705,7 @@ class Shows_Page : AppCompatActivity() {
             val dnot = withContext(Dispatchers.IO) { db.getAllTvNotifications(userId) }
             val notifications = mutableListOf<NotificationItem>()
 
-            findViewById<TextView>(R.id.notificationHeadline).text = "notifications (${dnot.size})"
+            findViewById<TextView>(R.id.notificationHeadline).text = "notifications"
             if (dnot.size > 0) findViewById<CardView>(R.id.cNotificationAnimeIcon).visibility = View.VISIBLE
 
             for (item in dnot) {
@@ -1722,7 +1736,9 @@ class Shows_Page : AppCompatActivity() {
 
             notificationAdapter = NotificationAdapter(
                 items = notifications.toMutableList(),
-                layoutResId = R.layout.item_notification
+                layoutResId = R.layout.item_notification,
+                db,
+                userId
             )
             notificationRecyclerView.adapter = notificationAdapter
 
@@ -1774,7 +1790,9 @@ class Shows_Page : AppCompatActivity() {
             if (!::notificationAdapter.isInitialized) {
                 notificationAdapter = NotificationAdapter(
                     items = notificationItems.toMutableList(),
-                    layoutResId = R.layout.item_notification
+                    layoutResId = R.layout.item_notification,
+                    db,
+                    userId
                 )
                 notificationRecyclerView.adapter = notificationAdapter
             } else {
@@ -1815,9 +1833,11 @@ class Shows_Page : AppCompatActivity() {
 
             // Fetch both lists in parallel on IO
             val (movies, tvShows) = withContext(Dispatchers.IO) {
-                val mv = async { db.getContinueWatchingAll(userId, "movie") }
-                val tv = async { db.getContinueWatchingAll(userId, "tv") }
-                mv.await() to tv.await()
+                coroutineScope {
+                    val mv = async { db.getContinueWatchingAll(userId, "movie") }
+                    val tv = async { db.getContinueWatchingAll(userId, "tv") }
+                    mv.await() to tv.await()
+                }
             }
 
             // Combine + sort

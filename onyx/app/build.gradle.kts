@@ -25,6 +25,11 @@ android {
     }
 
     buildTypes {
+        debug {
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = "-debug"
+            resValue("string", "app_name", "Onyx Debug")
+        }
         release {
             isMinifyEnabled = true
             //shrinkResources = true

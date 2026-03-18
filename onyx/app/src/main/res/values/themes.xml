@@ -22,6 +22,8 @@
         <item name="AccentColor">#d6cfc4</item>
         <item name="transparentEffect">#801d0f08</item>
         <item name="notBudge">#707000</item>
+
+        <item name="themeImage">@raw/background_brown</item>
     </style>
 
     <!-- Dark Theme  -->
