@@ -11,6 +11,7 @@
     android:orientation="vertical"
     card_view:cardCornerRadius="12dp"
     card_view:cardElevation="2dp"
+    android:layout_margin="5dp"
     card_view:cardBackgroundColor="?attr/BG_color_up"
     android:foreground="@drawable/card_focus"
     android:id="@+id/itemGrid2">
@@ -25,7 +26,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:background="@android:color/transparent"
-            android:src="@raw/test2"
+            android:src="@raw/gradient_img"
             android:scaleType="fitXY"
             />
 
@@ -119,7 +120,7 @@
                 android:text="⏱145 min"
                 android:textColor="?attr/FG_color"
                 android:textSize="7sp"
-                android:fontFamily="@font/e"
+                android:fontFamily="@font/o"
                 tools:ignore="HardcodedText,SmallSp"
                 android:paddingEnd="5dp"
                 android:paddingStart="5dp"

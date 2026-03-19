@@ -100,7 +100,7 @@ class Watch_Anime_Page : AppCompatActivity() {
 
 
 
-        LoadingAnimation.setup(this@Watch_Anime_Page, R.raw.b)
+        LoadingAnimation.setup(this@Watch_Anime_Page, R.raw.line_loading)
         SeasonIMGArray = mutableListOf<String>()
         //------------------------------------------------------------------------------------------
         animeId = intent.getStringExtra("anime_code")?: ""

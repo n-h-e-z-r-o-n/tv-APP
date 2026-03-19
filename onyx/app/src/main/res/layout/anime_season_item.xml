@@ -20,7 +20,7 @@
         android:layout_height="match_parent"
         tools:ignore="ContentDescription"
         android:scaleType="centerCrop"
-        android:src="@raw/test2"/>
+        android:src="@raw/gradient_img"/>
 
     <View
         android:layout_width="match_parent"
@@ -37,7 +37,7 @@
         android:padding="4dp"
         android:text="Season 1"
         android:textColor="#FFFFFF"
-        android:fontFamily="@font/e"
+        android:fontFamily="@font/n"
         android:textSize="18sp"
         tools:ignore="HardcodedText,Suspicious0dp"
         android:gravity="center"

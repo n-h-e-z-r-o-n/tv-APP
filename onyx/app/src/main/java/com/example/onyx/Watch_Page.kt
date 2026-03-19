@@ -96,7 +96,7 @@ class Watch_Page : AppCompatActivity() {
 
         setupBackPressedCallback()
 
-        LoadingAnimation.setup(this@Watch_Page, R.raw.b)
+        LoadingAnimation.setup(this@Watch_Page, R.raw.line_loading)
         LoadingAnimation.show(this@Watch_Page)
 
         fetch = TMDBapi(this)
@@ -690,7 +690,7 @@ class Watch_Page : AppCompatActivity() {
                 val loadingImageView = findViewById<ImageView>(R.id.stream_links_animation)
                 Glide.with(this@Watch_Page)
                     .asGif()
-                    .load(R.raw.grey)
+                    .load(R.raw.flame_loading)
                     .into(loadingImageView)
 
 
@@ -834,7 +834,7 @@ class Watch_Page : AppCompatActivity() {
             val loadingImageView = findViewById<ImageView>(R.id.stream_links_animation)
             Glide.with(this@Watch_Page)
                 .asGif()
-                .load(R.raw.grey)
+                .load(R.raw.flame_loading)
                 .into(loadingImageView)
 
             val stream_main = findViewById<FrameLayout>(R.id.stream_main)

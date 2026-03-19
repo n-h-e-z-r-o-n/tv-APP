@@ -37,7 +37,7 @@
             android:layout_height="match_parent"
             android:adjustViewBounds="true"
             android:scaleType="centerCrop"
-            android:src="@raw/test3"
+            android:src="@raw/gradient_img"
             tools:ignore="ContentDescription" />
 
         <LinearLayout

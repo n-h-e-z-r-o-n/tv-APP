@@ -48,7 +48,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="match_parent"
                         android:scaleType="centerCrop"
-                        android:src="@raw/backdrop"
+                        android:src="@raw/movie_backdrop"
                         android:layout_gravity="end"
                         android:adjustViewBounds="true"
                         tools:ignore="ContentDescription" />
@@ -841,7 +841,7 @@
                     android:id="@+id/stream_links_animation"
                     android:layout_width="50dp"
                     android:layout_height="50dp"
-                    android:src="@raw/grey"
+                    android:src="@raw/flame_loading"
                     android:layout_gravity="center"/>
 
                 <ScrollView
@@ -867,7 +867,9 @@
         android:id="@+id/container_server"
         android:visibility="invisible"
         android:layout_width="500dp"
-        android:layout_height="150dp"/>
+        android:orientation="vertical"
+        android:layout_height="150dp"
+        tools:ignore="MissingConstraints" />
 
     <include layout="@layout/laod_animation"/>
 

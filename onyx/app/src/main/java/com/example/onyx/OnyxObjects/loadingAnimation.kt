@@ -8,9 +8,9 @@ import com.example.onyx.R
 
 object LoadingAnimation {
 
-    private var currentAnimationRes: Int = R.raw.dotloading // default
+    private var currentAnimationRes: Int = R.raw.line_loading // default
 
-    fun setup(activity: Activity, animationRes: Int = R.raw.dotloading) {
+    fun setup(activity: Activity, animationRes: Int = R.raw.line_loading) {
         currentAnimationRes = animationRes
         val loadingImageView = activity.findViewById<ImageView>(R.id.loadingGif)
 

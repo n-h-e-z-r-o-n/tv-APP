@@ -14,7 +14,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:scaleType="centerCrop"
-        android:src="@raw/test2"
+        android:src="@raw/gradient_img"
         />
 
     <LinearLayout
@@ -130,7 +130,6 @@
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:adjustViewBounds="true"
-                        android:src="@raw/test"
                         android:foreground="@drawable/tv_frame_background"
                         android:scaleType="fitXY"
                         tools:ignore="UnusedAttribute" />

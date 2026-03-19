@@ -4,11 +4,11 @@
 
     <!-- Theme (default) -->
     <style name="Theme.Onyx.Default" parent="Theme.AppCompat.Light.NoActionBar">
-        <item name="BG_color">#000d1a</item>
+        <item name="BG_color">#0b0f19</item>
         <item name="FG_color">#FFFFFF</item>
-        <item name="BG_color_up">#001e35</item>
+        <item name="BG_color_up">#1f344a</item>
         <item name="AccentColor">#54becb</item>
-        <item name="transparentEffect">#80042c40</item>
+        <item name="transparentEffect">#800b0f19</item>
         <item name="notBudge">#290e05</item>
 
         <!-- Theme image -->
@@ -23,7 +23,7 @@
         <item name="transparentEffect">#801d0f08</item>
         <item name="notBudge">#707000</item>
 
-        <item name="themeImage">@raw/background_brown</item>
+        <item name="themeImage">@raw/background_1</item>
     </style>
 
     <!-- Dark Theme  -->

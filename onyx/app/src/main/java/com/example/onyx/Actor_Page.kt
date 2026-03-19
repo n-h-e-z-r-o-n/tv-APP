@@ -26,7 +26,7 @@ class Actor_Page : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_actor_page)
-        LoadingAnimation.setup(this@Actor_Page, R.raw.b)
+        LoadingAnimation.setup(this@Actor_Page, R.raw.line_loading)
         LoadingAnimation.show(this@Actor_Page)
 
 

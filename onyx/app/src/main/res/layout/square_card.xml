@@ -23,7 +23,7 @@
         android:maxHeight="120dp"
         android:adjustViewBounds="true"
         android:layout_weight="1"
-        android:src="@raw/test4"
+        android:src="@raw/anime_poster"
         android:scaleType="fitStart"
         tools:ignore="ContentDescription" />
 

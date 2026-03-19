@@ -143,7 +143,8 @@ class GridAdapter(
         val rating = currentItem.rating
         val runtime = currentItem.runtime
 
-        holder.showYear?.text = year.substring(0, 4)
+        //holder.showYear?.text = year.substring(0, 4)
+        holder.showYear?.text = if (year.length >= 4) year.substring(0, 4) else "N/A"
         holder.showTitle?.text = title
         holder.showRating?.text = rating
         holder.showRS?.text = runtime
@@ -492,11 +493,8 @@ class CategoryAdapter(
 
     inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
 
-
         val CardViewSquare: CardView = view.findViewById(R.id.categoryView)
         val category_image: ImageView = view.findViewById(R.id.categoryImage)
-
-
 
 
         init {

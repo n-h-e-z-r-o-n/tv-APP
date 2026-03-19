@@ -481,7 +481,7 @@
                             android:layout_marginTop="20dp"
                             android:scaleType="fitXY"
                             android:elevation="15dp"
-                            android:src="@raw/test4"
+                            android:src="@raw/anime_poster"
                             tools:ignore="ContentDescription,ImageContrastCheck" />
                     </FrameLayout>
 

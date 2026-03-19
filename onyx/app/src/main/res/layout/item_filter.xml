@@ -93,7 +93,7 @@
                 android:text="⏱145 min"
                 android:textColor="?attr/FG_color"
                 android:textSize="7sp"
-                android:fontFamily="@font/e"
+                android:fontFamily="@font/o"
                 tools:ignore="HardcodedText,SmallSp"
                 android:paddingEnd="5dp"
                 android:paddingStart="5dp"

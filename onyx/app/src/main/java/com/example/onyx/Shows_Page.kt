@@ -129,7 +129,7 @@ class Shows_Page : AppCompatActivity() {
         setContentView(R.layout.activity_shows_page)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
-        LoadingAnimation.setup(this, R.raw.b)
+        LoadingAnimation.setup(this, R.raw.line_loading)
         //LoadingAnimation.show(this)
         NavAction.setupSidebar(this)
         fetchTMDB = TMDBapi(this)

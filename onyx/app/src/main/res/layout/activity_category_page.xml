@@ -15,6 +15,12 @@
         android:src="?attr/themeImage"
         tools:ignore="ContentDescription" />
 
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="?attr/transparentEffect"/>
+
+
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -23,11 +29,9 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_marginTop="2dp"
-            android:layout_marginStart="32dp"
+            android:background="?attr/transparentEffect"
+            android:padding="13dp"
             android:orientation="vertical">
-
-
 
                 <TextView
                     android:id="@+id/CategoryTitle"
@@ -39,7 +43,7 @@
                     android:shadowDx="1"
                     android:shadowDy="1"
                     android:shadowRadius="1"
-                    android:textSize="22sp"
+                    android:textSize="33sp"
                     android:textStyle="bold"
                     android:ellipsize="end"
                     android:maxLines="1"
@@ -48,107 +52,59 @@
                     tools:text="Marvel Studios" />
 
                 <TextView
-                    android:id="@+id/CategorySubtitle"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:fontFamily="@font/n"
-                    android:textColor="?attr/FG_color"
-                    android:shadowColor="?attr/AccentColor"
+                    android:fontFamily="@font/p"
+                    android:textColor="#FFFFFF"
+                    android:shadowColor="#000000"
                     android:shadowDx="1"
                     android:shadowDy="1"
                     android:shadowRadius="1"
-                    android:textSize="12sp"
-                    android:alpha="0.7"
+                    android:textSize="23sp"
+                    android:textStyle="bold"
+                    android:layout_marginVertical="10dp"
                     android:ellipsize="end"
                     android:maxLines="1"
-                    android:paddingHorizontal="3dp"
-                    android:layout_gravity="top|start"
-                    tools:text="Movies &amp; TV titles" />
+                    android:paddingHorizontal="10dp"
+                    android:text="Movies" />
 
                     <androidx.recyclerview.widget.RecyclerView
                         android:id="@+id/CategoryMoviesRecyclerView"
                         android:layout_width="match_parent"
-                        android:layout_height="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
                         android:clipToPadding="false"
                         android:overScrollMode="never"
                         android:scrollbars="none"
                         tools:ignore="RtlSymmetry" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/p"
+                        android:textColor="#FFFFFF"
+                        android:shadowColor="#000000"
+                        android:shadowDx="1"
+                        android:shadowDy="1"
+                        android:layout_marginVertical="10dp"
+                        android:shadowRadius="1"
+                        android:textSize="23sp"
+                        android:textStyle="bold"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:paddingHorizontal="10dp"
+                        android:text="TV Shows" />
 
                     <androidx.recyclerview.widget.RecyclerView
                         android:id="@+id/CategoryTvRecyclerView"
                         android:layout_width="match_parent"
-                        android:layout_height="match_parent"
+                        android:layout_height="wrap_content"
                         android:clipToPadding="false"
                         android:overScrollMode="never"
                         android:scrollbars="none"
-                        android:visibility="gone"
                         tools:ignore="RtlSymmetry" />
         </LinearLayout>
 
-
-
-        <LinearLayout
-            android:id="@+id/categoryButtonColumn"
-            android:layout_width="30dp"
-            android:layout_height="match_parent"
-            android:layout_gravity="center_vertical|start"
-            android:orientation="vertical"
-            android:gravity="center">
-
-            <LinearLayout
-                android:id="@+id/CategoryMoviesButtonLayout"
-                android:layout_width="match_parent"
-                android:layout_height="100dp"
-                android:elevation="2dp"
-                android:background="@drawable/right_rounded"
-                android:gravity="center"
-                android:focusable="true"
-                android:focusableInTouchMode="true">
-
-                <TextView
-                    android:id="@+id/CategoryMoviesButtonText"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Mv"
-                    android:textSize="15sp"
-                    android:textStyle="bold"
-                    android:fontFamily="@font/l"
-                    android:textColor="?attr/FG_color"
-                    android:shadowColor="#000000"
-                    android:shadowDx="1"
-                    android:shadowDy="3"
-                    android:shadowRadius="4"
-                    android:padding="3dp"
-                    tools:ignore="HardcodedText" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/CategoryTvButtonLayout"
-                android:layout_width="match_parent"
-                android:layout_height="100sp"
-                android:background="@drawable/right_rounded"
-                android:gravity="center"
-                android:focusable="true"
-                android:focusableInTouchMode="true">
-
-                <TextView
-                    android:id="@+id/CategoryTvButtonText"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Tv"
-                    android:textSize="15sp"
-                    android:textStyle="bold"
-                    android:fontFamily="@font/l"
-                    android:textColor="?attr/FG_color"
-                    android:shadowColor="#000000"
-                    android:shadowDx="1"
-                    android:shadowDy="3"
-                    android:shadowRadius="4"
-                    android:paddingHorizontal="3dp"
-                    tools:ignore="HardcodedText" />
-            </LinearLayout>
-
-        </LinearLayout>
 
         <include layout="@layout/laod_animation" />
         <include layout="@layout/side_bar" android:visibility="gone" />

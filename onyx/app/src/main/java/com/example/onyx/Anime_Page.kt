@@ -113,7 +113,7 @@ class Anime_Page : AppCompatActivity() {
          window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
          NavAction.setupSidebar(this@Anime_Page)
-         LoadingAnimation.setup(this@Anime_Page, R.raw.b)
+         LoadingAnimation.setup(this@Anime_Page, R.raw.line_loading)
          LoadingAnimation.show(this@Anime_Page)
 
 

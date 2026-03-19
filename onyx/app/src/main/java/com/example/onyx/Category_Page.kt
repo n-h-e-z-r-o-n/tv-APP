@@ -10,6 +10,7 @@ import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.onyx.OnyxClasses.EqualSpaceItemDecoration
 import com.example.onyx.OnyxClasses.GridAdapter
@@ -55,13 +56,8 @@ class Category_Page : AppCompatActivity() {
 
     private val movieCache = mutableListOf<MovieItemOne>()
     private val tvCache = mutableListOf<MovieItemOne>()
-
     private val cachePrefs by lazy { getSharedPreferences("CategoryCache", Context.MODE_PRIVATE) }
-    private val tabPrefs by lazy { getSharedPreferences("CategoryTab", Context.MODE_PRIVATE) }
 
-    companion object {
-        private const val TAB_KEY = "C_CAT_T"
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         GlobalUtils.applyTheme(this)
@@ -69,15 +65,11 @@ class Category_Page : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.activity_category_page)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        LoadingAnimation.setup(this, R.raw.b)
-        LoadingAnimation.show(this)
+        //LoadingAnimation.setup(this, R.raw.line_loading)
+        //LoadingAnimation.show(this)
 
-        moviesButton = findViewById(R.id.CategoryMoviesButtonLayout)
-        tvButton = findViewById(R.id.CategoryTvButtonLayout)
-        moviesButtonText = findViewById(R.id.CategoryMoviesButtonText)
-        tvButtonText = findViewById(R.id.CategoryTvButtonText)
         categoryTitle = findViewById(R.id.CategoryTitle)
-        categorySubtitle = findViewById(R.id.CategorySubtitle)
+        categoryTitle.requestFocus()
 
         companyId = intent.getStringExtra("company_id").orEmpty()
         companyName = intent.getStringExtra("company_name") ?: "Collection"
@@ -89,19 +81,9 @@ class Category_Page : AppCompatActivity() {
         }
 
         categoryTitle.text = companyName
-        categorySubtitle.text = getString(R.string.category_subtitle, companyName)
 
         setupRecyclerViews()
 
-        moviesButton.setOnClickListener { showMovies() }
-        tvButton.setOnClickListener { showTv() }
-
-        val savedTab = tabPrefs.getString(TAB_KEY, "mv") ?: "mv"
-        if (savedTab == "tv") {
-            showTv()
-        } else {
-            showMovies()
-        }
 
         shouldFetchMovies = !loadCachedList(getMoviesCacheKey(companyId), movieCache, moviesAdapter)
         shouldFetchTv = !loadCachedList(getTvCacheKey(companyId), tvCache, tvAdapter)
@@ -114,65 +96,37 @@ class Category_Page : AppCompatActivity() {
         val itemWidthDp = 289
 
         moviesRecyclerView = findViewById(R.id.CategoryMoviesRecyclerView)
-        moviesRecyclerView.layoutManager =
-            GridLayoutManager(this@Category_Page, GlobalUtils.calculateSpanCount(this, itemWidthDp))
+        //moviesRecyclerView.layoutManager = GridLayoutManager(this@Category_Page, GlobalUtils.calculateSpanCount(this, itemWidthDp))
+        moviesRecyclerView.layoutManager = LinearLayoutManager(
+            this,
+            LinearLayoutManager.HORIZONTAL,
+            false
+        )
 
         val movieSpacing = (15 * resources.displayMetrics.density).toInt()
-        moviesRecyclerView.addItemDecoration(EqualSpaceItemDecoration(movieSpacing))
+        //moviesRecyclerView.addItemDecoration(EqualSpaceItemDecoration(movieSpacing))
 
         moviesAdapter = GridAdapter(mutableListOf(), R.layout.item_grid2)
         moviesRecyclerView.adapter = moviesAdapter
         moviesAdapter.onAddMoreClicked = { loadMoreMovies() }
 
         tvRecyclerView = findViewById(R.id.CategoryTvRecyclerView)
-        tvRecyclerView.layoutManager =
-            GridLayoutManager(this@Category_Page, GlobalUtils.calculateSpanCount(this, itemWidthDp))
+        //tvRecyclerView.layoutManager = GridLayoutManager(this@Category_Page, GlobalUtils.calculateSpanCount(this, itemWidthDp))
+        tvRecyclerView.layoutManager =  LinearLayoutManager(
+            this,
+            LinearLayoutManager.HORIZONTAL,
+            false
+        )
 
         val tvSpacing = (15 * resources.displayMetrics.density).toInt()
-        tvRecyclerView.addItemDecoration(EqualSpaceItemDecoration(tvSpacing))
+        //tvRecyclerView.addItemDecoration(EqualSpaceItemDecoration(tvSpacing))
 
         tvAdapter = GridAdapter(mutableListOf(), R.layout.item_grid2)
         tvRecyclerView.adapter = tvAdapter
         tvAdapter.onAddMoreClicked = { loadMoreTv() }
     }
 
-    private fun showMovies() {
-        moviesRecyclerView.visibility = View.VISIBLE
-        tvRecyclerView.visibility = View.GONE
 
-        moviesButton.isSelected = true
-        tvButton.isSelected = false
-
-        val fgColor = getThemeColor(R.attr.FG_color)
-        val accentColor = getThemeColor(R.attr.AccentColor)
-
-        moviesButtonText.setTextColor(accentColor )
-        tvButtonText.setTextColor(fgColor)
-
-        tabPrefs.edit().putString(TAB_KEY, "mv").apply()
-    }
-
-    private fun showTv() {
-        moviesRecyclerView.visibility = View.GONE
-        tvRecyclerView.visibility = View.VISIBLE
-
-        moviesButton.isSelected = false
-        tvButton.isSelected = true
-
-        val fgColor = getThemeColor(R.attr.FG_color)
-        val accentColor = getThemeColor(R.attr.AccentColor)
-
-        moviesButtonText.setTextColor(fgColor)
-        tvButtonText.setTextColor(accentColor)
-
-        tabPrefs.edit().putString(TAB_KEY, "tv").apply()
-    }
-
-    private fun getThemeColor(attr: Int): Int {
-        val typedValue = android.util.TypedValue()
-        theme.resolveAttribute(attr, typedValue, true)
-        return typedValue.data
-    }
 
     private fun loadCachedList(
         key: String,
@@ -237,9 +191,7 @@ class Category_Page : AppCompatActivity() {
     }
 
     private fun getMoviesCacheKey(companyId: String) = "Category_Movies_$companyId"
-
     private fun getTvCacheKey(companyId: String) = "Category_TV_$companyId"
-
     private fun fetchMovies() {
         if (isLoadingMovies || companyId.isBlank() || !shouldFetchMovies) return
         if (currentMoviePage > totalMoviePages) return
@@ -312,11 +264,21 @@ class Category_Page : AppCompatActivity() {
                     }
 
                     withContext(Dispatchers.Main) {
+                        val wasEmpty = movieCache.isEmpty()
+
                         if (list.isNotEmpty()) {
                             movieCache.addAll(list)
                             moviesAdapter.addItems(list)
                             saveCache(getMoviesCacheKey(companyId), movieCache)
                         }
+
+                        if (wasEmpty) {
+                            moviesRecyclerView.post {
+                                (moviesRecyclerView.layoutManager as? LinearLayoutManager)
+                                    ?.scrollToPositionWithOffset(0, 0)
+                            }
+                        }
+
                         currentMoviePage++
                         isLoadingMovies = false
                         moviesAdapter.isLoadingMore = false
@@ -330,11 +292,13 @@ class Category_Page : AppCompatActivity() {
                     )
                     delay(4000)
                 }
+
             }
 
             withContext(Dispatchers.Main) {
                 isLoadingMovies = false
                 moviesAdapter.isLoadingMore = false
+                LoadingAnimation.hide(this@Category_Page)
             }
         }
     }
@@ -411,11 +375,21 @@ class Category_Page : AppCompatActivity() {
                     }
 
                     withContext(Dispatchers.Main) {
+                        val wasEmpty = tvCache.isEmpty()
+
                         if (list.isNotEmpty()) {
                             tvCache.addAll(list)
                             tvAdapter.addItems(list)
                             saveCache(getTvCacheKey(companyId), tvCache)
                         }
+
+                        if (wasEmpty) {
+                            tvRecyclerView.post {
+                                (tvRecyclerView.layoutManager as? LinearLayoutManager)
+                                    ?.scrollToPositionWithOffset(0, 0)
+                            }
+                        }
+
                         currentTvPage++
                         isLoadingTv = false
                         tvAdapter.isLoadingMore = false
@@ -435,6 +409,7 @@ class Category_Page : AppCompatActivity() {
             withContext(Dispatchers.Main) {
                 isLoadingTv = false
                 tvAdapter.isLoadingMore = false
+                LoadingAnimation.hide(this@Category_Page)
             }
         }
     }
