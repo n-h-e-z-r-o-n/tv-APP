@@ -486,7 +486,7 @@
                                 android:id="@+id/HomePage"
                                 android:layout_width="match_parent"
                                 android:layout_height="match_parent"
-                                android:visibility="gone"
+                                android:visibility="visible"
                                 android:orientation="vertical">
 
 
@@ -511,6 +511,78 @@
                                     android:clipToPadding="false"
                                     android:scrollbars="none"
                                     tools:ignore="RtlSymmetry" />
+
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginVertical="10dp"
+                                    android:orientation="vertical">
+
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="COLLECTION"
+                                        android:textSize="5sp"
+                                        android:fontFamily="@font/p"
+                                        android:textColor="?attr/FG_color"
+                                        android:alpha="0.4"
+                                        tools:ignore="HardcodedText,SmallSp" />
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="Dark Thrills"
+                                        android:fontFamily="@font/p"
+                                        android:textStyle="bold"
+                                        android:textSize="20sp"
+                                        android:textColor="?attr/FG_color"
+                                        tools:ignore="HardcodedText" />
+
+                                    <androidx.recyclerview.widget.RecyclerView
+                                        android:id="@+id/ThrillsRecyclerView"
+                                        android:layout_height="wrap_content"
+                                        android:layout_width="match_parent"
+                                        android:layout_gravity="bottom"
+                                        android:clipToPadding="false"
+                                        android:scrollbars="none"
+                                        tools:ignore="RtlSymmetry" />
+                                </LinearLayout>
+
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginVertical="10dp"
+                                    android:orientation="vertical">
+
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="GENRES"
+                                        android:textSize="5sp"
+                                        android:fontFamily="@font/p"
+                                        android:textColor="?attr/FG_color"
+                                        android:alpha="0.4"
+                                        tools:ignore="HardcodedText,SmallSp" />
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="Browse by mood"
+                                        android:fontFamily="@font/p"
+                                        android:textStyle="bold"
+                                        android:textSize="20sp"
+                                        android:textColor="?attr/FG_color"
+                                        tools:ignore="HardcodedText" />
+
+                                    <androidx.recyclerview.widget.RecyclerView
+                                        android:id="@+id/genresRecyclerView"
+                                        android:layout_height="wrap_content"
+                                        android:layout_width="match_parent"
+                                        android:layout_gravity="bottom"
+                                        android:clipToPadding="false"
+                                        android:scrollbars="none"
+                                        tools:ignore="RtlSymmetry" />
+                                </LinearLayout>
+
+
 
                             </LinearLayout>
 
@@ -838,7 +910,7 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="match_parent"
                                 android:orientation="vertical"
-                                android:visibility="visible">
+                                android:visibility="gone">
 
 
 
@@ -1127,7 +1199,7 @@
                                             android:textSize="35sp"
                                             android:text="Your favorites list is feeling a little lonely. Discover shows and add them to your favorites!"
                                             android:gravity="center"
-                                            android:fontFamily="@font/i"
+                                            android:fontFamily="@font/p"
                                             android:textColor="?attr/BG_color_up"
                                             android:background="?attr/BG_color_up"
                                             android:shadowColor="?attr/FG_color"

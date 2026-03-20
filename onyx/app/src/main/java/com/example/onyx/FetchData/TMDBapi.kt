@@ -306,6 +306,40 @@ class TMDBapi(private val context: Context) {
         }
     }
 
+    fun fetchDiscoverMovie (param:String = ""): JSONObject? {
+        return runBlocking {
+            async(Dispatchers.IO) {
+                try {
+                   val  Url = "https://api.themoviedb.org/3/discover/movie?$param"
+                    //tvUrl = "https://api.themoviedb.org/3/discover/tv?"
+                    //val Url = "https://api.themoviedb.org/3/$type/$showId/recommendations?language=en-US&page=1"
+                    val connection = URL(Url).openConnection() as HttpURLConnection
+                    connection.requestMethod = "GET"
+                    connection.setRequestProperty("accept", "application/json")
+                    connection.setRequestProperty(
+                        "Authorization",
+                        "Bearer ${BuildConfig.TM_K}"
+                    )
+
+                    val response = connection.inputStream.bufferedReader().use { it.readText() }
+                    val jsonObject = JSONObject(response)
+
+                    jsonObject.optJSONObject("data") ?: jsonObject
+
+                } catch (e: IOException) {
+                    Log.e("fetchAnimeData", "Network error: ${e.message}")
+                    null
+                } catch (e: JSONException) {
+                    Log.e("fetchAnimeData", "JSON error: ${e.message}")
+                    null
+                } catch (e: Exception) {
+                    Log.e("fetchAnimeData", "Unexpected error: ${e.message}")
+                    null
+                }
+            }.await()
+        }
+    }
+
     //Query the details of a TV season.
     fun fetchSeasonInfo(seriesId: String, seasonNo:String): JSONObject? {
         return runBlocking {

@@ -264,7 +264,7 @@
                             android:textStyle="bold"
                             android:textSize="14dp"
                             android:textColor="?attr/FG_color"
-                            android:fontFamily="@font/f"
+                            android:fontFamily="@font/p"
                             android:text="Logout"
                             tools:ignore="HardcodedText,SpUsage" />
                         <ImageView

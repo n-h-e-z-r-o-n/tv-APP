@@ -850,7 +850,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Card Information"
-                            android:fontFamily="@font/g"
+                            android:fontFamily="@font/p"
                             android:textColor="?attr/FG_color"
                             android:textSize="14sp"
                             android:layout_marginBottom="8dp"

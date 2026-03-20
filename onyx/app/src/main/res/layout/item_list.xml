@@ -3,34 +3,37 @@
     xmlns:card_view="http://schemas.android.com/apk/res-auto"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="160dp"
-    android:layout_height="240dp"
+    android:layout_width="100dp"
+    android:layout_height="150dp"
     android:clickable="true"
     android:focusable="true"
     android:gravity="center"
+    android:layout_margin="5dp"
     android:orientation="vertical"
     card_view:cardCornerRadius="12dp"
     card_view:cardElevation="2dp"
-    card_view:cardBackgroundColor="?attr/BG_color_up"
+    card_view:cardBackgroundColor="#40000000"
     android:foreground="@drawable/card_focus"
     android:id="@+id/itemFilter">
 
     <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:background="?attr/transparentEffect">
 
 
         <ImageView
             android:id="@+id/itemImage"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@android:color/transparent"
+            android:background="?attr/transparentEffect"
             android:scaleType="fitXY"
-            />
+            tools:ignore="ContentDescription" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:visibility="gone"
             android:orientation="horizontal">
 
 
@@ -144,6 +147,7 @@
             android:visibility="gone"/>
 
         <TextView
+            android:visibility="gone"
             android:id="@+id/showType"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
