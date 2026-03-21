@@ -512,6 +512,7 @@
                                     android:scrollbars="none"
                                     tools:ignore="RtlSymmetry" />
 
+
                                 <LinearLayout
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
@@ -530,7 +531,43 @@
                                     <TextView
                                         android:layout_width="wrap_content"
                                         android:layout_height="wrap_content"
-                                        android:text="Dark Thrills"
+                                        android:text="Reality Spotlight"
+                                        android:fontFamily="@font/p"
+                                        android:textStyle="bold"
+                                        android:textSize="20sp"
+                                        android:textColor="?attr/FG_color"
+                                        tools:ignore="HardcodedText" />
+
+                                    <androidx.recyclerview.widget.RecyclerView
+                                        android:id="@+id/realityRecyclerView"
+                                        android:layout_height="wrap_content"
+                                        android:layout_width="match_parent"
+                                        android:layout_gravity="bottom"
+                                        android:clipToPadding="false"
+                                        android:scrollbars="none"
+                                        tools:ignore="RtlSymmetry" />
+                                </LinearLayout>
+
+
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginVertical="10dp"
+                                    android:orientation="vertical">
+
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="COLLECTION"
+                                        android:textSize="5sp"
+                                        android:fontFamily="@font/p"
+                                        android:textColor="?attr/FG_color"
+                                        android:alpha="0.4"
+                                        tools:ignore="HardcodedText,SmallSp" />
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="Chills &amp; Thrills"
                                         android:fontFamily="@font/p"
                                         android:textStyle="bold"
                                         android:textSize="20sp"
@@ -550,34 +587,171 @@
                                 <LinearLayout
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
-                                    android:layout_marginVertical="10dp"
+                                    android:layout_marginVertical="25dp"
                                     android:orientation="vertical">
 
-                                    <TextView
-                                        android:layout_width="wrap_content"
+                                    <LinearLayout
+                                        android:layout_width="match_parent"
                                         android:layout_height="wrap_content"
-                                        android:text="GENRES"
-                                        android:textSize="5sp"
-                                        android:fontFamily="@font/p"
-                                        android:textColor="?attr/FG_color"
-                                        android:alpha="0.4"
-                                        tools:ignore="HardcodedText,SmallSp" />
-                                    <TextView
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:text="Browse by mood"
-                                        android:fontFamily="@font/p"
-                                        android:textStyle="bold"
-                                        android:textSize="20sp"
-                                        android:textColor="?attr/FG_color"
-                                        tools:ignore="HardcodedText" />
+                                        android:orientation="horizontal"
+                                        android:gravity="center_vertical">
+
+                                            <LinearLayout
+                                                android:layout_width="wrap_content"
+                                                android:layout_height="wrap_content"
+                                                android:orientation="vertical"
+                                                tools:ignore="TooDeepLayout">
+
+                                                    <TextView
+                                                        android:layout_width="wrap_content"
+                                                        android:layout_height="wrap_content"
+                                                        android:text="GENRES"
+                                                        android:textSize="5sp"
+                                                        android:fontFamily="@font/p"
+                                                        android:textColor="?attr/FG_color"
+                                                        android:alpha="0.4"
+                                                        tools:ignore="HardcodedText,SmallSp" />
+                                                    <TextView
+                                                        android:layout_width="wrap_content"
+                                                        android:layout_height="wrap_content"
+                                                        android:text="Browse by mood"
+                                                        android:fontFamily="@font/p"
+                                                        android:textStyle="bold"
+                                                        android:textSize="20sp"
+                                                        android:textColor="?attr/FG_color"
+                                                        tools:ignore="HardcodedText" />
+
+                                            </LinearLayout>
+                                            <LinearLayout
+                                                android:layout_width="match_parent"
+                                                android:layout_height="wrap_content"
+                                                android:gravity="end"
+                                                android:orientation="horizontal">
+
+                                                <TextView
+                                                    android:id="@+id/genreComedy"
+                                                    android:layout_width="wrap_content"
+                                                    android:layout_height="wrap_content"
+                                                    android:paddingHorizontal="13dp"
+                                                    android:paddingVertical="6dp"
+                                                    android:textSize="11sp"
+                                                    android:fontFamily="@font/p"
+                                                    android:textColor="@color/filter_btn_text_selector"
+                                                    android:background="@drawable/filter_button"
+                                                    android:clickable="true"
+                                                    android:focusable="true"
+                                                    android:text="COMEDY"
+                                                    android:layout_marginHorizontal="5dp"
+                                                    tools:ignore="HardcodedText,TooDeepLayout" />
+
+                                                <TextView
+                                                    android:id="@+id/genreAction"
+                                                    android:layout_width="wrap_content"
+                                                    android:layout_height="wrap_content"
+                                                    android:paddingHorizontal="13dp"
+                                                    android:paddingVertical="6dp"
+                                                    android:textSize="11sp"
+                                                    android:fontFamily="@font/p"
+                                                    android:textColor="@color/filter_btn_text_selector"
+                                                    android:background="@drawable/filter_button"
+                                                    android:clickable="true"
+                                                    android:focusable="true"
+                                                    android:text="ACTION"
+                                                    android:layout_marginHorizontal="5dp"
+                                                    tools:ignore="HardcodedText,TooDeepLayout" />
+
+                                                <TextView
+                                                    android:id="@+id/genreSCIFI"
+                                                    android:layout_width="wrap_content"
+                                                    android:layout_height="wrap_content"
+                                                    android:paddingHorizontal="13dp"
+                                                    android:paddingVertical="6dp"
+                                                    android:textSize="11sp"
+                                                    android:fontFamily="@font/p"
+                                                    android:textColor="@color/filter_btn_text_selector"
+                                                    android:background="@drawable/filter_button"
+                                                    android:clickable="true"
+                                                    android:focusable="true"
+                                                    android:text="SCI-FI"
+                                                    android:layout_marginHorizontal="5dp"
+                                                    tools:ignore="HardcodedText,TooDeepLayout" />
+
+                                                <TextView
+                                                    android:id="@+id/genreAnimation"
+                                                    android:layout_width="wrap_content"
+                                                    android:layout_height="wrap_content"
+                                                    android:paddingHorizontal="13dp"
+                                                    android:paddingVertical="6dp"
+                                                    android:textSize="11sp"
+                                                    android:fontFamily="@font/p"
+                                                    android:textColor="@color/filter_btn_text_selector"
+                                                    android:background="@drawable/filter_button"
+                                                    android:clickable="true"
+                                                    android:focusable="true"
+                                                    android:text="ANIMATION"
+                                                    android:layout_marginHorizontal="5dp"
+                                                    tools:ignore="HardcodedText,TooDeepLayout" />
+
+
+                                                <TextView
+                                                    android:id="@+id/genreFamily"
+                                                    android:layout_width="wrap_content"
+                                                    android:layout_height="wrap_content"
+                                                    android:paddingHorizontal="13dp"
+                                                    android:paddingVertical="6dp"
+                                                    android:textSize="11sp"
+                                                    android:fontFamily="@font/p"
+                                                    android:textColor="@color/filter_btn_text_selector"
+                                                    android:background="@drawable/filter_button"
+                                                    android:clickable="true"
+                                                    android:focusable="true"
+                                                    android:text="FAMILY"
+                                                    android:layout_marginHorizontal="5dp"
+                                                    tools:ignore="HardcodedText,TooDeepLayout" />
+
+
+                                                <TextView
+                                                    android:id="@+id/genreRomance"
+                                                    android:layout_width="wrap_content"
+                                                    android:layout_height="wrap_content"
+                                                    android:paddingHorizontal="13dp"
+                                                    android:paddingVertical="6dp"
+                                                    android:textSize="11sp"
+                                                    android:fontFamily="@font/p"
+                                                    android:textColor="@color/filter_btn_text_selector"
+                                                    android:background="@drawable/filter_button"
+                                                    android:clickable="true"
+                                                    android:focusable="true"
+                                                    android:text="ROMANCE"
+                                                    android:layout_marginHorizontal="5dp"
+                                                    tools:ignore="HardcodedText,TooDeepLayout" />
+
+                                                <TextView
+                                                    android:id="@+id/genreDrama"
+                                                    android:layout_width="wrap_content"
+                                                    android:layout_height="wrap_content"
+                                                    android:paddingHorizontal="13dp"
+                                                    android:paddingVertical="6dp"
+                                                    android:textSize="11sp"
+                                                    android:fontFamily="@font/p"
+                                                    android:textColor="@color/filter_btn_text_selector"
+                                                    android:background="@drawable/filter_button"
+                                                    android:clickable="true"
+                                                    android:focusable="true"
+                                                    android:text="DRAMA"
+                                                    android:layout_marginHorizontal="5dp"
+                                                    tools:ignore="HardcodedText,TooDeepLayout" />
+
+
+                                            </LinearLayout>
+                                    </LinearLayout>
 
                                     <androidx.recyclerview.widget.RecyclerView
                                         android:id="@+id/genresRecyclerView"
                                         android:layout_height="wrap_content"
                                         android:layout_width="match_parent"
-                                        android:layout_gravity="bottom"
                                         android:clipToPadding="false"
+                                        android:gravity="center"
                                         android:scrollbars="none"
                                         tools:ignore="RtlSymmetry" />
                                 </LinearLayout>
@@ -763,7 +937,7 @@
                             <LinearLayout
                                 android:id="@+id/FilterPage"
                                 android:layout_width="match_parent"
-                                android:layout_height="match_parent"
+                                android:layout_height="wrap_content"
                                 android:orientation="vertical"
                                 android:nextFocusLeft="@+id/FilterContainer"
                                 android:visibility="gone">
@@ -784,7 +958,7 @@
                                         android:layout_height="30dp"
                                         android:gravity="center"
                                         android:padding="5dp"
-                                        android:textColor="?attr/FG_color"
+                                        android:textColor="@color/filter_btn_text_selector"
                                         android:fontFamily="serif-monospace"
                                         android:text="Type ¬"
                                         android:textSize="15sp"
@@ -808,7 +982,7 @@
                                         android:text="Country ¬"
                                         android:fontFamily="serif-monospace"
                                         android:textSize="15sp"
-                                        android:textColor="?attr/FG_color"
+                                        android:textColor="@color/filter_btn_text_selector"
                                         android:textStyle="bold"
                                         android:layout_gravity="center"
                                         tools:ignore="HardcodedText"
@@ -829,7 +1003,7 @@
                                         android:text="Sort By ¬"
                                         android:textSize="15sp"
                                         android:fontFamily="serif-monospace"
-                                        android:textColor="?attr/FG_color"
+                                        android:textColor="@color/filter_btn_text_selector"
                                         android:textStyle="bold"
                                         android:layout_gravity="center"
                                         tools:ignore="HardcodedText"
@@ -850,7 +1024,7 @@
                                         android:text="Genres ¬"
                                         android:fontFamily="serif-monospace"
                                         android:textSize="15sp"
-                                        android:textColor="?attr/FG_color"
+                                        android:textColor="@color/filter_btn_text_selector"
                                         android:textStyle="bold"
                                         android:layout_gravity="center"
                                         tools:ignore="HardcodedText"
@@ -872,7 +1046,7 @@
                                         android:textSize="15sp"
                                         android:fontFamily="serif-monospace"
                                         android:textStyle="bold"
-                                        android:textColor="?attr/FG_color"
+                                        android:textColor="@color/filter_btn_text_selector"
                                         android:layout_gravity="center"
                                         tools:ignore="HardcodedText"
                                         android:nextFocusRight="@+id/FilterTypeBtn"
@@ -895,7 +1069,8 @@
                                 <androidx.recyclerview.widget.RecyclerView
                                     android:id="@+id/filterResults"
                                     android:layout_width="match_parent"
-                                    android:layout_height="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:minHeight="6000dp"
                                     android:clipToPadding="false"
                                     android:overScrollMode="never"
                                     android:scrollbars="none"
@@ -908,13 +1083,9 @@
                             <LinearLayout
                                 android:id="@+id/FavePage"
                                 android:layout_width="match_parent"
-                                android:layout_height="match_parent"
+                                android:layout_height="wrap_content"
                                 android:orientation="vertical"
                                 android:visibility="gone">
-
-
-
-
 
                                 <TextView
                                     android:layout_width="wrap_content"
@@ -947,7 +1118,8 @@
                                         <androidx.recyclerview.widget.RecyclerView
                                             android:id="@+id/faveRecycler"
                                             android:layout_height="wrap_content"
-                                            android:layout_width="wrap_content"
+                                            android:layout_width="match_parent"
+                                            android:nestedScrollingEnabled="false"
                                             android:clipToPadding="false"
                                             android:focusable="false"
                                             android:scrollbars="none"

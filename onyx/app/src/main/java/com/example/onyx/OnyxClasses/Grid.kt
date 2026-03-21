@@ -129,7 +129,32 @@ class GridAdapter(
             }
             // Handle the Add More button
             holder.itemView.setOnClickListener {
-                onAddMoreClicked?.invoke()
+                if (!isLoadingMore) {
+
+                    val recycler = holder.itemView.parent as RecyclerView
+                    val prevPosition = position - 1  // use 'position' from onBindViewHolder
+
+                    if (prevPosition >= 0) {
+                        recycler.post {
+                            recycler.findViewHolderForAdapterPosition(prevPosition)
+                                ?.itemView
+                                ?.requestFocus()
+                        }
+                    }
+
+                    isLoadingMore = true
+                    onAddMoreClicked?.invoke()
+                }
+                //onAddMoreClicked?.invoke()
+            }
+
+            holder.itemView.setOnFocusChangeListener { v, hasFocus ->
+                if (hasFocus) {
+                    // Trigger the "Add More" action automatically when it gains focus
+                    if (!isLoadingMore) {
+                        holder.itemView.performClick()
+                    }
+                }
             }
             return
         }
@@ -174,7 +199,7 @@ class GridAdapter(
 
         holder.itemView.setOnFocusChangeListener { v, hasFocus ->
             if (hasFocus) {
-                onItemFocused?.invoke(v, currentItem)
+                onItemFocused?.invoke(v, currentItem) //show popup
             }
             else {
                 onItemFocusLost?.invoke()   // hide popup
@@ -308,8 +333,34 @@ class FilterAdapter(
             }
             // Handle the Add More button
             holder.itemView.setOnClickListener {
-                onAddMoreClicked?.invoke()
+
+                if (!isLoadingMore) {
+
+                    val recycler = holder.itemView.parent as RecyclerView
+                    val prevPosition = position - 1  // use 'position' from onBindViewHolder
+
+                    if (prevPosition >= 0) {
+                        recycler.post {
+                            recycler.findViewHolderForAdapterPosition(prevPosition)
+                                ?.itemView
+                                ?.requestFocus()
+                        }
+                    }
+
+                    isLoadingMore = true
+                    onAddMoreClicked?.invoke()
+                }
             }
+
+            holder.itemView.setOnFocusChangeListener { v, hasFocus ->
+                if (hasFocus) {
+                    // Trigger the "Add More" action automatically when it gains focus
+                    if (!isLoadingMore) {
+                        holder.itemView.performClick()
+                    }
+                }
+            }
+
             return
         }
 
@@ -360,7 +411,7 @@ class FilterAdapter(
 
             when (keyCode) {
                 KeyEvent.KEYCODE_DPAD_LEFT -> {
-                    if (position == 0) return@setOnKeyListener true
+                    //if (position == 0) return@setOnKeyListener true
                 }
                 KeyEvent.KEYCODE_DPAD_RIGHT -> {
                     if (position == items.size) return@setOnKeyListener true

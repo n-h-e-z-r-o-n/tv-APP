@@ -98,7 +98,14 @@ class Shows_Page : AppCompatActivity() {
     private lateinit var tvAdapter: GridAdapter
     private lateinit var searchAdapter: GridAdapter2
     private lateinit var filterAdapter: FilterAdapter
+
+
     private lateinit var thrillAdapter: FilterAdapter
+
+    private lateinit var realityAdapter: FilterAdapter
+    private lateinit var genreAdapter: FilterAdapter
+
+
 
 
 
@@ -107,7 +114,12 @@ class Shows_Page : AppCompatActivity() {
     private lateinit var movieRecyclerView : RecyclerView
     private lateinit var searchRecyclerView : RecyclerView
     private lateinit var fliterRecyclerView : RecyclerView
+
+
+    private lateinit var  realityRecyclerView : RecyclerView
     private lateinit var  thrillRecyclerView : RecyclerView
+    private lateinit var  genreRecyclerView : RecyclerView
+
 
 
     private lateinit var faveRecyclerView: RecyclerView
@@ -218,6 +230,7 @@ class Shows_Page : AppCompatActivity() {
             cWatchBtn.isSelected = false
             cNotificationBtn.isSelected = false
         }
+
         MoviesBtn.setOnFocusChangeListener { v, hasFocus ->
             Log.e("AUTO CLICK", "MoviesBtn : " + hasFocus)
             if (hasFocus) {
@@ -227,6 +240,10 @@ class Shows_Page : AppCompatActivity() {
                 }
             }
         }
+
+
+
+
 
 
 
@@ -384,7 +401,9 @@ class Shows_Page : AppCompatActivity() {
         lifecycleScope.launch {
             HomeData()
             categoryShow()
-            dark()
+            loadFilterContent(realityAdapter, "&with_genres=10764", false)
+            loadFilterContent(thrillAdapter, "&with_genres=27", true)
+            genreFilter()
 
             fetchMovies()
             fetchTvShows()
@@ -576,6 +595,26 @@ class Shows_Page : AppCompatActivity() {
 
         //------------------------------------------------------------------------------------------
 
+
+        realityAdapter = FilterAdapter(mutableListOf(), R.layout.item_list)
+        realityAdapter.onItemFocused = { view, item ->
+            //showPopupBeside(view, item.posterUlr, 240)
+        }
+        realityAdapter.onItemFocusLost = {
+            hidePopup()
+        }
+        realityRecyclerView = findViewById<RecyclerView>(R.id.realityRecyclerView)
+        //thrillRecyclerView.layoutManager = GridLayoutManager(this@Shows_Page, GlobalUtils.calculateSpanCountV2(this, 160, gapUsed))
+        realityRecyclerView.layoutManager = LinearLayoutManager(
+            this@Shows_Page,
+            LinearLayoutManager.HORIZONTAL,
+            false
+        )
+        realityRecyclerView.adapter = realityAdapter
+
+        //------------------------------------------------------------------------------------------
+
+
         thrillAdapter = FilterAdapter(mutableListOf(), R.layout.item_list)
         thrillAdapter.onItemFocused = { view, item ->
             //showPopupBeside(view, item.posterUlr, 240)
@@ -591,6 +630,24 @@ class Shows_Page : AppCompatActivity() {
             false
         )
         thrillRecyclerView.adapter = thrillAdapter
+
+        //------------------------------------------------------------------------------------------
+
+        genreAdapter = FilterAdapter(mutableListOf(), R.layout.item_list)
+        genreAdapter.onItemFocused = { view, item ->
+            //showPopupBeside(view, item.posterUlr, 240)
+        }
+        genreAdapter.onItemFocusLost = {
+            hidePopup()
+        }
+        genreRecyclerView = findViewById<RecyclerView>(R.id.genresRecyclerView)
+        //thrillRecyclerView.layoutManager = GridLayoutManager(this@Shows_Page, GlobalUtils.calculateSpanCountV2(this, 160, gapUsed))
+        genreRecyclerView.layoutManager = LinearLayoutManager(
+            this@Shows_Page,
+            LinearLayoutManager.HORIZONTAL,
+            false
+        )
+        genreRecyclerView.adapter = genreAdapter
         //------------------------------------------------------------------------------------------
 
         faveRecyclerView = findViewById(R.id.faveRecycler)
@@ -897,76 +954,419 @@ class Shows_Page : AppCompatActivity() {
     }
 
 
-    private fun dark(){
-        lifecycleScope.launch {
-        //ovieUrl = "https://api.themoviedb.org/3/discover/movie?"
-        //tvUrl = "https://api.themoviedb.org/3/discover/tv?"
-            val jsonObject = withContext(Dispatchers.IO) { fetchTMDB.fetchDiscoverMovie ("&with_genres=27") }
-            if (jsonObject == null) return@launch
-            val mvData = jsonObject.getJSONArray("results")
-
-            for (i in 0 until mvData.length()) {
 
 
-                val current = mvData.getJSONObject(i)
+    private fun loadFilterContent(
+        adapter: FilterAdapter,
+        query: String,
+        isMovie: Boolean
+    ){
+        var page  = 1
+        var isLoading  = false
 
-                val backdrop_path = current.optString("backdrop_path", "")
-                val poster_path = current.optString("poster_path", "")
+        fun fetchContent() {
+            isLoading  = true
+            lifecycleScope.launch {
 
-
-
-                val vote_average = current.optString("vote_average", "")
-                val title = current.optString("title", "")
-                //val overview = current.optString("overview", "")
-                val id = current.optString("id", "")
-                val original_title = current.optString("original_title", "")
-                //val original_name = current.optString("original_name", "")
-
-                val type: String
-                var date: String
-                var showD: String = ""
-
-                val imgPost =  "https://image.tmdb.org/t/p/original$poster_path"
-                val imgback  = "https://image.tmdb.org/t/p/original$backdrop_path"
-
-                if (original_title == "") {
-                    type = "tv";
-                    date = if (current.getString("first_air_date").length >= 4) {
-                        current.getString("first_air_date").substring(0, 4)
-                    } else{
-                        current.getString("first_air_date")}
-                } else {
-                    type = "movie"
-                    date = if (current.getString("release_date").length >= 4) {
-                        current.getString("release_date").substring(0, 4)
-                    } else{
-                        current.getString("release_date")}
+                val jsonObject =
+                    withContext(Dispatchers.IO) {
+                        if (isMovie) {
+                            fetchTMDB.fetchDiscoverMovie("$query&page=$page")
+                        } else {
+                            fetchTMDB.fetchDiscoverTv("$query&page=$page")
+                        }
+                    }
+                if (jsonObject == null){
+                    isLoading  = false
+                    return@launch
                 }
 
-                val Item = filterItemOne(
-                    title = title,
-                    backdropUrl = imgPost,
-                    posterUlr = imgback,
-                    imdbCode = id,
-                    type = type,
-                    year = date,
-                    rating = vote_average,
-                    runtime = showD
-                )
 
-                withContext(Dispatchers.Main) {
-                    thrillAdapter.addItem(Item)
-                    //isLoadingFliter = false
-                    thrillAdapter.isLoadingMore = false
+                val mvData = jsonObject.getJSONArray("results")
 
+                for (i in 0 until mvData.length()) {
+
+
+                    val current = mvData.getJSONObject(i)
+
+                    val backdrop_path = current.optString("backdrop_path", "")
+                    val poster_path = current.optString("poster_path", "")
+
+
+                    val vote_average = current.optString("vote_average", "")
+                    val title = current.optString("title", "")
+                    //val overview = current.optString("overview", "")
+                    val id = current.optString("id", "")
+                    val original_title = current.optString("original_title", "")
+                    //val original_name = current.optString("original_name", "")
+
+                    val type: String
+                    var date: String
+                    var showD: String = ""
+
+                    val imgPost = "https://image.tmdb.org/t/p/original$poster_path"
+                    val imgback = "https://image.tmdb.org/t/p/original$backdrop_path"
+
+                    if (original_title == "") {
+                        type = "tv";
+                        date = if (current.getString("first_air_date").length >= 4) {
+                            current.getString("first_air_date").substring(0, 4)
+                        } else {
+                            current.getString("first_air_date")
+                        }
+                    } else {
+                        type = "movie"
+                        date = if (current.getString("release_date").length >= 4) {
+                            current.getString("release_date").substring(0, 4)
+                        } else {
+                            current.getString("release_date")
+                        }
+                    }
+
+                    val Item = filterItemOne(
+                        title = title,
+                        backdropUrl = imgPost,
+                        posterUlr = imgback,
+                        imdbCode = id,
+                        type = type,
+                        year = date,
+                        rating = vote_average,
+                        runtime = showD
+                    )
+
+                    withContext(Dispatchers.Main) {
+                        adapter.addItem(Item)
+                        isLoading  = false
+                        adapter.isLoadingMore = false
+
+                    }
                 }
             }
-
-
-
-
         }
 
+        fun loadMore() {
+            if (isLoading) return // Prevent multiple rapid clicks
+            page++
+            fetchContent()
+        }
+
+        adapter.onAddMoreClicked = { loadMore() }
+
+        loadMore()
+    }
+
+
+    private fun genreFilter(){
+        var isloadingGenre = false
+        var genrePage = 1
+        var genresMv = ""
+        var genresTv = ""
+
+        fun fetchGenre(first: Boolean = true){
+
+                    if(isloadingGenre) return
+                    isloadingGenre = true
+
+                    var newAdd = true
+
+                    lifecycleScope.launch {
+
+
+                        val jsonObjectMv = withContext(Dispatchers.IO) { fetchTMDB.fetchDiscoverMovie ("$genresMv&page=$genrePage") }
+                        val jsonObjectTV = withContext(Dispatchers.IO) { fetchTMDB.fetchDiscoverTv("$genresTv&page=$genrePage")  }
+
+                        if (jsonObjectMv != null){
+                            val mvData = jsonObjectMv.getJSONArray("results")
+
+
+                            for (i in 0 until mvData.length()) {
+
+
+                                val current = mvData.getJSONObject(i)
+
+                                val backdrop_path = current.optString("backdrop_path", "")
+                                val poster_path = current.optString("poster_path", "")
+
+
+
+                                val vote_average = current.optString("vote_average", "")
+                                val title = current.optString("title", "")
+                                //val overview = current.optString("overview", "")
+                                val id = current.optString("id", "")
+                                val original_title = current.optString("original_title", "")
+                                //val original_name = current.optString("original_name", "")
+
+                                val type: String
+                                var date: String
+                                var showD: String = ""
+
+                                val imgPost =  "https://image.tmdb.org/t/p/original$poster_path"
+                                val imgback  = "https://image.tmdb.org/t/p/original$backdrop_path"
+
+                                if (original_title == "") {
+                                    type = "tv";
+                                    date = if (current.getString("first_air_date").length >= 4) {
+                                        current.getString("first_air_date").substring(0, 4)
+                                    } else{
+                                        current.getString("first_air_date")}
+                                } else {
+                                    type = "movie"
+                                    date = if (current.getString("release_date").length >= 4) {
+                                        current.getString("release_date").substring(0, 4)
+                                    } else{
+                                        current.getString("release_date")}
+                                }
+
+                                val Item = filterItemOne(
+                                    title = title,
+                                    backdropUrl = imgPost,
+                                    posterUlr = imgback,
+                                    imdbCode = id,
+                                    type = type,
+                                    year = date,
+                                    rating = vote_average,
+                                    runtime = showD
+                                )
+
+                                withContext(Dispatchers.Main) {
+                                    genreAdapter.addItem(Item)
+                                    //isLoadingFliter = false
+                                    genreAdapter.isLoadingMore = false
+
+                                    if(newAdd && first){
+                                        newAdd = false
+                                        genreRecyclerView.post {
+                                            val vh = genreRecyclerView.findViewHolderForAdapterPosition(0)
+                                            vh?.itemView?.requestFocus()
+                                        }
+                                    }
+
+                                }
+                            }
+                        }
+
+                        if (jsonObjectTV != null){
+                            val tvData = jsonObjectTV.getJSONArray("results")
+
+                            for (i in 0 until tvData.length()) {
+
+                                val current = tvData.getJSONObject(i)
+
+                                val backdrop_path = current.optString("backdrop_path", "")
+                                val poster_path = current.optString("poster_path", "")
+
+
+
+                                val vote_average = current.optString("vote_average", "")
+                                val title = current.optString("title", "")
+                                //val overview = current.optString("overview", "")
+                                val id = current.optString("id", "")
+                                val original_title = current.optString("original_title", "")
+                                //val original_name = current.optString("original_name", "")
+
+                                val type: String
+                                var date: String
+                                var showD: String = ""
+
+                                val imgPost =  "https://image.tmdb.org/t/p/original$poster_path"
+                                val imgback  = "https://image.tmdb.org/t/p/original$backdrop_path"
+
+                                if (original_title == "") {
+                                    type = "tv";
+                                    date = if (current.getString("first_air_date").length >= 4) {
+                                        current.getString("first_air_date").substring(0, 4)
+                                    } else{
+                                        current.getString("first_air_date")}
+                                } else {
+                                    type = "movie"
+                                    date = if (current.getString("release_date").length >= 4) {
+                                        current.getString("release_date").substring(0, 4)
+                                    } else{
+                                        current.getString("release_date")}
+                                }
+
+                                val Item = filterItemOne(
+                                    title = title,
+                                    backdropUrl = imgPost,
+                                    posterUlr = imgback,
+                                    imdbCode = id,
+                                    type = type,
+                                    year = date,
+                                    rating = vote_average,
+                                    runtime = showD
+                                )
+
+                                withContext(Dispatchers.Main) {
+                                    genreAdapter.addItem(Item)
+                                    //isLoadingFliter = false
+                                    genreAdapter.isLoadingMore = false
+
+                                    if(newAdd && first){
+                                        newAdd = false
+                                        genreRecyclerView.post {
+                                            val vh = genreRecyclerView.findViewHolderForAdapterPosition(0)
+                                            vh?.itemView?.requestFocus()
+                                        }
+                                    }
+
+                                }
+                            }
+                        }
+
+                        isloadingGenre = false
+                    }
+        }
+
+        fun loadMoreGenre() {
+            if (isloadingGenre) return // Prevent multiple rapid clicks
+            genrePage++
+            fetchGenre()
+        }
+        genreAdapter.onAddMoreClicked = { loadMoreGenre() }
+
+
+
+
+
+        val comedyBtn = findViewById<TextView>(R.id.genreComedy)
+        val actionBtn = findViewById<TextView>(R.id.genreAction)
+        val sciFiBtn = findViewById<TextView>(R.id.genreSCIFI)
+        val animationBtn = findViewById<TextView>(R.id.genreAnimation)
+        val familyBtn = findViewById<TextView>(R.id.genreFamily)
+        val romanceBtn = findViewById<TextView>(R.id.genreRomance)
+        val dramaBtn = findViewById<TextView>(R.id.genreDrama)
+
+
+        comedyBtn.setOnClickListener {
+            if(isloadingGenre) return@setOnClickListener
+
+            comedyBtn.isSelected  = true
+            actionBtn.isSelected  = false
+            sciFiBtn.isSelected  = false
+            animationBtn.isSelected  = false
+            familyBtn.isSelected  = false
+            romanceBtn.isSelected  = false
+            dramaBtn.isSelected  = false
+
+            genreAdapter.clearItems()
+            genresMv = "&with_genres=35"
+            genresTv = "&with_genres=35"
+            fetchGenre(false)
+        }
+        comedyBtn.performClick()
+
+        actionBtn.setOnClickListener {
+            if(isloadingGenre) return@setOnClickListener
+
+            comedyBtn.isSelected  = false
+            actionBtn.isSelected  = true
+            sciFiBtn.isSelected  = false
+            animationBtn.isSelected  = false
+            familyBtn.isSelected  = false
+            romanceBtn.isSelected  = false
+            dramaBtn.isSelected  = false
+
+            genreAdapter.clearItems()
+
+            genresMv = "&with_genres=28"
+            genresTv = "&with_genres=10759"
+
+            fetchGenre()
+        }
+
+        sciFiBtn.setOnClickListener {
+            if(isloadingGenre) return@setOnClickListener
+
+            comedyBtn.isSelected  = false
+            actionBtn.isSelected  = false
+            sciFiBtn.isSelected  = true
+            animationBtn.isSelected  = false
+            familyBtn.isSelected  = false
+            romanceBtn.isSelected  = false
+            dramaBtn.isSelected  = false
+
+            genreAdapter.clearItems()
+
+            genresMv = "&with_genres=878"
+            genresTv = "&with_genres=10765"
+
+            fetchGenre()
+        }
+
+        animationBtn.setOnClickListener {
+            if(isloadingGenre) return@setOnClickListener
+            comedyBtn.isSelected  = false
+            actionBtn.isSelected  = false
+            sciFiBtn.isSelected  = false
+            animationBtn.isSelected  = true
+            familyBtn.isSelected  = false
+            romanceBtn.isSelected  = false
+            dramaBtn.isSelected  = false
+
+            genreAdapter.clearItems()
+
+            genresMv = "&with_genres=12"
+            genresTv = "&with_genres=16"
+
+            fetchGenre()
+        }
+
+        familyBtn.setOnClickListener {
+            if(isloadingGenre) return@setOnClickListener
+
+            comedyBtn.isSelected  = false
+            actionBtn.isSelected  = false
+            sciFiBtn.isSelected  = false
+            animationBtn.isSelected  = false
+            familyBtn.isSelected  = true
+            romanceBtn.isSelected  = false
+            dramaBtn.isSelected  = false
+
+            genreAdapter.clearItems()
+
+            genresMv = "&with_genres=10751"
+            genresTv = "&with_genres=10751"
+
+            fetchGenre( )
+        }
+
+        romanceBtn.setOnClickListener {
+            if(isloadingGenre) return@setOnClickListener
+
+            comedyBtn.isSelected  = false
+            actionBtn.isSelected  = false
+            sciFiBtn.isSelected  = false
+            animationBtn.isSelected  = false
+            familyBtn.isSelected  = false
+            romanceBtn.isSelected  = true
+            dramaBtn.isSelected  = false
+
+            genreAdapter.clearItems()
+
+            genresMv = "&with_genres=10749"
+            genresTv = "&with_genres=10766"
+
+            fetchGenre( )
+        }
+
+        dramaBtn.setOnClickListener {
+            if(isloadingGenre) return@setOnClickListener
+
+            comedyBtn.isSelected  = false
+            actionBtn.isSelected  = false
+            sciFiBtn.isSelected  = false
+            animationBtn.isSelected  = false
+            familyBtn.isSelected  = false
+            romanceBtn.isSelected  = false
+            dramaBtn.isSelected  = true
+
+            genreAdapter.clearItems()
+
+            genresMv = "&with_genres=18"
+            genresTv = "&with_genres=18"
+
+            fetchGenre()
+        }
 
     }
 
