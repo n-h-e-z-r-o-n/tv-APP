@@ -10,11 +10,17 @@
 
 
     <ImageView
+        android:id="@+id/backgroundImgContainer"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:scaleType="centerCrop"
         android:src="?attr/themeImage"
         tools:ignore="ContentDescription" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="?attr/transparentEffect"/>
 
     <!-- Floating popup -->
     <androidx.cardview.widget.CardView

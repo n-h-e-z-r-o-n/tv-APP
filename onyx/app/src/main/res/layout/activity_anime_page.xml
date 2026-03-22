@@ -17,6 +17,12 @@
         android:src="?attr/themeImage"
         tools:ignore="ContentDescription" />
 
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="?attr/transparentEffect"/>
+
+
     <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -33,10 +39,7 @@
             android:layout_height="match_parent"
             android:background="?attr/transparentEffect"/>
 
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="?attr/transparentEffect"/>
+
 
         <LinearLayout
              android:layout_width="match_parent"

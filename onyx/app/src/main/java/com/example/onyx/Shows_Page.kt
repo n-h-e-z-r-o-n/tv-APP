@@ -396,6 +396,15 @@ class Shows_Page : AppCompatActivity() {
         setupRecyclerViews()
 
 
+        /*
+        val loadingImageView = findViewById<ImageView>(R.id.backgroundImgContainer)
+
+        Glide.with(this)
+            .asGif()
+            .load( R.raw.blur_vid)
+            .into(loadingImageView)
+
+         */
 
 
         lifecycleScope.launch {

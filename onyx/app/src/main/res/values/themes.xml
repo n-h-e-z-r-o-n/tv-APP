@@ -12,7 +12,7 @@
         <item name="notBudge">#290e05</item>
 
         <!-- Theme image -->
-        <item name="themeImage">@raw/background_1</item>
+        <item name="themeImage">@raw/background_4</item>
     </style>
 
     <style name="Theme.Onyx.Brown" parent="Theme.AppCompat.Light.NoActionBar">
@@ -23,7 +23,7 @@
         <item name="transparentEffect">#801d0f08</item>
         <item name="notBudge">#707000</item>
 
-        <item name="themeImage">@raw/background_1</item>
+        <item name="themeImage">@raw/gradient_img</item>
     </style>
 
     <!-- Dark Theme  -->
@@ -36,7 +36,7 @@
         <item name="notBudge">#FF0266</item>
 
         <!-- Theme image -->
-        <item name="themeImage">@raw/background_2</item>
+        <item name="themeImage">@raw/gradient_img</item>
     </style>
 
 
@@ -51,7 +51,7 @@
         <item name="notBudge">#3D5AFE</item>
 
         <!-- Theme image -->
-        <item name="themeImage">@raw/background_2</item>
+        <item name="themeImage">@raw/gradient_img</item>
     </style>
 
     <!-- Ghost Theme -->
@@ -64,7 +64,7 @@
         <item name="notBudge">#4b5b4d</item>
 
         <!-- Theme image -->
-        <item name="themeImage">@raw/background_ghost</item>
+        <item name="themeImage">@raw/gradient_img</item>
 
     </style>
 
@@ -78,7 +78,7 @@
         <item name="notBudge">#6a1c14</item>
 
         <!-- Theme image -->
-        <item name="themeImage">@raw/background_2</item>
+        <item name="themeImage">@raw/gradient_img</item>
     </style>
 
     <!-- Custom Red Theme -->
@@ -91,7 +91,7 @@
         <item name="notBudge">#66ff33</item>
 
         <!-- Theme image -->
-        <item name="themeImage">@raw/background_2</item>
+        <item name="themeImage">@raw/gradient_img</item>
     </style>
 
 
@@ -104,7 +104,7 @@
         <item name="notBudge">#3D5AFE</item>
 
         <!-- Theme image -->
-        <item name="themeImage">@raw/background_2</item>
+        <item name="themeImage">@raw/gradient_img</item>
     </style>
 
 
