@@ -12,14 +12,14 @@
     android:orientation="vertical"
     card_view:cardCornerRadius="12dp"
     card_view:cardElevation="2dp"
-    card_view:cardBackgroundColor="#40000000"
+    card_view:cardBackgroundColor="#90000000"
     android:foreground="@drawable/card_focus"
     android:id="@+id/itemFilter">
 
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="?attr/transparentEffect">
+        android:background="#90000000">
 
 
         <ImageView

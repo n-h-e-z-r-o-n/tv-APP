@@ -1090,6 +1090,7 @@ object GlobalUtils {
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"
             settings.allowFileAccess = false
             settings.allowContentAccess = false
+            settings.loadsImagesAutomatically = false
             webChromeClient = WebChromeClient()
             webViewClient = object : WebViewClient() {
                 override fun shouldInterceptRequest(
@@ -1150,14 +1151,14 @@ object GlobalUtils {
     }
 
 
-    fun closeWebView(webView: WebView) {
+    fun StopTrailer(webView: WebView) {
 
         webView.apply {
-
+            onPause() // pause video/audio
             // stop video playback
             loadUrl("about:blank")
             stopLoading()
-
+            onPause() // pause video/audio
             // clear temporary data
             clearHistory()
             clearFormData()

@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import android.util.TypedValue
 import android.view.View
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
@@ -123,9 +124,17 @@ class Anime_Page : AppCompatActivity() {
 
          userId = sm.getUserId()
 
+        ////////////////////////////////////////////////////////////////////////////////////////////
+         val loadingImageView = findViewById<ImageView>(R.id.backgroundImgContainer)
 
+         val typedValue = TypedValue()
+         theme.resolveAttribute(R.attr.themeImage, typedValue, true)
 
-         ////////////////////////////////////////////////////////////////////////////////////////
+         Glide.with(this)
+             .asGif()
+             .load( typedValue.resourceId)
+             .into(loadingImageView)
+         ///////////////////////////////////////////////////////////////////////////////////////////
 
          val navBar = findViewById<LinearLayout>(R.id.NavBar)
          val homeAnimeBtn = findViewById<LinearLayout>(R.id.HomeAnimeBtn)

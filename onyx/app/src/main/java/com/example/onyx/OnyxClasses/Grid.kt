@@ -890,6 +890,7 @@ class CastAdapter(
 
         Glide.with(holder.itemView.context)
             .load(imageUrl)
+            .override(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL)
             .centerInside()
             .into(holder.Movie_image)
 
@@ -1374,9 +1375,12 @@ class EpisodesAdapter(
 
         var cWatchSeek_bar: SeekBar = view.findViewById(R.id.cWatchSeek_bar)
 
+        val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
         var job: Job? = null  // Track the coroutine for this ViewHolder
 
         var lastClickTime = 0L
+
+
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): EpisodeViewHolder {
@@ -1391,7 +1395,7 @@ class EpisodesAdapter(
         val ep = episodes[position]
 
         holder.job?.cancel()  // cancel previous coroutine if any
-        holder.job = adapterScope.launch {
+        holder.job = holder.scope.launch {
             val itemId = "${ep.seriesId}_S${ep.seasonNumber}_E${ep.episodesNumber}"
             //val lastPos = db.getResumePosition(userId, itemId, "tv").toLong()
             //val durationPos = db.getDurationPosition(userId, itemId, "tv").toLong()
@@ -1405,16 +1409,27 @@ class EpisodesAdapter(
             }
             */
 
+            /*
+
             // Run both DB queries concurrently
             val lastPosDeferred = async(Dispatchers.IO) { db.getResumePosition(userId, itemId, "tv").toLong() }
             val durationPosDeferred = async(Dispatchers.IO) { db.getDurationPosition(userId, itemId, "tv").toLong() }
 
+
             // Await both results
             val lastPos = lastPosDeferred.await()
             val durationPos = durationPosDeferred.await()
+             */
+
+            val (lastPos, durationPos) = withContext(Dispatchers.IO) {
+                val last = db.getResumePosition(userId, itemId, "tv").toLong()
+                val duration = db.getDurationPosition(userId, itemId, "tv").toLong()
+                last to duration
+            }
 
             val safeDuration = if (durationPos == 0L) 1L else durationPos
             val progress = ((lastPos.toDouble() / safeDuration.toDouble()) * 1000).toInt()
+            holder.cWatchSeek_bar.max = 1000
             holder.cWatchSeek_bar.progress = progress.coerceIn(0, 1000)
         }
 
@@ -1428,7 +1443,7 @@ class EpisodesAdapter(
         GlobalUtils.enableFullViewOnDescendantFocus(ep.parentView, holder.itemView)
 
 
-        val url = "https://image.tmdb.org/t/p/original${ep.episodesImage}"
+        val url = "https://image.tmdb.org/t/p/w1280${ep.episodesImage}"
         Glide.with(holder.itemView.context)
             .load(url)
             .override(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL)
@@ -1483,20 +1498,20 @@ class EpisodesAdapter(
 
             false
         }
-
-
     }
-
-
 
     override fun getItemCount(): Int = episodes.size
 
-
-
     fun updateData(newList: List<EpisodeItem>) {
+
+
         episodes.clear()
         episodes.addAll(newList)
         notifyDataSetChanged()
+    }
+
+    fun clear() {
+        adapterScope.cancel()
     }
 }
 

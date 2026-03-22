@@ -996,7 +996,7 @@
                 android:layout_height="match_parent"
                 android:adjustViewBounds="true"
                 android:scaleType="centerCrop"
-                android:src="@raw/movies_grid"
+                android:src="@raw/blur_vid_b"
                 android:layout_gravity="end"
                 tools:ignore="ContentDescription"
                 tools:targetApi="23" />

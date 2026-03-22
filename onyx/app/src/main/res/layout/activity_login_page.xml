@@ -9,6 +9,7 @@
     tools:context=".Login_Page">
 
     <ImageView
+        android:id="@+id/backgroundImgContainer"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:src="?attr/themeImage"

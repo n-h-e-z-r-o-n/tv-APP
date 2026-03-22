@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.util.TypedValue
 import android.view.View
 import android.widget.EditText
 import android.widget.FrameLayout
@@ -17,6 +18,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.example.onyx.Database.AppDatabase
 import com.example.onyx.Database.SessionManger
 import com.example.onyx.OnyxClasses.AvatarAdapter
@@ -59,7 +61,17 @@ class Login_Page : AppCompatActivity() {
         GlobalUtils.applyTheme(this)
         setContentView(R.layout.activity_login_page)
 
+        ////////////////////////////////////////////////////////////////////////////////////////////
+        val loadingImageView = findViewById<ImageView>(R.id.backgroundImgContainer)
 
+        val typedValue = TypedValue()
+        theme.resolveAttribute(R.attr.themeImage, typedValue, true)
+
+        Glide.with(this)
+            .asGif()
+            .load( typedValue.resourceId)
+            .into(loadingImageView)
+        ///////////////////////////////////////////////////////////////////////////////////////////
 
         settingUi = findViewById(R.id.settingUi)
         settingButton = findViewById(R.id.settingButton)
@@ -110,6 +122,9 @@ class Login_Page : AppCompatActivity() {
         InitializeWindgets()         // Setup
         loadProfiles()         // Load existing profiles
         setupBackPressedCallback()
+
+
+
 
 
     }

@@ -14,6 +14,7 @@ import com.bumptech.glide.Glide
 import com.example.onyx.R
 import com.example.onyx.Watch_Anime_Page
 import com.example.onyx.Watch_Page
+import com.bumptech.glide.request.target.Target
 
 
 
@@ -161,6 +162,8 @@ class AnimeAiringAdapter(
 
         Glide.with(holder.itemView.context)
             .load(imageUrl)
+            .override(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL)
+
             .centerInside()
             .into(holder.Movie_image)
 
@@ -395,6 +398,7 @@ class AnimeGridAdapter(
 
                 Glide.with(holder.itemView.context)
                     .load(imageUrl)
+                    .override(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL)
                     .centerInside()
                     .into(holder.Movie_image)
 

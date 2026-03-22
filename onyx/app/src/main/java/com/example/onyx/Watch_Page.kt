@@ -62,6 +62,7 @@ import com.example.onyx.OnyxObjects.StreamingLinks.extractStreamFromServer
 import com.example.onyx.OnyxObjects.StreamingLinks.getServerUrls
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelChildren
+import com.bumptech.glide.request.target.Target
 
 class Watch_Page : AppCompatActivity() {
 
@@ -312,6 +313,7 @@ class Watch_Page : AppCompatActivity() {
 
             Glide.with(this@Watch_Page)
                 .load(backdropUrl)
+                .override(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL)
                 .centerInside()
                 .into(backdrop_Widget)
 
@@ -394,7 +396,7 @@ class Watch_Page : AppCompatActivity() {
                         GlobalUtils.playTrailer( this@Watch_Page,showId,showType,webView, muted = 0 )
                         trailerOn = true
                     } else {
-                        GlobalUtils.closeWebView(webView)
+                        GlobalUtils.StopTrailer(webView)
                         findViewById<TextView>(R.id.trailer_text).text = "Play Trailer"
                         trailerOn = false
                     }
@@ -427,6 +429,22 @@ class Watch_Page : AppCompatActivity() {
             Watch_Recomendation_Data(showId.toString(), showType.toString())
 
     }
+
+    override fun onDestroy() {
+        // Cancel any running coroutines
+        lifecycleScope.coroutineContext.cancelChildren()
+
+        Handler(Looper.getMainLooper()).removeCallbacksAndMessages(null)
+
+        episodesAdapter.clear()
+
+        // Finish activity
+        finish()
+
+        super.onDestroy()
+    }
+
+
 
 
 

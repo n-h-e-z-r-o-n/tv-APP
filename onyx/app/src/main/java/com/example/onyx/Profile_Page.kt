@@ -85,6 +85,18 @@ class Profile_Page : AppCompatActivity() {
 
         NavAction.setupSidebar(this)
 
+
+        ////////////////////////////////////////////////////////////////////////////////////////////
+        val loadingImageView = findViewById<ImageView>(R.id.backgroundImgContainer)
+
+        val typedValue = TypedValue()
+        theme.resolveAttribute(R.attr.themeImage, typedValue, true)
+
+        Glide.with(this)
+            .asGif()
+            .load( typedValue.resourceId)
+            .into(loadingImageView)
+
         ////////////////////////////////////////////////////////////////////////////////////////////
         val profileImage = findViewById<ImageView>(R.id.ProfileImg)
         val assetPath = "file:///android_asset/${sm.getUserAvatar()}"
