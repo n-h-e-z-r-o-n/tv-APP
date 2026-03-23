@@ -441,14 +441,16 @@ class Shows_Page : AppCompatActivity() {
             notificationAdapter.clearItems()
         }
         notificationS()
-        */
+
 
 
         if (this::faveAdapter.isInitialized) {
             faveAdapter.clearItems()
         }
 
-        tvFavoritesList()
+        //tvFavoritesList()
+
+         */
         watchedList()
 
 
@@ -877,11 +879,22 @@ class Shows_Page : AppCompatActivity() {
 
                     val SliderBackdrop = card.findViewById<ImageView>(R.id.cardBackdrop)
 
+                    val currentHeight = card.height
+                    val currentWidth = card.width
+                    val sizeH = (currentHeight  * 2f).toInt()
+                    val sizeW = (currentWidth  * 2f).toInt()
+
                     Glide.with(card.context)
                         .load(backdrop_path)
+                        //.override(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL)
+                        .override(sizeW, sizeH)
                         .diskCacheStrategy(DiskCacheStrategy.ALL)
                         .centerInside()
-                        .thumbnail(0.25f) // Load low-res first
+                        .thumbnail(
+                            Glide.with(card.context)
+                                .load(SliderBackdrop)
+                                .sizeMultiplier(0.3f)
+                        )
                         .into(SliderBackdrop)
 
 
@@ -938,6 +951,8 @@ class Shows_Page : AppCompatActivity() {
             "Apple" to Pair(14801, "https://image.tmdb.org/t/p/original/bnlD5KJ5oSzBYbEpDkwi6w8SoBO.png")
         )
 
+        val spotlightSection = findViewById<LinearLayout>(R.id.SpotlightSection)
+
         // Convert map to list of categoryItem objects
         val categoryItems = mutableListOf<categoryItem>()
         company_show.forEach { (name, pair) ->
@@ -945,7 +960,8 @@ class Shows_Page : AppCompatActivity() {
                 categoryItem(
                     cCode = pair.first.toString(),
                     cImg = pair.second,
-                    cName = name
+                    cName = name,
+                    parentView = spotlightSection
                 )
             )
         }
@@ -1237,6 +1253,7 @@ class Shows_Page : AppCompatActivity() {
 
 
 
+        val browseUISection = findViewById<LinearLayout>(R.id.browseUISection)
 
 
         val comedyBtn = findViewById<TextView>(R.id.genreComedy)
@@ -1246,6 +1263,15 @@ class Shows_Page : AppCompatActivity() {
         val familyBtn = findViewById<TextView>(R.id.genreFamily)
         val romanceBtn = findViewById<TextView>(R.id.genreRomance)
         val dramaBtn = findViewById<TextView>(R.id.genreDrama)
+
+        GlobalUtils.enableFullViewOnDescendantFocus( browseUISection, comedyBtn )
+        GlobalUtils.enableFullViewOnDescendantFocus( browseUISection, actionBtn )
+        GlobalUtils.enableFullViewOnDescendantFocus( browseUISection, sciFiBtn )
+        GlobalUtils.enableFullViewOnDescendantFocus( browseUISection, animationBtn)
+        GlobalUtils.enableFullViewOnDescendantFocus( browseUISection, familyBtn )
+        GlobalUtils.enableFullViewOnDescendantFocus( browseUISection, romanceBtn )
+        GlobalUtils.enableFullViewOnDescendantFocus( browseUISection, dramaBtn )
+
 
 
         comedyBtn.setOnClickListener {

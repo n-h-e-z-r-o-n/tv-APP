@@ -17,40 +17,29 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.OptIn
 import androidx.cardview.widget.CardView
-import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.util.UnstableApi
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
-
+import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.request.target.Target
 import com.example.onyx.Actor_Page
 import com.example.onyx.Anime_Video_Player
 import com.example.onyx.Category_Page
-import com.example.onyx.FetchData.TMDBapi
-
 import com.example.onyx.Database.AppDatabase
-import com.example.onyx.Database.SessionManger
-import com.example.onyx.Instraction
-import com.example.onyx.Login_Page
+import com.example.onyx.FetchData.TMDBapi
 import com.example.onyx.OnyxObjects.GlobalUtils
 import com.example.onyx.Play
 import com.example.onyx.R
-import com.example.onyx.Shows_Page
 import com.example.onyx.Watch_Anime_Page
 import com.example.onyx.Watch_Page
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlin.text.toLongOrNull
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.* // Make sure this is imported
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -379,10 +368,36 @@ class FilterAdapter(
         holder.showRS?.text = runtime
         holder.showType?.text = type
 
+        /*
         Glide.with(holder.itemView.context)
             .load(imageUrl)
             .centerInside()
             .into(holder.Movie_image!!)
+
+         */
+
+        // ✅ wait until ImageView is measured
+        holder.itemView.post {
+            val currentHeight = holder.itemView.height
+            val currentWidth = holder.itemView.width
+            val sizeH = (currentHeight  * 2f).toInt()
+            val sizeW = (currentWidth  * 2f).toInt()
+
+            holder.Movie_image?.let {
+                Glide.with(holder.itemView.context)
+                    .load(imageUrl)
+                    .override(sizeW, sizeH)
+                    //.override(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL)
+                    .thumbnail(
+                        Glide.with(holder.itemView.context)
+                            .load(imageUrl)
+                            .sizeMultiplier(0.5f)
+                    )
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .into(it)
+            }
+
+        }
 
         holder.itemView.setOnClickListener {
             val context = holder.itemView.context
@@ -577,15 +592,24 @@ class CategoryAdapter(
         // ✅ wait until ImageView is measured
         holder.category_image.post {
             val currentHeight = holder.category_image.height
-            val finalHeight = if (currentHeight > 200) 200 else currentHeight
+            val size = (currentHeight  * 1.5f).toInt()
 
             Glide.with(holder.itemView.context)
                 .load(imageUrl)
+                .override(Target.SIZE_ORIGINAL, size)
+                .thumbnail(
+                    Glide.with(holder.itemView.context)
+                        .load(imageUrl)
+                        .sizeMultiplier(0.1f)
+                )
+                .diskCacheStrategy(DiskCacheStrategy.ALL)
                 .into(holder.category_image)
+
         }
 
 
 
+        GlobalUtils.enableFullViewOnDescendantFocus(currentItem.parentView, holder.CardViewSquare)
 
 
         holder.CardViewSquare.setOnClickListener {
@@ -630,7 +654,9 @@ class CategoryAdapter(
 data class categoryItem(
     val cCode: String = "",
     val cImg: String= "",
-    val cName: String = ""
+    val cName: String = "",
+    val parentView: ViewGroup
+
 )
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -887,11 +913,20 @@ class CastAdapter(
 
         holder.Actor_Name.text = title
 
+        val density = holder.itemView.getContext().getResources().getDisplayMetrics().density
+        val sizeInPx = (100 * density * 1.5f).toInt() // 100dp converted to pixels
 
         Glide.with(holder.itemView.context)
             .load(imageUrl)
-            .override(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL)
-            .centerInside()
+            //.override(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL)
+            .override(sizeInPx, sizeInPx)
+            .thumbnail(
+                Glide.with(holder.itemView.context)
+                    .load(imageUrl)
+                    .sizeMultiplier(0.1f)
+            )
+            .circleCrop()
+            .diskCacheStrategy(DiskCacheStrategy.ALL)
             .into(holder.Movie_image)
 
         holder.CardViewcontiner.setOnClickListener {
@@ -1444,9 +1479,14 @@ class EpisodesAdapter(
 
 
         val url = "https://image.tmdb.org/t/p/w1280${ep.episodesImage}"
+        val currentHeight = holder.itemView.height
+        val currentWidth = holder.itemView.width
+        val sizeH = (currentHeight  * 2f).toInt()
+        val sizeW = (currentWidth  * 2f).toInt()
         Glide.with(holder.itemView.context)
             .load(url)
-            .override(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL)
+            //.override(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL)
+            .override(sizeW, sizeH)
             .into(holder.epsImg)
 
         //var lastClickTime = 0L

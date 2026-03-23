@@ -492,31 +492,39 @@
                                 android:id="@+id/HomePage"
                                 android:layout_width="match_parent"
                                 android:layout_height="match_parent"
-                                android:visibility="gone"
+                                android:visibility="visible"
                                 android:orientation="vertical">
 
-
-                                <FrameLayout
-                                    android:id="@+id/spotlightShows"
+                                <LinearLayout
+                                    android:id="@+id/SpotlightSection"
                                     android:layout_width="match_parent"
-                                    android:layout_height="0dp"
-                                    android:layout_weight="1"
-                                    android:layout_gravity="center"
-                                    android:focusable="false"
-                                    android:focusableInTouchMode="false"
-                                    android:descendantFocusability="afterDescendants"
-                                    android:clipChildren="false"
-                                    android:clipToPadding="false"/>
-
-
-                                <androidx.recyclerview.widget.RecyclerView
-                                    android:id="@+id/CategoryRecyclerView"
                                     android:layout_height="wrap_content"
-                                    android:layout_width="match_parent"
-                                    android:layout_gravity="bottom"
-                                    android:clipToPadding="false"
-                                    android:scrollbars="none"
-                                    tools:ignore="RtlSymmetry" />
+                                    android:orientation="vertical">
+
+
+                                    <FrameLayout
+                                        android:id="@+id/spotlightShows"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="0dp"
+                                        android:layout_weight="1"
+                                        android:layout_gravity="center"
+                                        android:focusable="false"
+                                        android:focusableInTouchMode="false"
+                                        android:descendantFocusability="afterDescendants"
+                                        android:clipChildren="false"
+                                        android:clipToPadding="false"/>
+
+
+                                    <androidx.recyclerview.widget.RecyclerView
+                                        android:id="@+id/CategoryRecyclerView"
+                                        android:layout_height="wrap_content"
+                                        android:layout_width="match_parent"
+                                        android:layout_gravity="bottom"
+                                        android:clipToPadding="false"
+                                        android:scrollbars="none"
+                                        tools:ignore="RtlSymmetry" />
+
+                                </LinearLayout>
 
 
                                 <LinearLayout
@@ -591,6 +599,7 @@
                                 </LinearLayout>
 
                                 <LinearLayout
+                                    android:id="@+id/browseUISection"
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
                                     android:layout_marginVertical="25dp"
@@ -739,6 +748,7 @@
                                                     android:paddingHorizontal="13dp"
                                                     android:paddingVertical="6dp"
                                                     android:textSize="11sp"
+                                                    android:nextFocusRight="@+id/genreComedy"
                                                     android:fontFamily="@font/p"
                                                     android:textColor="@color/filter_btn_text_selector"
                                                     android:background="@drawable/filter_button"
@@ -1091,7 +1101,7 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:orientation="vertical"
-                                android:visibility="visible">
+                                android:visibility="gone">
 
                                 <TextView
                                     android:layout_width="wrap_content"

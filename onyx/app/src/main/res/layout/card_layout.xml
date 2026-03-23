@@ -266,7 +266,7 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="bottom"
                     android:ellipsize="end"
-                    android:maxLines="10"
+                    android:maxLines="5"
                     android:singleLine="false"
                     android:textColor="#FFFFFF"
                     android:shadowColor="#000000"
