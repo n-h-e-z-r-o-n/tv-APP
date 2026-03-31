@@ -2,18 +2,18 @@ package com.example.onyx.OnyxObjects
 
 import android.content.Context
 import android.util.Log
+import androidx.lifecycle.lifecycleScope
 import com.example.onyx.Database.AppDatabase
 import com.example.onyx.Database.SessionManger
 import com.example.onyx.FetchData.TMDBapi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.json.JSONArray
 
 object NotificationHelper {
 
     private lateinit var db: AppDatabase
     private lateinit var  sm: SessionManger
-
-
-
 
 
     fun getTvNotifications(context: Context) : Boolean{
@@ -48,7 +48,7 @@ object NotificationHelper {
 
                 if (data != null) {
 
-                    val ddta = data.getJSONObject("last_episode_to_air")
+                    val ddta = data.optJSONObject("last_episode_to_air")?: continue
                     val newLastSeason = ddta.optInt("season_number")
                     val newLastEpisode = ddta.optInt("episode_number")
                     val newNoOfSeason = data.getJSONArray("seasons").length()
@@ -57,6 +57,7 @@ object NotificationHelper {
                     Log.d("Fav_tv", "fetched lastEpisode: ${newLastEpisode}")
                     Log.d("Fav_tv", "fetched noOfSeason: ${newNoOfSeason}\n\n\n")
 
+                    /*
                     var info = ""
                     var episodeDiff = 0
 
@@ -73,9 +74,9 @@ object NotificationHelper {
 
                     Log.e("Fav_tv", "info isNotEmpty: ${info.isNotEmpty()}, title: $name , episodeDiff $episodeDiff \n\n")
 
+                     */
 
-
-                    if (info.isNotEmpty()) {
+                    if (newLastEpisode > storedLastEpisode || newLastSeason > storedLastSeason) {
 
                         db.insertTvNotification(
                             userId = userId,
@@ -87,10 +88,13 @@ object NotificationHelper {
                             lastEpisode = newLastEpisode
                         )
 
-                        db.updateTvProgress(userId=userId, showId=show_id.toString(), noOfSeason=newNoOfSeason, lastSeason=newLastSeason, lastEpisode=newLastEpisode)
+                        db.updateFavoriteShowProgress(userId=userId, showId=show_id.toString(), noOfSeason=newNoOfSeason, lastSeason=newLastSeason, lastEpisode=newLastEpisode)
 
                         results = true
+
+
                     }
+
                 }
             } catch (e: Exception) {
                 Log.e("NotificationHelper", "Error for item: ${e.message}")
@@ -109,6 +113,8 @@ object NotificationHelper {
 
         var results = false
 
+
+        val fetch = TMDBapi(context)
 
         //Log.e("anime_Notification Fav", "animeList:  ${animeList.toString()}")
 
@@ -141,7 +147,7 @@ object NotificationHelper {
                 }
 
 
-                val fetch = TMDBapi(context)
+
 
                 val data = fetch.fetchAnimeData(item["anime_id"].toString())
                 if (data != null) {
@@ -153,24 +159,19 @@ object NotificationHelper {
                             .getJSONObject("episodes").optString("dub", "").toIntOrNull() ?: 0
                     val seasonsFetched = data.getJSONArray("seasons").length()?:0
 
-                    var info = "\n"
+
                     var notSub = 0
                     var notDub = 0
 
                     if (subFetched > subStored) {
-                        val cal = subFetched - subStored
                         notSub = subFetched
-                        info = info + "$cal SUB added\n"
                     }
                     if (dubFetched > dubStored) {
                         notDub = dubFetched
-                        val cal = dubFetched - dubStored
-                        info = info + "$cal DUB added\n"
                     }
 
-                    Log.e("anime_Not_fetched", "info isNotEmpty: ${info.isNotEmpty()}, title: $name ,dubFetched $dubFetched , subFetched $subFetched \n")
 
-                    if (info.isNotEmpty()) {
+                    if (subFetched > subStored || dubFetched > dubStored) {
 
                         db.insertAnimeNotification(
                             userId = userId,

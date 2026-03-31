@@ -450,7 +450,7 @@ class AppDatabase(context: Context) :
         }
     }
 
-    fun updateTvProgress(
+    fun updateFavoriteShowProgress(
         userId: Int,
         showId: String,
         noOfSeason: Int,
@@ -469,7 +469,7 @@ class AppDatabase(context: Context) :
             val rows = db.update(
                 "favorites_shows",
                 cv,
-                "user_id = ? AND anime_id = ?",
+                "user_id = ? AND show_id = ?",
                 arrayOf(userId.toString(), showId)
             )
 
