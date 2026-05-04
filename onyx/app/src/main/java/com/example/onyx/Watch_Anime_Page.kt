@@ -56,6 +56,8 @@ class Watch_Anime_Page : AppCompatActivity() {
 
 
     private lateinit var poster :String
+    private lateinit var backdrop :String
+
     private lateinit var animeId :String
 
     private lateinit var mainSection: FrameLayout
@@ -155,33 +157,33 @@ class Watch_Anime_Page : AppCompatActivity() {
 
         val data = jsonObject.getJSONObject("data")
 
-        val id = data.getJSONObject("anime").getJSONObject("info").getString("id")
-        poster = data.getJSONObject("anime").getJSONObject("info").getString("poster")
+        val id = data.getString("id")
+        poster = data.getString("poster")
+        backdrop = data.getString("backdrop")
 
-        val anilistId = data.getJSONObject("anime").getJSONObject("info").getString("anilistId")
-        val malId = data.getJSONObject("anime").getJSONObject("info").getString("malId")
+        val anilistId = data.getString("anilistId")
+        val malId = data.getString("malId")
 
-        val name = data.getJSONObject("anime").getJSONObject("info").getString("name")
+        val name = data.getString("name")
 
-        val japaneseName = data.getJSONObject("anime").getJSONObject("moreInfo").getString("japanese")
-
-        val description = data.getJSONObject("anime").getJSONObject("info").getString("description")
-        val rating = data.getJSONObject("anime").getJSONObject("info").getJSONObject("stats").getString("rating")
-        val quality = data.getJSONObject("anime").getJSONObject("info").getJSONObject("stats").getString("quality")
-        val type = data.getJSONObject("anime").getJSONObject("info").getJSONObject("stats").getString("type")
-        val duration = data.getJSONObject("anime").getJSONObject("info").getJSONObject("stats").getString("duration")
-        val sub = data.getJSONObject("anime").getJSONObject("info").getJSONObject("stats").getJSONObject("episodes").optString("sub", "")
-        val dub = data.getJSONObject("anime").getJSONObject("info").getJSONObject("stats").getJSONObject("episodes").optString("dub", "")
-        val aired = data.getJSONObject("anime").getJSONObject("moreInfo").getString("aired")
+        val japaneseName = data.getString("jname")
+        val description = data.getString("description")
+        val rating = data.getJSONObject("stats").getString("rating")
+        val quality = data.getJSONObject("stats").getString("quality")
+        val type = data.getJSONObject("stats").getString("type")
+        val duration = data.getJSONObject("stats").getString("duration")
+        val sub = data.getJSONObject("stats").getJSONObject("episodes").optString("sub", "")
+        val dub = data.getJSONObject("stats").getJSONObject("episodes").optString("dub", "")
+        val aired = data.getString("aired")
         //val status = data.getJSONObject("anime").getJSONObject("moreInfo").getString("status")
         //val studios = data.getJSONObject("anime").getJSONObject("moreInfo").getString("studios")
-        val genresArray = data.getJSONObject("anime").getJSONObject("moreInfo").getJSONArray("genres")
+        val genresArray = data.getJSONArray("genres")
         var genre = ""
         for (i in 0 until genresArray.length()) {
             genre = genre +" ~ " +genresArray.getString(i)
         }
 
-        tmdbRelation(japaneseName, type)
+        //tmdbRelation(japaneseName, type)
 
         val  seasons = data.getJSONArray("seasons")?: JSONArray()
         val  relatedAnimes = data.getJSONArray("relatedAnimes")?: JSONArray()
@@ -209,6 +211,16 @@ class Watch_Anime_Page : AppCompatActivity() {
             .load(poster)
             .fitCenter()
             .into(posterWidget)
+
+
+
+
+        val backdrop_Widget = findViewById<ImageView>(R.id.backdropWidget)
+        findViewById<ImageView>(R.id.WatchImage).visibility = View.GONE
+        Glide.with(this@Watch_Anime_Page)
+            .load(backdrop)
+            .centerInside()
+            .into(backdrop_Widget)
 
 
         if (seasons.length() > 0){

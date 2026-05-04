@@ -607,21 +607,25 @@ class Anime_Page : AppCompatActivity() {
 
                  val item = spotlightAnimes.getJSONObject(i)
                  val title = item.getString("name")
+                 val titleJ = item.getString("jname")
                  val overview = item.getString("description")
-                 val imageUrl = item.getString("poster")
+                 val imageUrl = item.getString("backdrop")
                  val id = item.getString("id")
                  val type = item.getString("type")
-                 val runtime = item.optJSONArray("otherInfo").optString(1, "")
-                 val release_date = item.optJSONArray("otherInfo").optString(2, "")
-                 val quality = item.optJSONArray("otherInfo").optString(3, "")
+                 val runtime = item.getString("duration")
+                 val releaseDate = item.getString("releaseDate")
+                 val quality = item.getString("quality")
                  val sub = item.getJSONObject("episodes").optInt("sub", 0)
                  val dub = item.getJSONObject("episodes").optInt("dub", 0)
+
+                 val genres = item.getJSONArray("genres")
+
 
                  card.findViewById<TextView>(R.id.cardTitle).text = title
                  card.findViewById<TextView>(R.id.cardPg).text = "PG-13"
                  card.findViewById<TextView>(R.id.cardType).text = type
                  card.findViewById<TextView>(R.id.cardRuntime).text = runtime
-                 card.findViewById<TextView>(R.id.cardYear).text = release_date
+                 card.findViewById<TextView>(R.id.cardYear).text = releaseDate
                  card.findViewById<TextView>(R.id.cardQuality).text = quality
                  card.findViewById<TextView>(R.id.cardSub).text = sub.toString()
                  card.findViewById<TextView>(R.id.cardDub).text = dub.toString()
@@ -666,41 +670,38 @@ class Anime_Page : AppCompatActivity() {
 
     private fun showTrending(trending: JSONArray) {
 
-         var trendingItems = mutableListOf<TrendingAnimeItem>()
-         for (i in 0 until trending.length()) {
+        var trendingItems = mutableListOf<TrendingAnimeItem>()
+        for (i in 0 until trending.length()) {
 
 
-             val item = trending.getJSONObject(i)
-             val title = item.getString("name")
-             val imageUrl = item.getString("poster")
-             val id = item.getString("id")
-             val ranking = "0" + item.getString("rank")
+            val item = trending.getJSONObject(i)
+            val title = item.getString("name")
+            val imageUrl = item.getString("poster")
+            val id = item.getString("id")
+            val ranking = "0" + i
+
+            trendingItems.add(
+                TrendingAnimeItem(
+                    id,
+                    title,
+                    imageUrl,
+                    ranking
+                )
+            )
+
+        }
+
+        Log.e("DEBUG_MAIN_Slider 1", trendingItems.toString())
 
 
-             trendingItems.add(
-                 TrendingAnimeItem(
-                     id,
-                     title,
-                     imageUrl,
-                     ranking
-                 )
-             )
-
-         }
-
-         Log.e("DEBUG_MAIN_Slider 1", trendingItems.toString())
-
-
-         val recyclerView = findViewById<RecyclerView>(R.id.Anime_Trending_widget)
-         recyclerView.layoutManager = LinearLayoutManager(
-             this@Anime_Page,
-             LinearLayoutManager.HORIZONTAL,
-             false
-         )
-         recyclerView.adapter = AnimeTrendingAdapter(trendingItems, R.layout.anime_trending_item)
-
-
-     }
+        val recyclerView = findViewById<RecyclerView>(R.id.Anime_Trending_widget)
+        recyclerView.layoutManager = LinearLayoutManager(
+            this@Anime_Page,
+            LinearLayoutManager.HORIZONTAL,
+            false
+        )
+        recyclerView.adapter = AnimeTrendingAdapter(trendingItems, R.layout.anime_trending_item)
+    }
 
      private fun showAiring(Airing: JSONArray) {
 
@@ -994,7 +995,6 @@ class Anime_Page : AppCompatActivity() {
                  }
              }
          }
-
      }
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1067,7 +1067,6 @@ class Anime_Page : AppCompatActivity() {
                          Log.e("ANIME_STATUS S-Error", "Error fetching data", e)
                          return@launch
                      }
-
                  }
              }
              isLoadingMoreRecently = false

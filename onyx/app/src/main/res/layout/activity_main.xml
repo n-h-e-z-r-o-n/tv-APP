@@ -38,7 +38,7 @@
     <View
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#40042c40"/>
+        android:background="#70042c40"/>
 
 
     <!-- Loading Animation -->
@@ -57,13 +57,12 @@
             android:gravity="center"
             android:maxLines="1"
             android:shadowColor="@android:color/white"
-            android:textFontWeight="900"
             android:shadowDx="5"
             android:shadowDy="6"
             android:shadowRadius="4"
-            android:text="ONYX"
+            android:text="♘"
             android:textColor="#152755"
-            android:textSize="240sp"
+            android:textSize="290sp"
             tools:ignore="HardcodedText" />
 
     </LinearLayout>
