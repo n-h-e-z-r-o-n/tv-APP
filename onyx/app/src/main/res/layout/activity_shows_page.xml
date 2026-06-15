@@ -72,408 +72,32 @@
         android:background="?attr/transparentEffect"/>
 
         <View
+            android:id="@+id/BackgroundContainer"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="?attr/transparentEffect"/>
+            android:background="?attr/BG_color"
+            android:visibility="gone"/>
 
-        <LinearLayout
+        <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="horizontal">
 
 
 
-                <LinearLayout
-                    android:id="@+id/NavBar"
-                    android:layout_width="70dp"
-                    android:layout_height="match_parent"
-                    android:layout_gravity="center_vertical"
-                    android:layout_marginVertical="5dp"
-                    android:orientation="vertical"
-                    android:gravity="center"
-                    android:elevation="15dp">
-
-                        <androidx.cardview.widget.CardView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginHorizontal="10dp"
-                            android:layout_gravity="center_vertical"
-                            app:cardCornerRadius="20dp"
-                            app:cardBackgroundColor="?attr/BG_color_up">
-
-                            <LinearLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:orientation="vertical"
-                                android:padding="5dp"
-                                android:background="@android:color/transparent" >
-
-                                <LinearLayout
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    tools:ignore="UseCompoundDrawables"
-                                    android:layout_marginBottom="20dp">
-
-
-                                    <ImageView
-                                        android:layout_width="40dp"
-                                        android:layout_height="40dp"
-                                        android:src="@drawable/ic_shows_logo"
-                                        tools:ignore="ContentDescription"
-                                        android:alpha="0.6"
-                                        app:tint="?attr/FG_color"/>
-
-
-                                    <TextView
-                                        android:layout_width="match_parent"
-                                        android:gravity="center"
-                                        android:layout_height="wrap_content"
-                                        android:text="shows"
-                                        android:layout_gravity="center_vertical"
-                                        android:fontFamily="@font/n"
-                                        android:textSize="23sp"
-                                        android:textColor="?attr/FG_color"
-                                        android:singleLine="true"
-                                        tools:ignore="HardcodedText"
-                                        android:shadowColor="?attr/AccentColor"
-                                        android:shadowDx="2"
-                                        android:shadowDy="2"
-                                        android:shadowRadius="4"/>
-                                </LinearLayout>
-
-                                <LinearLayout
-                                    android:id="@+id/HomeBtn"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginBottom="9dp"
-                                    android:clickable="true"
-                                    android:focusable="true"
-                                    android:focusableInTouchMode="true"
-                                    android:gravity="center_vertical"
-                                    android:nextFocusLeft="@+id/HomeBtn"
-                                    android:nextFocusUp="@+id/cNotificationBtn"
-                                    android:nextFocusDown="@+id/MoviesBtn"
-                                    android:background="@drawable/background_hovor"
-                                    android:padding="5dp"
-                                    tools:ignore="UseCompoundDrawables,UselessParent">
-
-                                    <ImageView
-                                        android:layout_width="25dp"
-                                        android:layout_height="25dp"
-                                        android:src="@drawable/ic_anime_home"
-                                        app:tint="?attr/FG_color"
-                                        tools:ignore="ContentDescription" />
-
-
-                                    <TextView
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:layout_marginStart="9dp"
-                                        android:fontFamily="@font/n"
-                                        android:text="Home"
-                                        android:textSize="18sp"
-                                        android:singleLine="true"
-                                        android:textColor="?attr/FG_color"
-                                        tools:ignore="HardcodedText" />
-
-                                </LinearLayout>
-
-
-                                <LinearLayout
-                                    android:id="@+id/MoviesBtn"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginBottom="9dp"
-                                    android:clickable="true"
-                                    android:focusable="true"
-                                    android:focusableInTouchMode="true"
-                                    android:gravity="center_vertical"
-                                    android:nextFocusLeft="@+id/MoviesBtn"
-                                    android:nextFocusUp="@+id/HomeBtn"
-                                    android:nextFocusDown="@+id/seriesBtn"
-                                    android:background="@drawable/background_hovor"
-                                    android:padding="5dp"
-                                    tools:ignore="UseCompoundDrawables,UselessParent">
-
-                                    <ImageView
-                                        android:layout_width="25dp"
-                                        android:layout_height="25dp"
-                                        android:src="@drawable/ic_movies"
-                                        app:tint="?attr/FG_color"
-                                        tools:ignore="ContentDescription" />
-
-
-                                    <TextView
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:layout_marginStart="9dp"
-                                        android:fontFamily="@font/n"
-                                        android:text="Movies"
-                                        android:singleLine="true"
-                                        android:textColor="?attr/FG_color"
-                                        android:textSize="18sp"
-                                        tools:ignore="HardcodedText,SmallSp" />
-
-                                </LinearLayout>
-
-
-                                <LinearLayout
-                                    android:id="@+id/seriesBtn"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginBottom="9dp"
-                                    android:clickable="true"
-                                    android:focusable="true"
-                                    android:focusableInTouchMode="true"
-                                    android:gravity="center_vertical"
-                                    android:nextFocusLeft="@+id/seriesBtn"
-                                    android:nextFocusUp="@+id/MoviesBtn"
-                                    android:nextFocusDown="@+id/SearchBtn"
-                                    android:background="@drawable/background_hovor"
-                                    android:padding="5dp"
-                                    tools:ignore="UseCompoundDrawables,UselessParent">
-
-                                    <ImageView
-                                        android:layout_width="25dp"
-                                        android:layout_height="25dp"
-                                        android:src="@drawable/ic_series"
-                                        app:tint="?attr/FG_color"
-                                        tools:ignore="ContentDescription" />
-
-
-                                    <TextView
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:layout_marginStart="9dp"
-                                        android:fontFamily="@font/n"
-                                        android:text="Series"
-                                        android:singleLine="true"
-                                        android:textColor="?attr/FG_color"
-                                        android:textSize="18sp"
-                                        tools:ignore="HardcodedText,SmallSp" />
-
-                                </LinearLayout>
-
-
-                                <LinearLayout
-                                    android:id="@+id/SearchBtn"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginBottom="9dp"
-                                    android:clickable="true"
-                                    android:focusable="true"
-                                    android:focusableInTouchMode="true"
-                                    android:gravity="center_vertical"
-                                    android:nextFocusLeft="@+id/SearchBtn"
-                                    android:nextFocusUp="@+id/seriesBtn"
-                                    android:nextFocusDown="@+id/FilterBtn"
-                                    android:background="@drawable/background_hovor"
-                                    android:padding="5dp"
-                                    tools:ignore="UseCompoundDrawables,UselessParent">
-
-                                    <ImageView
-                                        android:layout_width="25dp"
-                                        android:layout_height="25dp"
-                                        android:src="@drawable/ic_anime_search"
-                                        app:tint="?attr/FG_color"
-                                        tools:ignore="ContentDescription" />
-
-
-                                    <TextView
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:layout_marginStart="9dp"
-                                        android:fontFamily="@font/n"
-                                        android:text="Search"
-                                        android:singleLine="true"
-                                        android:textColor="?attr/FG_color"
-                                        android:textSize="18sp"
-                                        tools:ignore="HardcodedText,SmallSp" />
-
-                                </LinearLayout>
-
-                                <LinearLayout
-                                    android:id="@+id/FilterBtn"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginBottom="9dp"
-                                    android:clickable="true"
-                                    android:focusable="true"
-                                    android:focusableInTouchMode="true"
-                                    android:gravity="center_vertical"
-                                    android:nextFocusLeft="@+id/FilterBtn"
-                                    android:nextFocusUp="@+id/SearchBtn"
-                                    android:nextFocusDown="@+id/FavBtn"
-                                    android:background="@drawable/background_hovor"
-                                    android:padding="5dp"
-                                    tools:ignore="UseCompoundDrawables,UselessParent">
-
-                                    <ImageView
-                                        android:layout_width="25dp"
-                                        android:layout_height="25dp"
-                                        android:src="@drawable/ic_filter"
-                                        app:tint="?attr/FG_color"
-                                        tools:ignore="ContentDescription" />
-
-
-                                    <TextView
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:layout_marginStart="9dp"
-                                        android:fontFamily="@font/n"
-                                        android:text="Filter"
-                                        android:singleLine="true"
-                                        android:textColor="?attr/FG_color"
-                                        android:textSize="18sp"
-                                        tools:ignore="HardcodedText,SmallSp" />
-
-                                </LinearLayout>
-
-                                <LinearLayout
-                                    android:id="@+id/FavBtn"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginBottom="9dp"
-                                    android:clickable="true"
-                                    android:focusable="true"
-                                    android:focusableInTouchMode="true"
-                                    android:gravity="center_vertical"
-                                    android:nextFocusLeft="@+id/FavBtn"
-                                    android:nextFocusUp="@+id/FilterBtn"
-                                    android:nextFocusDown="@+id/cWatchBtn"
-                                    android:background="@drawable/background_hovor"
-                                    android:padding="5dp"
-                                    tools:ignore="UseCompoundDrawables,UselessParent">
-
-                                    <ImageView
-                                        android:layout_width="25dp"
-                                        android:layout_height="25dp"
-                                        android:src="@drawable/heart1"
-                                        app:tint="?attr/FG_color"
-                                        tools:ignore="ContentDescription" />
-
-
-                                    <TextView
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:layout_marginStart="9dp"
-                                        android:fontFamily="@font/n"
-                                        android:text="Favorites"
-                                        android:singleLine="true"
-                                        android:textColor="?attr/FG_color"
-                                        android:textSize="18sp"
-                                        tools:ignore="HardcodedText,SmallSp" />
-
-                                </LinearLayout>
-
-
-                                <LinearLayout
-                                    android:id="@+id/cWatchBtn"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginBottom="9dp"
-                                    android:clickable="true"
-                                    android:focusable="true"
-                                    android:focusableInTouchMode="true"
-                                    android:gravity="center_vertical"
-                                    android:nextFocusUp="@+id/FavBtn"
-                                    android:nextFocusDown="@+id/cNotificationBtn"
-                                    android:nextFocusLeft="@+id/cWatchBtn"
-                                    android:padding="5dp"
-                                    android:background="@drawable/background_hovor"
-                                    tools:ignore="UselessParent">
-
-                                    <ImageView
-                                        android:layout_width="25dp"
-                                        android:layout_height="25dp"
-                                        android:src="@drawable/clock"
-                                        app:tint="?attr/FG_color"
-                                        tools:ignore="ContentDescription" />
-
-
-                                    <TextView
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:layout_marginStart="9dp"
-                                        android:text="Watching All"
-                                        android:fontFamily="@font/n"
-                                        android:singleLine="true"
-                                        android:textColor="?attr/FG_color"
-                                        android:textSize="18sp"
-                                        tools:ignore="HardcodedText,SmallSp" />
-
-                                </LinearLayout>
-
-                                <LinearLayout
-                                    android:id="@+id/cNotificationBtn"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginBottom="9dp"
-                                    android:clickable="true"
-                                    android:focusable="true"
-                                    android:focusableInTouchMode="true"
-                                    android:gravity="center_vertical"
-                                    android:nextFocusUp="@+id/cWatchBtn"
-                                    android:nextFocusDown="@+id/HomeBtn"
-                                    android:nextFocusLeft="@+id/cNotificationBtn"
-                                    android:padding="5dp"
-                                    android:background="@drawable/background_hovor"
-                                    tools:ignore="UselessParent">
-
-                                    <FrameLayout
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content">
-
-                                        <androidx.cardview.widget.CardView
-                                            android:id="@+id/cNotificationAnimeIcon"
-                                            android:layout_width="9dp"
-                                            android:layout_height="9dp"
-                                            app:cardCornerRadius="50dp"
-                                            android:layout_gravity="right"
-                                            android:visibility="gone"
-                                            app:cardBackgroundColor="@android:color/holo_red_light"
-                                            tools:ignore="RtlHardcoded" />
-
-                                        <ImageView
-                                            android:layout_width="25dp"
-                                            android:layout_height="25dp"
-                                            android:src="@drawable/ic_notification"
-                                            app:tint="?attr/FG_color"
-                                            android:layout_marginRight="5dp"
-                                            tools:ignore="ContentDescription" />
-                                    </FrameLayout>
-
-
-                                    <TextView
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:layout_marginStart="4dp"
-                                        android:text="Notification"
-                                        android:fontFamily="@font/n"
-                                        android:singleLine="true"
-                                        android:textColor="?attr/FG_color"
-                                        android:textSize="18sp"
-                                        tools:ignore="HardcodedText,SmallSp" />
-
-                                </LinearLayout>
-
-                            </LinearLayout>
-                        </androidx.cardview.widget.CardView>
-
-                </LinearLayout>
 
 
 
             <LinearLayout
-                android:id="@+id/contentContainer"
                 android:layout_width="match_parent"
-                android:layout_gravity="center_horizontal"
+                android:layout_gravity="end"
                 android:layout_height="match_parent"
                 android:orientation="horizontal"
-                android:layout_marginVertical="10dp">
+                android:layout_marginVertical="0dp">
 
 
                     <ScrollView
+                        android:id="@+id/activityScrollVIEW"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:fillViewport="true"
@@ -483,7 +107,8 @@
                         <LinearLayout
                             android:orientation="vertical"
                             android:layout_width="match_parent"
-                            android:layout_height="wrap_content">
+                            android:layout_height="wrap_content"
+                            android:paddingBottom="400dp">
 
 
                         <!-- //////////////////////// HOME PAGE //////////////////////////////////// -->
@@ -492,117 +117,185 @@
                                 android:id="@+id/HomePage"
                                 android:layout_width="match_parent"
                                 android:layout_height="match_parent"
-                                android:visibility="visible"
+                                android:visibility="gone"
                                 android:orientation="vertical">
 
-                                <LinearLayout
+                                <FrameLayout
                                     android:id="@+id/SpotlightSection"
                                     android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:orientation="vertical">
+                                    android:layout_height="wrap_content">
 
+                                    <include
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="match_parent"
+                                        layout="@layout/nabbar_show"/>
+
+
+                                    <LinearLayout
+                                        android:layout_marginStart="70dp"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="match_parent"
+                                        android:orientation="vertical">
+
+                                            <FrameLayout
+                                                android:id="@+id/spotlightShows"
+                                                android:layout_width="match_parent"
+                                                android:layout_height="0dp"
+                                                android:layout_weight="1"
+                                                android:layout_gravity="center"
+                                                android:focusable="false"
+                                                android:focusableInTouchMode="false"
+                                                android:descendantFocusability="afterDescendants"
+                                                android:clipChildren="false"
+                                                android:clipToPadding="false"/>
+
+
+                                            <androidx.recyclerview.widget.RecyclerView
+                                                android:id="@+id/CategoryRecyclerView"
+                                                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                                                android:layout_height="wrap_content"
+                                                android:layout_width="match_parent"
+                                                android:layout_gravity="bottom"
+                                                android:clipToPadding="false"
+                                                tools:itemCount="1"
+                                                tools:listitem="@layout/item_category"
+                                                android:scrollbars="none"
+                                                tools:ignore="RtlSymmetry" />
+
+                                    </LinearLayout>
+
+                                </FrameLayout>
+
+
+                                <include
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    layout="@layout/test"/>
+
+
+
+
+
+
+
+                                <LinearLayout
+                                    android:id="@+id/MovieSection"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:orientation="vertical"
+                                    tools:ignore="TooManyViews">
+
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="Library"
+                                        android:textAllCaps="true"
+                                        android:layout_marginStart="10dp"
+                                        android:textSize="5sp"
+                                        android:fontFamily="@font/p"
+                                        android:textColor="?attr/FG_color"
+                                        android:alpha="0.4"
+                                        tools:ignore="HardcodedText,SmallSp" />
+
+
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="Movie Collection"
+                                        android:layout_marginStart="10dp"
+                                        android:fontFamily="@font/p"
+                                        android:textStyle="bold"
+                                        android:textSize="20sp"
+                                        android:textColor="?attr/FG_color"
+                                        tools:ignore="HardcodedText" />
 
                                     <FrameLayout
-                                        android:id="@+id/spotlightShows"
                                         android:layout_width="match_parent"
-                                        android:layout_height="0dp"
-                                        android:layout_weight="1"
-                                        android:layout_gravity="center"
-                                        android:focusable="false"
-                                        android:focusableInTouchMode="false"
-                                        android:descendantFocusability="afterDescendants"
+                                        android:layout_height="320dp"
+                                        android:layout_marginVertical="10dp"
                                         android:clipChildren="false"
-                                        android:clipToPadding="false"/>
+                                        android:clipToPadding="false">
+
+                                        <androidx.recyclerview.widget.RecyclerView
+                                            android:id="@+id/MoviesRecyclerView"
+                                            android:layout_width="match_parent"
+                                            android:layout_height="match_parent"
+                                            android:clipToPadding="false"
+                                            android:layout_marginStart="30dp"
+                                            android:scrollbars="none"
+                                            tools:itemCount="1"
+                                            tools:listitem="@layout/item_grid"
+                                            tools:ignore="RtlSymmetry" />
+
+                                        <!-- Fixed info card -->
+                                        <com.google.android.material.card.MaterialCardView
+                                            android:id="@+id/movieFixedFocusOverlay"
+                                            android:layout_width="527dp"
+                                            android:layout_height="320dp"
+                                            android:layout_gravity="start|center_vertical"
+                                            android:layout_marginStart="30dp"
+                                            android:focusable="false"
+                                            android:clickable="false"
+                                            android:alpha="0"
+                                            android:importantForAccessibility="no"
+                                            app:cardCornerRadius="12dp"
+                                            app:strokeWidth="0dp"
+                                            app:strokeColor="?attr/AccentColor"
+                                            app:cardBackgroundColor="?attr/BG_color_up"
+                                            app:cardElevation="0dp">
 
 
-                                    <androidx.recyclerview.widget.RecyclerView
-                                        android:id="@+id/CategoryRecyclerView"
-                                        android:layout_height="wrap_content"
-                                        android:layout_width="match_parent"
-                                        android:layout_gravity="bottom"
-                                        android:clipToPadding="false"
-                                        android:scrollbars="none"
-                                        tools:ignore="RtlSymmetry" />
+                                            <ImageView
+                                                android:id="@+id/movieOverlayPoster"
+                                                android:layout_width="match_parent"
+                                                android:layout_height="match_parent"
+                                                android:src="@raw/gradient_img"
+                                                android:scaleType="centerCrop"
+                                                tools:src="@drawable/splash_img"
+                                                tools:ignore="ContentDescription" />
 
+                                            <View
+                                                android:layout_width="match_parent"
+                                                android:layout_height="match_parent"
+                                                android:background="@drawable/overlay_bottom_gradient_bg"/>
+
+                                            <LinearLayout
+                                                android:layout_width="wrap_content"
+                                                android:layout_height="wrap_content"
+                                                android:layout_gravity="bottom"
+                                                android:layout_marginStart="20dp"
+                                                android:layout_marginBottom="10dp"
+                                                android:orientation="vertical">
+
+                                                <TextView
+                                                    android:id="@+id/movieoOverlayTitle"
+                                                    android:layout_width="match_parent"
+                                                    android:layout_height="wrap_content"
+                                                    android:textColor="#FFFFFF"
+                                                    android:textStyle="bold"/>
+
+                                                <TextView
+                                                    android:id="@+id/movieOverlayYear"
+                                                    android:layout_width="wrap_content"
+                                                    android:textColor="#FFFFFF"
+                                                    android:layout_height="wrap_content"/>
+
+                                                <TextView
+                                                    android:id="@+id/movieOverlayRating"
+                                                    android:textColor="#FFFFFF"
+                                                    android:layout_width="wrap_content"
+                                                    android:layout_height="wrap_content"/>
+
+                                            </LinearLayout>
+                                        </com.google.android.material.card.MaterialCardView>
+                                    </FrameLayout>
                                 </LinearLayout>
 
 
                                 <LinearLayout
+                                    android:id="@+id/browseRow"
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
-                                    android:layout_marginVertical="10dp"
-                                    android:orientation="vertical">
-
-                                    <TextView
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:text="COLLECTION"
-                                        android:textSize="5sp"
-                                        android:fontFamily="@font/p"
-                                        android:textColor="?attr/FG_color"
-                                        android:alpha="0.4"
-                                        tools:ignore="HardcodedText,SmallSp" />
-                                    <TextView
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:text="Reality Spotlight"
-                                        android:fontFamily="@font/p"
-                                        android:textStyle="bold"
-                                        android:textSize="20sp"
-                                        android:textColor="?attr/FG_color"
-                                        tools:ignore="HardcodedText" />
-
-                                    <androidx.recyclerview.widget.RecyclerView
-                                        android:id="@+id/realityRecyclerView"
-                                        android:layout_height="wrap_content"
-                                        android:layout_width="match_parent"
-                                        android:layout_gravity="bottom"
-                                        android:clipToPadding="false"
-                                        android:scrollbars="none"
-                                        tools:ignore="RtlSymmetry" />
-                                </LinearLayout>
-
-
-                                <LinearLayout
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginVertical="10dp"
-                                    android:orientation="vertical">
-
-                                    <TextView
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:text="COLLECTION"
-                                        android:textSize="5sp"
-                                        android:fontFamily="@font/p"
-                                        android:textColor="?attr/FG_color"
-                                        android:alpha="0.4"
-                                        tools:ignore="HardcodedText,SmallSp" />
-                                    <TextView
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:text="Chills &amp; Thrills"
-                                        android:fontFamily="@font/p"
-                                        android:textStyle="bold"
-                                        android:textSize="20sp"
-                                        android:textColor="?attr/FG_color"
-                                        tools:ignore="HardcodedText" />
-
-                                    <androidx.recyclerview.widget.RecyclerView
-                                        android:id="@+id/ThrillsRecyclerView"
-                                        android:layout_height="wrap_content"
-                                        android:layout_width="match_parent"
-                                        android:layout_gravity="bottom"
-                                        android:clipToPadding="false"
-                                        android:scrollbars="none"
-                                        tools:ignore="RtlSymmetry" />
-                                </LinearLayout>
-
-                                <LinearLayout
-                                    android:id="@+id/browseUISection"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginVertical="25dp"
                                     android:orientation="vertical">
 
                                     <LinearLayout
@@ -611,155 +304,156 @@
                                         android:orientation="horizontal"
                                         android:gravity="center_vertical">
 
-                                            <LinearLayout
+                                        <LinearLayout
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:orientation="vertical"
+                                            tools:ignore="TooDeepLayout">
+
+                                            <TextView
                                                 android:layout_width="wrap_content"
                                                 android:layout_height="wrap_content"
-                                                android:orientation="vertical"
-                                                tools:ignore="TooDeepLayout">
-
-                                                    <TextView
-                                                        android:layout_width="wrap_content"
-                                                        android:layout_height="wrap_content"
-                                                        android:text="GENRES"
-                                                        android:textSize="5sp"
-                                                        android:fontFamily="@font/p"
-                                                        android:textColor="?attr/FG_color"
-                                                        android:alpha="0.4"
-                                                        tools:ignore="HardcodedText,SmallSp" />
-                                                    <TextView
-                                                        android:layout_width="wrap_content"
-                                                        android:layout_height="wrap_content"
-                                                        android:text="Browse by mood"
-                                                        android:fontFamily="@font/p"
-                                                        android:textStyle="bold"
-                                                        android:textSize="20sp"
-                                                        android:textColor="?attr/FG_color"
-                                                        tools:ignore="HardcodedText" />
-
-                                            </LinearLayout>
-                                            <LinearLayout
-                                                android:layout_width="match_parent"
+                                                android:text="GENRES"
+                                                android:layout_marginStart="10dp"
+                                                android:textSize="5sp"
+                                                android:fontFamily="@font/p"
+                                                android:textColor="?attr/FG_color"
+                                                android:alpha="0.4"
+                                                tools:ignore="HardcodedText,SmallSp" />
+                                            <TextView
+                                                android:layout_width="wrap_content"
                                                 android:layout_height="wrap_content"
-                                                android:gravity="end"
-                                                android:orientation="horizontal">
+                                                android:text="Browse by mood"
+                                                android:layout_marginStart="10dp"
+                                                android:fontFamily="@font/p"
+                                                android:textStyle="bold"
+                                                android:textSize="20sp"
+                                                android:textColor="?attr/FG_color"
+                                                tools:ignore="HardcodedText" />
 
-                                                <TextView
-                                                    android:id="@+id/genreComedy"
-                                                    android:layout_width="wrap_content"
-                                                    android:layout_height="wrap_content"
-                                                    android:paddingHorizontal="13dp"
-                                                    android:paddingVertical="6dp"
-                                                    android:textSize="11sp"
-                                                    android:fontFamily="@font/p"
-                                                    android:textColor="@color/filter_btn_text_selector"
-                                                    android:background="@drawable/filter_button"
-                                                    android:clickable="true"
-                                                    android:focusable="true"
-                                                    android:text="COMEDY"
-                                                    android:layout_marginHorizontal="5dp"
-                                                    tools:ignore="HardcodedText,TooDeepLayout" />
+                                        </LinearLayout>
+                                        <LinearLayout
+                                            android:layout_width="match_parent"
+                                            android:layout_height="wrap_content"
+                                            android:gravity="end"
+                                            android:orientation="horizontal">
 
-                                                <TextView
-                                                    android:id="@+id/genreAction"
-                                                    android:layout_width="wrap_content"
-                                                    android:layout_height="wrap_content"
-                                                    android:paddingHorizontal="13dp"
-                                                    android:paddingVertical="6dp"
-                                                    android:textSize="11sp"
-                                                    android:fontFamily="@font/p"
-                                                    android:textColor="@color/filter_btn_text_selector"
-                                                    android:background="@drawable/filter_button"
-                                                    android:clickable="true"
-                                                    android:focusable="true"
-                                                    android:text="ACTION"
-                                                    android:layout_marginHorizontal="5dp"
-                                                    tools:ignore="HardcodedText,TooDeepLayout" />
+                                            <TextView
+                                                android:id="@+id/genreComedy"
+                                                android:layout_width="wrap_content"
+                                                android:layout_height="wrap_content"
+                                                android:paddingHorizontal="13dp"
+                                                android:paddingVertical="6dp"
+                                                android:textSize="11sp"
+                                                android:fontFamily="@font/p"
+                                                android:textColor="@color/filter_btn_text_selector"
+                                                android:background="@drawable/filter_button"
+                                                android:clickable="true"
+                                                android:focusable="true"
+                                                android:text="COMEDY"
+                                                android:layout_marginHorizontal="5dp"
+                                                tools:ignore="HardcodedText,TooDeepLayout" />
 
-                                                <TextView
-                                                    android:id="@+id/genreSCIFI"
-                                                    android:layout_width="wrap_content"
-                                                    android:layout_height="wrap_content"
-                                                    android:paddingHorizontal="13dp"
-                                                    android:paddingVertical="6dp"
-                                                    android:textSize="11sp"
-                                                    android:fontFamily="@font/p"
-                                                    android:textColor="@color/filter_btn_text_selector"
-                                                    android:background="@drawable/filter_button"
-                                                    android:clickable="true"
-                                                    android:focusable="true"
-                                                    android:text="SCI-FI"
-                                                    android:layout_marginHorizontal="5dp"
-                                                    tools:ignore="HardcodedText,TooDeepLayout" />
+                                            <TextView
+                                                android:id="@+id/genreAction"
+                                                android:layout_width="wrap_content"
+                                                android:layout_height="wrap_content"
+                                                android:paddingHorizontal="13dp"
+                                                android:paddingVertical="6dp"
+                                                android:textSize="11sp"
+                                                android:fontFamily="@font/p"
+                                                android:textColor="@color/filter_btn_text_selector"
+                                                android:background="@drawable/filter_button"
+                                                android:clickable="true"
+                                                android:focusable="true"
+                                                android:text="ACTION"
+                                                android:layout_marginHorizontal="5dp"
+                                                tools:ignore="HardcodedText,TooDeepLayout" />
 
-                                                <TextView
-                                                    android:id="@+id/genreAnimation"
-                                                    android:layout_width="wrap_content"
-                                                    android:layout_height="wrap_content"
-                                                    android:paddingHorizontal="13dp"
-                                                    android:paddingVertical="6dp"
-                                                    android:textSize="11sp"
-                                                    android:fontFamily="@font/p"
-                                                    android:textColor="@color/filter_btn_text_selector"
-                                                    android:background="@drawable/filter_button"
-                                                    android:clickable="true"
-                                                    android:focusable="true"
-                                                    android:text="ANIMATION"
-                                                    android:layout_marginHorizontal="5dp"
-                                                    tools:ignore="HardcodedText,TooDeepLayout" />
+                                            <TextView
+                                                android:id="@+id/genreSCIFI"
+                                                android:layout_width="wrap_content"
+                                                android:layout_height="wrap_content"
+                                                android:paddingHorizontal="13dp"
+                                                android:paddingVertical="6dp"
+                                                android:textSize="11sp"
+                                                android:fontFamily="@font/p"
+                                                android:textColor="@color/filter_btn_text_selector"
+                                                android:background="@drawable/filter_button"
+                                                android:clickable="true"
+                                                android:focusable="true"
+                                                android:text="SCI-FI"
+                                                android:layout_marginHorizontal="5dp"
+                                                tools:ignore="HardcodedText,TooDeepLayout" />
 
-
-                                                <TextView
-                                                    android:id="@+id/genreFamily"
-                                                    android:layout_width="wrap_content"
-                                                    android:layout_height="wrap_content"
-                                                    android:paddingHorizontal="13dp"
-                                                    android:paddingVertical="6dp"
-                                                    android:textSize="11sp"
-                                                    android:fontFamily="@font/p"
-                                                    android:textColor="@color/filter_btn_text_selector"
-                                                    android:background="@drawable/filter_button"
-                                                    android:clickable="true"
-                                                    android:focusable="true"
-                                                    android:text="FAMILY"
-                                                    android:layout_marginHorizontal="5dp"
-                                                    tools:ignore="HardcodedText,TooDeepLayout" />
+                                            <TextView
+                                                android:id="@+id/genreAnimation"
+                                                android:layout_width="wrap_content"
+                                                android:layout_height="wrap_content"
+                                                android:paddingHorizontal="13dp"
+                                                android:paddingVertical="6dp"
+                                                android:textSize="11sp"
+                                                android:fontFamily="@font/p"
+                                                android:textColor="@color/filter_btn_text_selector"
+                                                android:background="@drawable/filter_button"
+                                                android:clickable="true"
+                                                android:focusable="true"
+                                                android:text="ANIMATION"
+                                                android:layout_marginHorizontal="5dp"
+                                                tools:ignore="HardcodedText,TooDeepLayout" />
 
 
-                                                <TextView
-                                                    android:id="@+id/genreRomance"
-                                                    android:layout_width="wrap_content"
-                                                    android:layout_height="wrap_content"
-                                                    android:paddingHorizontal="13dp"
-                                                    android:paddingVertical="6dp"
-                                                    android:textSize="11sp"
-                                                    android:fontFamily="@font/p"
-                                                    android:textColor="@color/filter_btn_text_selector"
-                                                    android:background="@drawable/filter_button"
-                                                    android:clickable="true"
-                                                    android:focusable="true"
-                                                    android:text="ROMANCE"
-                                                    android:layout_marginHorizontal="5dp"
-                                                    tools:ignore="HardcodedText,TooDeepLayout" />
-
-                                                <TextView
-                                                    android:id="@+id/genreDrama"
-                                                    android:layout_width="wrap_content"
-                                                    android:layout_height="wrap_content"
-                                                    android:paddingHorizontal="13dp"
-                                                    android:paddingVertical="6dp"
-                                                    android:textSize="11sp"
-                                                    android:nextFocusRight="@+id/genreComedy"
-                                                    android:fontFamily="@font/p"
-                                                    android:textColor="@color/filter_btn_text_selector"
-                                                    android:background="@drawable/filter_button"
-                                                    android:clickable="true"
-                                                    android:focusable="true"
-                                                    android:text="DRAMA"
-                                                    android:layout_marginHorizontal="5dp"
-                                                    tools:ignore="HardcodedText,TooDeepLayout" />
+                                            <TextView
+                                                android:id="@+id/genreFamily"
+                                                android:layout_width="wrap_content"
+                                                android:layout_height="wrap_content"
+                                                android:paddingHorizontal="13dp"
+                                                android:paddingVertical="6dp"
+                                                android:textSize="11sp"
+                                                android:fontFamily="@font/p"
+                                                android:textColor="@color/filter_btn_text_selector"
+                                                android:background="@drawable/filter_button"
+                                                android:clickable="true"
+                                                android:focusable="true"
+                                                android:text="FAMILY"
+                                                android:layout_marginHorizontal="5dp"
+                                                tools:ignore="HardcodedText,TooDeepLayout" />
 
 
-                                            </LinearLayout>
+                                            <TextView
+                                                android:id="@+id/genreRomance"
+                                                android:layout_width="wrap_content"
+                                                android:layout_height="wrap_content"
+                                                android:paddingHorizontal="13dp"
+                                                android:paddingVertical="6dp"
+                                                android:textSize="11sp"
+                                                android:fontFamily="@font/p"
+                                                android:textColor="@color/filter_btn_text_selector"
+                                                android:background="@drawable/filter_button"
+                                                android:clickable="true"
+                                                android:focusable="true"
+                                                android:text="ROMANCE"
+                                                android:layout_marginHorizontal="5dp"
+                                                tools:ignore="HardcodedText,TooDeepLayout" />
+
+                                            <TextView
+                                                android:id="@+id/genreDrama"
+                                                android:layout_width="wrap_content"
+                                                android:layout_height="wrap_content"
+                                                android:paddingHorizontal="13dp"
+                                                android:paddingVertical="6dp"
+                                                android:textSize="11sp"
+                                                android:nextFocusRight="@+id/genreComedy"
+                                                android:fontFamily="@font/p"
+                                                android:textColor="@color/filter_btn_text_selector"
+                                                android:background="@drawable/filter_button"
+                                                android:clickable="true"
+                                                android:focusable="true"
+                                                android:text="DRAMA"
+                                                android:layout_marginHorizontal="5dp"
+                                                tools:ignore="HardcodedText,TooDeepLayout" />
+
+                                        </LinearLayout>
                                     </LinearLayout>
 
                                     <androidx.recyclerview.widget.RecyclerView
@@ -767,11 +461,128 @@
                                         android:layout_height="wrap_content"
                                         android:layout_width="match_parent"
                                         android:clipToPadding="false"
+                                        android:paddingEnd="500dp"
                                         android:gravity="center"
                                         android:scrollbars="none"
                                         tools:ignore="RtlSymmetry" />
                                 </LinearLayout>
 
+
+
+
+
+                                <LinearLayout
+                                    android:id="@+id/tvSection"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:orientation="vertical"
+                                    tools:ignore="TooManyViews">
+
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="Television"
+                                        android:textAllCaps="true"
+                                        android:layout_marginStart="10dp"
+                                        android:textSize="5sp"
+                                        android:fontFamily="@font/p"
+                                        android:textColor="?attr/FG_color"
+                                        android:alpha="0.4"
+                                        tools:ignore="HardcodedText,SmallSp" />
+
+
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="Series Spotlight"
+                                        android:layout_marginStart="10dp"
+                                        android:fontFamily="@font/p"
+                                        android:textStyle="bold"
+                                        android:textSize="20sp"
+                                        android:textColor="?attr/FG_color"
+                                        tools:ignore="HardcodedText" />
+
+                                    <FrameLayout
+                                        android:layout_width="match_parent"
+                                        android:layout_height="320dp"
+                                        android:layout_marginVertical="10dp"
+                                        android:clipChildren="false"
+                                        android:clipToPadding="false">
+
+                                        <androidx.recyclerview.widget.RecyclerView
+                                            android:id="@+id/TVsRecyclerView"
+                                            android:layout_width="match_parent"
+                                            android:layout_height="match_parent"
+                                            android:clipToPadding="false"
+                                            android:scrollbars="none"
+                                            android:paddingStart="30dp"
+                                            tools:itemCount="1"
+                                            tools:listitem="@layout/item_grid"
+                                            tools:ignore="RtlSymmetry" />
+
+                                        <!-- Fixed info card -->
+                                        <com.google.android.material.card.MaterialCardView
+                                            android:id="@+id/tvFixedFocusOverlay"
+                                            android:layout_width="527dp"
+                                            android:layout_height="320dp"
+                                            android:layout_gravity="start|center_vertical"
+                                            android:layout_marginStart="30dp"
+                                            android:focusable="false"
+                                            android:clickable="false"
+                                            android:alpha="0"
+                                            android:importantForAccessibility="no"
+                                            app:cardCornerRadius="12dp"
+                                            app:strokeWidth="0dp"
+                                            app:strokeColor="?attr/AccentColor"
+                                            app:cardBackgroundColor="?attr/BG_color_up"
+                                            app:cardElevation="0dp">
+
+
+                                            <ImageView
+                                                android:id="@+id/tvOverlayPoster"
+                                                android:layout_width="match_parent"
+                                                android:layout_height="match_parent"
+                                                android:src="@raw/gradient_img"
+                                                android:scaleType="centerCrop"
+                                                tools:src="@drawable/splash_img"
+                                                tools:ignore="ContentDescription" />
+
+                                            <View
+                                                android:layout_width="match_parent"
+                                                android:layout_height="match_parent"
+                                                android:background="@drawable/overlay_bottom_gradient_bg"/>
+
+                                            <LinearLayout
+                                                android:layout_width="wrap_content"
+                                                android:layout_height="wrap_content"
+                                                android:layout_gravity="bottom"
+                                                android:layout_marginStart="20dp"
+                                                android:layout_marginBottom="10dp"
+                                                android:orientation="vertical">
+
+                                                <TextView
+                                                    android:id="@+id/tvOverlayTitle"
+                                                    android:layout_width="match_parent"
+                                                    android:layout_height="wrap_content"
+                                                    android:textColor="#FFFFFF"
+                                                    android:textStyle="bold"/>
+
+                                                <TextView
+                                                    android:id="@+id/tvOverlayYear"
+                                                    android:layout_width="wrap_content"
+                                                    android:textColor="#FFFFFF"
+                                                    android:layout_height="wrap_content"/>
+
+                                                <TextView
+                                                    android:id="@+id/tvOverlayRating"
+                                                    android:textColor="#FFFFFF"
+                                                    android:layout_width="wrap_content"
+                                                    android:layout_height="wrap_content"/>
+
+                                            </LinearLayout>
+                                        </com.google.android.material.card.MaterialCardView>
+                                    </FrameLayout>
+                                </LinearLayout>
 
 
                             </LinearLayout>
@@ -783,27 +594,17 @@
                                 android:id="@+id/MoviePage"
                                 android:layout_width="match_parent"
                                 android:layout_height="match_parent"
-                                android:visibility="gone"
+                                android:visibility="visible"
                                 android:orientation="vertical">
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="Movies"
-                                    android:textStyle="bold"
-                                    android:fontFamily="@font/p"
-                                    android:textSize="15sp"
-                                    android:alpha="0.5"
-                                    android:textColor="?attr/FG_color"
-                                    tools:ignore="HardcodedText"/>
 
-                                <androidx.recyclerview.widget.RecyclerView
-                                    android:id="@+id/MoviesRecyclerView"
-                                    android:layout_height="match_parent"
+                                <androidx.core.widget.NestedScrollView
                                     android:layout_width="match_parent"
-                                    android:clipToPadding="false"
-                                    android:scrollbars="none"
-                                    tools:ignore="RtlSymmetry"
-                                    />
+                                    android:layout_height="match_parent"
+                                    tools:ignore="ScrollViewCount">
+
+
+
+                                </androidx.core.widget.NestedScrollView>
                             </LinearLayout>
 
 
@@ -830,7 +631,6 @@
                                     />
 
                                 <androidx.recyclerview.widget.RecyclerView
-                                    android:id="@+id/TVsRecyclerView"
                                     android:layout_width="match_parent"
                                     android:layout_height="match_parent"
                                     android:clipToPadding="false"
@@ -1516,7 +1316,7 @@
 
                     <include layout="@layout/laod_animation"/>
                 </LinearLayout>
-        </LinearLayout>
+        </FrameLayout>
     </androidx.cardview.widget.CardView>
 
 

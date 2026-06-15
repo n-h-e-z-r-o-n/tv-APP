@@ -753,7 +753,7 @@
                                     android:id="@+id/BottomOverlay"
                                     android:layout_width="0dp"
                                     android:layout_height="0dp"
-                                    android:background="@drawable/overlay_bottom_gradient"
+                                    android:background="@drawable/overlay_bottom_gradient_bg"
 
                                     app:layout_constraintBottom_toBottomOf="@id/FavBackdrop"
                                     app:layout_constraintStart_toStartOf="@id/FavBackdrop"
@@ -765,7 +765,7 @@
                                     android:id="@+id/LeftOverlay"
                                     android:layout_width="0dp"
                                     android:layout_height="0dp"
-                                    android:background="@drawable/overlay_left_gradient"
+                                    android:background="@drawable/overlay_left_gradient_bg"
                                     app:layout_constraintStart_toStartOf="@id/FavBackdrop"
                                     app:layout_constraintTop_toTopOf="@id/FavBackdrop"
                                     app:layout_constraintBottom_toBottomOf="@id/FavBackdrop"

@@ -1,0 +1,389 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:id="@+id/NavBar"
+        android:layout_width="70dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        android:orientation="vertical"
+        android:background="@drawable/overlay_left_gradient_bg"
+        android:gravity="center"
+        android:elevation="15dp">
+
+        <androidx.cardview.widget.CardView
+            android:id="@+id/navBarContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="10dp"
+            android:layout_gravity="center_vertical"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="?attr/BG_color_up">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:padding="5dp"
+                android:background="?attr/transparentEffect" >
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    tools:ignore="UseCompoundDrawables"
+                    android:layout_marginBottom="20dp">
+
+
+                    <ImageView
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:src="@drawable/ic_shows_logo"
+                        tools:ignore="ContentDescription"
+                        android:alpha="0.6"
+                        app:tint="?attr/FG_color"/>
+
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:gravity="center"
+                        android:layout_height="wrap_content"
+                        android:text="shows"
+                        android:layout_gravity="center_vertical"
+                        android:fontFamily="@font/n"
+                        android:textSize="23sp"
+                        android:textColor="?attr/FG_color"
+                        android:singleLine="true"
+                        tools:ignore="HardcodedText"
+                        android:shadowColor="?attr/AccentColor"
+                        android:shadowDx="2"
+                        android:shadowDy="2"
+                        android:shadowRadius="4"/>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/HomeBtn"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="9dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:focusableInTouchMode="true"
+                    android:gravity="center_vertical"
+                    android:nextFocusLeft="@+id/HomeBtn"
+                    android:nextFocusUp="@+id/cNotificationBtn"
+                    android:nextFocusDown="@+id/MoviesBtn"
+                    android:background="@drawable/background_hovor"
+                    android:padding="5dp"
+                    tools:ignore="UseCompoundDrawables,UselessParent">
+
+                    <ImageView
+                        android:layout_width="25dp"
+                        android:layout_height="25dp"
+                        android:src="@drawable/ic_anime_home"
+                        app:tint="?attr/FG_color"
+                        tools:ignore="ContentDescription" />
+
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="9dp"
+                        android:fontFamily="@font/n"
+                        android:text="Home"
+                        android:textSize="18sp"
+                        android:singleLine="true"
+                        android:textColor="?attr/FG_color"
+                        tools:ignore="HardcodedText" />
+
+                </LinearLayout>
+
+
+                <LinearLayout
+                    android:id="@+id/MoviesBtn"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="9dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:focusableInTouchMode="true"
+                    android:gravity="center_vertical"
+                    android:nextFocusLeft="@+id/MoviesBtn"
+                    android:nextFocusUp="@+id/HomeBtn"
+                    android:nextFocusDown="@+id/seriesBtn"
+                    android:background="@drawable/background_hovor"
+                    android:padding="5dp"
+                    tools:ignore="UseCompoundDrawables,UselessParent">
+
+                    <ImageView
+                        android:layout_width="25dp"
+                        android:layout_height="25dp"
+                        android:src="@drawable/ic_movies"
+                        app:tint="?attr/FG_color"
+                        tools:ignore="ContentDescription" />
+
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="9dp"
+                        android:fontFamily="@font/n"
+                        android:text="Movies"
+                        android:singleLine="true"
+                        android:textColor="?attr/FG_color"
+                        android:textSize="18sp"
+                        tools:ignore="HardcodedText,SmallSp" />
+
+                </LinearLayout>
+
+
+                <LinearLayout
+                    android:id="@+id/seriesBtn"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="9dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:focusableInTouchMode="true"
+                    android:gravity="center_vertical"
+                    android:nextFocusLeft="@+id/seriesBtn"
+                    android:nextFocusUp="@+id/MoviesBtn"
+                    android:nextFocusDown="@+id/SearchBtn"
+                    android:background="@drawable/background_hovor"
+                    android:padding="5dp"
+                    tools:ignore="UseCompoundDrawables,UselessParent">
+
+                    <ImageView
+                        android:layout_width="25dp"
+                        android:layout_height="25dp"
+                        android:src="@drawable/ic_series"
+                        app:tint="?attr/FG_color"
+                        tools:ignore="ContentDescription" />
+
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="9dp"
+                        android:fontFamily="@font/n"
+                        android:text="Series"
+                        android:singleLine="true"
+                        android:textColor="?attr/FG_color"
+                        android:textSize="18sp"
+                        tools:ignore="HardcodedText,SmallSp" />
+
+                </LinearLayout>
+
+
+                <LinearLayout
+                    android:id="@+id/SearchBtn"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="9dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:focusableInTouchMode="true"
+                    android:gravity="center_vertical"
+                    android:nextFocusLeft="@+id/SearchBtn"
+                    android:nextFocusUp="@+id/seriesBtn"
+                    android:nextFocusDown="@+id/FilterBtn"
+                    android:background="@drawable/background_hovor"
+                    android:padding="5dp"
+                    tools:ignore="UseCompoundDrawables,UselessParent">
+
+                    <ImageView
+                        android:layout_width="25dp"
+                        android:layout_height="25dp"
+                        android:src="@drawable/ic_anime_search"
+                        app:tint="?attr/FG_color"
+                        tools:ignore="ContentDescription" />
+
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="9dp"
+                        android:fontFamily="@font/n"
+                        android:text="Search"
+                        android:singleLine="true"
+                        android:textColor="?attr/FG_color"
+                        android:textSize="18sp"
+                        tools:ignore="HardcodedText,SmallSp" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/FilterBtn"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="9dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:focusableInTouchMode="true"
+                    android:gravity="center_vertical"
+                    android:nextFocusLeft="@+id/FilterBtn"
+                    android:nextFocusUp="@+id/SearchBtn"
+                    android:nextFocusDown="@+id/FavBtn"
+                    android:background="@drawable/background_hovor"
+                    android:padding="5dp"
+                    tools:ignore="UseCompoundDrawables,UselessParent">
+
+                    <ImageView
+                        android:layout_width="25dp"
+                        android:layout_height="25dp"
+                        android:src="@drawable/ic_filter"
+                        app:tint="?attr/FG_color"
+                        tools:ignore="ContentDescription" />
+
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="9dp"
+                        android:fontFamily="@font/n"
+                        android:text="Filter"
+                        android:singleLine="true"
+                        android:textColor="?attr/FG_color"
+                        android:textSize="18sp"
+                        tools:ignore="HardcodedText,SmallSp" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/FavBtn"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="9dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:focusableInTouchMode="true"
+                    android:gravity="center_vertical"
+                    android:nextFocusLeft="@+id/FavBtn"
+                    android:nextFocusUp="@+id/FilterBtn"
+                    android:nextFocusDown="@+id/cWatchBtn"
+                    android:background="@drawable/background_hovor"
+                    android:padding="5dp"
+                    tools:ignore="UseCompoundDrawables,UselessParent">
+
+                    <ImageView
+                        android:layout_width="25dp"
+                        android:layout_height="25dp"
+                        android:src="@drawable/heart1"
+                        app:tint="?attr/FG_color"
+                        tools:ignore="ContentDescription" />
+
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="9dp"
+                        android:fontFamily="@font/n"
+                        android:text="Favorites"
+                        android:singleLine="true"
+                        android:textColor="?attr/FG_color"
+                        android:textSize="18sp"
+                        tools:ignore="HardcodedText,SmallSp" />
+
+                </LinearLayout>
+
+
+                <LinearLayout
+                    android:id="@+id/cWatchBtn"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="9dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:focusableInTouchMode="true"
+                    android:gravity="center_vertical"
+                    android:nextFocusUp="@+id/FavBtn"
+                    android:nextFocusDown="@+id/cNotificationBtn"
+                    android:nextFocusLeft="@+id/cWatchBtn"
+                    android:padding="5dp"
+                    android:background="@drawable/background_hovor"
+                    tools:ignore="UselessParent">
+
+                    <ImageView
+                        android:layout_width="25dp"
+                        android:layout_height="25dp"
+                        android:src="@drawable/clock"
+                        app:tint="?attr/FG_color"
+                        tools:ignore="ContentDescription" />
+
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="9dp"
+                        android:text="Watching All"
+                        android:fontFamily="@font/n"
+                        android:singleLine="true"
+                        android:textColor="?attr/FG_color"
+                        android:textSize="18sp"
+                        tools:ignore="HardcodedText,SmallSp" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/cNotificationBtn"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="9dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:focusableInTouchMode="true"
+                    android:gravity="center_vertical"
+                    android:nextFocusUp="@+id/cWatchBtn"
+                    android:nextFocusDown="@+id/HomeBtn"
+                    android:nextFocusLeft="@+id/cNotificationBtn"
+                    android:padding="5dp"
+                    android:background="@drawable/background_hovor"
+                    tools:ignore="UselessParent">
+
+                    <FrameLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content">
+
+                        <androidx.cardview.widget.CardView
+                            android:id="@+id/cNotificationAnimeIcon"
+                            android:layout_width="9dp"
+                            android:layout_height="9dp"
+                            app:cardCornerRadius="50dp"
+                            android:layout_gravity="right"
+                            android:visibility="gone"
+                            app:cardBackgroundColor="@android:color/holo_red_light"
+                            tools:ignore="RtlHardcoded" />
+
+                        <ImageView
+                            android:layout_width="25dp"
+                            android:layout_height="25dp"
+                            android:src="@drawable/ic_notification"
+                            app:tint="?attr/FG_color"
+                            android:layout_marginRight="5dp"
+                            tools:ignore="ContentDescription" />
+                    </FrameLayout>
+
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:text="Notification"
+                        android:fontFamily="@font/n"
+                        android:singleLine="true"
+                        android:textColor="?attr/FG_color"
+                        android:textSize="18sp"
+                        tools:ignore="HardcodedText,SmallSp" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+    </LinearLayout>
+
+
+
+
+

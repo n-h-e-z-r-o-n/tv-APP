@@ -30,6 +30,7 @@ import android.view.WindowInsetsController
 import android.view.WindowManager
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.view.animation.AccelerateInterpolator
+import android.view.animation.PathInterpolator
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
@@ -789,6 +790,7 @@ object GlobalUtils {
     ////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////
 
+    //designed to force a container (like a section or a row) to be fully visible on the screen whenever an item inside it is focused.
     fun enableFullViewOnDescendantFocus(
         parent: ViewGroup,
         descendant: View
@@ -801,6 +803,45 @@ object GlobalUtils {
             parent.post {
                 scrollParentFullyIntoView(parent)
             }
+        }
+    }
+
+    fun enableFullViewOnDescendantFocus(
+        parent: ViewGroup
+    ) {
+        // Set container height to match the screen height
+        val displayMetrics = parent.context.resources.displayMetrics
+        val params = parent.layoutParams
+        if (params != null) {
+            params.height = displayMetrics.heightPixels
+            parent.layoutParams = params
+        }
+
+        parent.viewTreeObserver.addOnGlobalFocusChangeListener { _, newFocus ->
+            if (newFocus != null) {
+                var p = newFocus.parent
+                while (p != null) {
+                    if (p === parent) {
+                        parent.post {
+                            scrollParentFullyIntoView(parent)
+                        }
+                        break
+                    }
+                    p = p.parent
+                }
+            }
+        }
+    }
+
+    fun expandAndScrollIntoView(parent: ViewGroup) {
+        val displayMetrics = parent.context.resources.displayMetrics
+
+        parent.layoutParams = parent.layoutParams.apply {
+            height = displayMetrics.heightPixels
+        }
+
+        parent.post {
+            scrollParentFullyIntoView(parent)
         }
     }
 
@@ -914,58 +955,14 @@ object GlobalUtils {
     fun exitApp(activity: Activity) {
         // Finish all activities
         activity.finishAffinity()
-
         // Remove from recent apps
         activity.finishAndRemoveTask()
-
         // Kill process
         android.os.Process.killProcess(android.os.Process.myPid())
         System.exit(0)
     }
     ////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////
-
-    /*
-    fun startSignIn() {
-        val options = GoogleSignInOptions.Builder(
-            GoogleSignInOptions.DEFAULT_SIGN_IN
-        )
-            .requestEmail()
-            .requestScopes(Scope(DriveScopes.DRIVE_APPDATA))
-            .build()
-
-        val client = GoogleSignIn.getClient(this, options)
-
-        startActivityForResult(client.signInIntent, 1001)
-    }
-    fun signOut() {
-
-        // Configure the same GoogleSignInOptions as in sign-in
-        val options = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestEmail()
-            .requestScopes(Scope(DriveScopes.DRIVE_APPDATA))
-            .build()
-
-        val googleSignInClient = GoogleSignIn.getClient(this, options)
-
-        // Sign out
-        googleSignInClient.signOut()
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    // Clear local references to GoogleDriveSyncManager or account
-                    driveSync = null
-
-                    Toast.makeText(this, "Signed out successfully", Toast.LENGTH_SHORT).show()
-                    Log.d("Drive", "User signed out")
-                } else {
-                    Toast.makeText(this, "Sign out failed", Toast.LENGTH_SHORT).show()
-                    Log.e("Drive", "Sign out failed", task.exception)
-                }
-            }
-    }
-
-     */
-
     ////////////////////////////////////////////////////////////////////////////////////////////////
 
     suspend fun ipCheck(context: Context): Boolean {
@@ -1333,7 +1330,129 @@ object GlobalUtils {
         }
     }
 
+    // give your app that premium, Netflix-style vertical scrolling behavior.
+    fun snapRowToTopOnFocus_(scrollView: ScrollView, rowView: View) {
+        rowView.viewTreeObserver.addOnGlobalFocusChangeListener { oldFocus, newFocus ->
+            val oldWasInRow = oldFocus?.let { isViewAncestor(rowView, it) } ?: false
+            val newIsInRow = newFocus?.let { isViewAncestor(rowView, it) } ?: false
+
+            if (!oldWasInRow && newIsInRow) {
+                scrollView.post {
+                    scrollView.smoothScrollTo(0, rowView.top)
+                }
+            }
+        }
+    }
+
+    fun snapRowToTopOnFocus(scrollView: ScrollView, rowView: View) {
+        rowView.viewTreeObserver.addOnGlobalFocusChangeListener { oldFocus, newFocus ->
+            val oldWasInRow = oldFocus?.let { isViewAncestor(rowView, it) } ?: false
+            val newIsInRow = newFocus?.let { isViewAncestor(rowView, it) } ?: false
+
+            if (!oldWasInRow && newIsInRow) {
+                scrollView.post {
+                    // ✅ FIX 1: Get the true Y position relative to the ScrollView
+                    val targetY = getRelativeTop(rowView, scrollView)
+
+                    // ✅ FIX 2: Use our custom interpolator and cancelable animation
+                    animateScrollTo(scrollView, targetY.coerceAtLeast(0))
+                }
+            }
+        }
+    }
+
+
+
+    private fun isViewAncestor(parent: View, child: View): Boolean {
+        var current: android.view.ViewParent? = child.parent
+        while (current != null) {
+            if (current === parent) return true
+            current = current.parent
+        }
+        return false
+    }
+
+
+
+    private var activeScrollAnimator: ValueAnimator? = null
+
+    fun centerParentOnFocus(scrollView: ScrollView, parentView: View) {
+        // Note: If you call this in a Fragment/Activity, ensure you remove the listener in onDestroyView
+        parentView.viewTreeObserver.addOnGlobalFocusChangeListener { oldFocus, newFocus ->
+
+            val oldWasInParent = oldFocus?.let { isViewAncestor(parentView, it) } ?: false
+            val newIsInParent = newFocus?.let { isViewAncestor(parentView, it) } ?: false
+
+            if (!oldWasInParent && newIsInParent) {
+                scrollView.post {
+                    // ✅ FIX 1: Calculate the true Y position relative to the ScrollView
+                    val relativeTop = getRelativeTop(parentView, scrollView)
+
+                    val targetY = relativeTop - (scrollView.height / 2) + (parentView.height / 2)
+
+                    animateScrollTo(scrollView, targetY.coerceAtLeast(0))
+                }
+            }
+        }
+    }
+
+    // Helper to get the absolute Top of a view relative to a specific ancestor
+    private fun getRelativeTop(child: View, ancestor: ViewGroup): Int {
+        var top = child.top
+        var currentParent = child.parent as? View
+
+        while (currentParent != null && currentParent != ancestor) {
+            top += currentParent.top
+            currentParent = currentParent.parent as? View
+        }
+        return top
+    }
+
+    private fun animateScrollTo(
+        scrollView: ScrollView,
+        targetY: Int
+    ) {
+        val startY = scrollView.scrollY
+        if (startY == targetY) return // Already there
+
+        // ✅ FIX 2: Cancel any currently running scroll animation before starting a new one
+        activeScrollAnimator?.cancel()
+
+        activeScrollAnimator = ValueAnimator.ofInt(startY, targetY).apply {
+            duration = 450L
+
+            interpolator = PathInterpolator(
+                0.22f,
+                1f,
+                0.36f,
+                1f
+            ) // Prime/Netflix style easing
+
+            addUpdateListener {
+                scrollView.scrollTo(
+                    0,
+                    it.animatedValue as Int
+                )
+            }
+
+            start()
+        }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    fun setHeightToMatchScreen(view: View) {
+        val displayMetrics = view.context.resources.displayMetrics
+        val screenHeight = displayMetrics.heightPixels
+        val params = view.layoutParams
+        if (params != null) {
+            params.height = screenHeight
+            view.layoutParams = params
+        } else {
+            view.layoutParams = android.view.ViewGroup.LayoutParams(
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                screenHeight
+            )
+        }
+    }
 
 }
-
-

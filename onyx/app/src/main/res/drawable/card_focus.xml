@@ -2,14 +2,6 @@
     <!-- Focused state -->
     <item android:state_focused="true">
         <shape android:shape="rectangle">
-            <gradient
-                android:type="radial"
-                android:centerX="50%"
-                android:centerY="50%"
-                android:gradientRadius="150dp"
-                android:startColor="@android:color/transparent"
-                android:endColor="?attr/AccentColor"
-                />
 
             <stroke
                 android:width="2dp"

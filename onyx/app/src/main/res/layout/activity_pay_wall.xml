@@ -1014,14 +1014,14 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:alpha="0.8"
-                android:background="@drawable/overlay_left_gradient"
+                android:background="@drawable/overlay_left_gradient_bg"
                 />
 
             <View
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:alpha="0.8"
-                android:background="@drawable/overlay_left_gradient"
+                android:background="@drawable/overlay_left_gradient_bg"
                 />
         </FrameLayout>
     </LinearLayout>

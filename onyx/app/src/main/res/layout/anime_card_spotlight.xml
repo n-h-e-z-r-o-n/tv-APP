@@ -21,45 +21,41 @@
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="horizontal"
-        >
+        android:orientation="horizontal">
 
-        <FrameLayout
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_gravity="end">
+                <FrameLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="end">
+                        <ImageView
+                            android:id="@+id/SliderBackdrop"
+                            android:layout_width="wrap_content"
+                            android:layout_height="match_parent"
+                            android:adjustViewBounds="true"
+                            android:scaleType="centerCrop"
+                            tools:src="@raw/gradient_img"
+                            tools:ignore="ContentDescription" />
 
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="30dp"
+                            android:visibility="gone"
+                            android:background="@drawable/overlay_bottom_gradient_bg"
+                            android:orientation="horizontal"
+                            android:layout_gravity="bottom" />
 
-
-        <ImageView
-            android:id="@+id/SliderBackdrop"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:adjustViewBounds="true"
-            android:scaleType="centerCrop"
-            android:src="@raw/gradient_img"
-            tools:ignore="ContentDescription" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="30dp"
-            android:visibility="gone"
-            android:background="@drawable/overlay_bottom_gradient"
-            android:orientation="horizontal"
-            android:layout_gravity="bottom" />
-
-        <LinearLayout
-            android:layout_width="100dp"
-            android:layout_height="match_parent"
-            android:visibility="visible"
-            android:background="@drawable/overlay_left_gradient_light"
-            android:orientation="horizontal"
-            android:layout_gravity="start" />
-        </FrameLayout>
+                        <LinearLayout
+                            android:layout_width="100dp"
+                            android:layout_height="match_parent"
+                            android:visibility="visible"
+                            android:background="@drawable/overlay_left_gradient_bg_up"
+                            android:orientation="horizontal"
+                            android:layout_gravity="start" />
+                </FrameLayout>
 
 
         <LinearLayout
-            android:layout_width="399dp"
+            android:layout_width="300dp"
             android:layout_height="match_parent"
             android:layout_gravity="bottom"
             android:orientation="vertical"
@@ -82,7 +78,7 @@
                 android:shadowDy="2"
                 android:shadowRadius="3"
                 android:singleLine="false"
-                android:text="Sakamoto Days Part 2"
+                tools:text="Sakamoto Days Part 2"
                 android:textColor="#FFFFFF"
                 android:textSize="30sp"
                 android:textStyle="bold"
@@ -327,14 +323,15 @@
                 android:ellipsize="end"
                 android:maxLines="5"
                 android:singleLine="false"
+                android:fontFamily="serif"
                 android:textColor="#FFFFFF"
                 android:shadowColor="#000000"
                 android:shadowDx="2"
+                tools:text="Five years ago, a tear in the fabric of reality brought creatures to our world from an alternate dimension bent on our destruction. A father hides his daughter on an island to keep her safe while he prepares her for survival and the"
                 android:shadowDy="2"
                 android:shadowRadius="3"
                 android:paddingHorizontal="2dp"
-
-                android:textSize="14sp"
+                android:textSize="12sp"
                 tools:ignore="Suspicious0dp" />
 
         </LinearLayout>

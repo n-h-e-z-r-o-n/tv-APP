@@ -34,7 +34,7 @@
             android:layout_width="match_parent"
             android:layout_height="10dp"
             android:layout_gravity="bottom"
-            android:background="@drawable/overlay_bottom_gradient"/>
+            android:background="@drawable/overlay_bottom_gradient_bg"/>
 
 
     </FrameLayout>

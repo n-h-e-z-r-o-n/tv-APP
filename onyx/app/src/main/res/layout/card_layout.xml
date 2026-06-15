@@ -38,14 +38,14 @@
                     android:layout_width="match_parent"
                     android:layout_height="50dp"
                     android:visibility="gone"
-                    android:background="@drawable/overlay_bottom_gradient"
+                    android:background="@drawable/overlay_bottom_gradient_bg"
                     android:orientation="horizontal"
                     android:layout_gravity="bottom" />
 
                 <LinearLayout
                     android:layout_width="100dp"
                     android:layout_height="match_parent"
-                    android:background="@drawable/overlay_left_gradient_light"
+                    android:background="@drawable/overlay_left_gradient_bg_up"
                     android:orientation="horizontal"
                     android:layout_gravity="start" />
 

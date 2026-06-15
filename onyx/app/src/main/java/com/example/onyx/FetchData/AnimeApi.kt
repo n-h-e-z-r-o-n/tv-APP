@@ -61,7 +61,7 @@ class AnimeApi(private val context: Context) {
     fun animeHome(): JSONObject? {
         return runBlocking {
             async(Dispatchers.IO) {
-                val url = "${BuildConfig.A_K}/api/v2/hianime/home"
+                val url = "${BuildConfig.A_K}/api/v2/anime/home"
                 makeRequest(url)
             }.await()
         }
@@ -71,7 +71,7 @@ class AnimeApi(private val context: Context) {
     fun animeInfo(animeId: String): JSONObject? {
         return runBlocking {
             async(Dispatchers.IO) {
-                val url = "${BuildConfig.A_K}/api/v2/hianime/anime/$animeId"
+                val url = "${BuildConfig.A_K}/api/v2/anime/anime/$animeId"
                 makeRequest(url)
             }.await()
         }
@@ -81,7 +81,7 @@ class AnimeApi(private val context: Context) {
     fun animeEpisodes(season_id: String): JSONObject? {
         return runBlocking {
             async(Dispatchers.IO) {
-                val url = "${BuildConfig.A_K}/api/v2/hianime/anime/$season_id/episodes"
+                val url = "${BuildConfig.A_K}/api/v2/anime/anime/$season_id/episodes"
                 makeRequest(url)
             }.await()
         }
@@ -91,7 +91,7 @@ class AnimeApi(private val context: Context) {
     fun animeEpisodeServers(animeEpisodeId: String): JSONObject? {
         return runBlocking {
             async(Dispatchers.IO) {
-                val url = "${BuildConfig.A_K}/api/v2/hianime/episode/servers?animeEpisodeId=$animeEpisodeId"
+                val url = "${BuildConfig.A_K}/api/v2/anime/episode/servers?animeEpisodeId=$animeEpisodeId"
                 makeRequest(url)
             }.await()
         }
@@ -101,7 +101,7 @@ class AnimeApi(private val context: Context) {
     fun animeEpisodeStreamingLinks(episodeId: String, serverName: String, category: String): JSONObject? {
         return runBlocking {
             async(Dispatchers.IO) {
-                val url = "${BuildConfig.A_K}/api/v2/hianime/episode/sources?animeEpisodeId=$episodeId&server=$serverName&category=$category"
+                val url = "${BuildConfig.A_K}/api/v2/anime/episode/sources?animeEpisodeId=$episodeId&server=$serverName&category=$category"
                 makeRequest(url)
             }.await()
         }

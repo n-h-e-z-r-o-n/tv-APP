@@ -54,7 +54,7 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="2dp"
-                    android:background="@drawable/overlay_bottom_gradient"
+                    android:background="@drawable/overlay_bottom_gradient_bg"
                     android:layout_gravity="bottom"/>
             </FrameLayout>
 

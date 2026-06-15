@@ -758,7 +758,7 @@ class Anime_Page : AppCompatActivity() {
              repeat(5) { attempt ->
                  try {
                      val url =
-                         "$urlHome/api/v2/hianime/category/dubbed-anime?page=$currentDubbedAnimePage"
+                         "$urlHome/api/v2/anime/category/dubbed-anime?page=$currentDubbedAnimePage"
                      val connection = URL(url).openConnection() as HttpURLConnection
                      connection.requestMethod = "GET"
                      val response = connection.inputStream.bufferedReader().use { it.readText() }
@@ -841,7 +841,7 @@ class Anime_Page : AppCompatActivity() {
              repeat(5) { attempt ->
                  try {
                      val url =
-                         "$urlHome/api/v2/hianime/category/most-popular?page=$currentPopularAnimePage"
+                         "$urlHome/api/v2/anime/category/most-popular?page=$currentPopularAnimePage"
                      val connection = URL(url).openConnection() as HttpURLConnection
                      connection.requestMethod = "GET"
                      val response = connection.inputStream.bufferedReader().use { it.readText() }
@@ -923,7 +923,7 @@ class Anime_Page : AppCompatActivity() {
              repeat(5) { attempt ->
                  try {
                      val url =
-                         "$urlHome/api/v2/hianime/category/recently-updated?page=$currentRecentlyAnimePage"
+                         "$urlHome/api/v2/hianimeanime/category/recently-updated?page=$currentRecentlyAnimePage"
                      val connection = URL(url).openConnection() as HttpURLConnection
                      connection.requestMethod = "GET"
                      val response = connection.inputStream.bufferedReader().use { it.readText() }
@@ -1008,7 +1008,7 @@ class Anime_Page : AppCompatActivity() {
                  repeat(1) { attempt ->
                      try {
 
-                         val url = "$urlHome/api/v2/hianime/search?q=$searchTerm&page=1"
+                         val url = "$urlHome/api/v2/anime/search?q=$searchTerm&page=1"
                          val connection = URL(url).openConnection() as HttpURLConnection
                          connection.requestMethod = "GET"
                          connection.setRequestProperty("accept", "application/json")

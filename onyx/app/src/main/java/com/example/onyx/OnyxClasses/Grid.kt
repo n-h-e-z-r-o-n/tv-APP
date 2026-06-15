@@ -38,6 +38,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -46,14 +47,13 @@ import kotlinx.coroutines.withContext
 class GridAdapter(
     private val items: MutableList<MovieItemOne>,
     private val layoutResId: Int,
-
 ) : RecyclerView.Adapter<GridAdapter.ViewHolder>() {
 
     companion object {
         private const val VIEW_TYPE_MOVIE = 0
         private const val VIEW_TYPE_ADD_BUTTON = 1
         private var lastKeyTime = 0L
-        private val KEY_DEBOUNCE_DELAY = 150L // ms
+        private val KEY_DEBOUNCE_DELAY = 300L // ms
     }
 
     var onAddMoreClicked: (() -> Unit)? = null
@@ -72,14 +72,7 @@ class GridAdapter(
         val showRating: TextView? = view.findViewById(R.id.showRating)
         val showRS: TextView? = view.findViewById(R.id.showRS)
         val showType: TextView? = view.findViewById(R.id.showType)
-
         val Logo_image: ImageView? = view.findViewById(R.id.itemLogo)
-
-
-
-        init {
-
-        }
     }
 
     override fun getItemViewType(position: Int): Int {
@@ -89,19 +82,21 @@ class GridAdapter(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val layoutId = if (viewType == VIEW_TYPE_ADD_BUTTON) {
-            R.layout.item_add_more // 👈 Create this layout separately
+            R.layout.item_add_more
         } else {
             layoutResId
         }
 
         val view = LayoutInflater.from(parent.context).inflate(layoutId, parent, false)
-
         return ViewHolder(view)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        if (getItemViewType(position) == VIEW_TYPE_ADD_BUTTON) {
 
+        // ==========================================
+        // 1. HANDLE "ADD MORE" BUTTON
+        // ==========================================
+        if (getItemViewType(position) == VIEW_TYPE_ADD_BUTTON) {
             val content = holder.itemView.findViewById<View>(R.id.addMoreContent)
             val loading = holder.itemView.findViewById<View>(R.id.addMoreLoading)
 
@@ -116,12 +111,13 @@ class GridAdapter(
                 holder.itemView.isClickable = true
                 holder.itemView.isFocusable = true
             }
-            // Handle the Add More button
+
+            // Fallback click listener
             holder.itemView.setOnClickListener {
                 if (!isLoadingMore) {
-
+                    isLoadingMore = true
                     val recycler = holder.itemView.parent as RecyclerView
-                    val prevPosition = position - 1  // use 'position' from onBindViewHolder
+                    val prevPosition = holder.bindingAdapterPosition - 1
 
                     if (prevPosition >= 0) {
                         recycler.post {
@@ -130,96 +126,99 @@ class GridAdapter(
                                 ?.requestFocus()
                         }
                     }
-
-                    isLoadingMore = true
                     onAddMoreClicked?.invoke()
                 }
-                //onAddMoreClicked?.invoke()
             }
 
-            holder.itemView.setOnFocusChangeListener { v, hasFocus ->
-                if (hasFocus) {
-                    // Trigger the "Add More" action automatically when it gains focus
-                    if (!isLoadingMore) {
-                        holder.itemView.performClick()
-                    }
-                }
-            }
+            // Note: Auto-focus click removed because the 6-item prefetch handles this safely now.
             return
         }
 
+        // ==========================================
+        // 2. HANDLE STANDARD MOVIE ITEM
+        // ==========================================
         val currentItem = items[position]
         val title = currentItem.title
-        val imageUrl = currentItem.backdropUrl
+        val imageUrl = currentItem.posterUlr
         val imdbCode = currentItem.imdbCode
         val type = currentItem.type
         val year = currentItem.year
         val rating = currentItem.rating
         val runtime = currentItem.runtime
 
-        //holder.showYear?.text = year.substring(0, 4)
         holder.showYear?.text = if (year.length >= 4) year.substring(0, 4) else "N/A"
         holder.showTitle?.text = title
         holder.showRating?.text = rating
         holder.showRS?.text = runtime
         holder.showType?.text = type
 
+        // Note: Doing API calls directly inside onBindViewHolder can cause scroll lag.
+        // Ensure TMDBapi caches results or handles async heavily!
+        try {
+            val fetch = TMDBapi(holder.itemView.context)
+            if (holder.Logo_image != null && holder.showTitle != null) {
+                fetch.fetchLogos(type, imdbCode, holder.Logo_image, holder.showTitle)
+            }
+        } catch (e: Exception){}
 
-        val fetch = TMDBapi(holder.itemView.context)
-
-        fetch.fetchLogos(type, imdbCode, holder.Logo_image as ImageView, holder.showTitle as TextView)
-
-
-
-
-
-        Glide.with(holder.itemView.context)
-            .load(imageUrl)
-            .centerInside()
-            .into(holder.Movie_image!!)
+        holder.Movie_image?.let {
+            Glide.with(holder.itemView.context)
+                .load(imageUrl)
+                .centerInside()
+                .into(it)
+        }
 
         holder.itemView.setOnClickListener {
             val context = holder.itemView.context
-            val intent = Intent(context, Watch_Page::class.java)
-            intent.putExtra("imdb_code", imdbCode)
-            intent.putExtra("type", type)
+            val intent = Intent(context, Watch_Page::class.java).apply {
+                putExtra("imdb_code", imdbCode)
+                putExtra("type", type)
+            }
             context.startActivity(intent)
         }
 
+        // ==========================================
+        // 3. TV FOCUS PREFETCH LOGIC
+        // ==========================================
         holder.itemView.setOnFocusChangeListener { v, hasFocus ->
             if (hasFocus) {
-                onItemFocused?.invoke(v, currentItem) //show popup
-            }
-            else {
+                onItemFocused?.invoke(v, currentItem) // show popup
+
+                // ✅ Trigger load when focused on the last 6 items
+                val prefetchThreshold = 6
+                val currentPos = holder.bindingAdapterPosition
+
+                if (!isLoadingMore && currentPos != RecyclerView.NO_POSITION && currentPos >= items.size - prefetchThreshold) {
+                    isLoadingMore = true
+                    v.post {
+                        onAddMoreClicked?.invoke()
+                    }
+                }
+            } else {
                 onItemFocusLost?.invoke()   // hide popup
             }
         }
 
-
-
-        holder.itemView.setOnKeyListener { v, keyCode, event ->
+        holder.itemView.setOnKeyListener { _, keyCode, event ->
             if (event.action != KeyEvent.ACTION_DOWN) return@setOnKeyListener false
             val now = System.currentTimeMillis()
             if (now - lastKeyTime < KEY_DEBOUNCE_DELAY) return@setOnKeyListener true
             lastKeyTime = now
 
+            val currentPos = holder.bindingAdapterPosition
             when (keyCode) {
                 KeyEvent.KEYCODE_DPAD_LEFT -> {
-                    if (position == 0) return@setOnKeyListener true
+                    if (currentPos == 0) return@setOnKeyListener true
                 }
                 KeyEvent.KEYCODE_DPAD_RIGHT -> {
-                    if (position == items.size) return@setOnKeyListener true
+                    if (currentPos == items.size) return@setOnKeyListener true
                 }
             }
-
             false
         }
-
-
     }
 
     override fun getItemCount(): Int {
-        // Total items = movies + the add button
         return items.size + 1
     }
 
@@ -233,9 +232,11 @@ class GridAdapter(
         items.addAll(newItems)
         notifyItemRangeInserted(startPos, newItems.size)
     }
+
     fun clearItems() {
+        val size = items.size
         items.clear()
-        notifyDataSetChanged()
+        notifyItemRangeRemoved(0, size) // Much smoother than notifyDataSetChanged()
     }
 }
 
@@ -261,7 +262,7 @@ class FilterAdapter(
         private const val VIEW_TYPE_MOVIE = 0
         private const val VIEW_TYPE_ADD_BUTTON = 1
         private var lastKeyTime = 0L
-        private val KEY_DEBOUNCE_DELAY = 170L // ms
+        private val KEY_DEBOUNCE_DELAY = 370L // ms
     }
 
     var onAddMoreClicked: (() -> Unit)? = null
@@ -270,7 +271,8 @@ class FilterAdapter(
     var isLoadingMore = false
         set(value) {
             field = value
-            notifyItemChanged(items.size) // refresh the "Add More" item only
+            // Only refresh the "Add More" button to show/hide the loading spinner
+            notifyItemChanged(items.size)
         }
 
     inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -280,10 +282,6 @@ class FilterAdapter(
         val showRating: TextView? = view.findViewById(R.id.showRating)
         val showRS: TextView? = view.findViewById(R.id.showRS)
         val showType: TextView? = view.findViewById(R.id.showType)
-
-        init {
-
-        }
     }
 
     override fun getItemViewType(position: Int): Int {
@@ -293,22 +291,25 @@ class FilterAdapter(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val layoutId = if (viewType == VIEW_TYPE_ADD_BUTTON) {
-            R.layout.item_add_more // 👈 Create this layout separately
+            R.layout.item_add_more
         } else {
             layoutResId
         }
 
         val view = LayoutInflater.from(parent.context).inflate(layoutId, parent, false)
-
         return ViewHolder(view)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        if (getItemViewType(position) == VIEW_TYPE_ADD_BUTTON) {
 
+        // ==========================================
+        // 1. HANDLE "ADD MORE" BUTTON
+        // ==========================================
+        if (getItemViewType(position) == VIEW_TYPE_ADD_BUTTON) {
             val content = holder.itemView.findViewById<View>(R.id.addMoreContent)
             val loading = holder.itemView.findViewById<View>(R.id.addMoreLoading)
 
+            // Toggle spinner vs button based on state
             if (isLoadingMore) {
                 content.visibility = View.GONE
                 loading.visibility = View.VISIBLE
@@ -320,13 +321,14 @@ class FilterAdapter(
                 holder.itemView.isClickable = true
                 holder.itemView.isFocusable = true
             }
-            // Handle the Add More button
-            holder.itemView.setOnClickListener {
 
+            // Fallback click listener (if user manually clicks it before prefetch triggers)
+            holder.itemView.setOnClickListener {
                 if (!isLoadingMore) {
+                    isLoadingMore = true
 
                     val recycler = holder.itemView.parent as RecyclerView
-                    val prevPosition = position - 1  // use 'position' from onBindViewHolder
+                    val prevPosition = holder.bindingAdapterPosition - 1
 
                     if (prevPosition >= 0) {
                         recycler.post {
@@ -335,90 +337,80 @@ class FilterAdapter(
                                 ?.requestFocus()
                         }
                     }
-
-                    isLoadingMore = true
                     onAddMoreClicked?.invoke()
                 }
             }
-
-            holder.itemView.setOnFocusChangeListener { v, hasFocus ->
-                if (hasFocus) {
-                    // Trigger the "Add More" action automatically when it gains focus
-                    if (!isLoadingMore) {
-                        holder.itemView.performClick()
-                    }
-                }
-            }
-
             return
         }
 
+        // ==========================================
+        // 2. HANDLE STANDARD MOVIE ITEM
+        // ==========================================
         val currentItem = items[position]
-        val title = currentItem.title
-        val imageUrl = currentItem.backdropUrl
-        val imdbCode = currentItem.imdbCode
-        val type = currentItem.type
-        val year = currentItem.year
-        val rating = currentItem.rating
-        val runtime = currentItem.runtime
 
-        holder.showYear?.text = year
-        holder.showTitle?.text = title
-        holder.showRating?.text = rating
-        holder.showRS?.text = runtime
-        holder.showType?.text = type
+        holder.showYear?.text = currentItem.year
+        holder.showTitle?.text = currentItem.title
+        holder.showRating?.text = currentItem.rating
+        holder.showRS?.text = currentItem.runtime
+        holder.showType?.text = currentItem.type
 
-        /*
-        Glide.with(holder.itemView.context)
-            .load(imageUrl)
-            .centerInside()
-            .into(holder.Movie_image!!)
-
-         */
-
-        // ✅ wait until ImageView is measured
+        // Glide Image Loading (wait until ImageView is measured)
         holder.itemView.post {
             val currentHeight = holder.itemView.height
             val currentWidth = holder.itemView.width
-            val sizeH = (currentHeight  * 2f).toInt()
-            val sizeW = (currentWidth  * 2f).toInt()
+            val sizeH = (currentHeight * 2f).toInt()
+            val sizeW = (currentWidth * 2f).toInt()
 
             holder.Movie_image?.let {
                 Glide.with(holder.itemView.context)
-                    .load(imageUrl)
+                    .load(currentItem.posterUlr)
                     .override(sizeW, sizeH)
                     //.override(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL)
                     .thumbnail(
                         Glide.with(holder.itemView.context)
-                            .load(imageUrl)
+                            .load(currentItem.posterUlr)
                             .sizeMultiplier(0.5f)
                     )
                     .diskCacheStrategy(DiskCacheStrategy.ALL)
                     .into(it)
             }
-
         }
 
+        // Click to open Watch_Page
         holder.itemView.setOnClickListener {
             val context = holder.itemView.context
-            val intent = Intent(context, Watch_Page::class.java)
-            intent.putExtra("imdb_code", imdbCode)
-            intent.putExtra("type", type)
+            val intent = Intent(context, Watch_Page::class.java).apply {
+                putExtra("imdb_code", currentItem.imdbCode)
+                putExtra("type", currentItem.type)
+            }
             context.startActivity(intent)
         }
 
+        // TV Focus logic & Background Prefetching
         holder.itemView.setOnFocusChangeListener { v, hasFocus ->
             if (hasFocus) {
+                // Trigger standard UI updates
                 onItemFocused?.invoke(v, currentItem)
-            }
-            else {
-                onItemFocusLost?.invoke()   // hide popup
+
+                // ✅ TV PREFETCH LOGIC: Load more if we are in the last 6 items
+                val prefetchThreshold = 8
+                val currentPos = holder.bindingAdapterPosition
+
+                if (!isLoadingMore && currentPos != RecyclerView.NO_POSITION && currentPos >= items.size - prefetchThreshold) {
+                    isLoadingMore = true
+
+                    // Post to avoid interrupting the TV focus outline animation
+                    v.post {
+                        onAddMoreClicked?.invoke()
+                    }
+                }
+            } else {
+                onItemFocusLost?.invoke()
             }
         }
 
-
-
-        holder.itemView.setOnKeyListener { v, keyCode, event ->
+        // D-Pad Debounce Key Listener
+        holder.itemView.setOnKeyListener { _, keyCode, event ->
             if (event.action != KeyEvent.ACTION_DOWN) return@setOnKeyListener false
             val now = System.currentTimeMillis()
             if (now - lastKeyTime < KEY_DEBOUNCE_DELAY) return@setOnKeyListener true
@@ -426,13 +418,12 @@ class FilterAdapter(
 
             when (keyCode) {
                 KeyEvent.KEYCODE_DPAD_LEFT -> {
-                    //if (position == 0) return@setOnKeyListener true
+                    // Logic for left boundary if needed
                 }
                 KeyEvent.KEYCODE_DPAD_RIGHT -> {
                     if (position == items.size) return@setOnKeyListener true
                 }
             }
-
             false
         }
     }
@@ -441,6 +432,10 @@ class FilterAdapter(
         // Total items = movies + the add button
         return items.size + 1
     }
+
+    // ==========================================
+    // HELPER METHODS
+    // ==========================================
 
     fun addItem(item: filterItemOne) {
         items.add(item)
@@ -452,9 +447,11 @@ class FilterAdapter(
         items.addAll(newItems)
         notifyItemRangeInserted(startPos, newItems.size)
     }
+
     fun clearItems() {
+        val size = items.size
         items.clear()
-        notifyDataSetChanged()
+        notifyItemRangeRemoved(0, size)
     }
 }
 
@@ -467,7 +464,10 @@ data class filterItemOne(
     val type: String = "",
     val year: String = "",
     val rating: String = "",
-    val runtime: String = ""
+    val runtime: String = "",
+    val overview: String = "",
+    val isAdult: Boolean = false,
+    val genres: String = ""
 )
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -557,6 +557,9 @@ class CategoryAdapter(
         private val KEY_DEBOUNCE_DELAY = 150L // ms
     }
 
+    var onItemFocused: ((View, categoryItem) -> Unit)? = null
+    var onItemFocusLost: (() -> Unit)? = null
+
     inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
 
         val CardViewSquare: CardView = view.findViewById(R.id.categoryView)
@@ -609,7 +612,7 @@ class CategoryAdapter(
 
 
 
-        GlobalUtils.enableFullViewOnDescendantFocus(currentItem.parentView, holder.CardViewSquare)
+        //GlobalUtils.enableFullViewOnDescendantFocus(currentItem.parentView, holder.CardViewSquare)
 
 
         holder.CardViewSquare.setOnClickListener {
@@ -619,6 +622,22 @@ class CategoryAdapter(
                 putExtra("company_name", companyName)
             }
             context.startActivity(intent)
+        }
+
+        holder.CardViewSquare.setOnFocusChangeListener { v, hasFocus ->
+            
+            v.animate()
+                .scaleX(if (hasFocus) 1.05f else 1f)
+                .scaleY(if (hasFocus) 1.05f else 1f)
+                .setDuration(150)
+                .start()
+
+            if (hasFocus) {
+                onItemFocused?.invoke(v, currentItem)
+            }
+            else {
+                onItemFocusLost?.invoke()   // hide popup
+            }
         }
 
 
@@ -668,10 +687,15 @@ class GridAdapter2(
     private val layoutResId: Int   // 👈 pass in the layout resource
 ) :  RecyclerView.Adapter<GridAdapter2.ViewHolder>() {
 
+    var onAddMoreClicked: (() -> Unit)? = null
+    var onItemFocused: ((View, MovieItemOne) -> Unit)? = null
+    var onItemFocusLost: (() -> Unit)? = null
+
+    var isLoadingMore = false
+
     inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val Movie_image: ImageView = view.findViewById(R.id.itemImage)
         val showYear: TextView = view.findViewById(R.id.itemText)
-
 
         val showTitle: TextView = view.findViewById(R.id.showTitle)
         val showRating: TextView = view.findViewById(R.id.showRating)
@@ -679,11 +703,7 @@ class GridAdapter2(
         val showType: TextView = view.findViewById(R.id.showType)
 
 
-
-
-
         init {
-
             itemView.setOnFocusChangeListener { v, hasFocus ->
                 // Scale animation
                 v.animate()
@@ -744,16 +764,6 @@ class GridAdapter2(
         holder.showType.text = type
 
 
-
-
-        /*
-        Picasso.get()
-            .load(imageUrl)
-            .fit()
-            .centerInside()
-            .into(holder.Movie_image)
-
-         */
 
         Glide.with(holder.itemView.context)
             .load(imageUrl)

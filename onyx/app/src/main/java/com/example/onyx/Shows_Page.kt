@@ -3,6 +3,7 @@ package com.example.onyx
 import android.content.Context
 import android.content.Intent
 import android.content.res.Resources
+import android.graphics.Rect
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -16,12 +17,15 @@ import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.ScrollView
 import android.widget.TextView
+import android.view.animation.AccelerateDecelerateInterpolator
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
+import androidx.core.view.doOnLayout
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -59,12 +63,15 @@ import com.example.onyx.OnyxClasses.filterItemOne
 import com.example.onyx.OnyxObjects.GlobalUtils
 import com.example.onyx.OnyxObjects.LoadingAnimation
 import com.example.onyx.OnyxObjects.NavAction
+import com.google.android.material.card.MaterialCardView
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.coroutineScope
 import org.json.JSONArray
 import java.io.IOException
 import java.util.Calendar
+import kotlin.math.abs
+import kotlin.math.roundToInt
 
 class Shows_Page : AppCompatActivity() {
     private var currentMoviePage = 1
@@ -76,10 +83,12 @@ class Shows_Page : AppCompatActivity() {
 
 
 
-    private lateinit var moviesBtn: LinearLayout
-    private lateinit var tvBtn: LinearLayout
-    private lateinit var SearchBtn: LinearLayout
-    private lateinit var filterBtn: LinearLayout
+    private lateinit var backgroundContainer: View
+    private lateinit var SpotlightSection: FrameLayout
+    private lateinit var HomeContentSection: FrameLayout
+
+    private lateinit var currentContent: CardView
+
 
 
     private lateinit var mvBtnText: TextView
@@ -112,11 +121,22 @@ class Shows_Page : AppCompatActivity() {
     //RecyclerViews
     private lateinit var tvRecyclerView : RecyclerView
     private lateinit var movieRecyclerView : RecyclerView
+    private lateinit var movieFixedFocusOverlay: MaterialCardView
+    private lateinit var tvFixedFocusOverlay: MaterialCardView
+    private lateinit var movieOverlayPoster: ImageView
+    private lateinit var movieOverlayTitle: TextView
+    private lateinit var movieOverlayYear: TextView
+    private lateinit var movieOverlayRating: TextView
     private lateinit var searchRecyclerView : RecyclerView
     private lateinit var fliterRecyclerView : RecyclerView
 
+    private var movieEmbeddedFocusedView: View? = null
+    private var tvEmbeddedFocusedView: View? = null
+
+
 
     private lateinit var  realityRecyclerView : RecyclerView
+    private lateinit var realityFixedFocusOverlay: View
     private lateinit var  thrillRecyclerView : RecyclerView
     private lateinit var  genreRecyclerView : RecyclerView
 
@@ -156,7 +176,18 @@ class Shows_Page : AppCompatActivity() {
 
 
         //setupBackPressedCallback()
-        trackFocus()
+        //trackFocus()
+
+        backgroundContainer = findViewById(R.id.BackgroundContainer)
+        currentContent = findViewById(R.id.currentContent)
+        SpotlightSection = findViewById(R.id.SpotlightSection)
+        HomeContentSection = findViewById(R.id.HomeContentSection)
+
+        HomeContentSection.visibility = View.GONE
+
+        GlobalUtils.setHeightToMatchScreen(SpotlightSection)
+        GlobalUtils.setHeightToMatchScreen(HomeContentSection)
+
         ////////////////////////////////////////////////////////////////////////////////////////////
         val navBar = findViewById<LinearLayout>(R.id.NavBar)
 
@@ -170,7 +201,35 @@ class Shows_Page : AppCompatActivity() {
         val cNotificationBtn = findViewById<LinearLayout>(R.id.cNotificationBtn)
 
 
+        ////////////////////////////////////////////////////////////////////////////////////////////
+        val activityScrollVIEW = findViewById<ScrollView>(R.id.activityScrollVIEW)
+
         val HomePage = findViewById<LinearLayout>(R.id.HomePage)
+
+        val movieSection = findViewById<LinearLayout>(R.id.MovieSection)
+        val tvSection = findViewById<LinearLayout>(R.id.tvSection)
+
+        GlobalUtils.snapRowToTopOnFocus(activityScrollVIEW, SpotlightSection)
+
+
+        GlobalUtils.centerParentOnFocus(activityScrollVIEW, movieSection)
+        GlobalUtils.centerParentOnFocus(activityScrollVIEW, tvSection)
+
+
+        val homeScrollView = findViewById<ScrollView>(R.id.HomeInnerScrollView)
+        val realityRow = findViewById<LinearLayout>(R.id.realityRow)
+        val thrillsRow = findViewById<LinearLayout>(R.id.thrillsRow)
+
+
+        GlobalUtils.snapRowToTopOnFocus(homeScrollView, realityRow)
+        GlobalUtils.snapRowToTopOnFocus(homeScrollView, thrillsRow)
+        GlobalUtils.centerParentOnFocus(activityScrollVIEW, HomeContentSection)
+
+        val browseRow = findViewById<LinearLayout>(R.id.browseRow)
+        GlobalUtils.centerParentOnFocus(activityScrollVIEW, browseRow)
+
+        ////////////////////////////////////////////////////////////////////////////////////////////
+
         val moviePage = findViewById<LinearLayout>(R.id.MoviePage)
         val seriesPage = findViewById<LinearLayout>(R.id.SeriesPage)
         val searchPage = findViewById<LinearLayout>(R.id.searchPage)
@@ -376,18 +435,6 @@ class Shows_Page : AppCompatActivity() {
             collapsedWidthDp = 70f
         )
 
-        val displayMetrics = resources.displayMetrics
-        val screenHeight = displayMetrics.heightPixels
-        val screenWidth = displayMetrics.widthPixels
-
-
-        val dp70 = (70 * displayMetrics.density).toInt()
-        val container = findViewById<LinearLayout>(R.id.contentContainer)
-
-        container.minimumWidth = screenWidth - dp70
-        val params = container.layoutParams
-        params.width = screenWidth - dp70
-        container.layoutParams = params
 
 
 
@@ -412,8 +459,8 @@ class Shows_Page : AppCompatActivity() {
         lifecycleScope.launch {
             HomeData()
             categoryShow()
-            loadFilterContent(realityAdapter, "&with_genres=10764", false)
-            loadFilterContent(thrillAdapter, "&with_genres=27", true)
+            //loadFilterContent(realityAdapter, "&with_genres=10764", false)
+            //loadFilterContent(thrillAdapter, "&with_genres=27", true)
             genreFilter()
 
             fetchMovies()
@@ -479,6 +526,8 @@ class Shows_Page : AppCompatActivity() {
         // Cancel any running coroutines
         lifecycleScope.coroutineContext.cancelChildren()
 
+
+
         // Remove all handler callbacks
         Handler(Looper.getMainLooper()).removeCallbacksAndMessages(null)
 
@@ -486,13 +535,125 @@ class Shows_Page : AppCompatActivity() {
     }
 
 
-    private fun trackFocus() {
-        window.decorView.viewTreeObserver.addOnGlobalFocusChangeListener { _, newFocus ->
-            if (newFocus != null) {
-                lastFocusedView = newFocus
-            }
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+
+    private var initialMovieHeroPopulated = false
+    private var initialtvHeroPopulated = false
+
+    private fun enforceFirstItemFocusIfNeeded(recyclerView: RecyclerView) {
+        val adapter = recyclerView.adapter ?: return
+        if (adapter.itemCount <= 0) return
+
+        val layoutManager = recyclerView.layoutManager as? LinearLayoutManager ?: return
+        layoutManager.scrollToPositionWithOffset(0, 0)
+
+        recyclerView.post {
+            val firstItem = recyclerView.findViewHolderForAdapterPosition(0)?.itemView
+            firstItem?.requestFocus()
         }
     }
+
+
+    private fun projectMovieItemIntoHero(item: MovieItemOne) {
+        try {
+        movieOverlayPoster = findViewById(R.id.movieOverlayPoster)
+        movieOverlayTitle = findViewById(R.id.movieoOverlayTitle)
+        movieOverlayYear = findViewById(R.id.movieOverlayYear)
+        movieOverlayRating = findViewById(R.id.movieOverlayRating)
+
+        movieFixedFocusOverlay.alpha = 1f
+        movieOverlayTitle.text = item.title
+        movieOverlayYear.text = item.year
+        movieOverlayRating.text = item.rating
+
+        val heroImage = if (item.backdropUrl.isNotBlank() && item.backdropUrl != "null") {
+            item.backdropUrl
+        } else {
+            item.posterUlr
+        }
+
+        Glide.with(this)
+            .load(heroImage)
+            .centerCrop()
+            .diskCacheStrategy(DiskCacheStrategy.ALL)
+            .into(movieOverlayPoster)
+
+        }catch (e: Exception){}
+    }
+
+    private fun projectTvItemIntoHero(item: MovieItemOne) {
+        try {
+             val overlayPoster = findViewById<ImageView>(R.id.tvOverlayPoster)
+            findViewById<TextView>(R.id.tvOverlayTitle).text = item.title
+            findViewById<TextView>(R.id.tvOverlayYear).text = item.year
+            findViewById<TextView>(R.id.tvOverlayRating).text = item.rating
+
+            tvFixedFocusOverlay.alpha = 1f
+
+
+            val heroImage = if (item.backdropUrl.isNotBlank() && item.backdropUrl != "null") {
+                item.backdropUrl
+            } else {
+                item.posterUlr
+            }
+
+            Glide.with(this)
+                .load(heroImage)
+                .centerCrop()
+                .diskCacheStrategy(DiskCacheStrategy.ALL)
+                .into(overlayPoster)
+
+        }catch (e: Exception){}
+    }
+
+
+    private fun centerChildUnderFixedFocus(
+        recyclerView: RecyclerView,
+        overlay: View,
+        child: View,
+        smooth: Boolean = true
+    ) {
+        if (recyclerView.width == 0) return
+
+        // Calculate the overlay anchor X directly within the function
+        val viewportCenterX = if (overlay.width == 0) {
+            val fallbackWidth = (110f * overlay.resources.displayMetrics.density).roundToInt()
+            val lp = overlay.layoutParams as? FrameLayout.LayoutParams
+            val startMargin = lp?.marginStart ?: 0
+            (startMargin + fallbackWidth / 2).coerceIn(0, recyclerView.width)
+        } else {
+            val recyclerLocation = IntArray(2)
+            val overlayLocation = IntArray(2)
+            recyclerView.getLocationInWindow(recyclerLocation)
+            overlay.getLocationInWindow(overlayLocation)
+
+            val overlayCenterX = overlayLocation[0] - recyclerLocation[0] + (overlay.width / 2)
+            overlayCenterX.coerceIn(0, recyclerView.width)
+        }
+
+        val childCenterX = child.left + (child.width / 2)
+        val distanceToCenter = childCenterX - viewportCenterX
+        if (distanceToCenter == 0) return
+
+        if (smooth) {
+            val duration = (110 + abs(distanceToCenter) * 0.20f)
+                .roundToInt()
+                .coerceIn(110, 260)
+            recyclerView.smoothScrollBy(
+                distanceToCenter,
+                0,
+                AccelerateDecelerateInterpolator(),
+                duration
+            )
+        } else {
+            recyclerView.scrollBy(distanceToCenter, 0)
+        }
+    }
+
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 
     private fun setupRecyclerViews() {
 
@@ -503,85 +664,207 @@ class Shows_Page : AppCompatActivity() {
 
         //  Movies ---------------------------------------------------------------------------------
         movieRecyclerView = findViewById(R.id.MoviesRecyclerView)
-        movieRecyclerView.layoutManager  = object :GridLayoutManager(this@Shows_Page,  GlobalUtils.calculateSpanCountV2(this, item_grid2_width, gapUsed )){
-            override fun onInterceptFocusSearch(focused: View, direction: Int): View? {
-                val currentPosition = getPosition(focused)
-                if (currentPosition == RecyclerView.NO_POSITION) return null
+        movieFixedFocusOverlay = findViewById(R.id.movieFixedFocusOverlay)
 
-                if (direction == View.FOCUS_RIGHT) {
-                    val span = spanCount
-                    val isLastColumn = (currentPosition + 1) % span == 0
-                    val nextRowFirstPos = currentPosition + 1
 
-                    if (isLastColumn) {
-                        if (nextRowFirstPos >= itemCount) {
-                            // Block focus at end of grid
-                            return focused
-                        }
-
-                        // Ensure view exists (scroll if needed)
-                        val nextView = findViewByPosition(nextRowFirstPos)
-                        return nextView ?: run {
-                            movieRecyclerView.scrollToPosition(nextRowFirstPos)
-                            focused
-                        }
-                    }
-                }
-                return super.onInterceptFocusSearch(focused, direction)
+        movieRecyclerView.layoutManager  = object : LinearLayoutManager(
+            this@Shows_Page,
+            LinearLayoutManager.HORIZONTAL,
+            false
+        ) {
+            override fun requestChildRectangleOnScreen(
+                parent: RecyclerView,
+                child: View,
+                rect: Rect,
+                immediate: Boolean,
+                focusedChildVisible: Boolean
+            ): Boolean {
+                return false
             }
         }
         movieRecyclerView.addItemDecoration(EqualSpaceItemDecoration(Spacing))
-        movieAdapter = GridAdapter(mutableListOf(), R.layout.item_grid2,)
+        movieAdapter = GridAdapter(mutableListOf(), R.layout.item_grid)
         movieRecyclerView.adapter = movieAdapter
+
+        movieRecyclerView.addOnChildAttachStateChangeListener(object : RecyclerView.OnChildAttachStateChangeListener {
+            override fun onChildViewAttachedToWindow(view: View) {
+                view.foreground = null
+            }
+            override fun onChildViewDetachedFromWindow(view: View) {
+            }
+        })
+
+        val movieFocusDataObserver = object : RecyclerView.AdapterDataObserver() {
+            override fun onChanged() = enforceFirstItemFocusIfNeeded(movieRecyclerView)
+            override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
+                if (positionStart == 0) {
+                    //enforceFirstItemFocusIfNeeded(movieRecyclerView)
+                }
+            }
+        }
+
+        movieAdapter.registerAdapterDataObserver(movieFocusDataObserver)
+
         movieAdapter.onAddMoreClicked = { loadMoreMovies() }
         movieAdapter.onItemFocused = { view, item ->
-            //showPopupBeside(view, item.posterUlr, 165)
+
+            movieFixedFocusOverlay.strokeWidth = 3
+
+            // Restore previous focused item
+            movieEmbeddedFocusedView?.let { previous ->
+                if (previous !== view) {
+                    val oldLp = previous.layoutParams as RecyclerView.LayoutParams
+                    oldLp.marginStart = 0
+                    oldLp.marginEnd = 0
+                    oldLp.topMargin = 0
+                    oldLp.bottomMargin = 0
+
+                    previous.layoutParams = oldLp
+                    previous.requestLayout()
+
+                    previous.animate()
+                        .alpha(1f)
+                        .setDuration(80L)
+                        .start()
+                }
+            }
+
+            // Apply spacing to newly focused item
+            val lp = view.layoutParams as RecyclerView.LayoutParams
+
+            val focusedMargin =
+                (movieFixedFocusOverlay.width * 0.3f).toInt()
+
+            lp.marginStart = focusedMargin
+            lp.marginEnd = focusedMargin
+
+            view.layoutParams = lp
+            view.requestLayout()
+
+            movieEmbeddedFocusedView = view
+
+            view.animate()
+                .alpha(0.03f)
+                .setDuration(95L)
+                .start()
+
+            // Wait for RecyclerView to apply new margins
+            view.post {
+                if (movieEmbeddedFocusedView == view) {
+                    centerChildUnderFixedFocus(
+                        movieRecyclerView,
+                        movieFixedFocusOverlay,
+                        view
+                    )
+                }
+                projectMovieItemIntoHero(item)
+            }
         }
+
         movieAdapter.onItemFocusLost = {
-            hidePopup()
+            movieFixedFocusOverlay.strokeWidth = 0
         }
 
 
         //  TV Shows -------------------------------------------------------------------------------
         tvRecyclerView = findViewById(R.id.TVsRecyclerView)
-        tvRecyclerView.layoutManager  = object : GridLayoutManager(this@Shows_Page, GlobalUtils.calculateSpanCountV2(this, item_grid2_width, gapUsed ) ){
-            override fun onInterceptFocusSearch(focused: View, direction: Int): View? {
-                val currentPosition = getPosition(focused)
-                if (currentPosition == RecyclerView.NO_POSITION) return null
-
-                if (direction == View.FOCUS_RIGHT) {
-                    val span = spanCount
-                    val isLastColumn = (currentPosition + 1) % span == 0
-                    val nextRowFirstPos = currentPosition + 1
-
-                    if (isLastColumn) {
-                        if (nextRowFirstPos >= itemCount) {
-                            // Block focus at end of grid
-                            return focused
-                        }
-
-                        // Ensure view exists (scroll if needed)
-                        val nextView = findViewByPosition(nextRowFirstPos)
-                        return nextView ?: run {
-                            tvRecyclerView.scrollToPosition(nextRowFirstPos)
-                            focused
-                        }
-                    }
-                }
-
-                return super.onInterceptFocusSearch(focused, direction)
+        tvFixedFocusOverlay = findViewById(R.id.tvFixedFocusOverlay)
+        tvRecyclerView.layoutManager  = object : LinearLayoutManager(
+            this@Shows_Page,
+            LinearLayoutManager.HORIZONTAL,
+            false
+        ) {
+            override fun requestChildRectangleOnScreen(
+                parent: RecyclerView,
+                child: View,
+                rect: Rect,
+                immediate: Boolean,
+                focusedChildVisible: Boolean
+            ): Boolean {
+                return false
             }
-
         }
         tvRecyclerView.addItemDecoration(EqualSpaceItemDecoration(Spacing))
-        tvAdapter = GridAdapter(mutableListOf(), R.layout.item_grid2)
+        tvAdapter = GridAdapter(mutableListOf(), R.layout.item_grid)
         tvRecyclerView.adapter = tvAdapter
+
+        tvRecyclerView.addOnChildAttachStateChangeListener(object : RecyclerView.OnChildAttachStateChangeListener {
+            override fun onChildViewAttachedToWindow(view: View) {
+                view.foreground = null
+            }
+            override fun onChildViewDetachedFromWindow(view: View) {
+            }
+        })
+
+        val tvFocusDataObserver = object : RecyclerView.AdapterDataObserver() {
+            override fun onChanged() = enforceFirstItemFocusIfNeeded(tvRecyclerView)
+            override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
+                if (positionStart == 0) {
+                    //enforceFirstItemFocusIfNeeded(movieRecyclerView)
+                }
+            }
+        }
+
+        tvAdapter.registerAdapterDataObserver(tvFocusDataObserver)
+
         tvAdapter.onAddMoreClicked = { loadMoreTv() }
         tvAdapter.onItemFocused = { view, item ->
-           // showPopupBeside(view, item.posterUlr, 165)
+
+            tvFixedFocusOverlay.strokeWidth = 3
+
+            // Restore previous focused item
+            tvEmbeddedFocusedView?.let { previous ->
+                if (previous !== view) {
+                    val oldLp = previous.layoutParams as RecyclerView.LayoutParams
+                    oldLp.marginStart = 0
+                    oldLp.marginEnd = 0
+                    oldLp.topMargin = 0
+                    oldLp.bottomMargin = 0
+
+                    previous.layoutParams = oldLp
+                    previous.requestLayout()
+
+                    previous.animate()
+                        .alpha(1f)
+                        .setDuration(80L)
+                        .start()
+                }
+            }
+
+            // Apply spacing to newly focused item
+            val lp = view.layoutParams as RecyclerView.LayoutParams
+
+            val focusedMargin =
+                (tvFixedFocusOverlay.width * 0.3f).toInt()
+
+            lp.marginStart = focusedMargin
+            lp.marginEnd = focusedMargin
+
+            view.layoutParams = lp
+            view.requestLayout()
+
+            tvEmbeddedFocusedView = view
+
+            view.animate()
+                .alpha(0.03f)
+                .setDuration(95L)
+                .start()
+
+            // Wait for RecyclerView to apply new margins
+            view.post {
+                if (tvEmbeddedFocusedView == view) {
+                    centerChildUnderFixedFocus(
+                        tvRecyclerView,
+                        tvFixedFocusOverlay,
+                        view
+                    )
+                }
+                projectTvItemIntoHero(item)
+            }
         }
+
         tvAdapter.onItemFocusLost = {
-            hidePopup()
+            tvFixedFocusOverlay.strokeWidth = 0
         }
 
         //  Search  --------------------------------------------------------------------------------
@@ -599,7 +882,6 @@ class Shows_Page : AppCompatActivity() {
             //showPopupBeside(view, item.posterUlr, 240)
         }
         filterAdapter.onItemFocusLost = {
-            hidePopup()
         }
         fliterRecyclerView = findViewById<RecyclerView>(R.id.filterResults)
         fliterRecyclerView.layoutManager = GridLayoutManager(this@Shows_Page, GlobalUtils.calculateSpanCountV2(this, 160, gapUsed))
@@ -608,32 +890,62 @@ class Shows_Page : AppCompatActivity() {
 
         //------------------------------------------------------------------------------------------
 
+         fun setFixedFocusOverlayVisible(overlay: View, visible: Boolean) {
+            val targetAlpha = if (visible) 1f else 0f
+            if (overlay.alpha == targetAlpha) return
 
+            overlay.animate()
+                .alpha(targetAlpha)
+                .setDuration(if (visible) 90L else 130L)
+                .start()
+        }
         realityAdapter = FilterAdapter(mutableListOf(), R.layout.item_list)
         realityAdapter.onItemFocused = { view, item ->
-            //showPopupBeside(view, item.posterUlr, 240)
+            backgroundContainer.visibility = View.VISIBLE
+            updateCurrentContent(item)
+            setFixedFocusOverlayVisible(realityFixedFocusOverlay, true)
+            centerChildUnderFixedFocus(realityRecyclerView, realityFixedFocusOverlay, view)
         }
         realityAdapter.onItemFocusLost = {
-            hidePopup()
+            realityRecyclerView.post {
+                setFixedFocusOverlayVisible( realityFixedFocusOverlay,realityRecyclerView.hasFocus()                )
+            }
         }
-        realityRecyclerView = findViewById<RecyclerView>(R.id.realityRecyclerView)
-        //thrillRecyclerView.layoutManager = GridLayoutManager(this@Shows_Page, GlobalUtils.calculateSpanCountV2(this, 160, gapUsed))
+
+        realityRecyclerView = findViewById(R.id.realityRecyclerView)
+        realityFixedFocusOverlay = findViewById(R.id.realityFixedFocusOverlay)
         realityRecyclerView.layoutManager = LinearLayoutManager(
             this@Shows_Page,
             LinearLayoutManager.HORIZONTAL,
             false
         )
         realityRecyclerView.adapter = realityAdapter
+        realityRecyclerView.layoutManager?.scrollToPosition(0)
+
+
+
+        realityRecyclerView.addOnChildAttachStateChangeListener(object : RecyclerView.OnChildAttachStateChangeListener {
+            override fun onChildViewAttachedToWindow(view: View) {
+                view.foreground = null // Dynamically strip the focus highlight ONLY for this specific RecyclerView
+            }
+            override fun onChildViewDetachedFromWindow(view: View) {
+            }
+        })
+        /* */
+
+
 
         //------------------------------------------------------------------------------------------
 
 
         thrillAdapter = FilterAdapter(mutableListOf(), R.layout.item_list)
         thrillAdapter.onItemFocused = { view, item ->
-            //showPopupBeside(view, item.posterUlr, 240)
+            backgroundContainer.visibility = View.VISIBLE
+            updateCurrentContent(item)
+            //GlobalUtils.expandAndScrollIntoView(findViewById<LinearLayout>(R.id.thrillsRow))
         }
         thrillAdapter.onItemFocusLost = {
-            hidePopup()
+            //backgroundContainer.visibility = View.GONE
         }
         thrillRecyclerView = findViewById<RecyclerView>(R.id.ThrillsRecyclerView)
         //thrillRecyclerView.layoutManager = GridLayoutManager(this@Shows_Page, GlobalUtils.calculateSpanCountV2(this, 160, gapUsed))
@@ -648,13 +960,13 @@ class Shows_Page : AppCompatActivity() {
 
         genreAdapter = FilterAdapter(mutableListOf(), R.layout.item_list)
         genreAdapter.onItemFocused = { view, item ->
-            //showPopupBeside(view, item.posterUlr, 240)
+            backgroundContainer.visibility = View.VISIBLE
+            updateCurrentContent(item)
         }
         genreAdapter.onItemFocusLost = {
-            hidePopup()
+            //backgroundContainer.visibility = View.GONE
         }
-        genreRecyclerView = findViewById<RecyclerView>(R.id.genresRecyclerView)
-        //thrillRecyclerView.layoutManager = GridLayoutManager(this@Shows_Page, GlobalUtils.calculateSpanCountV2(this, 160, gapUsed))
+        genreRecyclerView = findViewById(R.id.genresRecyclerView)
         genreRecyclerView.layoutManager = LinearLayoutManager(
             this@Shows_Page,
             LinearLayoutManager.HORIZONTAL,
@@ -689,63 +1001,6 @@ class Shows_Page : AppCompatActivity() {
     }
 
 
-    private fun showPopupBeside(targetView: View, imageUrl: String, popupHeightDp: Int = 0) {
-        val popup = findViewById<CardView>(R.id.floatingPopup)
-
-        val popupHeightPx = (popupHeightDp * targetView.context.resources.displayMetrics.density).toInt()
-        popup.layoutParams.height = popupHeightPx
-        popup.requestLayout()
-
-        //findViewById<TextView>(R.id.popupTitle).text = item.posterUlr
-        val imageC = findViewById<ImageView>(R.id.floatingPopupImg)
-
-        Glide.with(targetView.context)
-            .load(imageUrl)
-            .diskCacheStrategy(DiskCacheStrategy.ALL)
-            .override(Target.SIZE_ORIGINAL, popup.height) // scale height to container
-            .into(imageC)
-
-        val margin = 0.dp(targetView.context)
-
-        // Get item location
-        val location = IntArray(2)
-        targetView.getLocationOnScreen(location)
-        val x = location[0]
-        val y = location[1]
-
-        val screenWidth = Resources.getSystem().displayMetrics.widthPixels
-        val popupWidth = popup.width.takeIf { it > 0 } ?: 300  // fallback estimate
-
-        var popupX = x + targetView.width + margin   // default → right side
-
-        //  If it goes off-screen, move popup to LEFT
-        if (popupX + popupWidth > screenWidth) {
-            popupX = x - popupWidth - margin
-            if (popupX < 0) popupX = margin // safety
-        }
-
-        //val popupY = y + (targetView.height / 3)
-        val popupY = y
-
-
-        // Apply position
-        popup.x = popupX.toFloat()
-        popup.y = popupY.toFloat()
-
-        popup.visibility = View.VISIBLE
-        popup.alpha = 0f
-        popup.animate().alpha(1f).setDuration(150).start()
-    }
-    private fun hidePopup() {
-        val popup = findViewById<CardView>(R.id.floatingPopup)
-        if (popup.visibility == View.VISIBLE) {
-            popup.animate()
-                .alpha(0f)
-                .setDuration(120)
-                .withEndAction { popup.visibility = View.GONE }
-                .start()
-        }
-    }
 
 
     private fun Int.dp(context: Context): Int =
@@ -753,26 +1008,56 @@ class Shows_Page : AppCompatActivity() {
     ////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private fun HomeData() {
+    private fun updateCurrentContent(item: filterItemOne) {
 
-        val displayMetrics = resources.displayMetrics
-        val screenWidth = displayMetrics.widthPixels     // in pixels
-        val screenHeight = displayMetrics.heightPixels    // in pixels
+        if (currentContent.visibility != View.VISIBLE) {
+            currentContent.visibility = View.VISIBLE
+        }
+
+        val backdrop = currentContent.findViewById<ImageView>(R.id.cardBackdrop)
+        val title = currentContent.findViewById<TextView>(R.id.cardTitle)
+        val type = currentContent.findViewById<TextView>(R.id.cardType)
+        val rating = currentContent.findViewById<TextView>(R.id.cardRating)
+        val year = currentContent.findViewById<TextView>(R.id.cardYear)
+        val genre = currentContent.findViewById<TextView>(R.id.cardGenre)
+        val pg = currentContent.findViewById<TextView>(R.id.cardPg)
+        val overview = currentContent.findViewById<TextView>(R.id.cardOverview)
+
+        Log.d("updateCurrentContent", item.toString())
+
+        genre.visibility = if (item.genres.isNotEmpty()) View.VISIBLE else View.GONE
+        pg.visibility = View.VISIBLE
+        overview.visibility = if (item.overview.isNotEmpty()) View.VISIBLE else View.GONE
+
+        genre.text = item.genres
+        pg.text = if (item.isAdult) "18+" else "PG-13"
+        overview.text = item.overview
+
+        title.text = item.title
+        type.text = item.type
+        rating.text = item.rating
+        year.text = item.year
+
+        val imageUrl = if (!item.backdropUrl.isNullOrEmpty() &&
+            item.backdropUrl != "null"
+        ) {
+            item.backdropUrl
+        } else {
+            item.posterUlr
+        }
+
+        Glide.with(currentContent)
+            .load(imageUrl)
+            .into(backdrop)
+    }
+
+    private fun HomeData() {
 
         val inflater = LayoutInflater.from(this)
         val container = findViewById<FrameLayout>(R.id.spotlightShows)
 
 
-        val params = container.layoutParams
-        //params.height = (screenHeight * 0.70).toInt()
-        val otherItemHeightPx = TypedValue.applyDimension(
-            TypedValue.COMPLEX_UNIT_DIP,
-            124f,
-            container.resources.displayMetrics
-        ).toInt()
 
-        params.height = screenHeight - otherItemHeightPx
-        container.layoutParams = params
 
         lifecycleScope.launch {
 
@@ -951,7 +1236,6 @@ class Shows_Page : AppCompatActivity() {
             "Apple" to Pair(14801, "https://image.tmdb.org/t/p/original/bnlD5KJ5oSzBYbEpDkwi6w8SoBO.png")
         )
 
-        val spotlightSection = findViewById<LinearLayout>(R.id.SpotlightSection)
 
         // Convert map to list of categoryItem objects
         val categoryItems = mutableListOf<categoryItem>()
@@ -961,7 +1245,7 @@ class Shows_Page : AppCompatActivity() {
                     cCode = pair.first.toString(),
                     cImg = pair.second,
                     cName = name,
-                    parentView = spotlightSection
+                    parentView = SpotlightSection
                 )
             )
         }
@@ -977,6 +1261,11 @@ class Shows_Page : AppCompatActivity() {
         )
         recyclerView.layoutManager = layoutManager
         recyclerView.adapter = adapter
+
+        adapter.onItemFocused = { _, _ ->
+            backgroundContainer.visibility = View.GONE
+            currentContent.visibility = View.GONE
+        }
 
     }
 
@@ -1013,19 +1302,58 @@ class Shows_Page : AppCompatActivity() {
 
                 for (i in 0 until mvData.length()) {
 
-
                     val current = mvData.getJSONObject(i)
+
+                    Log.d("DEBUG_MAIN_Filter", current.toString())
 
                     val backdrop_path = current.optString("backdrop_path", "")
                     val poster_path = current.optString("poster_path", "")
 
-
                     val vote_average = current.optString("vote_average", "")
-                    val title = current.optString("title", "")
-                    //val overview = current.optString("overview", "")
+                    val title = current.optString("title").takeIf { it.isNotEmpty() } ?: current.optString("name", "")
+                    val overview = current.optString("overview", "")
+                    val adult = current.optBoolean("adult", false)
                     val id = current.optString("id", "")
                     val original_title = current.optString("original_title", "")
-                    //val original_name = current.optString("original_name", "")
+
+                    val genreIdsArr = current.optJSONArray("genre_ids")
+                    val genresList = mutableListOf<String>()
+                    if (genreIdsArr != null) {
+                        for (j in 0 until genreIdsArr.length()) {
+                            val gName = when(genreIdsArr.optInt(j)) {
+                                28 -> "Action"
+                                12 -> "Adventure"
+                                16 -> "Animation"
+                                35 -> "Comedy"
+                                80 -> "Crime"
+                                99 -> "Documentary"
+                                18 -> "Drama"
+                                10751 -> "Family"
+                                14 -> "Fantasy"
+                                36 -> "History"
+                                27 -> "Horror"
+                                10402 -> "Music"
+                                9648 -> "Mystery"
+                                10749 -> "Romance"
+                                878 -> "Sci-Fi"
+                                10770 -> "TV Movie"
+                                53 -> "Thriller"
+                                10752 -> "War"
+                                37 -> "Western"
+                                10759 -> "Action & Adventure"
+                                10762 -> "Kids"
+                                10763 -> "News"
+                                10764 -> "Reality"
+                                10765 -> "Sci-Fi & Fantasy"
+                                10766 -> "Soap"
+                                10767 -> "Talk"
+                                10768 -> "War & Politics"
+                                else -> ""
+                            }
+                            if (gName.isNotEmpty()) genresList.add(gName)
+                        }
+                    }
+                    val genreString = genresList.joinToString(", ")
 
                     val type: String
                     var date: String
@@ -1052,21 +1380,27 @@ class Shows_Page : AppCompatActivity() {
 
                     val Item = filterItemOne(
                         title = title,
-                        backdropUrl = imgPost,
-                        posterUlr = imgback,
+                        backdropUrl = imgback,
+                        posterUlr = imgPost ,
                         imdbCode = id,
                         type = type,
                         year = date,
                         rating = vote_average,
-                        runtime = showD
+                        runtime = showD,
+                        overview = overview,
+                        isAdult = adult,
+                        genres = genreString
                     )
 
                     withContext(Dispatchers.Main) {
                         adapter.addItem(Item)
                         isLoading  = false
-                        adapter.isLoadingMore = false
+
 
                     }
+                }
+                withContext(Dispatchers.Main) {
+                    adapter.isLoadingMore = false
                 }
             }
         }
@@ -1083,179 +1417,138 @@ class Shows_Page : AppCompatActivity() {
     }
 
 
-    private fun genreFilter(){
+    private fun genreFilter() {
         var isloadingGenre = false
         var genrePage = 1
         var genresMv = ""
         var genresTv = ""
 
-        fun fetchGenre(first: Boolean = true){
+        // Helper function to map genre IDs to names
+        fun getGenresString(genreIdsArr: JSONArray?): String {
+            if (genreIdsArr == null) return ""
+            val genresList = mutableListOf<String>()
+            for (j in 0 until genreIdsArr.length()) {
+                val gName = when (genreIdsArr.optInt(j)) {
+                    28 -> "Action"
+                    12 -> "Adventure"
+                    16 -> "Animation"
+                    35 -> "Comedy"
+                    80 -> "Crime"
+                    99 -> "Documentary"
+                    18 -> "Drama"
+                    10751 -> "Family"
+                    14 -> "Fantasy"
+                    36 -> "History"
+                    27 -> "Horror"
+                    10402 -> "Music"
+                    9648 -> "Mystery"
+                    10749 -> "Romance"
+                    878 -> "Sci-Fi"
+                    10770 -> "TV Movie"
+                    53 -> "Thriller"
+                    10752 -> "War"
+                    37 -> "Western"
+                    10759 -> "Action & Adventure"
+                    10762 -> "Kids"
+                    10763 -> "News"
+                    10764 -> "Reality"
+                    10765 -> "Sci-Fi & Fantasy"
+                    10766 -> "Soap"
+                    10767 -> "Talk"
+                    10768 -> "War & Politics"
+                    else -> ""
+                }
+                if (gName.isNotEmpty()) genresList.add(gName)
+            }
+            return genresList.joinToString(", ")
+        }
 
-                    if(isloadingGenre) return
-                    isloadingGenre = true
+        // Helper to parse JSON arrays into your data objects to prevent code duplication
+        fun parseJsonArray(jsonArray: JSONArray?, isTvShow: Boolean): List<filterItemOne> {
+            val parsedList = mutableListOf<filterItemOne>()
+            if (jsonArray == null) return parsedList
 
-                    var newAdd = true
+            for (i in 0 until jsonArray.length()) {
+                val current = jsonArray.optJSONObject(i) ?: continue
 
-                    lifecycleScope.launch {
+                val backdropPath = current.optString("backdrop_path", "")
+                val posterPath = current.optString("poster_path", "")
+                val voteAverage = current.optString("vote_average", "")
+                val title = current.optString("title").takeIf { it.isNotEmpty() } ?: current.optString("name", "")
+                val overview = current.optString("overview", "")
+                val adult = current.optBoolean("adult", false)
+                val id = current.optString("id", "")
 
+                val genreString = getGenresString(current.optJSONArray("genre_ids"))
 
-                        val jsonObjectMv = withContext(Dispatchers.IO) { fetchTMDB.fetchDiscoverMovie ("$genresMv&page=$genrePage") }
-                        val jsonObjectTV = withContext(Dispatchers.IO) { fetchTMDB.fetchDiscoverTv("$genresTv&page=$genrePage")  }
+                val type = if (isTvShow) "tv" else "movie"
+                val dateKey = if (isTvShow) "first_air_date" else "release_date"
+                val rawDate = current.optString(dateKey, "")
+                val date = if (rawDate.length >= 4) rawDate.substring(0, 4) else rawDate
 
-                        if (jsonObjectMv != null){
-                            val mvData = jsonObjectMv.getJSONArray("results")
+                val imgPost = "https://image.tmdb.org/t/p/original$posterPath"
+                val imgBack = "https://image.tmdb.org/t/p/original$backdropPath"
 
+                parsedList.add(
+                    filterItemOne(
+                        title = title,
+                        backdropUrl = imgBack,
+                        posterUlr = imgPost,
+                        imdbCode = id,
+                        type = type,
+                        year = date,
+                        rating = voteAverage,
+                        runtime = "",
+                        overview = overview,
+                        isAdult = adult,
+                        genres = genreString
+                    )
+                )
+            }
+            return parsedList
+        }
 
-                            for (i in 0 until mvData.length()) {
+        fun fetchGenre(first: Boolean = true) {
+            if (isloadingGenre) return
+            isloadingGenre = true
+            var newAdd = true
 
+            lifecycleScope.launch {
+                val jsonObjectMv = withContext(Dispatchers.IO) { fetchTMDB.fetchDiscoverMovie("$genresMv&page=$genrePage") }
+                val jsonObjectTV = withContext(Dispatchers.IO) { fetchTMDB.fetchDiscoverTv("$genresTv&page=$genrePage") }
 
-                                val current = mvData.getJSONObject(i)
+                val newMovies = parseJsonArray(jsonObjectMv?.optJSONArray("results"), isTvShow = false)
+                val newTvShows = parseJsonArray(jsonObjectTV?.optJSONArray("results"), isTvShow = true)
 
-                                val backdrop_path = current.optString("backdrop_path", "")
-                                val poster_path = current.optString("poster_path", "")
+                // Switch to Main thread ONCE to update the UI
+                withContext(Dispatchers.Main) {
+                    // Assuming genreAdapter can accept a list. If not, loop over them here.
+                    newMovies.forEach { genreAdapter.addItem(it) }
+                    newTvShows.forEach { genreAdapter.addItem(it) }
 
+                    genreAdapter.isLoadingMore = false
 
-
-                                val vote_average = current.optString("vote_average", "")
-                                val title = current.optString("title", "")
-                                //val overview = current.optString("overview", "")
-                                val id = current.optString("id", "")
-                                val original_title = current.optString("original_title", "")
-                                //val original_name = current.optString("original_name", "")
-
-                                val type: String
-                                var date: String
-                                var showD: String = ""
-
-                                val imgPost =  "https://image.tmdb.org/t/p/original$poster_path"
-                                val imgback  = "https://image.tmdb.org/t/p/original$backdrop_path"
-
-                                if (original_title == "") {
-                                    type = "tv";
-                                    date = if (current.getString("first_air_date").length >= 4) {
-                                        current.getString("first_air_date").substring(0, 4)
-                                    } else{
-                                        current.getString("first_air_date")}
-                                } else {
-                                    type = "movie"
-                                    date = if (current.getString("release_date").length >= 4) {
-                                        current.getString("release_date").substring(0, 4)
-                                    } else{
-                                        current.getString("release_date")}
-                                }
-
-                                val Item = filterItemOne(
-                                    title = title,
-                                    backdropUrl = imgPost,
-                                    posterUlr = imgback,
-                                    imdbCode = id,
-                                    type = type,
-                                    year = date,
-                                    rating = vote_average,
-                                    runtime = showD
-                                )
-
-                                withContext(Dispatchers.Main) {
-                                    genreAdapter.addItem(Item)
-                                    //isLoadingFliter = false
-                                    genreAdapter.isLoadingMore = false
-
-                                    if(newAdd && first){
-                                        newAdd = false
-                                        genreRecyclerView.post {
-                                            val vh = genreRecyclerView.findViewHolderForAdapterPosition(0)
-                                            vh?.itemView?.requestFocus()
-                                        }
-                                    }
-
-                                }
-                            }
+                    if (newAdd && first) {
+                        newAdd = false
+                        genreRecyclerView.post {
+                            val vh = genreRecyclerView.findViewHolderForAdapterPosition(0)
+                            vh?.itemView?.requestFocus()
                         }
-
-                        if (jsonObjectTV != null){
-                            val tvData = jsonObjectTV.getJSONArray("results")
-
-                            for (i in 0 until tvData.length()) {
-
-                                val current = tvData.getJSONObject(i)
-
-                                val backdrop_path = current.optString("backdrop_path", "")
-                                val poster_path = current.optString("poster_path", "")
-
-
-
-                                val vote_average = current.optString("vote_average", "")
-                                val title = current.optString("title", "")
-                                //val overview = current.optString("overview", "")
-                                val id = current.optString("id", "")
-                                val original_title = current.optString("original_title", "")
-                                //val original_name = current.optString("original_name", "")
-
-                                val type: String
-                                var date: String
-                                var showD: String = ""
-
-                                val imgPost =  "https://image.tmdb.org/t/p/original$poster_path"
-                                val imgback  = "https://image.tmdb.org/t/p/original$backdrop_path"
-
-                                if (original_title == "") {
-                                    type = "tv";
-                                    date = if (current.getString("first_air_date").length >= 4) {
-                                        current.getString("first_air_date").substring(0, 4)
-                                    } else{
-                                        current.getString("first_air_date")}
-                                } else {
-                                    type = "movie"
-                                    date = if (current.getString("release_date").length >= 4) {
-                                        current.getString("release_date").substring(0, 4)
-                                    } else{
-                                        current.getString("release_date")}
-                                }
-
-                                val Item = filterItemOne(
-                                    title = title,
-                                    backdropUrl = imgPost,
-                                    posterUlr = imgback,
-                                    imdbCode = id,
-                                    type = type,
-                                    year = date,
-                                    rating = vote_average,
-                                    runtime = showD
-                                )
-
-                                withContext(Dispatchers.Main) {
-                                    genreAdapter.addItem(Item)
-                                    //isLoadingFliter = false
-                                    genreAdapter.isLoadingMore = false
-
-                                    if(newAdd && first){
-                                        newAdd = false
-                                        genreRecyclerView.post {
-                                            val vh = genreRecyclerView.findViewHolderForAdapterPosition(0)
-                                            vh?.itemView?.requestFocus()
-                                        }
-                                    }
-
-                                }
-                            }
-                        }
-
-                        isloadingGenre = false
                     }
+                    isloadingGenre = false
+                }
+            }
         }
 
         fun loadMoreGenre() {
-            if (isloadingGenre) return // Prevent multiple rapid clicks
+            if (isloadingGenre) return
             genrePage++
-            fetchGenre()
+            fetchGenre(false) // Assuming load more isn't the 'first' load
         }
+
         genreAdapter.onAddMoreClicked = { loadMoreGenre() }
 
-
-
-        val browseUISection = findViewById<LinearLayout>(R.id.browseUISection)
-
-
+        // --- UI Setup ---
         val comedyBtn = findViewById<TextView>(R.id.genreComedy)
         val actionBtn = findViewById<TextView>(R.id.genreAction)
         val sciFiBtn = findViewById<TextView>(R.id.genreSCIFI)
@@ -1264,149 +1557,40 @@ class Shows_Page : AppCompatActivity() {
         val romanceBtn = findViewById<TextView>(R.id.genreRomance)
         val dramaBtn = findViewById<TextView>(R.id.genreDrama)
 
-        GlobalUtils.enableFullViewOnDescendantFocus( browseUISection, comedyBtn )
-        GlobalUtils.enableFullViewOnDescendantFocus( browseUISection, actionBtn )
-        GlobalUtils.enableFullViewOnDescendantFocus( browseUISection, sciFiBtn )
-        GlobalUtils.enableFullViewOnDescendantFocus( browseUISection, animationBtn)
-        GlobalUtils.enableFullViewOnDescendantFocus( browseUISection, familyBtn )
-        GlobalUtils.enableFullViewOnDescendantFocus( browseUISection, romanceBtn )
-        GlobalUtils.enableFullViewOnDescendantFocus( browseUISection, dramaBtn )
+        val allGenreButtons = listOf(comedyBtn, actionBtn, sciFiBtn, animationBtn, familyBtn, romanceBtn, dramaBtn)
 
+        // Helper to handle button clicks cleanly
+        fun setupGenreButton(button: TextView, mvGenreId: Int, tvGenreId: Int) {
+            button.setOnClickListener {
+                if (isloadingGenre) return@setOnClickListener
 
+                // Update UI State for all buttons dynamically
+                allGenreButtons.forEach { it.isSelected = (it == button) }
 
-        comedyBtn.setOnClickListener {
-            if(isloadingGenre) return@setOnClickListener
+                // Reset pagination and adapter
+                genrePage = 1
+                genreAdapter.clearItems()
 
-            comedyBtn.isSelected  = true
-            actionBtn.isSelected  = false
-            sciFiBtn.isSelected  = false
-            animationBtn.isSelected  = false
-            familyBtn.isSelected  = false
-            romanceBtn.isSelected  = false
-            dramaBtn.isSelected  = false
+                // Update genre query parameters
+                genresMv = "&with_genres=$mvGenreId"
+                genresTv = "&with_genres=$tvGenreId"
 
-            genreAdapter.clearItems()
-            genresMv = "&with_genres=35"
-            genresTv = "&with_genres=35"
-            fetchGenre(false)
+                fetchGenre(true)
+            }
         }
+
+        // Initialize all buttons
+        setupGenreButton(comedyBtn, 35, 35)
+        setupGenreButton(actionBtn, 28, 10759)
+        setupGenreButton(sciFiBtn, 878, 10765)
+        setupGenreButton(animationBtn, 12, 16)
+        setupGenreButton(familyBtn, 10751, 10751)
+        setupGenreButton(romanceBtn, 10749, 10766)
+        setupGenreButton(dramaBtn, 18, 18)
+
+        // Trigger initial load
         comedyBtn.performClick()
-
-        actionBtn.setOnClickListener {
-            if(isloadingGenre) return@setOnClickListener
-
-            comedyBtn.isSelected  = false
-            actionBtn.isSelected  = true
-            sciFiBtn.isSelected  = false
-            animationBtn.isSelected  = false
-            familyBtn.isSelected  = false
-            romanceBtn.isSelected  = false
-            dramaBtn.isSelected  = false
-
-            genreAdapter.clearItems()
-
-            genresMv = "&with_genres=28"
-            genresTv = "&with_genres=10759"
-
-            fetchGenre()
-        }
-
-        sciFiBtn.setOnClickListener {
-            if(isloadingGenre) return@setOnClickListener
-
-            comedyBtn.isSelected  = false
-            actionBtn.isSelected  = false
-            sciFiBtn.isSelected  = true
-            animationBtn.isSelected  = false
-            familyBtn.isSelected  = false
-            romanceBtn.isSelected  = false
-            dramaBtn.isSelected  = false
-
-            genreAdapter.clearItems()
-
-            genresMv = "&with_genres=878"
-            genresTv = "&with_genres=10765"
-
-            fetchGenre()
-        }
-
-        animationBtn.setOnClickListener {
-            if(isloadingGenre) return@setOnClickListener
-            comedyBtn.isSelected  = false
-            actionBtn.isSelected  = false
-            sciFiBtn.isSelected  = false
-            animationBtn.isSelected  = true
-            familyBtn.isSelected  = false
-            romanceBtn.isSelected  = false
-            dramaBtn.isSelected  = false
-
-            genreAdapter.clearItems()
-
-            genresMv = "&with_genres=12"
-            genresTv = "&with_genres=16"
-
-            fetchGenre()
-        }
-
-        familyBtn.setOnClickListener {
-            if(isloadingGenre) return@setOnClickListener
-
-            comedyBtn.isSelected  = false
-            actionBtn.isSelected  = false
-            sciFiBtn.isSelected  = false
-            animationBtn.isSelected  = false
-            familyBtn.isSelected  = true
-            romanceBtn.isSelected  = false
-            dramaBtn.isSelected  = false
-
-            genreAdapter.clearItems()
-
-            genresMv = "&with_genres=10751"
-            genresTv = "&with_genres=10751"
-
-            fetchGenre( )
-        }
-
-        romanceBtn.setOnClickListener {
-            if(isloadingGenre) return@setOnClickListener
-
-            comedyBtn.isSelected  = false
-            actionBtn.isSelected  = false
-            sciFiBtn.isSelected  = false
-            animationBtn.isSelected  = false
-            familyBtn.isSelected  = false
-            romanceBtn.isSelected  = true
-            dramaBtn.isSelected  = false
-
-            genreAdapter.clearItems()
-
-            genresMv = "&with_genres=10749"
-            genresTv = "&with_genres=10766"
-
-            fetchGenre( )
-        }
-
-        dramaBtn.setOnClickListener {
-            if(isloadingGenre) return@setOnClickListener
-
-            comedyBtn.isSelected  = false
-            actionBtn.isSelected  = false
-            sciFiBtn.isSelected  = false
-            animationBtn.isSelected  = false
-            familyBtn.isSelected  = false
-            romanceBtn.isSelected  = false
-            dramaBtn.isSelected  = true
-
-            genreAdapter.clearItems()
-
-            genresMv = "&with_genres=18"
-            genresTv = "&with_genres=18"
-
-            fetchGenre()
-        }
-
     }
-
     ////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1476,13 +1660,67 @@ class Shows_Page : AppCompatActivity() {
                                 runtime = "⏱$runtime min"
                             )
                         )
+                        withContext(Dispatchers.Main) {
+                            movieAdapter.addItem(
+                                    MovieItemOne(
+                                    title = title,
+                                    backdropUrl = imgUrl,
+                                    posterUlr = imgUrl2,
+                                    imdbCode = id,
+                                    type = "movie",
+                                    year = year,
+                                    rating = "${String.format("%.1f", rating)}imdb",
+                                    runtime = "⏱$runtime min"
+                                )
+                            )
+                        }
                     }
 
                     // ✅ Update UI once per batch
                     withContext(Dispatchers.Main) {
-                        movieAdapter.addItems(movies)
+                        //movieAdapter.addItem(movies)
                         isLoadingMoreMovies = false
                         movieAdapter.isLoadingMore = false
+
+                        if (!initialMovieHeroPopulated) {
+                            initialMovieHeroPopulated = true
+
+                            delay(3000)
+                            movieRecyclerView.post {
+                                Log.d("...._MAIN", "Initial movie hero populate d 1")
+                                val firstView =
+                                    movieRecyclerView.findViewHolderForAdapterPosition(0)?.itemView
+                                        ?: return@post
+
+                                Log.d("...._MAIN", "Initial movie hero populated 2")
+
+                                // Apply the same visual state as focus
+                                val lp = firstView.layoutParams as RecyclerView.LayoutParams
+
+                                val focusedMargin =
+                                    (movieFixedFocusOverlay.width * 0.3f).toInt()
+
+                                lp.marginStart = focusedMargin
+                                lp.marginEnd = focusedMargin
+
+                                firstView.layoutParams = lp
+
+                                firstView.alpha = 0.03f
+
+                                centerChildUnderFixedFocus(
+                                    movieRecyclerView,
+                                    movieFixedFocusOverlay,
+                                    firstView
+                                )
+                                //projectMovieItemIntoHero(movies.first())
+                                movies.getOrNull(0)?.let {
+                                    projectMovieItemIntoHero(it)
+                                }
+
+                                movieEmbeddedFocusedView = firstView
+                            }
+                        }
+
                         LoadingAnimation.hide(this@Shows_Page)
                     }
 
@@ -1600,13 +1838,58 @@ class Shows_Page : AppCompatActivity() {
 
                         withContext(Dispatchers.Main) {
                             tvAdapter.addItem(MovieItemOne)
-                            isLoadingMoreTv = false
-                            tvAdapter.isLoadingMore = false
-                            LoadingAnimation.hide(this@Shows_Page)
                         }
+                    }
 
+                    withContext(Dispatchers.Main) {
+                        isLoadingMoreTv = false
+                        tvAdapter.isLoadingMore = false
+                        LoadingAnimation.hide(this@Shows_Page)
+
+                        /*
+
+                        if (!initialtvHeroPopulated) {
+                            initialtvHeroPopulated = true
+
+                            delay(3000)
+                            tvRecyclerView.post {
+                                Log.d("...._MAIN", "Initial movie hero populate d 1")
+                                val firstView =
+                                    tvRecyclerView.findViewHolderForAdapterPosition(0)?.itemView
+                                        ?: return@post
+
+                                Log.d("...._MAIN", "Initial movie hero populated 2")
+
+                                // Apply the same visual state as focus
+                                val lp = firstView.layoutParams as RecyclerView.LayoutParams
+
+                                val focusedMargin =
+                                    (tvFixedFocusOverlay.width * 0.3f).toInt()
+
+                                lp.marginStart = focusedMargin
+                                lp.marginEnd = focusedMargin
+
+                                firstView.layoutParams = lp
+
+                                firstView.alpha = 0.03f
+
+                                centerChildUnderFixedFocus(
+                                    tvRecyclerView,
+                                    tvFixedFocusOverlay,
+                                    firstView
+                                )
+                                //projectTvItemIntoHero(movies.first())
+                                movies.getOrNull(0)?.let {
+                                   // projectTvItemIntoHero(it)
+                                }
+
+                                tvEmbeddedFocusedView = firstView
+                            }
+                          }
+                         */
 
                     }
+
                     Log.e("DEBUG_TAG_TvShows 4", movies.toString())
 
                     return@launch
@@ -2252,51 +2535,7 @@ class Shows_Page : AppCompatActivity() {
     ////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private fun o_notificationS() {
-        lifecycleScope.launch(Dispatchers.Main) {
 
-            val dnot = withContext(Dispatchers.IO) { db.getAllTvNotifications(userId) }
-            val notifications = mutableListOf<NotificationItem>()
-
-            findViewById<TextView>(R.id.notificationHeadline).text = "notifications"
-            if (dnot.size > 0) findViewById<CardView>(R.id.cNotificationAnimeIcon).visibility = View.VISIBLE
-
-            for (item in dnot) {
-                Log.d("Not_tv", "notificationId: ${item["id"]}")
-                Log.d("Not_tv", "anime_id: ${item["anime_id"]}")
-                Log.d("Not_tv", "title: ${item["title"]}")
-                Log.d("Not_tv", "poster: ${item["poster"]}")
-                Log.d("Not_tv", "noOfSeason: ${item["noOfSeason"]}")
-                Log.d("Not_tv", "lastSeason: ${item["lastSeason"]}")
-                Log.d("Not_tv", "lastEpisode: ${item["lastEpisode"]}")
-                Log.d("Not_tv", "notify_at: ${item["notify_at"]}\n\n\n")
-
-
-                val itemData = NotificationItem(
-                    notificationId = item["id"].toString(),      // ✅ PASS ID
-                    imdbCode = item["tv_id"].toString(),
-                    title = item["title"].toString(),
-                    imageUrl = item["poster"],
-                    info = "Season ${item["lastSeason"]} - Episode ${item["lastEpisode"]}",
-                    type = "tv",
-                    newSeason = item["lastSeason"].toString(),
-                    newEpisode = item["lastEpisode"].toString(),
-                    time = item["notify_at"].toString()
-                )
-                notifications.add(itemData)
-            }
-
-
-            notificationAdapter = NotificationAdapter(
-                items = notifications.toMutableList(),
-                layoutResId = R.layout.item_notification,
-                db,
-                userId
-            )
-            notificationRecyclerView.adapter = notificationAdapter
-
-        }
-    }
     private fun notificationS() {
         lifecycleScope.launch {
             // Fetch from DB on IO thread
@@ -2358,27 +2597,7 @@ class Shows_Page : AppCompatActivity() {
     ////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-    private fun o_watchedList() {
-        lifecycleScope.launch(Dispatchers.Main) {
-                val userId = sm.getUserId()
-                val cWatchingMv = withContext(Dispatchers.IO) { db.getContinueWatchingAll(userId, "movie")}
-                val cWatchingTv = withContext(Dispatchers.IO) { db.getContinueWatchingAll(userId, "tv")}
 
-                // Combine and sort in one operation
-                val combinedList = ArrayList<HashMap<String, String>>().apply {
-                    addAll(cWatchingMv)
-                    addAll(cWatchingTv)
-                    // Sort by updated_at in descending order
-                    sortByDescending { it["updated_at"]?.toLongOrNull() ?: 0L }
-                }
-
-                watchAdapter = cWatchingAdapter(
-                    combinedList,
-                    R.layout.item_watched
-                )
-                watchRecyclerView.adapter = watchAdapter
-        }
-    }
 
     private fun watchedList() {
         lifecycleScope.launch {
@@ -2410,6 +2629,56 @@ class Shows_Page : AppCompatActivity() {
         }
     }
 
+    /*
+    private fun setupPrimeStyleFixedFocusRow(
+        recyclerView: RecyclerView,
+        overlay: View
+    ) {
+        recyclerView.clipToPadding = false
+        recyclerView.clipChildren = false
+        recyclerView.overScrollMode = View.OVER_SCROLL_NEVER
+        recyclerView.setHasFixedSize(true)
+
+        var isInitialized = false
+
+        // 🔥 Force stable initial position AFTER layout + adapter binding
+        recyclerView.post {
+            recyclerView.stopScroll()
+            recyclerView.scrollToPosition(0)
+            isInitialized = true
+        }
+
+        // 🔥 Delay layout-dependent logic until fully ready
+        recyclerView.post {
+            recyclerView.doOnLayout {
+                updateFixedFocusSidePadding(recyclerView, overlay)
+            }
+        }
+
+        recyclerView.addOnChildAttachStateChangeListener(
+            object : RecyclerView.OnChildAttachStateChangeListener {
+
+                override fun onChildViewAttachedToWindow(view: View) {
+                    view.post {
+                        view.foreground = null
+                        view.alpha = if (view === movieEmbeddedFocusedView) 0.03f else 1f
+
+                        if (isInitialized) {
+                            updateFixedFocusSidePadding(recyclerView, overlay, view)
+                        }
+                    }
+                }
+
+                override fun onChildViewDetachedFromWindow(view: View) {
+                    if (view === movieEmbeddedFocusedView && !view.hasFocus()) {
+                        movieEmbeddedFocusedView = null
+                    }
+                }
+            }
+        )
+    }
+
+     */
 
 
     private fun setupBackPressedCallback() {

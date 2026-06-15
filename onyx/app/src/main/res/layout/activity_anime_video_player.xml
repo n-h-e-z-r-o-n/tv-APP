@@ -56,7 +56,7 @@ tools:context=".Anime_Video_Player">
         <View
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@drawable/overlay_left_gradient"
+            android:background="@drawable/overlay_left_gradient_bg"
           />
 
         <LinearLayout
