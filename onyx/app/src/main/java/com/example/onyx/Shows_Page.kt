@@ -80,6 +80,7 @@ class Shows_Page : AppCompatActivity() {
     private var lastFocusedView: View? = null
     private var currentTvPage = 1
     private var isLoadingMoreTv = false
+    private var updateContentJob: kotlinx.coroutines.Job? = null
 
 
 
@@ -87,11 +88,14 @@ class Shows_Page : AppCompatActivity() {
     private lateinit var SpotlightSection: FrameLayout
     private lateinit var HomeContentSection: FrameLayout
 
+    private lateinit var favoriteSection: LinearLayout
+
+    private lateinit var watchingSection: LinearLayout
     private lateinit var currentContent: CardView
 
 
 
-    private lateinit var mvBtnText: TextView
+
     private lateinit var tvBtnText: TextView
 
 
@@ -136,7 +140,7 @@ class Shows_Page : AppCompatActivity() {
 
 
     private lateinit var  realityRecyclerView : RecyclerView
-    private lateinit var realityFixedFocusOverlay: View
+    //private lateinit var realityFixedFocusOverlay: View
     private lateinit var  thrillRecyclerView : RecyclerView
     private lateinit var  genreRecyclerView : RecyclerView
 
@@ -182,11 +186,16 @@ class Shows_Page : AppCompatActivity() {
         currentContent = findViewById(R.id.currentContent)
         SpotlightSection = findViewById(R.id.SpotlightSection)
         HomeContentSection = findViewById(R.id.HomeContentSection)
+        favoriteSection =  findViewById(R.id.favoriteSection)
+        watchingSection = findViewById(R.id.watchingSection)
 
-        HomeContentSection.visibility = View.GONE
+        //HomeContentSection.visibility = View.GONE
+        favoriteSection.visibility = View.GONE
+        watchingSection.visibility = View.GONE
 
         GlobalUtils.setHeightToMatchScreen(SpotlightSection)
         GlobalUtils.setHeightToMatchScreen(HomeContentSection)
+        //GlobalUtils.setHeightToMatchScreen(favoriteSection)
 
         ////////////////////////////////////////////////////////////////////////////////////////////
         val navBar = findViewById<LinearLayout>(R.id.NavBar)
@@ -210,10 +219,14 @@ class Shows_Page : AppCompatActivity() {
         val tvSection = findViewById<LinearLayout>(R.id.tvSection)
 
         GlobalUtils.snapRowToTopOnFocus(activityScrollVIEW, SpotlightSection)
-
-
         GlobalUtils.centerParentOnFocus(activityScrollVIEW, movieSection)
         GlobalUtils.centerParentOnFocus(activityScrollVIEW, tvSection)
+        GlobalUtils.centerParentOnFocus(activityScrollVIEW, HomeContentSection)
+        GlobalUtils.centerParentOnFocus(activityScrollVIEW, favoriteSection)
+        GlobalUtils.centerParentOnFocus(activityScrollVIEW, watchingSection)
+
+
+
 
 
         val homeScrollView = findViewById<ScrollView>(R.id.HomeInnerScrollView)
@@ -223,7 +236,6 @@ class Shows_Page : AppCompatActivity() {
 
         GlobalUtils.snapRowToTopOnFocus(homeScrollView, realityRow)
         GlobalUtils.snapRowToTopOnFocus(homeScrollView, thrillsRow)
-        GlobalUtils.centerParentOnFocus(activityScrollVIEW, HomeContentSection)
 
         val browseRow = findViewById<LinearLayout>(R.id.browseRow)
         GlobalUtils.centerParentOnFocus(activityScrollVIEW, browseRow)
@@ -459,13 +471,12 @@ class Shows_Page : AppCompatActivity() {
         lifecycleScope.launch {
             HomeData()
             categoryShow()
-            //loadFilterContent(realityAdapter, "&with_genres=10764", false)
-            //loadFilterContent(thrillAdapter, "&with_genres=27", true)
+            loadFilterContent(realityAdapter, "&with_genres=10764", false)
+            loadFilterContent(thrillAdapter, "&with_genres=27", true)
             genreFilter()
-
             fetchMovies()
             fetchTvShows()
-            filter()
+            //filter()
             tvFavoritesList()
             notificationS()
             watchedList()
@@ -658,7 +669,6 @@ class Shows_Page : AppCompatActivity() {
     private fun setupRecyclerViews() {
 
         val Spacing = (10 * resources.displayMetrics.density).toInt()
-        val item_grid2_width = 280
         val gapUsed = 70
 
 
@@ -707,6 +717,8 @@ class Shows_Page : AppCompatActivity() {
 
         movieAdapter.onAddMoreClicked = { loadMoreMovies() }
         movieAdapter.onItemFocused = { view, item ->
+
+            backgroundContainer.visibility = View.GONE
 
             movieFixedFocusOverlay.strokeWidth = 3
 
@@ -809,8 +821,10 @@ class Shows_Page : AppCompatActivity() {
 
         tvAdapter.onAddMoreClicked = { loadMoreTv() }
         tvAdapter.onItemFocused = { view, item ->
+            backgroundContainer.visibility = View.GONE
 
             tvFixedFocusOverlay.strokeWidth = 3
+
 
             // Restore previous focused item
             tvEmbeddedFocusedView?.let { previous ->
@@ -890,7 +904,7 @@ class Shows_Page : AppCompatActivity() {
 
         //------------------------------------------------------------------------------------------
 
-         fun setFixedFocusOverlayVisible(overlay: View, visible: Boolean) {
+         fun realitySetFixedFocusOverlayVisible(overlay: View, visible: Boolean) {
             val targetAlpha = if (visible) 1f else 0f
             if (overlay.alpha == targetAlpha) return
 
@@ -899,21 +913,28 @@ class Shows_Page : AppCompatActivity() {
                 .setDuration(if (visible) 90L else 130L)
                 .start()
         }
-        realityAdapter = FilterAdapter(mutableListOf(), R.layout.item_list)
+
+        val realityFixedFocusOverlay = findViewById<View>(R.id.realityFixedFocusOverlay)
+        realityRecyclerView = findViewById(R.id.realityRecyclerView)
+        realityAdapter = FilterAdapter(mutableListOf(), R.layout.item_list2)
         realityAdapter.onItemFocused = { view, item ->
             backgroundContainer.visibility = View.VISIBLE
-            updateCurrentContent(item)
-            setFixedFocusOverlayVisible(realityFixedFocusOverlay, true)
+            updateContentJob?.cancel()
+            updateContentJob = lifecycleScope.launch {
+                delay(300)
+                updateCurrentContent(item)
+            }
+            realitySetFixedFocusOverlayVisible(realityFixedFocusOverlay, true)
             centerChildUnderFixedFocus(realityRecyclerView, realityFixedFocusOverlay, view)
         }
         realityAdapter.onItemFocusLost = {
+            backgroundContainer.visibility = View.GONE
             realityRecyclerView.post {
-                setFixedFocusOverlayVisible( realityFixedFocusOverlay,realityRecyclerView.hasFocus()                )
+                realitySetFixedFocusOverlayVisible( realityFixedFocusOverlay,realityRecyclerView.hasFocus()                )
             }
         }
 
-        realityRecyclerView = findViewById(R.id.realityRecyclerView)
-        realityFixedFocusOverlay = findViewById(R.id.realityFixedFocusOverlay)
+
         realityRecyclerView.layoutManager = LinearLayoutManager(
             this@Shows_Page,
             LinearLayoutManager.HORIZONTAL,
@@ -931,40 +952,62 @@ class Shows_Page : AppCompatActivity() {
             override fun onChildViewDetachedFromWindow(view: View) {
             }
         })
-        /* */
+
 
 
 
         //------------------------------------------------------------------------------------------
+        fun thrillSetFixedFocusOverlayVisible(overlay: View, visible: Boolean) {
+            val targetAlpha = if (visible) 1f else 0f
+            if (overlay.alpha == targetAlpha) return
 
+            overlay.animate()
+                .alpha(targetAlpha)
+                .setDuration(if (visible) 90L else 130L)
+                .start()
+        }
 
-        thrillAdapter = FilterAdapter(mutableListOf(), R.layout.item_list)
+        val thrillFixedFocusOverlay = findViewById<View>(R.id.thrillFixedFocusOverlay)
+        thrillRecyclerView = findViewById<RecyclerView>(R.id.ThrillsRecyclerView)
+        thrillAdapter = FilterAdapter(mutableListOf(), R.layout.item_list2)
         thrillAdapter.onItemFocused = { view, item ->
             backgroundContainer.visibility = View.VISIBLE
-            updateCurrentContent(item)
-            //GlobalUtils.expandAndScrollIntoView(findViewById<LinearLayout>(R.id.thrillsRow))
+            updateContentJob?.cancel()
+            updateContentJob = lifecycleScope.launch {
+                delay(300)
+                updateCurrentContent(item)
+            }
+            thrillSetFixedFocusOverlayVisible(thrillFixedFocusOverlay, true)
+            centerChildUnderFixedFocus(thrillRecyclerView, thrillFixedFocusOverlay, view)
         }
         thrillAdapter.onItemFocusLost = {
-            //backgroundContainer.visibility = View.GONE
+            backgroundContainer.visibility = View.GONE
+            realitySetFixedFocusOverlayVisible( thrillFixedFocusOverlay,thrillRecyclerView.hasFocus()                )
+
         }
-        thrillRecyclerView = findViewById<RecyclerView>(R.id.ThrillsRecyclerView)
-        //thrillRecyclerView.layoutManager = GridLayoutManager(this@Shows_Page, GlobalUtils.calculateSpanCountV2(this, 160, gapUsed))
         thrillRecyclerView.layoutManager = LinearLayoutManager(
             this@Shows_Page,
             LinearLayoutManager.HORIZONTAL,
             false
         )
         thrillRecyclerView.adapter = thrillAdapter
+        thrillRecyclerView.layoutManager?.scrollToPosition(0)
+
+        thrillRecyclerView.addOnChildAttachStateChangeListener(object : RecyclerView.OnChildAttachStateChangeListener {
+            override fun onChildViewAttachedToWindow(view: View) {
+                view.foreground = null // Dynamically strip the focus highlight ONLY for this specific RecyclerView
+            }
+            override fun onChildViewDetachedFromWindow(view: View) {
+            }
+        })
 
         //------------------------------------------------------------------------------------------
 
         genreAdapter = FilterAdapter(mutableListOf(), R.layout.item_list)
         genreAdapter.onItemFocused = { view, item ->
             backgroundContainer.visibility = View.VISIBLE
-            updateCurrentContent(item)
         }
         genreAdapter.onItemFocusLost = {
-            //backgroundContainer.visibility = View.GONE
         }
         genreRecyclerView = findViewById(R.id.genresRecyclerView)
         genreRecyclerView.layoutManager = LinearLayoutManager(
@@ -973,10 +1016,15 @@ class Shows_Page : AppCompatActivity() {
             false
         )
         genreRecyclerView.adapter = genreAdapter
+        genreRecyclerView.layoutManager?.scrollToPosition(0)
         //------------------------------------------------------------------------------------------
 
         faveRecyclerView = findViewById(R.id.faveRecycler)
-        faveRecyclerView.layoutManager = GridLayoutManager(this@Shows_Page, 1)
+        faveRecyclerView.layoutManager =LinearLayoutManager(
+            this@Shows_Page,
+            LinearLayoutManager.HORIZONTAL,
+            false
+        )
         faveRecyclerView.addItemDecoration(EqualSpaceItemDecoration(Spacing))
 
         //------------------------------------------------------------------------------------------
@@ -1264,7 +1312,7 @@ class Shows_Page : AppCompatActivity() {
 
         adapter.onItemFocused = { _, _ ->
             backgroundContainer.visibility = View.GONE
-            currentContent.visibility = View.GONE
+            //currentContent.visibility = View.GONE
         }
 
     }
@@ -1511,32 +1559,53 @@ class Shows_Page : AppCompatActivity() {
         fun fetchGenre(first: Boolean = true) {
             if (isloadingGenre) return
             isloadingGenre = true
-            var newAdd = true
 
             lifecycleScope.launch {
-                val jsonObjectMv = withContext(Dispatchers.IO) { fetchTMDB.fetchDiscoverMovie("$genresMv&page=$genrePage") }
-                val jsonObjectTV = withContext(Dispatchers.IO) { fetchTMDB.fetchDiscoverTv("$genresTv&page=$genrePage") }
 
-                val newMovies = parseJsonArray(jsonObjectMv?.optJSONArray("results"), isTvShow = false)
-                val newTvShows = parseJsonArray(jsonObjectTV?.optJSONArray("results"), isTvShow = true)
+                // 1. Fetch AND parse completely in the background (IO Thread)
+                val (newMovies, newTvShows) = withContext(Dispatchers.IO) {
 
-                // Switch to Main thread ONCE to update the UI
-                withContext(Dispatchers.Main) {
-                    // Assuming genreAdapter can accept a list. If not, loop over them here.
-                    newMovies.forEach { genreAdapter.addItem(it) }
-                    newTvShows.forEach { genreAdapter.addItem(it) }
+                    // Use coroutineScope to safely launch parallel async tasks
+                    coroutineScope {
+                        val mvDeferred = async { fetchTMDB.fetchDiscoverMovie("$genresMv&page=$genrePage") }
+                        val tvDeferred = async { fetchTMDB.fetchDiscoverTv("$genresTv&page=$genrePage") }
 
-                    genreAdapter.isLoadingMore = false
+                        val jsonObjectMv = mvDeferred.await()
+                        val jsonObjectTV = tvDeferred.await()
 
-                    if (newAdd && first) {
-                        newAdd = false
-                        genreRecyclerView.post {
-                            val vh = genreRecyclerView.findViewHolderForAdapterPosition(0)
-                            vh?.itemView?.requestFocus()
-                        }
+                        // Parse the JSON while still on the background thread
+                        val movies = parseJsonArray(jsonObjectMv?.optJSONArray("results"), isTvShow = false)
+                        val tvShows = parseJsonArray(jsonObjectTV?.optJSONArray("results"), isTvShow = true)
+
+                        // Return the paired lists
+                        movies to tvShows
                     }
-                    isloadingGenre = false
                 }
+
+                // 2. Combine the lists into one
+                val combinedList = newMovies + newTvShows
+
+                // 3. Switch back to the Main UI thread to update the screen
+                if (combinedList.isNotEmpty()) {
+                    var wasEmpty = genreAdapter.itemCount <= 1
+
+                    genreAdapter.addItems(combinedList)
+                    if (wasEmpty) {
+                        genreRecyclerView.scrollToPosition(0)
+                        wasEmpty =  false
+                    }
+
+
+
+
+                    // Increment your page here so the next call gets the next page!
+                    genrePage++
+                }
+
+                genreAdapter.isLoadingMore = false
+                isloadingGenre = false
+
+
             }
         }
 
@@ -1617,7 +1686,6 @@ class Shows_Page : AppCompatActivity() {
                     val response2 = connection2.inputStream.bufferedReader().use { it.readText() }
                     val jsonObject2 = org.json.JSONObject(response2)
                     val dataFetched = jsonObject2.getJSONArray("results")
-
 
 
                     val movies = mutableListOf<MovieItemOne>()
@@ -1720,7 +1788,6 @@ class Shows_Page : AppCompatActivity() {
                                 movieEmbeddedFocusedView = firstView
                             }
                         }
-
                         LoadingAnimation.hide(this@Shows_Page)
                     }
 
@@ -2458,62 +2525,45 @@ class Shows_Page : AppCompatActivity() {
     ////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private fun tvFavoritesList(){
+
+
+    private fun tvFavoritesList() {
         lifecycleScope.launch(Dispatchers.Main) {
 
-                val FavBackdrop: ImageView = findViewById(R.id.FavBackdrop)
-                val FavTitle: TextView = findViewById(R.id.FavTitle)
-                val FavGenre: TextView = findViewById(R.id.FavGenre)
-                val FavType: TextView = findViewById(R.id.FavType)
-                val FavRating: TextView = findViewById(R.id.FavRating)
-                val FavYear: TextView = findViewById(R.id.FavYear)
-                val FavOverview: TextView = findViewById(R.id.FavOverview)
-                val RemoveFaveItem: LinearLayout = findViewById(R.id.RemoveFaveItem)
-                val emptyState: TextView = findViewById(R.id.favEmptyState)
+            // 1. Fetch AND map the data on the background IO thread
+            val items = withContext(Dispatchers.IO) {
+                val showFavData = db.getFavoriteShows(userId)
 
-
-                val showFavData =  withContext(Dispatchers.IO) { db.getFavoriteShows(userId)}
-
-
-                emptyState.visibility = if (showFavData.isEmpty()) View.VISIBLE else View.GONE
-                if (showFavData.isEmpty()) return@launch
-
-                //val items = mutableListOf<FavItem>()
-
-                val items = showFavData.map { anime ->
-
-                //for (anime in showFavData) {
-                    Log.d("Fav_anime", "show_id: ${anime["show_id"]}")
-                    Log.d("Fav_anime", "title: ${anime["title"]}")
-                    Log.d("Fav_anime", "poster: ${anime["poster"]}")
-                    Log.d("Fav_anime", "type: ${anime["type"]}")
-                    Log.d("Fav_anime", "noOfSeason: ${anime["noOfSeason"]}")
-                    Log.d("Fav_anime", "lastSeason: ${anime["lastSeason"]}")
-                    Log.d("Fav_anime", "lastEpisode: ${anime["lastEpisode"]}")
-
-
-                        FavItem(
-                            title = anime["title"] ?: "",
-                            posterUrl = anime["poster"] ?: "",
-                            backdropUrl = anime["backdrop"] ?: "",
-                            releaseDate = anime["year"] ?: "",
-                            runtime = anime["runtime"] ?: "",
-                            overview = anime["overview"] ?: "",
-                            voteAverage = anime["rating"] ?: "",
-                            genres = anime["genres"] ?: "",
-                            production = "",
-                            parentalGuide = anime["pg"] ?: "",
-                            imdbCode = anime["show_id"] ?: "",
-                            showType = anime["type"] ?: ""
-                        )
-
+                // Map the raw database data directly into FavItem objects
+                showFavData.map { anime ->
+                    FavItem(
+                        title = anime["title"] ?: "",
+                        posterUrl = anime["poster"] ?: "",
+                        backdropUrl = anime["backdrop"] ?: "",
+                        releaseDate = anime["year"] ?: "",
+                        runtime = anime["runtime"] ?: "",
+                        overview = anime["overview"] ?: "",
+                        voteAverage = anime["rating"] ?: "",
+                        genres = anime["genres"] ?: "",
+                        production = "",
+                        parentalGuide = anime["pg"] ?: "",
+                        imdbCode = anime["show_id"] ?: "",
+                        showType = anime["type"] ?: ""
+                    )
                 }
+            }
+
+            // 2. Handle UI Visibility and Adapter Updates
+            if (items.isNotEmpty()) {
 
                 if (!::faveAdapter.isInitialized) {
+
+                    /*
 
                         faveAdapter = FavAdapter(
                             items.toMutableList(),
                             R.layout.square_card,
+
                             FavBackdrop,
                             FavTitle,
                             FavGenre,
@@ -2524,11 +2574,36 @@ class Shows_Page : AppCompatActivity() {
                             RemoveFaveItem
                         )
 
-                        faveRecyclerView.adapter = faveAdapter
-                }else{
-                     faveAdapter.updateItems(items)
+                        */
+
+                    faveAdapter = FavAdapter(
+                        items.toMutableList(),
+                        R.layout.square_card,
+                        null, // FavBackdrop
+                        null, // FavTitle
+                        null, // FavGenre
+                        null, // FavType
+                        null, // FavRating
+                        null, // FavYear
+                        null, // FavOverview
+                        null  // RemoveFaveItem
+                    )
+                    faveRecyclerView.adapter = faveAdapter
+                } else {
+                    faveAdapter.updateItems(items)
                 }
 
+                favoriteSection.visibility = View.VISIBLE
+
+            } else {
+                // ✅ THE FIX: If the list is empty, hide the section entirely
+                favoriteSection.visibility = View.GONE
+
+                // If the adapter was already running, clear it out
+                if (::faveAdapter.isInitialized) {
+                    faveAdapter.clearItems()
+                }
+            }
         }
     }
 
@@ -2598,7 +2673,6 @@ class Shows_Page : AppCompatActivity() {
 
 
 
-
     private fun watchedList() {
         lifecycleScope.launch {
             val userId = sm.getUserId()
@@ -2616,69 +2690,27 @@ class Shows_Page : AppCompatActivity() {
             val combinedList = (movies + tvShows)
                 .sortedByDescending { it["updated_at"]?.toLongOrNull() ?: 0L }
 
-            // Adapter setup / update
-            if (!::watchAdapter.isInitialized) {
-                watchAdapter = cWatchingAdapter(
-                    combinedList.toMutableList(),
-                    R.layout.item_watched
-                )
-                watchRecyclerView.adapter = watchAdapter
+            // ✅ Check if the list has items before showing the UI
+            if (combinedList.isNotEmpty()) {
+
+                // Adapter setup / update
+                if (!::watchAdapter.isInitialized) {
+                    watchAdapter = cWatchingAdapter(
+                        combinedList.toMutableList(),
+                        R.layout.item_watched
+                    )
+                    watchRecyclerView.adapter = watchAdapter
+                } else {
+                    watchAdapter.updateItems(combinedList)
+                }
+                watchingSection.visibility = View.VISIBLE
             } else {
-                watchAdapter.updateItems(combinedList)
+                // ✅ Hide the section completely if there is nothing to watch
+                watchingSection.visibility = View.GONE
             }
         }
     }
 
-    /*
-    private fun setupPrimeStyleFixedFocusRow(
-        recyclerView: RecyclerView,
-        overlay: View
-    ) {
-        recyclerView.clipToPadding = false
-        recyclerView.clipChildren = false
-        recyclerView.overScrollMode = View.OVER_SCROLL_NEVER
-        recyclerView.setHasFixedSize(true)
-
-        var isInitialized = false
-
-        // 🔥 Force stable initial position AFTER layout + adapter binding
-        recyclerView.post {
-            recyclerView.stopScroll()
-            recyclerView.scrollToPosition(0)
-            isInitialized = true
-        }
-
-        // 🔥 Delay layout-dependent logic until fully ready
-        recyclerView.post {
-            recyclerView.doOnLayout {
-                updateFixedFocusSidePadding(recyclerView, overlay)
-            }
-        }
-
-        recyclerView.addOnChildAttachStateChangeListener(
-            object : RecyclerView.OnChildAttachStateChangeListener {
-
-                override fun onChildViewAttachedToWindow(view: View) {
-                    view.post {
-                        view.foreground = null
-                        view.alpha = if (view === movieEmbeddedFocusedView) 0.03f else 1f
-
-                        if (isInitialized) {
-                            updateFixedFocusSidePadding(recyclerView, overlay, view)
-                        }
-                    }
-                }
-
-                override fun onChildViewDetachedFromWindow(view: View) {
-                    if (view === movieEmbeddedFocusedView && !view.hasFocus()) {
-                        movieEmbeddedFocusedView = null
-                    }
-                }
-            }
-        )
-    }
-
-     */
 
 
     private fun setupBackPressedCallback() {

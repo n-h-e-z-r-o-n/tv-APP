@@ -8,9 +8,9 @@
     android:focusable="false"
     android:focusableInTouchMode="false"
     app:cardElevation="0dp"
-    app:cardBackgroundColor="@android:color/transparent"
+    app:cardBackgroundColor="?attr/BG_color"
     android:foreground="@drawable/spotlight_selector"
-    android:layout_margin="10dp">
+    >
 
 
 
@@ -60,6 +60,7 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:layout_gravity="bottom"
+        android:layout_marginStart="10dp"
         android:layout_marginBottom="15dp">
 
         <TextView

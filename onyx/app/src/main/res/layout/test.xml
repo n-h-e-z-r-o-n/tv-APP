@@ -1,10 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/HomeContentSection"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:background="?attr/BG_color">
+    android:layout_height="wrap_content">
 
         <include
             android:layout_width="match_parent"
@@ -76,8 +74,8 @@
 
                         <View
                             android:id="@+id/realityFixedFocusOverlay"
-                            android:layout_width="100dp"
-                            android:layout_height="150dp"
+                            android:layout_width="103dp"
+                            android:layout_height="153dp"
                             android:layout_gravity="start|center_vertical"
                             android:layout_marginStart="90dp"
                             android:alpha="0"
@@ -123,15 +121,39 @@
                         android:textColor="?attr/FG_color"
                         tools:ignore="HardcodedText" />
 
-                    <androidx.recyclerview.widget.RecyclerView
-                        android:id="@+id/ThrillsRecyclerView"
-                        android:layout_height="wrap_content"
+
+
+                    <FrameLayout
                         android:layout_width="match_parent"
-                        android:paddingEnd="500dp"
+                        android:layout_height="wrap_content"
                         android:layout_gravity="bottom"
-                        android:clipToPadding="false"
-                        android:scrollbars="none"
-                        tools:ignore="RtlSymmetry" />
+                        android:clipChildren="false"
+                        android:clipToPadding="false">
+
+                        <androidx.recyclerview.widget.RecyclerView
+                            android:id="@+id/ThrillsRecyclerView"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:clipToPadding="false"
+                            android:paddingStart="95dp"
+                            android:paddingEnd="500dp"
+                            android:scrollbars="none"
+                            tools:ignore="RtlSymmetry" />
+
+                        <View
+                            android:id="@+id/thrillFixedFocusOverlay"
+                            android:layout_width="104dp"
+                            android:layout_height="154dp"
+                            android:layout_gravity="start|center_vertical"
+                            android:layout_marginStart="90dp"
+                            android:alpha="0"
+                            android:background="@drawable/background_focus"
+                            android:clickable="false"
+                            android:focusable="false"
+                            android:importantForAccessibility="no" />
+
+                    </FrameLayout>
+
                 </LinearLayout>
 
 

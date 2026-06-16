@@ -8,7 +8,6 @@
         android:layout_height="match_parent"
         android:layout_gravity="start"
         android:orientation="vertical"
-        android:background="@drawable/overlay_left_gradient_bg"
         android:gravity="center"
         android:elevation="15dp">
 

@@ -19,6 +19,7 @@ import androidx.annotation.OptIn
 import androidx.cardview.widget.CardView
 import androidx.media3.common.util.UnstableApi
 import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
@@ -282,6 +283,40 @@ class FilterAdapter(
         val showRating: TextView? = view.findViewById(R.id.showRating)
         val showRS: TextView? = view.findViewById(R.id.showRS)
         val showType: TextView? = view.findViewById(R.id.showType)
+
+        init {
+            itemView.setOnKeyListener { _, keyCode, event ->
+                if (event.action != KeyEvent.ACTION_DOWN) return@setOnKeyListener false
+
+                // 1. D-Pad Debounce Logic
+                val now = System.currentTimeMillis()
+                if (now - lastKeyTime < KEY_DEBOUNCE_DELAY) return@setOnKeyListener true
+                lastKeyTime = now
+
+                // 2. Boundary Trap Logic
+                val currentPos = bindingAdapterPosition
+
+                // Safety check for invalid positions
+                if (currentPos == RecyclerView.NO_POSITION) return@setOnKeyListener false
+
+                // Total items is the adapter's item count (movies + add button)
+                val totalItems = bindingAdapter?.itemCount ?: (items.size + 1)
+
+                when (keyCode) {
+                    KeyEvent.KEYCODE_DPAD_LEFT -> {
+                        // Swallow left click if on the very first item
+                        if (currentPos == 0) return@setOnKeyListener true
+                    }
+                    KeyEvent.KEYCODE_DPAD_RIGHT -> {
+                        // Swallow right click if on the very last item (the Add More button)
+                        if (currentPos == totalItems - 1) return@setOnKeyListener true
+                    }
+                }
+
+                // Otherwise, let the RecyclerView handle the scroll normally
+                false
+            }
+        }
     }
 
     override fun getItemViewType(position: Int): Int {
@@ -409,23 +444,7 @@ class FilterAdapter(
             }
         }
 
-        // D-Pad Debounce Key Listener
-        holder.itemView.setOnKeyListener { _, keyCode, event ->
-            if (event.action != KeyEvent.ACTION_DOWN) return@setOnKeyListener false
-            val now = System.currentTimeMillis()
-            if (now - lastKeyTime < KEY_DEBOUNCE_DELAY) return@setOnKeyListener true
-            lastKeyTime = now
 
-            when (keyCode) {
-                KeyEvent.KEYCODE_DPAD_LEFT -> {
-                    // Logic for left boundary if needed
-                }
-                KeyEvent.KEYCODE_DPAD_RIGHT -> {
-                    if (position == items.size) return@setOnKeyListener true
-                }
-            }
-            false
-        }
     }
 
     override fun getItemCount(): Int {
@@ -483,8 +502,6 @@ class OtherAdapter(
         val CardViewSquare: CardView = view.findViewById(R.id.CardViewSquare)
         val Movie_image: ImageView = view.findViewById(R.id.itemImage)
         val itemText: TextView = view.findViewById(R.id.itemText)
-
-
 
         init {
             itemView.setOnFocusChangeListener { v, hasFocus ->
@@ -1200,71 +1217,102 @@ class AvatarAdapter(
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class FavAdapter(
-    private val  items: MutableList<FavItem>,
-    private val layoutResId: Int ,
-    private val backdropView: ImageView,
-    private val favTitleView: TextView,
-    private val favGenreView: TextView,
-    private val favTypeView: TextView,
-    private val favRatingView: TextView,
-    private val favYearView: TextView,
-    private val favOverviewView: TextView,
-    private val RemoveFaveItemBtn: LinearLayout
+    private val items: MutableList<FavItem>,
+    private val layoutResId: Int,
+    private val backdropView: ImageView? = null,
+    private val favTitleView: TextView? = null,
+    private val favGenreView: TextView? = null,
+    private val favTypeView: TextView? = null,
+    private val favRatingView: TextView? = null,
+    private val favYearView: TextView? = null,
+    private val favOverviewView: TextView? = null,
+    private val RemoveFaveItemBtn: LinearLayout? = null
+) : RecyclerView.Adapter<FavAdapter.ViewHolder>() {
 
-) :  RecyclerView.Adapter<FavAdapter.ViewHolder>() {
+    // ✅ ADDED: Companion object to hold the debounce variables
+    companion object {
+        private var lastKeyTime = 0L
+        private const val KEY_DEBOUNCE_DELAY = 300L // ms - Tweak this number to feel faster or slower
+    }
 
     inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val Movie_image: ImageView = view.findViewById(R.id.itemImage)
-        val itemText: TextView = view.findViewById(R.id.itemText)
-
+        val itemText: TextView? = view.findViewById(R.id.itemText)
 
         init {
             itemView.setOnFocusChangeListener { _, hasFocus ->
 
-                //Scale animation
+                // Scale animation
                 itemView.animate()
                     .scaleX(if (hasFocus) 1.02f else 1f)
                     .scaleY(if (hasFocus) 1.02f else 1f)
                     .setDuration(150)
                     .start()
 
-
-
                 if (hasFocus) {
                     val pos = bindingAdapterPosition
                     if (pos != RecyclerView.NO_POSITION) {
                         val item = items[pos]
 
-                        // Backdrop image
-                        Glide.with(backdropView.context)
-                            .load(item.backdropUrl)
-                            //.override(Target.SIZE_ORIGINAL, backdropView.height) // scale height to container
-                            .into(backdropView)
+                        backdropView?.let {
+                            Glide.with(it.context)
+                                .load(item.backdropUrl)
+                                .into(it)
+                        }
 
-                        // ✅ Set text properties correctly
-                        favTitleView.text    = item.title
-                        favGenreView.text    = item.genres
-                        favTypeView.text     = item.showType          // ensure you have a `type` field
-                        favRatingView.text   = "${item.voteAverage}"
-                        favYearView.text     = item.releaseDate
-                        favOverviewView.text = item.overview
+                        favTitleView?.text = item.title
+                        favGenreView?.text = item.genres
+                        favTypeView?.text = item.showType
+                        favRatingView?.text = "${item.voteAverage}"
+                        favYearView?.text = item.releaseDate
+                        favOverviewView?.text = item.overview
 
+                        RemoveFaveItemBtn?.setOnClickListener {
+                            val currentPos = bindingAdapterPosition
+                            if (currentPos != RecyclerView.NO_POSITION) {
+                                // TODO: removeFavorite(it.context, item.imdbCode, item.showType)
 
-                        RemoveFaveItemBtn.setOnClickListener {
-                            //.removeFavorite( RemoveFaveItemBtn.context, item.imdbCode, item.showType)
-                            val pos = bindingAdapterPosition
-                            if (pos != RecyclerView.NO_POSITION) {
-                                items.removeAt(pos)
-                                notifyItemRemoved(pos)
+                                items.removeAt(currentPos)
+                                notifyItemRemoved(currentPos)
+
+                                favTitleView?.text = ""
+                                favOverviewView?.text = ""
+                                backdropView?.setImageDrawable(null)
                             }
                         }
                     }
                 }
             }
 
+            itemView.setOnKeyListener { _, keyCode, event ->
+                if (event.action != KeyEvent.ACTION_DOWN) return@setOnKeyListener false
 
+                // ✅ ADDED: D-Pad Debounce Logic
+                val now = System.currentTimeMillis()
+                if (now - lastKeyTime < KEY_DEBOUNCE_DELAY) return@setOnKeyListener true
+                lastKeyTime = now
+
+                val currentPos = bindingAdapterPosition
+
+                when (keyCode) {
+                    KeyEvent.KEYCODE_DPAD_LEFT -> {
+                        // If we are at the very first item, swallow the left click
+                        if (currentPos == 0) {
+                            return@setOnKeyListener true
+                        }
+                    }
+                    KeyEvent.KEYCODE_DPAD_RIGHT -> {
+                        // If we are at the very last item, swallow the right click
+                        if (currentPos == items.size - 1) {
+                            return@setOnKeyListener true
+                        }
+                    }
+                }
+
+                // Otherwise, let the RecyclerView handle the scroll normally
+                false
+            }
         }
-
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -1274,57 +1322,82 @@ class FavAdapter(
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-
         val currentItem = items[position]
-
         val posterUrl = currentItem.posterUrl
+        val backdropUrl = currentItem.backdropUrl
         val imdbCode = currentItem.imdbCode
         val type = currentItem.showType
 
-
-
         Glide.with(holder.itemView.context)
-            .load(posterUrl)
+            .load(backdropUrl)
             .centerInside()
             .into(holder.Movie_image)
 
-
         holder.itemView.setOnClickListener {
             val context = holder.itemView.context
-            if(type == "anime"){
-                val intent = Intent(context, Watch_Anime_Page::class.java)
-                intent.putExtra("anime_code", imdbCode)
-                intent.putExtra("anime_poster", posterUrl)
+            if (type == "anime") {
+                val intent = Intent(context, Watch_Anime_Page::class.java).apply {
+                    putExtra("anime_code", imdbCode)
+                    putExtra("anime_poster", posterUrl)
+                }
                 context.startActivity(intent)
-            }else {
-                val intent = Intent(context, Watch_Page::class.java)
-                intent.putExtra("imdb_code", imdbCode)
-                intent.putExtra("type", type)
+            } else {
+                val intent = Intent(context, Watch_Page::class.java).apply {
+                    putExtra("imdb_code", imdbCode)
+                    putExtra("type", type)
+                }
                 context.startActivity(intent)
             }
         }
-
-
     }
 
     override fun getItemCount() = items.size
 
-    // 👇 helper to add items one by one
+    // ==========================================
+    // HELPER METHODS
+    // ==========================================
+
     fun addItem(item: FavItem) {
         items.add(item)
         notifyItemInserted(items.size - 1)
     }
 
-    fun updateItems(newItems: List<FavItem>) {
+    fun updateItems_(newItems: List<FavItem>) {
+        val oldSize = items.size
         items.clear()
+        notifyItemRangeRemoved(0, oldSize)
+
         items.addAll(newItems)
-        notifyDataSetChanged()
-    }
-    fun clearItems() {
-        items.clear()
-        notifyDataSetChanged()  // Notify RecyclerView that data is cleared
+        notifyItemRangeInserted(0, newItems.size)
     }
 
+    suspend fun updateItems(newItems: List<FavItem>) {
+        val oldSize = items.size
+        items.clear()
+        notifyItemRangeRemoved(0, oldSize)
+
+        // Load 6 items at a time (tweak this based on how many fit on your screen)
+        val chunkSize = 6
+
+        for (i in newItems.indices step chunkSize) {
+            val end = Math.min(i + chunkSize, newItems.size)
+            val chunk = newItems.subList(i, end)
+
+            val currentStart = items.size
+            items.addAll(chunk)
+            notifyItemRangeInserted(currentStart, chunk.size)
+
+            // ✅ The Magic: Yield back to the Main Thread for 16ms (1 frame at 60fps)
+            // This gives the TV time to draw the items before processing the next batch.
+            delay(16)
+        }
+    }
+
+    fun clearItems() {
+        val size = items.size
+        items.clear()
+        notifyItemRangeRemoved(0, size)
+    }
 }
 
 
@@ -1372,7 +1445,7 @@ class EqualSxpaceItemDecoration(private val space: Int) : RecyclerView.ItemDecor
 }
 
 
-class EqualSpaceItemDecoration(private val space: Int) : RecyclerView.ItemDecoration() {
+class EqualSpaceItemDecoration_o(private val space: Int) : RecyclerView.ItemDecoration() {
     override fun getItemOffsets(
         outRect: Rect,
         view: View,
@@ -1394,6 +1467,53 @@ class EqualSpaceItemDecoration(private val space: Int) : RecyclerView.ItemDecora
         }
         if (position % spanCount == 0) {
             outRect.left = space // first column
+        }
+    }
+}
+
+class EqualSpaceItemDecoration(private val space: Int) : RecyclerView.ItemDecoration() {
+    override fun getItemOffsets(
+        outRect: Rect,
+        view: View,
+        parent: RecyclerView,
+        state: RecyclerView.State
+    ) {
+        val position = parent.getChildAdapterPosition(view)
+        val layoutManager = parent.layoutManager
+
+        // 1. Apply base equal spacing on all sides (creates 'space' between items)
+        outRect.left = space / 2
+        outRect.right = space / 2
+        outRect.top = space / 2
+        outRect.bottom = space / 2
+
+        // 2. Only apply Grid edge logic if it is actually a Grid
+        if (layoutManager is GridLayoutManager) {
+            val spanCount = layoutManager.spanCount
+
+            if (position < spanCount) {
+                outRect.top = space // first row
+            }
+            if (position % spanCount == 0) {
+                outRect.left = space // first column
+            }
+        }
+        // 3. Optional: Edge logic for Linear Layouts (Horizontal or Vertical)
+        else if (layoutManager is LinearLayoutManager) {
+            // If you want the outer edges of the list to be equal to the space between items,
+            // uncomment the lines below based on your orientation:
+
+            /*
+            if (layoutManager.orientation == LinearLayoutManager.VERTICAL) {
+                // if (position == 0) outRect.top = space // Extra space at very top
+                // outRect.left = space  // Full space on left
+                // outRect.right = space // Full space on right
+            } else { // HORIZONTAL
+                // if (position == 0) outRect.left = space // Extra space at very left
+                // outRect.top = space    // Full space on top
+                // outRect.bottom = space // Full space on bottom
+            }
+            */
         }
     }
 }
@@ -1880,10 +2000,32 @@ class cWatchingAdapter(
 
     override fun getItemCount(): Int = items.size
 
-    fun updateItems(newItems: List<HashMap<String, String>>) {
+    fun updateItems_ (newItems: List<HashMap<String, String>>) {
         items.clear()
         items.addAll(newItems)
         notifyDataSetChanged()
+    }
+
+    suspend fun updateItems(newItems: List<HashMap<String, String>>)  {
+        val oldSize = items.size
+        items.clear()
+        notifyItemRangeRemoved(0, oldSize)
+
+        // Load 6 items at a time (tweak this based on how many fit on your screen)
+        val chunkSize = 6
+
+        for (i in newItems.indices step chunkSize) {
+            val end = Math.min(i + chunkSize, newItems.size)
+            val chunk = newItems.subList(i, end)
+
+            val currentStart = items.size
+            items.addAll(chunk)
+            notifyItemRangeInserted(currentStart, chunk.size)
+
+            // ✅ The Magic: Yield back to the Main Thread for 16ms (1 frame at 60fps)
+            // This gives the TV time to draw the items before processing the next batch.
+            delay(16)
+        }
     }
 
     fun clearItems() {

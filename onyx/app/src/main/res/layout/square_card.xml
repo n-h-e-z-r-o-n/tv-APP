@@ -21,8 +21,8 @@
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:maxHeight="120dp"
-        android:adjustViewBounds="true"
         android:layout_weight="1"
+        android:adjustViewBounds="true"
         android:src="@raw/anime_poster"
         android:scaleType="fitStart"
         tools:ignore="ContentDescription" />

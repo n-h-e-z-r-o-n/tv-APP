@@ -1374,7 +1374,7 @@ object GlobalUtils {
 
 
 
-    private var activeScrollAnimator: ValueAnimator? = null
+    private val activeScrollAnimators = java.util.WeakHashMap<ScrollView, ValueAnimator>()
 
     fun centerParentOnFocus(scrollView: ScrollView, parentView: View) {
         // Note: If you call this in a Fragment/Activity, ensure you remove the listener in onDestroyView
@@ -1393,11 +1393,20 @@ object GlobalUtils {
                     animateScrollTo(scrollView, targetY.coerceAtLeast(0))
                 }
             }
+
+            parentView.setOnFocusChangeListener { _, hasFocus ->
+                if (hasFocus) {
+                    parentView.post {
+                        val next = parentView.focusSearch(View.FOCUS_DOWN)
+                        next?.requestFocus()
+                    }
+                }
+            }
         }
     }
 
     // Helper to get the absolute Top of a view relative to a specific ancestor
-    private fun getRelativeTop(child: View, ancestor: ViewGroup): Int {
+    private  fun getRelativeTop(child: View, ancestor: ViewGroup): Int {
         var top = child.top
         var currentParent = child.parent as? View
 
@@ -1416,9 +1425,9 @@ object GlobalUtils {
         if (startY == targetY) return // Already there
 
         // ✅ FIX 2: Cancel any currently running scroll animation before starting a new one
-        activeScrollAnimator?.cancel()
+        activeScrollAnimators[scrollView]?.cancel()
 
-        activeScrollAnimator = ValueAnimator.ofInt(startY, targetY).apply {
+        val animator = ValueAnimator.ofInt(startY, targetY).apply {
             duration = 450L
 
             interpolator = PathInterpolator(
@@ -1437,6 +1446,7 @@ object GlobalUtils {
 
             start()
         }
+        activeScrollAnimators[scrollView] = animator
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
