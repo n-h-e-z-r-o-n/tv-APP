@@ -1,185 +1,984 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:padding="4dp"
+    android:background="@android:color/transparent"
+    android:id="@+id/keyboard_layout">
+
     <LinearLayout
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:tools="http://schemas.android.com/tools"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
         android:gravity="center"
-        android:padding="4dp"
-        android:background="@android:color/transparent"
-        android:id="@+id/keyboard_layout"
-        >
-
-        <!-- Top Row -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:orientation="horizontal"
-            >
-
-            <Button android:id="@+id/key_1" android:text="1"
-                style="@style/KeyboardKey"
+        android:orientation="horizontal">
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/key_1"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_margin="2dp"
+            app:cardBackgroundColor="#000000"
+            app:cardCornerRadius="6dp"
+            app:cardElevation="2dp"
+            android:clickable="true"
+            app:strokeColor="@color/card_stroke"
+            app:strokeWidth="1dp"
+            android:focusable="true">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="1"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:fontFamily="@font/p"
                 tools:ignore="HardcodedText" />
-            <Button android:id="@+id/key_2" android:text="2"
-                style="@style/KeyboardKey"
-                tools:ignore="HardcodedText"/>
-            <Button android:id="@+id/key_3" android:text="3"
-                style="@style/KeyboardKey"
-                tools:ignore="HardcodedText"/>
-            <Button android:id="@+id/key_4" android:text="4"
-                style="@style/KeyboardKey"
-                tools:ignore="HardcodedText"/>
-            <Button android:id="@+id/key_5" android:text="5"
-                style="@style/KeyboardKey"
-                tools:ignore="HardcodedText"/>
-            <Button android:id="@+id/key_6" android:text="6"
-                style="@style/KeyboardKey"
-                tools:ignore="HardcodedText"/>
-            <Button android:id="@+id/key_7" android:text="7"
-                style="@style/KeyboardKey"
-                tools:ignore="HardcodedText"/>
-            <Button android:id="@+id/key_8" android:text="8"
-                style="@style/KeyboardKey"
-                tools:ignore="HardcodedText"/>
-            <Button android:id="@+id/key_9" android:text="9"
-                style="@style/KeyboardKey"
-                tools:ignore="HardcodedText"/>
-            <Button android:id="@+id/key_0" android:text="0"
-                style="@style/KeyboardKey"
-                tools:ignore="HardcodedText"/>
+        </com.google.android.material.card.MaterialCardView>
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/key_2"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_margin="2dp"
+            app:cardBackgroundColor="#000000"
+            app:cardCornerRadius="6dp"
+            app:cardElevation="2dp"
+            app:strokeColor="@color/card_stroke"
+            app:strokeWidth="1dp"
 
-        </LinearLayout>
-
-        <!-- First Row -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:orientation="horizontal">
-
-            <Button android:id="@+id/key_q" android:text="Q"
-                style="@style/KeyboardKey"
-                tools:ignore="HardcodedText"/>
-            <Button android:id="@+id/key_w" android:text="W"
-                style="@style/KeyboardKey"
-                tools:ignore="HardcodedText"/>
-            <Button android:id="@+id/key_e" android:text="E"
-                style="@style/KeyboardKey"
-                tools:ignore="HardcodedText"/>
-            <Button android:id="@+id/key_r" android:text="R"
-                style="@style/KeyboardKey"
-                tools:ignore="HardcodedText"/>
-            <Button android:id="@+id/key_t" android:text="T"
-                style="@style/KeyboardKey"
-                tools:ignore="HardcodedText"/>
-            <Button android:id="@+id/key_y" android:text="Y"
-                style="@style/KeyboardKey"
-                tools:ignore="HardcodedText"/>
-            <Button android:id="@+id/key_u" android:text="U"
-                style="@style/KeyboardKey"
-                tools:ignore="HardcodedText"/>
-            <Button android:id="@+id/key_i" android:text="I"
-                style="@style/KeyboardKey"
-                tools:ignore="HardcodedText"/>
-            <Button android:id="@+id/key_o" android:text="O"
-                style="@style/KeyboardKey"
-                tools:ignore="HardcodedText"/>
-            <Button android:id="@+id/key_p" android:text="P"
-                style="@style/KeyboardKey"
-                tools:ignore="HardcodedText"/>
-
-        </LinearLayout>
-
-        <!-- Second Row -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:orientation="horizontal">
-
-            <Button android:id="@+id/key_a" android:text="A"
-                style="@style/KeyboardKey"
-                tools:ignore="HardcodedText"/>
-            <Button android:id="@+id/key_s" android:text="S"
-                style="@style/KeyboardKey"
-                tools:ignore="HardcodedText"/>
-            <Button android:id="@+id/key_d" android:text="D"
-                style="@style/KeyboardKey"
-                tools:ignore="HardcodedText"/>
-            <Button android:id="@+id/key_f" android:text="F"
-                style="@style/KeyboardKey"
-                tools:ignore="HardcodedText"/>
-            <Button android:id="@+id/key_g" android:text="G"
-                style="@style/KeyboardKey"
-                tools:ignore="HardcodedText"/>
-            <Button android:id="@+id/key_h" android:text="H"
-                style="@style/KeyboardKey"
-                tools:ignore="HardcodedText"/>
-            <Button android:id="@+id/key_j" android:text="J"
-                style="@style/KeyboardKey"
-                tools:ignore="HardcodedText"/>
-            <Button android:id="@+id/key_k" android:text="K"
-                style="@style/KeyboardKey"
-                tools:ignore="HardcodedText"/>
-            <Button android:id="@+id/key_l" android:text="L"
-                style="@style/KeyboardKey"
-                tools:ignore="HardcodedText"/>
-
-        </LinearLayout>
-
-        <!-- Third Row -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:orientation="horizontal">
-
-            <Button android:id="@+id/key_z" android:text="Z"
-                style="@style/KeyboardKey"
-                tools:ignore="HardcodedText"/>
-            <Button android:id="@+id/key_x" android:text="X"
-                style="@style/KeyboardKey"
-                tools:ignore="HardcodedText"/>
-            <Button android:id="@+id/key_c" android:text="C"
-                style="@style/KeyboardKey"
-                tools:ignore="HardcodedText"/>
-            <Button android:id="@+id/key_v" android:text="V"
-                style="@style/KeyboardKey"
-                tools:ignore="HardcodedText"/>
-            <Button android:id="@+id/key_b" android:text="B"
-                style="@style/KeyboardKey"
-                tools:ignore="HardcodedText"/>
-            <Button android:id="@+id/key_n" android:text="N"
-                style="@style/KeyboardKey"
-                tools:ignore="HardcodedText"/>
-            <Button android:id="@+id/key_m" android:text="M"
-                style="@style/KeyboardKey"
-                tools:ignore="HardcodedText"/>
-            <Button android:id="@+id/key_backspace" android:text="⌫"
-                style="@style/KeyboardKeySpecial"
-                tools:ignore="HardcodedText"/>
-
-        </LinearLayout>
-
-        <!-- Bottom Row -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:orientation="horizontal">
-
-            <Button android:id="@+id/key_clear" android:text="Clear"
-                style="@style/KeyboardKeySpecial" />
-
-            <Button android:id="@+id/key_space" android:text="Space"
-                style="@style/KeyboardKeySpace" />
-
-            <Button android:id="@+id/key_enter" android:text="Enter"
-                style="@style/KeyboardKeySpecial" />
-
-
-
-        </LinearLayout>
-
+            android:clickable="true"
+            android:focusable="true">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="2"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:fontFamily="@font/p"
+                tools:ignore="HardcodedText" />
+        </com.google.android.material.card.MaterialCardView>
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/key_3"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_margin="2dp"
+            app:cardBackgroundColor="#000000"
+            app:cardCornerRadius="6dp"
+            app:cardElevation="2dp"
+            app:strokeColor="@color/card_stroke"
+            app:strokeWidth="1dp"
+            android:clickable="true"
+            android:focusable="true">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="3"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:fontFamily="@font/p"
+                tools:ignore="HardcodedText" />
+        </com.google.android.material.card.MaterialCardView>
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/key_4"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_margin="2dp"
+            app:cardBackgroundColor="#000000"
+            app:cardCornerRadius="6dp"
+            app:cardElevation="2dp"
+            app:strokeColor="@color/card_stroke"
+            app:strokeWidth="1dp"
+            android:clickable="true"
+            android:focusable="true">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="4"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:fontFamily="@font/p"
+                tools:ignore="HardcodedText" />
+        </com.google.android.material.card.MaterialCardView>
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/key_5"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_margin="2dp"
+            app:cardBackgroundColor="#000000"
+            app:cardCornerRadius="6dp"
+            app:cardElevation="2dp"
+            app:strokeColor="@color/card_stroke"
+            app:strokeWidth="1dp"
+            android:clickable="true"
+            android:focusable="true">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="5"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:fontFamily="@font/p"
+                tools:ignore="HardcodedText" />
+        </com.google.android.material.card.MaterialCardView>
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/key_6"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_margin="2dp"
+            app:cardBackgroundColor="#000000"
+            app:cardCornerRadius="6dp"
+            app:cardElevation="2dp"
+            app:strokeColor="@color/card_stroke"
+            app:strokeWidth="1dp"
+            android:clickable="true"
+            android:focusable="true">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="6"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:fontFamily="@font/p"
+                tools:ignore="HardcodedText" />
+        </com.google.android.material.card.MaterialCardView>
     </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="horizontal">
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/key_7"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_margin="2dp"
+            app:cardBackgroundColor="#000000"
+            app:cardCornerRadius="6dp"
+            app:cardElevation="2dp"
+            app:strokeColor="@color/card_stroke"
+            app:strokeWidth="1dp"
+            android:clickable="true"
+            android:focusable="true">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="7"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:fontFamily="@font/p"
+                tools:ignore="HardcodedText" />
+        </com.google.android.material.card.MaterialCardView>
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/key_8"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_margin="2dp"
+            app:cardBackgroundColor="#000000"
+            app:cardCornerRadius="6dp"
+            app:cardElevation="2dp"
+            app:strokeColor="@color/card_stroke"
+            app:strokeWidth="1dp"
+            android:clickable="true"
+            android:focusable="true">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="8"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:fontFamily="@font/p"
+                tools:ignore="HardcodedText" />
+        </com.google.android.material.card.MaterialCardView>
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/key_9"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_margin="2dp"
+            app:cardBackgroundColor="#000000"
+            app:cardCornerRadius="6dp"
+            app:cardElevation="2dp"
+            app:strokeColor="@color/card_stroke"
+            app:strokeWidth="1dp"
+            android:clickable="true"
+            android:focusable="true">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="9"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:fontFamily="@font/p"
+                tools:ignore="HardcodedText" />
+        </com.google.android.material.card.MaterialCardView>
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/key_0"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_margin="2dp"
+            app:cardBackgroundColor="#000000"
+            app:cardCornerRadius="6dp"
+            app:cardElevation="2dp"
+            app:strokeColor="@color/card_stroke"
+            app:strokeWidth="1dp"
+            android:clickable="true"
+            android:focusable="true">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="0"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:fontFamily="@font/p"
+                tools:ignore="HardcodedText" />
+        </com.google.android.material.card.MaterialCardView>
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/key_q"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_margin="2dp"
+            app:cardBackgroundColor="#000000"
+            app:cardCornerRadius="6dp"
+            app:cardElevation="2dp"
+            app:strokeColor="@color/card_stroke"
+            app:strokeWidth="1dp"
+            android:clickable="true"
+            android:focusable="true">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="Q"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:fontFamily="@font/p"
+                tools:ignore="HardcodedText" />
+        </com.google.android.material.card.MaterialCardView>
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/key_w"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_margin="2dp"
+            app:cardBackgroundColor="#000000"
+            app:cardCornerRadius="6dp"
+            app:cardElevation="2dp"
+            app:strokeColor="@color/card_stroke"
+            app:strokeWidth="1dp"
+            android:clickable="true"
+            android:focusable="true">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="W"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:fontFamily="@font/p"
+                tools:ignore="HardcodedText" />
+        </com.google.android.material.card.MaterialCardView>
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="horizontal">
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/key_e"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_margin="2dp"
+            app:strokeColor="@color/card_stroke"
+            app:strokeWidth="1dp"
+            app:cardBackgroundColor="#000000"
+            app:cardCornerRadius="6dp"
+            app:cardElevation="2dp"
+            android:clickable="true"
+            android:focusable="true">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="E"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:fontFamily="@font/p"
+                tools:ignore="HardcodedText" />
+        </com.google.android.material.card.MaterialCardView>
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/key_r"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_margin="2dp"
+            app:cardBackgroundColor="#000000"
+            app:cardCornerRadius="6dp"
+            app:cardElevation="2dp"
+            app:strokeColor="@color/card_stroke"
+            app:strokeWidth="1dp"
+            android:clickable="true"
+            android:focusable="true">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="R"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:fontFamily="@font/p"
+                tools:ignore="HardcodedText" />
+        </com.google.android.material.card.MaterialCardView>
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/key_t"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_margin="2dp"
+            app:cardBackgroundColor="#000000"
+            app:cardCornerRadius="6dp"
+            app:cardElevation="2dp"
+            app:strokeColor="@color/card_stroke"
+            app:strokeWidth="1dp"
+            android:clickable="true"
+            android:focusable="true">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="T"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:fontFamily="@font/p"
+                tools:ignore="HardcodedText" />
+        </com.google.android.material.card.MaterialCardView>
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/key_y"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_margin="2dp"
+            app:cardBackgroundColor="#000000"
+            app:cardCornerRadius="6dp"
+            app:cardElevation="2dp"
+            app:strokeColor="@color/card_stroke"
+            app:strokeWidth="1dp"
+            android:clickable="true"
+            android:focusable="true">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="Y"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:fontFamily="@font/p"
+                tools:ignore="HardcodedText" />
+        </com.google.android.material.card.MaterialCardView>
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/key_u"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_margin="2dp"
+            app:cardBackgroundColor="#000000"
+            app:cardCornerRadius="6dp"
+            app:cardElevation="2dp"
+            app:strokeColor="@color/card_stroke"
+            app:strokeWidth="1dp"
+            android:clickable="true"
+            android:focusable="true">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="U"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:fontFamily="@font/p"
+                tools:ignore="HardcodedText" />
+        </com.google.android.material.card.MaterialCardView>
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/key_i"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_margin="2dp"
+            app:cardBackgroundColor="#000000"
+            app:cardCornerRadius="6dp"
+            app:cardElevation="2dp"
+            app:strokeColor="@color/card_stroke"
+            app:strokeWidth="1dp"
+            android:clickable="true"
+            android:focusable="true">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="I"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:fontFamily="@font/p"
+                tools:ignore="HardcodedText" />
+        </com.google.android.material.card.MaterialCardView>
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="horizontal">
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/key_o"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_margin="2dp"
+            app:cardBackgroundColor="#000000"
+            app:cardCornerRadius="6dp"
+            app:cardElevation="2dp"
+            app:strokeColor="@color/card_stroke"
+            app:strokeWidth="1dp"
+            android:clickable="true"
+            android:focusable="true">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="O"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:fontFamily="@font/p"
+                tools:ignore="HardcodedText" />
+        </com.google.android.material.card.MaterialCardView>
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/key_p"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_margin="2dp"
+            app:cardBackgroundColor="#000000"
+            app:cardCornerRadius="6dp"
+            app:cardElevation="2dp"
+            app:strokeColor="@color/card_stroke"
+            app:strokeWidth="1dp"
+            android:clickable="true"
+            android:focusable="true">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="P"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:fontFamily="@font/p"
+                tools:ignore="HardcodedText" />
+        </com.google.android.material.card.MaterialCardView>
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/key_a"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_margin="2dp"
+            app:cardBackgroundColor="#000000"
+            app:cardCornerRadius="6dp"
+            app:cardElevation="2dp"
+            app:strokeColor="@color/card_stroke"
+            app:strokeWidth="1dp"
+            android:clickable="true"
+            android:focusable="true">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="A"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:fontFamily="@font/p"
+                tools:ignore="HardcodedText" />
+        </com.google.android.material.card.MaterialCardView>
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/key_s"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_margin="2dp"
+            app:cardBackgroundColor="#000000"
+            app:cardCornerRadius="6dp"
+            app:cardElevation="2dp"
+            app:strokeColor="@color/card_stroke"
+            app:strokeWidth="1dp"
+            android:clickable="true"
+            android:focusable="true">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="S"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:fontFamily="@font/p"
+                tools:ignore="HardcodedText" />
+        </com.google.android.material.card.MaterialCardView>
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/key_d"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_margin="2dp"
+            app:cardBackgroundColor="#000000"
+            app:cardCornerRadius="6dp"
+            app:cardElevation="2dp"
+            app:strokeColor="@color/card_stroke"
+            app:strokeWidth="1dp"
+            android:clickable="true"
+            android:focusable="true">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="D"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:fontFamily="@font/p"
+                tools:ignore="HardcodedText" />
+        </com.google.android.material.card.MaterialCardView>
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/key_f"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_margin="2dp"
+            app:cardBackgroundColor="#000000"
+            app:cardCornerRadius="6dp"
+            app:cardElevation="2dp"
+            app:strokeColor="@color/card_stroke"
+            app:strokeWidth="1dp"
+            android:clickable="true"
+            android:focusable="true">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="F"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:fontFamily="@font/p"
+                tools:ignore="HardcodedText" />
+        </com.google.android.material.card.MaterialCardView>
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="horizontal">
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/key_g"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_margin="2dp"
+            app:cardBackgroundColor="#000000"
+            app:cardCornerRadius="6dp"
+            app:cardElevation="2dp"
+            app:strokeColor="@color/card_stroke"
+            app:strokeWidth="1dp"
+            android:clickable="true"
+            android:focusable="true">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="G"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:fontFamily="@font/p"
+                tools:ignore="HardcodedText" />
+        </com.google.android.material.card.MaterialCardView>
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/key_h"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_margin="2dp"
+            app:cardBackgroundColor="#000000"
+            app:cardCornerRadius="6dp"
+            app:cardElevation="2dp"
+            app:strokeColor="@color/card_stroke"
+            app:strokeWidth="1dp"
+            android:clickable="true"
+            android:focusable="true">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="H"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:fontFamily="@font/p"
+                tools:ignore="HardcodedText" />
+        </com.google.android.material.card.MaterialCardView>
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/key_j"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_margin="2dp"
+            app:cardBackgroundColor="#000000"
+            app:cardCornerRadius="6dp"
+            app:cardElevation="2dp"
+            app:strokeColor="@color/card_stroke"
+            app:strokeWidth="1dp"
+            android:clickable="true"
+            android:focusable="true">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="J"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:fontFamily="@font/p"
+                tools:ignore="HardcodedText" />
+        </com.google.android.material.card.MaterialCardView>
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/key_k"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_margin="2dp"
+            app:cardBackgroundColor="#000000"
+            app:cardCornerRadius="6dp"
+            app:cardElevation="2dp"
+            app:strokeColor="@color/card_stroke"
+            app:strokeWidth="1dp"
+            android:clickable="true"
+            android:focusable="true">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="K"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:fontFamily="@font/p"
+                tools:ignore="HardcodedText" />
+        </com.google.android.material.card.MaterialCardView>
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/key_l"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_margin="2dp"
+            app:cardBackgroundColor="#000000"
+            app:cardCornerRadius="6dp"
+            app:cardElevation="2dp"
+            app:strokeColor="@color/card_stroke"
+            app:strokeWidth="1dp"
+            android:clickable="true"
+            android:focusable="true">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="L"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:fontFamily="@font/p"
+                tools:ignore="HardcodedText" />
+        </com.google.android.material.card.MaterialCardView>
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/key_z"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_margin="2dp"
+            app:cardBackgroundColor="#000000"
+            app:cardCornerRadius="6dp"
+            app:cardElevation="2dp"
+            app:strokeColor="@color/card_stroke"
+            app:strokeWidth="1dp"
+            android:clickable="true"
+            android:focusable="true">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="Z"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:fontFamily="@font/p"
+                tools:ignore="HardcodedText" />
+        </com.google.android.material.card.MaterialCardView>
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="horizontal">
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/key_x"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_margin="2dp"
+            app:cardBackgroundColor="#000000"
+            app:cardCornerRadius="6dp"
+            app:cardElevation="2dp"
+            app:strokeColor="@color/card_stroke"
+            app:strokeWidth="1dp"
+            android:clickable="true"
+            android:focusable="true">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="X"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:fontFamily="@font/p"
+                tools:ignore="HardcodedText" />
+        </com.google.android.material.card.MaterialCardView>
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/key_c"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_margin="2dp"
+            app:cardBackgroundColor="#000000"
+            app:cardCornerRadius="6dp"
+            app:cardElevation="2dp"
+            app:strokeColor="@color/card_stroke"
+            app:strokeWidth="1dp"
+            android:clickable="true"
+            android:focusable="true">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="C"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:fontFamily="@font/p"
+                tools:ignore="HardcodedText" />
+        </com.google.android.material.card.MaterialCardView>
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/key_v"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_margin="2dp"
+            app:cardBackgroundColor="#000000"
+            app:cardCornerRadius="6dp"
+            app:cardElevation="2dp"
+            app:strokeColor="@color/card_stroke"
+            app:strokeWidth="1dp"
+            android:clickable="true"
+            android:focusable="true">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="V"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:fontFamily="@font/p"
+                tools:ignore="HardcodedText" />
+        </com.google.android.material.card.MaterialCardView>
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/key_b"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_margin="2dp"
+            app:cardBackgroundColor="#000000"
+            app:cardCornerRadius="6dp"
+            app:cardElevation="2dp"
+            app:strokeColor="@color/card_stroke"
+            app:strokeWidth="1dp"
+            android:clickable="true"
+            android:focusable="true">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="B"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:fontFamily="@font/p"
+                tools:ignore="HardcodedText" />
+        </com.google.android.material.card.MaterialCardView>
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/key_n"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_margin="2dp"
+            app:cardBackgroundColor="#000000"
+            app:cardCornerRadius="6dp"
+            app:cardElevation="2dp"
+            app:strokeColor="@color/card_stroke"
+            app:strokeWidth="1dp"
+            android:clickable="true"
+            android:focusable="true">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="N"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:fontFamily="@font/p"
+                tools:ignore="HardcodedText" />
+        </com.google.android.material.card.MaterialCardView>
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/key_m"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_margin="2dp"
+            app:cardBackgroundColor="#000000"
+            app:cardCornerRadius="6dp"
+            app:cardElevation="2dp"
+            app:strokeColor="@color/card_stroke"
+            app:strokeWidth="1dp"
+            android:clickable="true"
+            android:focusable="true">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="M"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:fontFamily="@font/p"
+                tools:ignore="HardcodedText" />
+        </com.google.android.material.card.MaterialCardView>
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="horizontal">
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/key_backspace"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_margin="2dp"
+            app:cardBackgroundColor="?attr/BG_color"
+            app:cardCornerRadius="6dp"
+            app:cardElevation="2dp"
+            app:strokeColor="@color/card_stroke"
+            app:strokeWidth="1dp"
+            android:clickable="true"
+            android:focusable="true">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="⌫"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                tools:ignore="HardcodedText" />
+        </com.google.android.material.card.MaterialCardView>
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/key_clear"
+            android:layout_width="50dp"
+            android:layout_height="35dp"
+            android:layout_margin="2dp"
+            app:cardBackgroundColor="?attr/BG_color"
+            app:cardCornerRadius="6dp"
+            app:cardElevation="2dp"
+            app:strokeColor="@color/card_stroke"
+            app:strokeWidth="1dp"
+            android:clickable="true"
+            android:focusable="true">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="Clear"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:fontFamily="serif"
+                tools:ignore="HardcodedText" />
+        </com.google.android.material.card.MaterialCardView>
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/key_space"
+            android:layout_width="70dp"
+            android:layout_height="35dp"
+            android:layout_margin="2dp"
+            app:cardBackgroundColor="?attr/BG_color"
+            app:cardCornerRadius="6dp"
+            app:cardElevation="2dp"
+            app:strokeColor="@color/card_stroke"
+            app:strokeWidth="1dp"
+            android:clickable="true"
+            android:focusable="true">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="Space"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:fontFamily="serif"
+                tools:ignore="HardcodedText" />
+        </com.google.android.material.card.MaterialCardView>
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/key_enter"
+            android:layout_width="60dp"
+            android:layout_height="35dp"
+            android:layout_margin="2dp"
+            app:cardBackgroundColor="?attr/BG_color_up"
+            app:cardCornerRadius="6dp"
+            app:cardElevation="2dp"
+            app:strokeColor="@color/card_stroke"
+            app:strokeWidth="1dp"
+            android:clickable="true"
+            android:focusable="true">
+
+            <View
+                android:alpha="0.1"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="#22724b"/>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="Enter"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:fontFamily="serif"
+                tools:ignore="HardcodedText" />
+        </com.google.android.material.card.MaterialCardView>
+    </LinearLayout>
+</LinearLayout>

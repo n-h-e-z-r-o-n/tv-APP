@@ -77,14 +77,14 @@ class CustomKeyboardManager(
     }
 
     private fun setupButton(buttonId: Int, character: String) {
-        val button = keyboardLayout.findViewById<Button>(buttonId)
+        val button = keyboardLayout.findViewById<View>(buttonId)
         button?.setOnClickListener {
             insertText(character)
         }
     }
 
     private fun setupBackspaceButton() {
-        val backspaceButton = keyboardLayout.findViewById<Button>(R.id.key_backspace)
+        val backspaceButton = keyboardLayout.findViewById<View>(R.id.key_backspace)
         backspaceButton?.setOnClickListener {
             val currentText = searchEditText.text.toString()
             if (currentText.isNotEmpty()) {
@@ -96,14 +96,14 @@ class CustomKeyboardManager(
     }
 
     private fun setupSpaceButton() {
-        val spaceButton = keyboardLayout.findViewById<Button>(R.id.key_space)
+        val spaceButton = keyboardLayout.findViewById<View>(R.id.key_space)
         spaceButton?.setOnClickListener {
             insertText(" ")
         }
     }
 
     private fun setupEnterButton() {
-        val enterButton = keyboardLayout.findViewById<Button>(R.id.key_enter)
+        val enterButton = keyboardLayout.findViewById<View>(R.id.key_enter)
         enterButton?.setOnClickListener {
             val query = searchEditText.text.toString().trim()
             if (query.isNotEmpty()) {
@@ -113,7 +113,7 @@ class CustomKeyboardManager(
     }
 
     private fun setupClearButton() {
-        val clearButton = keyboardLayout.findViewById<Button>(R.id.key_clear)
+        val clearButton = keyboardLayout.findViewById<View>(R.id.key_clear)
         clearButton?.setOnClickListener {
             clearText()
         }

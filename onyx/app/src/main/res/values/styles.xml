@@ -10,56 +10,6 @@
         <item name="colorAccent">?attr/AccentColor</item>
     </style>
 
-    <style name="KeyboardKey">
-        <item name="android:layout_width">25dp</item>
-        <item name="android:layout_height">30dp</item>
-        <item name="android:layout_margin">0.5dp</item>
-        <item name="android:background">@drawable/keyboard_buttons</item>
-        <item name="android:textSize">13sp</item>
-        <item name="android:textStyle">bold</item>
-        <item name="android:textColor">#FFFFFF</item>
-        <item name="android:focusable">true</item>
-        <item name="android:clickable">true</item>
-        <item name="android:fontFamily">@font/p</item>
-        <item name="android:shadowColor">#000000</item>
-        <item name="android:shadowDx">1</item>
-        <item name="android:shadowDy">1</item>
-        <item name="android:shadowRadius">2</item>
-    </style>
-
-    <style name="KeyboardKeySpecial">
-        <item name="android:layout_width">53dp</item>
-        <item name="android:layout_height">25dp</item>
-        <item name="android:textSize">15sp</item>
-        <item name="android:layout_margin">1dp</item>
-        <item name="android:background">@drawable/keyboard_buttons</item>
-        <item name="android:textColor">#FFFFFF</item>
-        <item name="android:focusable">true</item>
-        <item name="android:clickable">true</item>
-        <item name="android:fontFamily">@font/n</item>
-
-
-        <item name="android:shadowColor">#000000</item>
-        <item name="android:shadowDx">1</item>
-        <item name="android:shadowDy">1</item>
-        <item name="android:shadowRadius">2</item>
-    </style>
-
-    <style name="KeyboardKeySpace">
-        <item name="android:layout_width">130dp</item>
-        <item name="android:layout_height">25dp</item>
-        <item name="android:layout_margin">1dp</item>
-        <item name="android:textSize">14sp</item>
-        <item name="android:textColor">#FFFFFF</item>
-        <item name="android:background">@drawable/keyboard_buttons</item>
-        <item name="android:focusable">true</item>
-        <item name="android:clickable">true</item>
-        <item name="android:fontFamily">@font/n</item>
-        <item name="android:shadowColor">#000000</item>
-        <item name="android:shadowDx">1</item>
-        <item name="android:shadowDy">1</item>
-        <item name="android:shadowRadius">2</item>
-    </style>
 
     <style name="Widget.Theme.Onyx.Default.ButtonBar.Fullscreen" parent="">
         <item name="android:background">@color/black_overlay</item>
