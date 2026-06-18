@@ -1,0 +1,674 @@
+private fun performSearch(searchTerm:String) {
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+            repeat(3) { attempt ->
+                try {
+
+                    Log.e("SEARCH RESULTS", searchTerm)
+
+                    // --- Background work (network request) ---
+                    val url =
+                        "https://api.themoviedb.org/3/search/multi?include_adult=false&query=$searchTerm"
+                    val connection = URL(url).openConnection() as HttpURLConnection
+                    connection.requestMethod = "GET"
+                    connection.setRequestProperty("accept", "application/json")
+                    connection.setRequestProperty(
+                        "Authorization",
+                        "Bearer ${BuildConfig.TM_K}"
+                    )
+
+                    val response = connection.inputStream.bufferedReader().use { it.readText() }
+                    val jsonObject = JSONObject(response)
+
+                    Log.e("SEARCH RESULTS", jsonObject.toString())
+                    val moviesArray = jsonObject.getJSONArray("results")
+
+                    //Log.e("SEARCH RESULTS", moviesArray.toString())
+
+
+                    withContext(Dispatchers.Main)  {
+                        val find = requireView().findViewById<TextView>(R.id.searchResultsDisplay)
+                        find.text = "Search Results for: $searchTerm (${moviesArray.length()})"
+                        searchAdapter.clearItems()
+                    }
+
+                    for (i in 0 until moviesArray.length()) {
+                        val current = moviesArray.getJSONObject(i)
+                        current.remove("overview")
+                        current.remove("genre_ids")
+                        current.remove("popularity")
+                        current.remove("video")
+
+                        val mediaType = current.optString("media_type", "movie")
+
+                        var title = "Unknown"
+                        var info = ""
+                        var date = ""
+                        var voteAverage = ""
+                        var imgUrl = ""
+                        var poster = ""
+
+                        Log.e("SEARCH RESULTS $i", current.toString())
+                        when (mediaType) {
+                            "person" -> {
+                                title = current.optString(
+                                    "name",
+                                    current.optString("original_name", "Unknown")
+                                )
+                                imgUrl = "https://image.tmdb.org/t/p/w500" + current.optString(
+                                    "profile_path",
+                                    ""
+                                )
+                                poster = current.optString("profile_path", "null")
+                                info = current.optString("known_for_department", "")
+                                voteAverage = ""
+                            }
+
+                            "tv" -> {
+                                title = current.optString(
+                                    "name",
+                                    current.optString("original_name", "Unknown")
+                                )
+                                date =
+                                    current.optString("first_air_date")
+                                        .takeIf { it.isNotEmpty() }
+                                        ?.substring(0, 4) ?: ""
+                                imgUrl = "https://image.tmdb.org/t/p/w500" + current.optString(
+                                    "poster_path",
+                                    ""
+                                )
+                                poster = current.optString("poster_path", "null")
+                                info = ""
+                                voteAverage =
+                                    current.optDouble("vote_average", 0.0).toInt()
+                                        .toString() + " ★"
+                            }
+
+                            "movie" -> {
+                                title = current.optString("original_title", "Unknown")
+                                date =
+                                    current.optString("release_date").takeIf { it.isNotEmpty() }
+                                        ?.substring(0, 4) ?: ""
+                                imgUrl = "https://image.tmdb.org/t/p/w500" + current.optString(
+                                    "poster_path",
+                                    ""
+                                )
+                                poster = current.optString("poster_path", "null")
+                                info = "" // TODO: runtime if available
+                                voteAverage = current.optDouble("vote_average", 0.0).toInt()
+                                    .toString() + " ★"
+                            }
+                        }
+
+                        if (poster.isBlank() || poster.endsWith("null")) continue
+
+                        val id = current.getString("id")
+
+
+                        //movies.add(MovieItem(title, imgUrl, id, type))
+
+                        val movieItem = MovieItem(
+                            title = title,
+                            imageUrl = imgUrl,
+                            imdbCode = id,
+                            type = mediaType,
+                            year = date,
+                            rating = voteAverage,
+                            runtime = info
+                        )
+
+                        withContext(Dispatchers.Main) {
+                    if (!isAdded || view == null) return@withContext
+                            searchAdapter.addItem(movieItem)
+                        }
+
+
+
+
+                    }
+
+
+                    return@launch
+                } catch (e: Exception) {
+                    Log.e("SEARCH RESULTS ERROR", "S ERROR", e)
+                    delay(10_000)
+                }
+            }
+        }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+
+    private fun filter(){
+
+        //filter options buttons
+        val filterTypeBtn = requireView().findViewById<TextView>(R.id.FilterTypeBtn)
+        val filterCountryBtn = requireView().findViewById<TextView>(R.id.FilterCountryBtn)
+        val filterSortBtn = requireView().findViewById<TextView>(R.id.FilterSortBtn)
+        val filterGenreBtn = requireView().findViewById<TextView>(R.id.FilterGenreBtn)
+        val filterYearBtn = requireView().findViewById<TextView>(R.id.FilterYearBtn)
+
+
+        // Filter data
+        val typeOptions = listOf("Movie", "TV", "All")
+        val countryOptions = listOf(
+            FilterChoice("AR", "Argentina"),
+            FilterChoice("AT", "Austria"),
+            FilterChoice("BR", "Brazil"),
+            FilterChoice("FI", "Finland"),
+            FilterChoice("AR", "Argentina"),
+            FilterChoice("AR", "Argentina")
+        )
+
+        val sortOptions = listOf(
+            FilterChoice("original_title.asc", "Original Title ↑ Ascending"),
+            FilterChoice("original_title.desc", "Original Title ↓ Descending"),
+            FilterChoice("popularity.asc", "Popularity ↑ Ascending"),
+            FilterChoice("popularity.desc", "Popularity ↓ Descending"),
+            FilterChoice("revenue.asc", "Revenue ↑ Ascending"),
+            FilterChoice("revenue.desc", "Revenue ↓ Descending")
+        )
+
+        val genreOptions = listOf(
+            FilterChoice("28", "Action"),
+            FilterChoice("12", "Adventure"),
+            FilterChoice("12", "Series Action & Adventure"),
+            FilterChoice("16", "Animation"),
+            FilterChoice("35", "Comedy"),
+            FilterChoice("80", "Crime"),
+            FilterChoice("99", "Documentary"),
+            FilterChoice("18", "Drama"),
+            FilterChoice("10751", "Family"),
+            FilterChoice("9648", "Mystery"),
+            FilterChoice("10749", "Romance"),
+            FilterChoice("878", "Sci-Fi"),
+            FilterChoice("14", "Fantasy"),
+            FilterChoice("10402", "Music"),
+            FilterChoice("10770", "TV Movie"),
+            FilterChoice("53", "Thriller"),
+            FilterChoice("37", "Western"),
+            FilterChoice("10752", "War"),
+            FilterChoice("27", "Horror"),
+            FilterChoice("10764", "Series Reality"),
+            FilterChoice("10766", "Series Soap"),
+            FilterChoice("10767", "Series Talk"),
+            FilterChoice("10762", "Series Kids"),
+        )
+
+        val yearOptions = listOf(
+            FilterChoice("2025", "2026"),
+            FilterChoice("2025", "2025"),
+            FilterChoice("2024", "2024"),
+            FilterChoice("2023", "2023"),
+            FilterChoice("2022", "2022"),
+            FilterChoice("2021", "2021")
+        )
+
+        // Filter state
+        var selectedType: String? = null
+        val selectedGenres = mutableSetOf<String>()
+        val selectedCountries = mutableSetOf<String>()
+        val selectedsortOptions = mutableSetOf<String>()
+        val selectedyearOptions   = mutableSetOf<String>()
+
+        val filterDisplay = requireView().findViewById<TextView>(R.id.FilterDisplay)
+        var movieUrl: String
+        var tvUrl: String
+        var filterPage = 1
+        var isLoadingFliter = false
+
+        fun updateFilterDisplay() {
+            isLoadingFliter = true
+            filterAdapter.isLoadingMore = true
+            //filterAdapter.clearItems()
+
+            // Reset attributes
+            movieUrl = "https://api.themoviedb.org/3/discover/movie?"
+            tvUrl = "https://api.themoviedb.org/3/discover/tv?"
+
+
+            /*
+            val parts = mutableListOf<String>()
+            //selectedType?.let { parts.add("Type: ${it.label}") }
+            if (selectedGenres.isNotEmpty()) parts.add("Genres: ${selectedGenres.joinToString()}")
+            if (selectedCountries.isNotEmpty()) parts.add("Country: ${selectedCountries.joinToString()}")
+            if (selectedsortOptions.isNotEmpty()) parts.add("Sort: ${selectedsortOptions.joinToString()}")
+            if (selectedyearOptions.isNotEmpty()) parts.add("Year: ${selectedyearOptions.joinToString()}")
+
+            filterDisplay.text = if (parts.isEmpty()) "Filter Results ($default)" else parts.joinToString(" | ")
+
+             */
+
+
+            if (selectedGenres.isNotEmpty()) {
+                val genres = selectedGenres.joinToString(",")
+                movieUrl += "&with_genres=$genres"
+                tvUrl += "&with_genres=$genres"
+            }
+
+            if (selectedyearOptions.isNotEmpty()) {
+                val year = selectedyearOptions.first()
+                movieUrl += "&year=$year"
+                tvUrl += "&year=$year"
+            }
+
+            if (selectedCountries.isNotEmpty()) {
+                val country = selectedCountries.first()
+                movieUrl += "&with_origin_country=$country"
+                tvUrl += "&with_origin_country=$country"
+            }
+
+            if (selectedsortOptions.isNotEmpty()) {
+                val sort = selectedsortOptions.first()
+                movieUrl += "&sort_by=$sort"
+                tvUrl += "&sort_by=$sort"
+            }
+
+            if(selectedType == "Movie"){
+                tvUrl = ""
+            } else if(selectedType == "TV"){
+                movieUrl = ""
+            } else {}
+
+            viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+
+                val urlM = "$movieUrl&page=$filterPage"
+                val urlT = "$tvUrl&page=$filterPage"
+
+                val movieList = mutableListOf<JSONObject>()
+                val tvList = mutableListOf<JSONObject>()
+
+                Log.e("Filter Results urlM", urlM.toString())
+                Log.e("Filter Results urlT", urlT.toString())
+
+                // ------------------ MOVIES ------------------
+                try {
+                    val connection2 = URL(urlM).openConnection() as HttpURLConnection
+                    connection2.requestMethod = "GET"
+                    connection2.setRequestProperty("accept", "application/json")
+                    connection2.setRequestProperty(
+                        "Authorization",
+                        "Bearer ${BuildConfig.TM_K}"
+                    )
+
+                    val response2 = connection2.inputStream.bufferedReader().use { it.readText() }
+                    val jsonObject2 = org.json.JSONObject(response2)
+                    val mvData = jsonObject2.getJSONArray("results")
+
+                    for (i in 0 until mvData.length()) {
+                        movieList.add(mvData.getJSONObject(i))
+                    }
+
+                    Log.e("Filter Results mvData", mvData.toString())
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+
+                // ------------------ TV SHOWS ------------------
+                try {
+                    val connection2 = URL(urlT).openConnection() as HttpURLConnection
+                    connection2.requestMethod = "GET"
+                    connection2.setRequestProperty("accept", "application/json")
+                    connection2.setRequestProperty(
+                        "Authorization",
+                        "Bearer ${BuildConfig.TM_K}"
+                    )
+
+                    val response2 = connection2.inputStream.bufferedReader().use { it.readText() }
+                    val jsonObject2 = org.json.JSONObject(response2)
+                    val tvData = jsonObject2.getJSONArray("results")
+
+                    for (i in 0 until tvData.length()) {
+                        tvList.add(tvData.getJSONObject(i))
+                    }
+
+                    Log.e("Filter Results tvData", tvData.toString())
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+
+                // Merge movie + tv
+                val combined = (movieList + tvList).shuffled()
+                for (i in 0 until combined.size) {
+                    val current = combined[i]
+
+                    val backdrop_path = current.optString("backdrop_path", "")
+                    val poster_path = current.optString("poster_path", "")
+
+
+
+                    val vote_average = current.optString("vote_average", "")
+                    val title = current.optString("title", "")
+                    //val overview = current.optString("overview", "")
+                    val id = current.optString("id", "")
+                    val original_title = current.optString("original_title", "")
+                    //val original_name = current.optString("original_name", "")
+
+                    val type: String
+                    var date: String
+                    var showD: String = ""
+
+                    val imgPost =  "https://image.tmdb.org/t/p/original$poster_path"
+                    val imgback  = "https://image.tmdb.org/t/p/original$backdrop_path"
+
+                    if (original_title == "") {
+                        type = "tv";
+                        date = if (current.getString("first_air_date").length >= 4) {
+                            current.getString("first_air_date").substring(0, 4)
+                        } else{
+                            current.getString("first_air_date")}
+                    } else {
+                        type = "movie"
+                        date = if (current.getString("release_date").length >= 4) {
+                            current.getString("release_date").substring(0, 4)
+                        } else{
+                            current.getString("release_date")}
+                    }
+
+                    val Item = filterItemOne(
+                        title = title,
+                        backdropUrl = imgPost,
+                        posterUlr = imgback,
+                        imdbCode = id,
+                        type = type,
+                        year = date,
+                        rating = vote_average,
+                        runtime = showD
+                    )
+
+                    withContext(Dispatchers.Main) {
+                    if (!isAdded || view == null) return@withContext
+                        filterAdapter.addItem(Item)
+                        isLoadingFliter = false
+                        filterAdapter.isLoadingMore = false
+
+
+                    }
+                }
+            }
+        }
+        fun loadMoreFilter() {
+            if (isLoadingFliter) return // Prevent multiple rapid clicks
+            filterPage++
+            updateFilterDisplay()
+        }
+
+        filterAdapter.onAddMoreClicked = { loadMoreFilter() }
+        updateFilterDisplay() //Default
+
+        filterTypeBtn.setOnClickListener {
+            showSingleChoiceDialog(
+                title = "Select Type",
+                options = typeOptions,
+                currentSelection = typeOptions.indexOf(selectedType ?: "")
+            ) { selected ->
+                selectedType = selected   // <— this is just a STRING
+                filterPage = 1
+                filterAdapter.clearItems()
+                updateFilterDisplay()
+            }
+        }
+
+        filterGenreBtn.setOnClickListener {
+            showMultiChoiceDialog(
+                title = "Select Genres",
+                options = genreOptions,
+                selectedKeys = selectedGenres
+            ) { selected ->
+                filterPage = 1
+                filterAdapter.clearItems()
+                updateFilterDisplay()
+            }
+        }
+
+        filterCountryBtn.setOnClickListener {
+            showMultiChoiceDialog(
+                title = "Select Genres",
+                options = countryOptions,
+                selectedKeys = selectedCountries
+            ) { selected ->
+                filterPage = 1
+                filterAdapter.clearItems()
+                updateFilterDisplay()
+            }
+        }
+
+        filterSortBtn.setOnClickListener {
+            showMultiChoiceDialog(
+                title = "Select Genres",
+                options = sortOptions,
+                selectedKeys = selectedsortOptions
+            ) { selected ->
+                filterPage = 1
+                filterAdapter.clearItems()
+                updateFilterDisplay()
+            }
+        }
+
+        filterYearBtn.setOnClickListener {
+            showMultiChoiceDialog(
+                title = "Select Genres",
+                options = yearOptions,
+                selectedKeys = selectedyearOptions
+            ) { selected ->
+                filterPage = 1
+                filterAdapter.clearItems()
+                updateFilterDisplay()
+            }
+        }
+
+    }
+    data  class FilterChoice(
+        val value: String,
+        val label: String
+    )
+
+    private fun showSingleChoiceDialog(
+        title: String,
+        options: List<String>,
+        currentSelection: Int,
+        onDone: (String) -> Unit
+    ) {
+        val builder = AlertDialog.Builder(requireActivity(), R.style.CustomDialogTheme)
+        builder.setTitle(title)
+
+        builder.setSingleChoiceItems(options.toTypedArray(), currentSelection) { dialog, which ->
+            onDone(options[which])
+            dialog.dismiss()
+        }
+
+        builder.setNegativeButton("Cancel", null)
+        builder.show()
+    }
+
+    private fun showMultiChoiceDialog(
+        title: String,
+        options: List<FilterChoice>,
+        selectedKeys: MutableSet<String>,
+        onDone: (Set<String>) -> Unit
+    ) {
+        val labels = options.map { it.label }.toTypedArray()
+        val checkedItems = options.map { selectedKeys.contains(it.value) }.toBooleanArray()
+
+        val builder = AlertDialog.Builder(requireActivity(), R.style.CustomDialogTheme)
+        builder.setTitle(title)
+
+        builder.setMultiChoiceItems(labels, checkedItems) { _, index, isChecked ->
+            // Ensure you reference the options list inside the lambda
+            val selectedKey = options[index].value
+            if (isChecked) selectedKeys.add(selectedKey)
+            else selectedKeys.remove(selectedKey)
+        }
+
+        builder.setPositiveButton("Apply") { _, _ ->
+            onDone(selectedKeys)
+        }
+
+        builder.setNegativeButton("Cancel", null)
+        builder.show()
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+    private fun tvFavoritesList() {
+        lifecycleScope.launch(Dispatchers.Main) {
+
+            // 1. Fetch AND map the data on the background IO thread
+            val items = withContext(Dispatchers.IO) {
+                val showFavData = db.getFavoriteShows(userId)
+
+                // Map the raw database data directly into FavItem objects
+                showFavData.map { anime ->
+                    FavItem(
+                        title = anime["title"] ?: "",
+                        posterUrl = anime["poster"] ?: "",
+                        backdropUrl = anime["backdrop"] ?: "",
+                        releaseDate = anime["year"] ?: "",
+                        runtime = anime["runtime"] ?: "",
+                        overview = anime["overview"] ?: "",
+                        voteAverage = anime["rating"] ?: "",
+                        genres = anime["genres"] ?: "",
+                        production = "",
+                        parentalGuide = anime["pg"] ?: "",
+                        imdbCode = anime["show_id"] ?: "",
+                        showType = anime["type"] ?: ""
+                    )
+                }
+            }
+
+            // 2. Handle UI Visibility and Adapter Updates
+            if (items.isNotEmpty()) {
+
+                if (!::faveAdapter.isInitialized) {
+
+                    /*
+
+                        faveAdapter = FavAdapter(
+                            items.toMutableList(),
+                            R.layout.square_card,
+
+                            FavBackdrop,
+                            FavTitle,
+                            FavGenre,
+                            FavType,
+                            FavRating,
+                            FavYear,
+                            FavOverview,
+                            RemoveFaveItem
+                        )
+
+                        */
+
+                    faveAdapter = FavAdapter(
+                        items.toMutableList(),
+                        R.layout.square_card,
+                        null, // FavBackdrop
+                        null, // FavTitle
+                        null, // FavGenre
+                        null, // FavType
+                        null, // FavRating
+                        null, // FavYear
+                        null, // FavOverview
+                        null  // RemoveFaveItem
+                    )
+                    faveRecyclerView.adapter = faveAdapter
+                } else {
+                    faveAdapter.updateItems(items)
+                }
+
+                favoriteSection.visibility = View.VISIBLE
+
+            } else {
+                // ✅ THE FIX: If the list is empty, hide the section entirely
+                favoriteSection.visibility = View.GONE
+
+                // If the adapter was already running, clear it out
+                if (::faveAdapter.isInitialized) {
+                    faveAdapter.clearItems()
+                }
+            }
+        }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+    private fun notificationS() {
+        lifecycleScope.launch {
+            // Fetch from DB on IO thread
+            val dbNotifications = withContext(Dispatchers.IO) {
+                db.getAllTvNotifications(userId)
+            }
+
+            if (dbNotifications.size > 0) requireActivity().findViewById<CardView>(R.id.cNotificationAnimeIcon).visibility = View.VISIBLE
+
+            // Update UI on Main thread
+            val notificationItems = dbNotifications.map { item ->
+
+                Log.d(
+                    "Not_tv",
+                    """
+                notificationId: ${item["id"]}
+                anime_id: ${item["anime_id"]}
+                title: ${item["title"]}
+                poster: ${item["poster"]}
+                noOfSeason: ${item["noOfSeason"]}
+                lastSeason: ${item["lastSeason"]}
+                lastEpisode: ${item["lastEpisode"]}
+                notify_at: ${item["notify_at"]}
+                """.trimIndent()
+                )
+
+                NotificationItem(
+                    notificationId = item["id"]?.toString().orEmpty(),
+                    imdbCode = item["tv_id"]?.toString().orEmpty(),
+                    title = item["title"]?.toString().orEmpty(),
+                    imageUrl = item["poster"],
+                    info = "Season ${item["lastSeason"]} - Episode ${item["lastEpisode"]}",
+                    type = "tv",
+                    newSeason = item["lastSeason"]?.toString().orEmpty(),
+                    newEpisode = item["lastEpisode"]?.toString().orEmpty(),
+                    time = item["notify_at"]?.toString().orEmpty()
+                )
+            }
+
+            // UI updates
+            requireView().findViewById<TextView>(R.id.notificationHeadline).text =
+                "notifications (${notificationItems.size})"
+
+            if (!::notificationAdapter.isInitialized) {
+                notificationAdapter = NotificationAdapter(
+                    items = notificationItems.toMutableList(),
+                    layoutResId = R.layout.item_notification,
+                    db,
+                    userId
+                )
+                notificationRecyclerView.adapter = notificationAdapter
+            } else {
+                notificationAdapter.updateItems(notificationItems)
+            }
+        }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+    
+
+
+
+    private fun setupBackPressedCallback() {
+        requireActivity().onBackPressedDispatcher.addCallback(requireActivity(), object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+
+            }
+        })
+    }
+
+}

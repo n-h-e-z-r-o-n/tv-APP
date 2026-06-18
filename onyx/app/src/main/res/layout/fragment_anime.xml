@@ -1,0 +1,595 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".AnimeFragment"
+    android:background="@android:color/transparent">
+
+
+
+    <ImageView
+        android:id="@+id/backgroundImgContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"
+        android:src="?attr/themeImage"
+        tools:ignore="ContentDescription" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="?attr/transparentEffect"/>
+
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/mainBox"
+        android:layout_margin="0dp"
+        app:cardElevation="0dp"
+        app:cardUseCompatPadding="false"
+        android:layout_gravity="center"
+        app:cardBackgroundColor="?attr/transparentEffect"
+        app:cardCornerRadius="0dp">
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="?attr/transparentEffect"/>
+
+
+
+        <LinearLayout
+             android:layout_width="match_parent"
+             android:layout_height="match_parent"
+             android:orientation="horizontal">
+
+
+            <LinearLayout
+                android:id="@+id/contentContainer"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                android:orientation="horizontal"
+                android:layout_gravity="center"
+                android:overScrollMode="never"
+                tools:ignore="RtlSymmetry">
+
+            <ScrollView
+                android:id="@+id/activityScrollVIEW"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:fillViewport="true"
+                android:scrollbars="none"
+                android:overScrollMode="never"
+                tools:ignore="UselessParent">
+
+                <LinearLayout
+                    android:orientation="vertical"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+
+
+                    <!-- //////////////////////// HOME PAGE ///////////////////////////////////////////// -->
+
+                    <LinearLayout
+                        android:id="@+id/HomePageAnime"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        tools:ignore="UselessParent"
+                        android:visibility="visible">
+
+
+                        <LinearLayout
+                            android:id="@+id/animeSpotlightSection"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical">
+
+
+                            <FrameLayout
+                                android:id="@+id/spotlightAnimes"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center"
+                                android:focusable="false"
+                                android:focusableInTouchMode="false"
+                                android:descendantFocusability="afterDescendants"
+                                android:clipChildren="false"
+                                android:clipToPadding="false"/>
+
+                             <View
+                                 android:layout_width="match_parent"
+                                 android:layout_marginVertical="5dp"
+                                 android:layout_height="1dp"
+                                 android:focusable="true"
+                                 android:clickable="true"/>
+
+
+
+                        </LinearLayout>
+
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:orientation="vertical"
+                            android:layout_height="wrap_content"
+                            android:id="@+id/animeTrendingSection">
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text=" Trending Anime"
+                                android:textStyle="bold"
+                                android:fontFamily="@font/p"
+                                android:textSize="18sp"
+                                android:textColor="#FFFFFF"
+                                android:shadowColor="#000000"
+                                android:shadowDx="2"
+                                android:shadowDy="2"
+                                android:shadowRadius="3"
+                                tools:ignore="HardcodedText" />
+
+
+                            <androidx.recyclerview.widget.RecyclerView
+                                android:id="@+id/Anime_Trending_widget"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:clipToPadding="false"
+                                android:nextFocusUp="@+id/spotlightAnimes"
+                                android:nextFocusDown="@+id/Anime_Airing_widget"
+                                android:overScrollMode="never"
+                                android:scrollbars="none"
+                                tools:ignore="NestedWeights" />
+
+
+
+                        </LinearLayout>
+
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:orientation="vertical"
+                            android:layout_height="wrap_content"
+                            android:id="@+id/animeAiringSection">
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text=" Top Airing Anime"
+                                android:textStyle="bold"
+                                android:fontFamily="@font/p"
+                                android:textSize="18sp"
+                                android:textColor="#FFFFFF"
+                                android:shadowColor="#000000"
+                                android:shadowDx="2"
+                                android:shadowDy="2"
+                                android:shadowRadius="3"
+                                tools:ignore="HardcodedText"
+                                android:layout_marginTop="10dp"/>
+
+                            <androidx.recyclerview.widget.RecyclerView
+                                android:id="@+id/Anime_Airing_widget"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:clipToPadding="false"
+                                android:overScrollMode="never"
+                                android:scrollbars="none"
+                                tools:ignore="NestedWeights"
+                                android:nextFocusUp="@+id/Anime_Trending_widget"
+                                android:nextFocusDown="@+id/Anime_Airing_widget"/>
+
+                        </LinearLayout>
+
+
+
+                        <LinearLayout
+                            android:id="@+id/dubbSection"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            tools:ignore="TooManyViews">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="English"
+                                android:textAllCaps="true"
+                                android:layout_marginStart="10dp"
+                                android:textSize="5sp"
+                                android:fontFamily="@font/p"
+                                android:textColor="?attr/FG_color"
+                                android:alpha="0.4"
+                                tools:ignore="HardcodedText,SmallSp" />
+
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Dubbed Collection"
+                                android:layout_marginStart="10dp"
+                                android:fontFamily="@font/p"
+                                android:textStyle="bold"
+                                android:textSize="20sp"
+                                android:textColor="?attr/FG_color"
+                                tools:ignore="HardcodedText" />
+
+                            <FrameLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="320dp"
+                                android:layout_marginVertical="10dp"
+                                android:clipChildren="false"
+                                android:clipToPadding="false">
+
+                                <androidx.recyclerview.widget.RecyclerView
+                                    android:id="@+id/dubbedRecycler"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:clipToPadding="false"
+                                    android:layout_marginStart="30dp"
+                                    android:scrollbars="none"
+                                    tools:itemCount="1"
+                                    tools:listitem="@layout/item_grid"
+                                    tools:ignore="RtlSymmetry" />
+
+                                <!-- Fixed info card -->
+                                <com.google.android.material.card.MaterialCardView
+                                    android:id="@+id/dubbFixedFocusOverlay"
+                                    android:layout_width="527dp"
+                                    android:layout_height="320dp"
+                                    android:layout_gravity="start|center_vertical"
+                                    android:layout_marginStart="30dp"
+                                    android:focusable="false"
+                                    android:clickable="false"
+                                    android:alpha="0"
+                                    android:importantForAccessibility="no"
+                                    app:cardCornerRadius="12dp"
+                                    app:strokeWidth="0dp"
+                                    app:strokeColor="?attr/AccentColor"
+                                    app:cardBackgroundColor="?attr/BG_color_up"
+                                    app:cardElevation="0dp">
+
+
+                                    <ImageView
+                                        android:id="@+id/dubbOverlayPoster"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="match_parent"
+                                        android:src="@raw/gradient_img"
+                                        android:scaleType="centerCrop"
+                                        tools:src="@drawable/splash_img"
+                                        tools:ignore="ContentDescription" />
+
+
+
+                                    <View
+                                        android:layout_width="match_parent"
+                                        android:layout_height="match_parent"
+                                        android:background="@drawable/overlay_bottom_gradient_bg"/>
+
+                                    <LinearLayout
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_gravity="bottom"
+                                        android:layout_marginStart="20dp"
+                                        android:layout_marginBottom="10dp"
+                                        android:orientation="vertical">
+
+                                        <TextView
+                                            android:id="@+id/dubbOverlayTitle"
+                                            android:layout_width="match_parent"
+                                            android:layout_height="wrap_content"
+                                            android:textColor="#FFFFFF"
+                                            android:textStyle="bold"/>
+
+                                        <TextView
+                                            android:id="@+id/dubbOverlayYear"
+                                            android:layout_width="wrap_content"
+                                            android:textColor="#FFFFFF"
+                                            android:layout_height="wrap_content"/>
+
+                                        <TextView
+                                            android:id="@+id/dubbOverlayRating"
+                                            android:textColor="#FFFFFF"
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"/>
+
+                                    </LinearLayout>
+                                </com.google.android.material.card.MaterialCardView>
+                            </FrameLayout>
+                        </LinearLayout>
+
+
+                    </LinearLayout>
+
+
+
+
+                    <!-- //////////////////////// POPULAR PAGE ////////////////////////////////////// -->
+
+                    <!-- //////////////////////// ANIME FAVORITE PAGE ////////////////////////////////////// -->
+                    <LinearLayout
+                        android:id="@+id/favoriteSection"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:visibility="gone">
+
+
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Favorite List"
+                            android:textStyle="bold"
+                            android:fontFamily="@font/p"
+                            android:textSize="13sp"
+                            android:textColor="?attr/FG_color"
+                            tools:ignore="HardcodedText"
+                            android:alpha="0.5"
+                            android:layout_marginTop="10dp"/>
+
+
+                        <androidx.cardview.widget.CardView
+                            android:layout_width="match_parent"
+                            android:layout_height="0dp"
+                            android:layout_weight="1"
+                            android:layout_marginHorizontal="20dp"
+                            android:layout_marginVertical="10dp"
+                            app:cardBackgroundColor="?attr/BG_color"
+                            app:cardCornerRadius="20dp"
+                            android:orientation="horizontal"
+                            android:visibility="gone">
+
+                            <androidx.constraintlayout.widget.ConstraintLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="match_parent"
+                                android:layout_gravity="end">
+
+                                <ImageView
+                                    android:id="@+id/FavBackdrop"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="match_parent"
+                                    android:adjustViewBounds="true"
+                                    android:scaleType="fitCenter"
+                                    android:src="@raw/anime_poster"
+                                    app:layout_constraintTop_toTopOf="parent"
+                                    app:layout_constraintBottom_toBottomOf="parent"
+                                    app:layout_constraintStart_toStartOf="parent" />
+
+                                <!-- Bottom Gradient Overlay: covers 30% of height -->
+                                <View
+                                    android:id="@+id/BottomOverlay"
+                                    android:layout_width="0dp"
+                                    android:layout_height="0dp"
+                                    android:background="@drawable/overlay_bottom_gradient_bg"
+
+                                    app:layout_constraintBottom_toBottomOf="@id/FavBackdrop"
+                                    app:layout_constraintStart_toStartOf="@id/FavBackdrop"
+                                    app:layout_constraintEnd_toEndOf="@id/FavBackdrop"
+                                    app:layout_constraintHeight_percent="0.35" />
+
+                                <!-- Left Gradient Overlay: covers 25% of width -->
+                                <View
+                                    android:id="@+id/LeftOverlay"
+                                    android:layout_width="0dp"
+                                    android:layout_height="0dp"
+                                    android:background="@drawable/overlay_left_gradient_bg"
+                                    app:layout_constraintStart_toStartOf="@id/FavBackdrop"
+                                    app:layout_constraintTop_toTopOf="@id/FavBackdrop"
+                                    app:layout_constraintBottom_toBottomOf="@id/FavBackdrop"
+                                    app:layout_constraintWidth_percent="0.40" />
+                            </androidx.constraintlayout.widget.ConstraintLayout>
+
+                            <LinearLayout
+                                android:id="@+id/FaveData"
+                                android:layout_width="450dp"
+                                android:layout_height="match_parent"
+                                android:layout_gravity="bottom"
+                                android:gravity="bottom"
+                                android:layout_marginStart="10dp"
+                                android:layout_marginBottom="10dp"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:id="@+id/FavTitle"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_gravity="bottom"
+                                    android:ellipsize="end"
+                                    android:maxLines="3"
+                                    android:text="Sakamoto Days Part 2"
+                                    android:singleLine="false"
+                                    android:textColor="?attr/FG_color"
+                                    android:textSize="40sp"
+                                    android:textStyle="bold"
+                                    android:layout_marginBottom="5dp"
+                                    android:fontFamily="@font/p"
+                                    tools:ignore="HardcodedText" />
+                                <TextView
+                                    android:id="@+id/FavGenre"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:ellipsize="end"
+                                    android:maxLines="1"
+                                    android:text="Action"
+                                    android:singleLine="false"
+                                    android:textColor="?attr/FG_color"
+                                    android:textSize="13sp"
+                                    android:textStyle="bold"
+                                    android:layout_marginBottom="10dp"
+                                    android:fontFamily="@font/q"
+                                    tools:ignore="HardcodedText" />
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="20dp"
+                                    android:orientation="horizontal"
+                                    android:layout_marginBottom="10dp"
+                                    android:alpha="0.5">
+
+                                    <TextView
+                                        android:id="@+id/FavType"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="match_parent"
+                                        android:layout_gravity="bottom"
+                                        android:ellipsize="end"
+                                        android:maxLines="7"
+                                        android:text=""
+                                        android:singleLine="false"
+                                        android:textColor="?attr/AccentColor"
+                                        android:textSize="15sp"
+                                        android:fontFamily="@font/a"
+                                        android:gravity="center"
+                                        android:textStyle="bold"
+                                        android:layout_marginEnd="15dp"
+                                        />
+
+                                    <androidx.cardview.widget.CardView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        app:cardCornerRadius="3dp"
+                                        android:text="IMDB"
+
+                                        android:textSize="11sp"
+                                        app:cardBackgroundColor="#DAA520"
+                                        tools:ignore="HardcodedText"
+                                        android:textStyle="bold">
+
+                                        <TextView
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:text="IMDb"
+                                            android:paddingVertical="2dp"
+                                            android:paddingHorizontal="5dp"
+                                            android:textColor="#000000"
+                                            android:textStyle="bold"
+                                            android:textSize="11sp"
+                                            android:fontFamily="@font/p"
+                                            tools:ignore="HardcodedText" />
+
+                                    </androidx.cardview.widget.CardView>
+
+                                    <TextView
+                                        android:id="@+id/FavRating"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="match_parent"
+                                        android:layout_gravity="bottom"
+                                        android:ellipsize="end"
+                                        android:maxLines="7"
+                                        android:text=""
+                                        android:singleLine="false"
+                                        android:textColor="?attr/FG_color"
+                                        android:textSize="13sp"
+                                        android:gravity="center"
+                                        android:textStyle="italic|bold"
+                                        android:layout_marginEnd="15dp"
+                                        android:layout_marginStart="2dp"
+                                        />
+                                    <TextView
+                                        android:id="@+id/FavYear"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="match_parent"
+                                        android:layout_gravity="bottom"
+                                        android:ellipsize="end"
+                                        android:maxLines="1"
+                                        android:text=""
+                                        android:singleLine="false"
+                                        android:textColor="?attr/FG_color"
+                                        android:textSize="13sp"
+                                        android:gravity="center"
+                                        android:textStyle="italic|bold"
+                                        android:layout_marginEnd="15dp"
+                                        />
+
+
+
+
+
+                                </LinearLayout>
+
+                                <TextView
+                                    android:id="@+id/FavOverview"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_gravity="bottom"
+                                    android:ellipsize="end"
+                                    android:maxLines="5"
+                                    android:singleLine="false"
+                                    android:text="  at com.android.server.wm.WindowOrganizerController.onTransact(WindowOrganizerController.java:223)"
+                                    android:textColor="?attr/FG_color"
+                                    android:fontFamily="@font/p"
+                                    android:textSize="12sp"
+                                    android:layout_marginBottom="20dp"
+                                    />
+
+                                <LinearLayout
+                                    android:id="@+id/RemoveFaveItem"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="30dp"
+                                    android:focusable="true"
+                                    android:focusableInTouchMode="true"
+                                    android:clickable="true"
+                                    android:background="@drawable/watch_button"
+                                    android:nextFocusLeft="@+id/sideBar"
+                                    android:paddingStart="9dp"
+                                    android:paddingEnd="9dp"
+                                    android:gravity="center">
+
+                                    <ImageView
+                                        android:layout_width="20dp"
+                                        android:layout_height="20dp"
+                                        android:contentDescription="TODO"
+                                        android:src="@drawable/remove_fave"
+                                        app:tint="?attr/AccentColor"
+                                        tools:ignore="ContentDescription,HardcodedText" />
+
+
+
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="Remove From Favorites"
+                                        android:textColor="@android:color/white"
+                                        android:fontFamily="@font/q"
+                                        android:textSize="8sp"
+                                        android:layout_marginStart="2dp"
+                                        tools:ignore="HardcodedText,SmallSp"
+                                        />
+
+                                </LinearLayout>
+                            </LinearLayout>
+                        </androidx.cardview.widget.CardView>
+
+
+
+                        <androidx.recyclerview.widget.RecyclerView
+                            android:id="@+id/faveRecycler"
+                            android:layout_marginHorizontal="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_width="match_parent"
+                            android:clipToPadding="false"
+                            android:scrollbars="none"
+                            tools:ignore="RtlSymmetry"/>
+
+
+                    </LinearLayout>
+
+
+
+                </LinearLayout>
+            </ScrollView>
+
+        </LinearLayout>
+
+        <include layout="@layout/laod_animation" />
+
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

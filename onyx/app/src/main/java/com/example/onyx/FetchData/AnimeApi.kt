@@ -91,7 +91,8 @@ class AnimeApi(private val context: Context) {
     fun animeEpisodeServers(animeEpisodeId: String): JSONObject? {
         return runBlocking {
             async(Dispatchers.IO) {
-                val url = "${BuildConfig.A_K}/api/v2/anime/episode/servers?animeEpisodeId=$animeEpisodeId"
+                //val url = "${BuildConfig.A_K}/api/v2/anime/episode/servers?animeEpisodeId=$animeEpisodeId"
+                val url = "${BuildConfig.A_K}/api/v2/mirurostream/episode/links/$animeEpisodeId&access_code=12echo12"
                 makeRequest(url)
             }.await()
         }

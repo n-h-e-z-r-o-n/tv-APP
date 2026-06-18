@@ -40,7 +40,6 @@
     </style>
 
 
-
     <!-- Yellow Pure Black Theme -->
     <style name="Theme.Onyx.Yellow" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <item name="BG_color">#0F0D08</item>
@@ -97,7 +96,7 @@
 
     <style name="Theme.Onyx.Purple" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <item name="BG_color">#14081A</item>
-        <item name="FG_color">#E6DCEF </item>
+        <item name="FG_color">#E6DCEF</item>
         <item name="BG_color_up">#24102E</item>
         <item name="AccentColor">#f1a7c6</item>
         <item name="transparentEffect">#8014081A</item>
@@ -112,6 +111,10 @@
         <item name="android:windowBackground">@drawable/splash_background</item>
     </style>
 
+    <style name="ThemeOverlay.Onyx.FullscreenContainer" parent="">
+        <item name="fullscreenBackgroundColor">@color/light_blue_600</item>
+        <item name="fullscreenTextColor">@color/light_blue_A200</item>
+    </style>
 
 
 </resources>

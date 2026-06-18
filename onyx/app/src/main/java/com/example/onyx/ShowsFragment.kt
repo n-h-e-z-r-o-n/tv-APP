@@ -21,7 +21,6 @@ import android.widget.ScrollView
 import android.widget.TextView
 import android.view.animation.AccelerateDecelerateInterpolator
 import androidx.activity.OnBackPressedCallback
-import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
@@ -62,7 +61,6 @@ import com.example.onyx.OnyxClasses.categoryItem
 import com.example.onyx.OnyxClasses.filterItemOne
 import com.example.onyx.OnyxObjects.GlobalUtils
 import com.example.onyx.OnyxObjects.LoadingAnimation
-import com.example.onyx.OnyxObjects.NavAction
 import com.google.android.material.card.MaterialCardView
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancelChildren
@@ -73,7 +71,19 @@ import java.util.Calendar
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
-class Shows_Page : AppCompatActivity() {
+import androidx.fragment.app.Fragment
+import com.example.onyx.OnyxClasses.AnimeGridItem
+import com.example.onyx.OnyxClasses.FocusOverlay
+
+
+import android.graphics.drawable.Drawable
+import android.view.animation.LinearInterpolator
+import com.bumptech.glide.load.DataSource
+import com.bumptech.glide.load.engine.GlideException
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
+import com.bumptech.glide.request.RequestListener
+
+class ShowsFragment : Fragment(R.layout.fragment_shows) {
     private var currentMoviePage = 1
     private var isLoadingMoreMovies = false
 
@@ -89,27 +99,19 @@ class Shows_Page : AppCompatActivity() {
     private lateinit var HomeContentSection: FrameLayout
 
     private lateinit var favoriteSection: LinearLayout
-
-    private lateinit var watchingSection: LinearLayout
     private lateinit var currentContent: CardView
 
 
 
 
     private lateinit var tvBtnText: TextView
-
-
-    private lateinit var searchContainerImg: ImageView
     private lateinit var filterContainerImg: ImageView
-
-    private lateinit var searchContainer: LinearLayout
     private lateinit var fliterContainer: LinearLayout
 
 
     //Adapters
     private lateinit var movieAdapter: GridAdapter
     private lateinit var tvAdapter: GridAdapter
-    private lateinit var searchAdapter: GridAdapter2
     private lateinit var filterAdapter: FilterAdapter
 
 
@@ -124,18 +126,13 @@ class Shows_Page : AppCompatActivity() {
 
     //RecyclerViews
     private lateinit var tvRecyclerView : RecyclerView
+    private lateinit var tvFixedFocusOverlay: MaterialCardView
+
     private lateinit var movieRecyclerView : RecyclerView
     private lateinit var movieFixedFocusOverlay: MaterialCardView
-    private lateinit var tvFixedFocusOverlay: MaterialCardView
-    private lateinit var movieOverlayPoster: ImageView
-    private lateinit var movieOverlayTitle: TextView
-    private lateinit var movieOverlayYear: TextView
-    private lateinit var movieOverlayRating: TextView
-    private lateinit var searchRecyclerView : RecyclerView
     private lateinit var fliterRecyclerView : RecyclerView
 
-    private var movieEmbeddedFocusedView: View? = null
-    private var tvEmbeddedFocusedView: View? = null
+
 
 
 
@@ -163,289 +160,100 @@ class Shows_Page : AppCompatActivity() {
     private var userId: Int = -1
 
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        GlobalUtils.applyTheme(this)
-        super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContentView(R.layout.activity_shows_page)
-        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        GlobalUtils.applyTheme(requireActivity())
+        super.onViewCreated(view, savedInstanceState)
+        
+        
+        requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
-        LoadingAnimation.setup(this, R.raw.line_loading)
-        //LoadingAnimation.show(this)
-        NavAction.setupSidebar(this)
-        fetchTMDB = TMDBapi(this)
-        db = AppDatabase(this)         // Initialize database
-        sm = SessionManger(this)
+        LoadingAnimation.setup(requireActivity(), R.raw.line_loading)
+        //LoadingAnimation.show(requireActivity())
+        
+        fetchTMDB = TMDBapi(requireActivity())
+        db = AppDatabase(requireActivity())         // Initialize database
+        sm = SessionManger(requireActivity())
         userId = sm.getUserId()
 
 
         //setupBackPressedCallback()
         //trackFocus()
 
-        backgroundContainer = findViewById(R.id.BackgroundContainer)
-        currentContent = findViewById(R.id.currentContent)
-        SpotlightSection = findViewById(R.id.SpotlightSection)
-        HomeContentSection = findViewById(R.id.HomeContentSection)
-        favoriteSection =  findViewById(R.id.favoriteSection)
-        watchingSection = findViewById(R.id.watchingSection)
+        val activityScrollVIEW = requireView().findViewById<ScrollView>(R.id.activityScrollVIEW)
 
-        //HomeContentSection.visibility = View.GONE
+
+        backgroundContainer = requireView().findViewById(R.id.BackgroundContainer)
+        currentContent = requireView().findViewById(R.id.currentContent)
+
+        SpotlightSection = requireView().findViewById(R.id.SpotlightSection)
+        HomeContentSection = requireView().findViewById(R.id.HomeContentSection)
+        val movieSection = requireView().findViewById<LinearLayout>(R.id.MovieSection)
+        val filterSection = requireView().findViewById<LinearLayout>(R.id.filterSection)
+        val tvSection = requireView().findViewById<LinearLayout>(R.id.tvSection)
+        favoriteSection =  requireView().findViewById(R.id.favoriteSection)
+
+        SpotlightSection.visibility = View.GONE
+        HomeContentSection.visibility = View.GONE
+        movieSection.visibility = View.GONE
+        filterSection.visibility = View.GONE
+        tvSection.visibility = View.GONE
         favoriteSection.visibility = View.GONE
-        watchingSection.visibility = View.GONE
+
+
 
         GlobalUtils.setHeightToMatchScreen(SpotlightSection)
         GlobalUtils.setHeightToMatchScreen(HomeContentSection)
         //GlobalUtils.setHeightToMatchScreen(favoriteSection)
 
-        ////////////////////////////////////////////////////////////////////////////////////////////
-        val navBar = findViewById<LinearLayout>(R.id.NavBar)
 
-        val HomeBtn = findViewById<LinearLayout>(R.id.HomeBtn)
-        val MoviesBtn = findViewById<LinearLayout>(R.id.MoviesBtn)
-        val seriesBtn = findViewById<LinearLayout>(R.id.seriesBtn)
-        val SearchBtn = findViewById<LinearLayout>(R.id.SearchBtn)
-        val FilterBtn = findViewById<LinearLayout>(R.id.FilterBtn)
-        val FavBtn = findViewById<LinearLayout>(R.id.FavBtn)
-        val cWatchBtn = findViewById<LinearLayout>(R.id.cWatchBtn)
-        val cNotificationBtn = findViewById<LinearLayout>(R.id.cNotificationBtn)
-
-
-        ////////////////////////////////////////////////////////////////////////////////////////////
-        val activityScrollVIEW = findViewById<ScrollView>(R.id.activityScrollVIEW)
-
-        val HomePage = findViewById<LinearLayout>(R.id.HomePage)
-
-        val movieSection = findViewById<LinearLayout>(R.id.MovieSection)
-        val tvSection = findViewById<LinearLayout>(R.id.tvSection)
 
         GlobalUtils.snapRowToTopOnFocus(activityScrollVIEW, SpotlightSection)
-        GlobalUtils.centerParentOnFocus(activityScrollVIEW, movieSection)
-        GlobalUtils.centerParentOnFocus(activityScrollVIEW, tvSection)
         GlobalUtils.centerParentOnFocus(activityScrollVIEW, HomeContentSection)
+        GlobalUtils.centerParentOnFocus(activityScrollVIEW, movieSection)
         GlobalUtils.centerParentOnFocus(activityScrollVIEW, favoriteSection)
-        GlobalUtils.centerParentOnFocus(activityScrollVIEW, watchingSection)
+        GlobalUtils.centerParentOnFocus(activityScrollVIEW, tvSection)
+        GlobalUtils.centerParentOnFocus(activityScrollVIEW, favoriteSection)
+
+
+        ////////////////////////////////////////////////////////////////////////////////////////////
+        val navBar = requireView().findViewById<LinearLayout>(R.id.NavBar)
+
+        val HomeBtn = requireView().findViewById<LinearLayout>(R.id.HomeBtn)
+        val MoviesBtn = requireView().findViewById<LinearLayout>(R.id.MoviesBtn)
+        val seriesBtn = requireView().findViewById<LinearLayout>(R.id.seriesBtn)
+        val SearchBtn = requireView().findViewById<LinearLayout>(R.id.SearchBtn)
+        val FilterBtn = requireView().findViewById<LinearLayout>(R.id.FilterBtn)
+        val FavBtn = requireView().findViewById<LinearLayout>(R.id.FavBtn)
+        val cWatchBtn = requireView().findViewById<LinearLayout>(R.id.cWatchBtn)
+        val cNotificationBtn = requireView().findViewById<LinearLayout>(R.id.cNotificationBtn)
+
+
+        ////////////////////////////////////////////////////////////////////////////////////////////
+
+        val HomePage = requireView().findViewById<LinearLayout>(R.id.HomePage)
 
 
 
 
 
-        val homeScrollView = findViewById<ScrollView>(R.id.HomeInnerScrollView)
-        val realityRow = findViewById<LinearLayout>(R.id.realityRow)
-        val thrillsRow = findViewById<LinearLayout>(R.id.thrillsRow)
+
+
+        val homeScrollView = requireView().findViewById<ScrollView>(R.id.HomeInnerScrollView)
+        val realityRow = requireView().findViewById<LinearLayout>(R.id.realityRow)
+        val thrillsRow = requireView().findViewById<LinearLayout>(R.id.thrillsRow)
 
 
         GlobalUtils.snapRowToTopOnFocus(homeScrollView, realityRow)
         GlobalUtils.snapRowToTopOnFocus(homeScrollView, thrillsRow)
 
-        val browseRow = findViewById<LinearLayout>(R.id.browseRow)
-        GlobalUtils.centerParentOnFocus(activityScrollVIEW, browseRow)
+
+
 
         ////////////////////////////////////////////////////////////////////////////////////////////
 
-        val moviePage = findViewById<LinearLayout>(R.id.MoviePage)
-        val seriesPage = findViewById<LinearLayout>(R.id.SeriesPage)
-        val searchPage = findViewById<LinearLayout>(R.id.searchPage)
-        val filterPage = findViewById<LinearLayout>(R.id.FilterPage)
-        val FavePage = findViewById<LinearLayout>(R.id.FavePage)
-        val cWatchPage = findViewById<LinearLayout>(R.id.cWatchPage)
-        val cNotificationPage = findViewById<LinearLayout>(R.id.cNotificationPage)
-
-
-        HomeBtn.setOnClickListener {
-            HomePage.visibility = View.VISIBLE
-            moviePage.visibility = View.GONE
-            seriesPage.visibility = View.GONE
-            searchPage.visibility = View.GONE
-            filterPage.visibility = View.GONE
-            FavePage.visibility = View.GONE
-            cWatchPage.visibility = View.GONE
-            cNotificationPage.visibility = View.GONE
-
-
-            HomeBtn.isSelected = true
-            MoviesBtn.isSelected = false
-            seriesBtn.isSelected = false
-            SearchBtn.isSelected = false
-            FilterBtn.isSelected = false
-            FavBtn.isSelected = false
-            cWatchBtn.isSelected = false
-            cNotificationBtn.isSelected = false
-        }
-        HomeBtn.setOnFocusChangeListener { v, hasFocus ->
-            Log.e("AUTO CLICK", "HomeBtn : " + HomeBtn )
-            if (hasFocus) {
-                v.performClick()
-            }
-        }
-        HomeBtn.performClick()
-        HomeBtn.requestFocus()
-
-
-        MoviesBtn.setOnClickListener {
-            HomePage.visibility = View.GONE
-            moviePage.visibility = View.VISIBLE
-            seriesPage.visibility = View.GONE
-            searchPage.visibility = View.GONE
-            filterPage.visibility = View.GONE
-            FavePage.visibility = View.GONE
-            cWatchPage.visibility = View.GONE
-            cNotificationPage.visibility = View.GONE
-
-
-            HomeBtn.isSelected = false
-            MoviesBtn.isSelected = true
-            seriesBtn.isSelected = false
-            SearchBtn.isSelected = false
-            FilterBtn.isSelected = false
-            FavBtn.isSelected = false
-            cWatchBtn.isSelected = false
-            cNotificationBtn.isSelected = false
-        }
-
-        MoviesBtn.setOnFocusChangeListener { v, hasFocus ->
-            Log.e("AUTO CLICK", "MoviesBtn : " + hasFocus)
-            if (hasFocus) {
-                // Use post to delay the click until after focus is fully set
-                v.post {
-                    v.performClick()
-                }
-            }
-        }
 
 
 
-
-
-
-
-
-        seriesBtn.setOnClickListener {
-            HomePage.visibility = View.GONE
-            moviePage.visibility = View.GONE
-            seriesPage.visibility = View.VISIBLE
-            searchPage.visibility = View.GONE
-            filterPage.visibility = View.GONE
-            FavePage.visibility = View.GONE
-            cWatchPage.visibility = View.GONE
-            cNotificationPage.visibility = View.GONE
-
-            HomeBtn.isSelected = false
-            MoviesBtn.isSelected = false
-            seriesBtn.isSelected = true
-            SearchBtn.isSelected = false
-            FilterBtn.isSelected = false
-            FavBtn.isSelected = false
-            cWatchBtn.isSelected = false
-            cNotificationBtn.isSelected = false
-        }
-
-        SearchBtn.setOnClickListener {
-            HomePage.visibility = View.GONE
-            moviePage.visibility = View.GONE
-            seriesPage.visibility = View.GONE
-            searchPage.visibility = View.VISIBLE
-            filterPage.visibility = View.GONE
-            FavePage.visibility = View.GONE
-            cWatchPage.visibility = View.GONE
-            cNotificationPage.visibility = View.GONE
-
-            HomeBtn.isSelected = false
-            MoviesBtn.isSelected = false
-            seriesBtn.isSelected = false
-            SearchBtn.isSelected = true
-            FilterBtn.isSelected = false
-            FavBtn.isSelected = false
-            cWatchBtn.isSelected = false
-            cNotificationBtn.isSelected = false
-        }
-
-
-        FilterBtn.setOnClickListener {
-            HomePage.visibility = View.GONE
-            moviePage.visibility = View.GONE
-            seriesPage.visibility = View.GONE
-            searchPage.visibility = View.GONE
-            filterPage.visibility = View.VISIBLE
-            FavePage.visibility = View.GONE
-            cWatchPage.visibility = View.GONE
-            cNotificationPage.visibility = View.GONE
-
-            HomeBtn.isSelected = false
-            MoviesBtn.isSelected = false
-            seriesBtn.isSelected = false
-            SearchBtn.isSelected = false
-            FilterBtn.isSelected = true
-            FavBtn.isSelected = false
-            cWatchBtn.isSelected = false
-            cNotificationBtn.isSelected = false
-        }
-
-
-        FavBtn.setOnClickListener {
-            HomePage.visibility = View.GONE
-            moviePage.visibility = View.GONE
-            seriesPage.visibility = View.GONE
-            searchPage.visibility = View.GONE
-            filterPage.visibility = View.GONE
-            FavePage.visibility = View.VISIBLE
-            cWatchPage.visibility = View.GONE
-            cNotificationPage.visibility = View.GONE
-
-            HomeBtn.isSelected = false
-            MoviesBtn.isSelected = false
-            seriesBtn.isSelected = false
-            SearchBtn.isSelected = false
-            FilterBtn.isSelected = false
-            FavBtn.isSelected = true
-            cWatchBtn.isSelected = false
-            cNotificationBtn.isSelected = false
-        }
-
-        cWatchBtn.setOnClickListener {
-            HomePage.visibility = View.GONE
-            moviePage.visibility = View.GONE
-            seriesPage.visibility = View.GONE
-            searchPage.visibility = View.GONE
-            filterPage.visibility = View.GONE
-            FavePage.visibility = View.GONE
-            cWatchPage.visibility = View.VISIBLE
-            cNotificationPage.visibility = View.GONE
-
-            HomeBtn.isSelected = false
-            MoviesBtn.isSelected = false
-            seriesBtn.isSelected = false
-            SearchBtn.isSelected = false
-            FilterBtn.isSelected = false
-            FavBtn.isSelected = false
-            cWatchBtn.isSelected = true
-            cNotificationBtn.isSelected = false
-        }
-
-        cNotificationBtn.setOnClickListener {
-            HomePage.visibility = View.GONE
-            moviePage.visibility = View.GONE
-            seriesPage.visibility = View.GONE
-            searchPage.visibility = View.GONE
-            filterPage.visibility = View.GONE
-            FavePage.visibility = View.GONE
-            cWatchPage.visibility = View.GONE
-            cNotificationPage.visibility = View.VISIBLE
-
-            HomeBtn.isSelected = false
-            MoviesBtn.isSelected = false
-            seriesBtn.isSelected = false
-            SearchBtn.isSelected = false
-            FilterBtn.isSelected = false
-            FavBtn.isSelected = false
-            cWatchBtn.isSelected = false
-            cNotificationBtn.isSelected = true
-        }
-
-        GlobalUtils.expandParentOnChildFocus(
-            parent = navBar,
-            expandedWidthDp = 155f,
-            collapsedWidthDp = 70f
-        )
 
 
 
@@ -456,12 +264,12 @@ class Shows_Page : AppCompatActivity() {
 
 
         ////////////////////////////////////////////////////////////////////////////////////////////
-        val loadingImageView = findViewById<ImageView>(R.id.backgroundImgContainer)
+        val loadingImageView = requireView().findViewById<ImageView>(R.id.backgroundImgContainer)
 
         val typedValue = TypedValue()
-        theme.resolveAttribute(R.attr.themeImage, typedValue, true)
+        requireActivity().theme.resolveAttribute(R.attr.themeImage, typedValue, true)
 
-        Glide.with(this)
+        Glide.with(requireActivity())
             .asGif()
             .load( typedValue.resourceId)
             .into(loadingImageView)
@@ -473,13 +281,11 @@ class Shows_Page : AppCompatActivity() {
             categoryShow()
             loadFilterContent(realityAdapter, "&with_genres=10764", false)
             loadFilterContent(thrillAdapter, "&with_genres=27", true)
-            genreFilter()
+            //genreFilter()
             fetchMovies()
             fetchTvShows()
             //filter()
             tvFavoritesList()
-            notificationS()
-            watchedList()
 
         }
 
@@ -509,16 +315,15 @@ class Shows_Page : AppCompatActivity() {
         //tvFavoritesList()
 
          */
-        watchedList()
 
 
         // Only request focus if nothing has focus
-        window.decorView.post {
-            if (currentFocus == null) {
+        requireActivity().window.decorView.post {
+            if (requireActivity().currentFocus == null) {
                 if (lastFocusedView != null && lastFocusedView!!.isShown && lastFocusedView!!.isFocusable) {
                     lastFocusedView!!.requestFocus()
                 } else {
-                    findViewById<LinearLayout>(R.id.HomeBtn).requestFocus()
+                    requireView().findViewById<LinearLayout>(R.id.HomeBtn).requestFocus()
                 }
             }
         }
@@ -531,7 +336,6 @@ class Shows_Page : AppCompatActivity() {
         // Clear all adapters
         movieAdapter.clearItems()
         tvAdapter.clearItems()
-        searchAdapter.clearItems()
         filterAdapter.clearItems()
 
         // Cancel any running coroutines
@@ -542,64 +346,99 @@ class Shows_Page : AppCompatActivity() {
         // Remove all handler callbacks
         Handler(Looper.getMainLooper()).removeCallbacksAndMessages(null)
 
-        finish()
+        // requireActivity().finish()
     }
 
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private var initialMovieHeroPopulated = false
-    private var initialtvHeroPopulated = false
-
-    private fun enforceFirstItemFocusIfNeeded(recyclerView: RecyclerView) {
-        val adapter = recyclerView.adapter ?: return
-        if (adapter.itemCount <= 0) return
-
-        val layoutManager = recyclerView.layoutManager as? LinearLayoutManager ?: return
-        layoutManager.scrollToPositionWithOffset(0, 0)
-
-        recyclerView.post {
-            val firstItem = recyclerView.findViewHolderForAdapterPosition(0)?.itemView
-            firstItem?.requestFocus()
-        }
-    }
-
-
     private fun projectMovieItemIntoHero(item: MovieItemOne) {
         try {
-        movieOverlayPoster = findViewById(R.id.movieOverlayPoster)
-        movieOverlayTitle = findViewById(R.id.movieoOverlayTitle)
-        movieOverlayYear = findViewById(R.id.movieOverlayYear)
-        movieOverlayRating = findViewById(R.id.movieOverlayRating)
+            val view = requireView()
+            val overlayPoster = view.findViewById<ImageView>(R.id.movieOverlayPoster)
+            val titleText = view.findViewById<TextView>(R.id.movieoOverlayTitle)
+            val yearText = view.findViewById<TextView>(R.id.movieOverlayYear)
+            val ratingText = view.findViewById<TextView>(R.id.movieOverlayRating)
+            val overlayCard = view.findViewById<MaterialCardView>(R.id.movieFixedFocusOverlay)
 
-        movieFixedFocusOverlay.alpha = 1f
-        movieOverlayTitle.text = item.title
-        movieOverlayYear.text = item.year
-        movieOverlayRating.text = item.rating
+            val heroImage = if (item.backdropUrl.isNotBlank() && item.backdropUrl != "null") {
+                item.backdropUrl
+            } else {
+                item.posterUlr
+            }
 
-        val heroImage = if (item.backdropUrl.isNotBlank() && item.backdropUrl != "null") {
-            item.backdropUrl
-        } else {
-            item.posterUlr
+            // 1. Cross-fade the text content
+            val fadeDuration = 250L
+            titleText.animate().alpha(0f).setDuration(fadeDuration).withEndAction {
+                // Update text after it fades out
+                titleText.text = item.title
+                yearText.text = item.year
+                ratingText.text = item.rating
+                overlayCard.alpha = 1f
+
+                // Fade text back in
+                titleText.animate().alpha(1f).setDuration(fadeDuration).start()
+                yearText.animate().alpha(1f).setDuration(fadeDuration).start()
+                ratingText.animate().alpha(1f).setDuration(fadeDuration).start()
+            }.start()
+
+            yearText.animate().alpha(0f).setDuration(fadeDuration).start()
+            ratingText.animate().alpha(0f).setDuration(fadeDuration).start()
+
+            // 2. Load Image with Cross-fade and Panning Animation
+            Glide.with(requireContext())
+                .load(heroImage)
+                .transition(DrawableTransitionOptions.withCrossFade(150)) // Glide cross-fade
+                .centerCrop()
+                .diskCacheStrategy(DiskCacheStrategy.ALL)
+                .listener(object : RequestListener<Drawable> {
+                    override fun onLoadFailed(
+                        e: GlideException?,
+                        model: Any?,
+                        target: Target<Drawable>,
+                        isFirstResource: Boolean
+                    ): Boolean {
+                        return false
+                    }
+
+                    override fun onResourceReady(
+                        resource: Drawable,
+                        model: Any,
+                        target: Target<Drawable>?,
+                        dataSource: DataSource,
+                        isFirstResource: Boolean
+                    ): Boolean {
+                        // Cancel any previous panning animation to prevent jank
+                        overlayPoster.animate().cancel()
+
+                        // Start position: Shifted slightly to the right
+                        overlayPoster.translationX = 60f
+
+                        // Pan slowly to the left (Ken Burns effect)
+                        overlayPoster.animate()
+                            .translationX(0f)
+                            .setDuration(200)
+                            .setInterpolator(LinearInterpolator())
+                            .start()
+
+                        return false
+                    }
+                })
+                .into(overlayPoster)
+
+        } catch (e: Exception) {
+            Log.e("projectMovieItemIntoHero", e.toString())
         }
-
-        Glide.with(this)
-            .load(heroImage)
-            .centerCrop()
-            .diskCacheStrategy(DiskCacheStrategy.ALL)
-            .into(movieOverlayPoster)
-
-        }catch (e: Exception){}
     }
 
     private fun projectTvItemIntoHero(item: MovieItemOne) {
         try {
-             val overlayPoster = findViewById<ImageView>(R.id.tvOverlayPoster)
-            findViewById<TextView>(R.id.tvOverlayTitle).text = item.title
-            findViewById<TextView>(R.id.tvOverlayYear).text = item.year
-            findViewById<TextView>(R.id.tvOverlayRating).text = item.rating
+           val overlayPoster = requireView().findViewById<ImageView>(R.id.tvOverlayPoster)
 
-            tvFixedFocusOverlay.alpha = 1f
+            requireView().findViewById<TextView>(R.id.tvOverlayTitle).text = item.title
+            requireView().findViewById<TextView>(R.id.tvOverlayYear).text = item.year
+            requireView().findViewById<TextView>(R.id.tvOverlayRating).text = item.rating
+            requireView().findViewById<MaterialCardView>(R.id.tvFixedFocusOverlay).alpha = 1f
 
 
             val heroImage = if (item.backdropUrl.isNotBlank() && item.backdropUrl != "null") {
@@ -608,13 +447,15 @@ class Shows_Page : AppCompatActivity() {
                 item.posterUlr
             }
 
-            Glide.with(this)
+            Glide.with(requireContext())
                 .load(heroImage)
                 .centerCrop()
                 .diskCacheStrategy(DiskCacheStrategy.ALL)
                 .into(overlayPoster)
 
-        }catch (e: Exception){}
+        }catch (e: Exception){
+            Log.e("projectTvItemIntoHero", e.toString())
+        }
     }
 
 
@@ -673,222 +514,49 @@ class Shows_Page : AppCompatActivity() {
 
 
         //  Movies ---------------------------------------------------------------------------------
-        movieRecyclerView = findViewById(R.id.MoviesRecyclerView)
-        movieFixedFocusOverlay = findViewById(R.id.movieFixedFocusOverlay)
-
-
-        movieRecyclerView.layoutManager  = object : LinearLayoutManager(
-            this@Shows_Page,
+        movieRecyclerView = requireView().findViewById(R.id.MoviesRecyclerView)
+        movieFixedFocusOverlay = requireView().findViewById(R.id.movieFixedFocusOverlay)
+        movieRecyclerView.layoutManager  =  LinearLayoutManager(
+            requireActivity(),
             LinearLayoutManager.HORIZONTAL,
             false
-        ) {
-            override fun requestChildRectangleOnScreen(
-                parent: RecyclerView,
-                child: View,
-                rect: Rect,
-                immediate: Boolean,
-                focusedChildVisible: Boolean
-            ): Boolean {
-                return false
-            }
-        }
+        )
         movieRecyclerView.addItemDecoration(EqualSpaceItemDecoration(Spacing))
         movieAdapter = GridAdapter(mutableListOf(), R.layout.item_grid)
         movieRecyclerView.adapter = movieAdapter
 
-        movieRecyclerView.addOnChildAttachStateChangeListener(object : RecyclerView.OnChildAttachStateChangeListener {
-            override fun onChildViewAttachedToWindow(view: View) {
-                view.foreground = null
-            }
-            override fun onChildViewDetachedFromWindow(view: View) {
-            }
-        })
-
-        val movieFocusDataObserver = object : RecyclerView.AdapterDataObserver() {
-            override fun onChanged() = enforceFirstItemFocusIfNeeded(movieRecyclerView)
-            override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
-                if (positionStart == 0) {
-                    //enforceFirstItemFocusIfNeeded(movieRecyclerView)
-                }
-            }
-        }
-
-        movieAdapter.registerAdapterDataObserver(movieFocusDataObserver)
-
         movieAdapter.onAddMoreClicked = { loadMoreMovies() }
-        movieAdapter.onItemFocused = { view, item ->
 
-            backgroundContainer.visibility = View.GONE
-
-            movieFixedFocusOverlay.strokeWidth = 3
-
-            // Restore previous focused item
-            movieEmbeddedFocusedView?.let { previous ->
-                if (previous !== view) {
-                    val oldLp = previous.layoutParams as RecyclerView.LayoutParams
-                    oldLp.marginStart = 0
-                    oldLp.marginEnd = 0
-                    oldLp.topMargin = 0
-                    oldLp.bottomMargin = 0
-
-                    previous.layoutParams = oldLp
-                    previous.requestLayout()
-
-                    previous.animate()
-                        .alpha(1f)
-                        .setDuration(80L)
-                        .start()
-                }
-            }
-
-            // Apply spacing to newly focused item
-            val lp = view.layoutParams as RecyclerView.LayoutParams
-
-            val focusedMargin =
-                (movieFixedFocusOverlay.width * 0.3f).toInt()
-
-            lp.marginStart = focusedMargin
-            lp.marginEnd = focusedMargin
-
-            view.layoutParams = lp
-            view.requestLayout()
-
-            movieEmbeddedFocusedView = view
-
-            view.animate()
-                .alpha(0.03f)
-                .setDuration(95L)
-                .start()
-
-            // Wait for RecyclerView to apply new margins
-            view.post {
-                if (movieEmbeddedFocusedView == view) {
-                    centerChildUnderFixedFocus(
-                        movieRecyclerView,
-                        movieFixedFocusOverlay,
-                        view
-                    )
-                }
-                projectMovieItemIntoHero(item)
-            }
-        }
-
-        movieAdapter.onItemFocusLost = {
-            movieFixedFocusOverlay.strokeWidth = 0
+        FocusOverlay<MovieItemOne>(
+            overlay = movieFixedFocusOverlay,
+            recyclerView = movieRecyclerView,
+            adapter = movieAdapter
+        ) { item ->
+            projectMovieItemIntoHero(item)
         }
 
 
         //  TV Shows -------------------------------------------------------------------------------
-        tvRecyclerView = findViewById(R.id.TVsRecyclerView)
-        tvFixedFocusOverlay = findViewById(R.id.tvFixedFocusOverlay)
-        tvRecyclerView.layoutManager  = object : LinearLayoutManager(
-            this@Shows_Page,
+
+        val tvFixedFocusOverlay = requireView().findViewById<MaterialCardView>(R.id.tvFixedFocusOverlay)
+        val tvRecyclerView = requireView().findViewById<RecyclerView>(R.id.TVsRecyclerView)
+        tvRecyclerView.layoutManager  =  LinearLayoutManager(
+            requireActivity(),
             LinearLayoutManager.HORIZONTAL,
             false
-        ) {
-            override fun requestChildRectangleOnScreen(
-                parent: RecyclerView,
-                child: View,
-                rect: Rect,
-                immediate: Boolean,
-                focusedChildVisible: Boolean
-            ): Boolean {
-                return false
-            }
-        }
+        )
         tvRecyclerView.addItemDecoration(EqualSpaceItemDecoration(Spacing))
         tvAdapter = GridAdapter(mutableListOf(), R.layout.item_grid)
         tvRecyclerView.adapter = tvAdapter
 
-        tvRecyclerView.addOnChildAttachStateChangeListener(object : RecyclerView.OnChildAttachStateChangeListener {
-            override fun onChildViewAttachedToWindow(view: View) {
-                view.foreground = null
-            }
-            override fun onChildViewDetachedFromWindow(view: View) {
-            }
-        })
-
-        val tvFocusDataObserver = object : RecyclerView.AdapterDataObserver() {
-            override fun onChanged() = enforceFirstItemFocusIfNeeded(tvRecyclerView)
-            override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
-                if (positionStart == 0) {
-                    //enforceFirstItemFocusIfNeeded(movieRecyclerView)
-                }
-            }
+        FocusOverlay<MovieItemOne>(
+            overlay = tvFixedFocusOverlay,
+            recyclerView = tvRecyclerView,
+            adapter = tvAdapter
+        ) { item ->
+            projectTvItemIntoHero(item)
         }
-
-        tvAdapter.registerAdapterDataObserver(tvFocusDataObserver)
-
         tvAdapter.onAddMoreClicked = { loadMoreTv() }
-        tvAdapter.onItemFocused = { view, item ->
-            backgroundContainer.visibility = View.GONE
-
-            tvFixedFocusOverlay.strokeWidth = 3
-
-
-            // Restore previous focused item
-            tvEmbeddedFocusedView?.let { previous ->
-                if (previous !== view) {
-                    val oldLp = previous.layoutParams as RecyclerView.LayoutParams
-                    oldLp.marginStart = 0
-                    oldLp.marginEnd = 0
-                    oldLp.topMargin = 0
-                    oldLp.bottomMargin = 0
-
-                    previous.layoutParams = oldLp
-                    previous.requestLayout()
-
-                    previous.animate()
-                        .alpha(1f)
-                        .setDuration(80L)
-                        .start()
-                }
-            }
-
-            // Apply spacing to newly focused item
-            val lp = view.layoutParams as RecyclerView.LayoutParams
-
-            val focusedMargin =
-                (tvFixedFocusOverlay.width * 0.3f).toInt()
-
-            lp.marginStart = focusedMargin
-            lp.marginEnd = focusedMargin
-
-            view.layoutParams = lp
-            view.requestLayout()
-
-            tvEmbeddedFocusedView = view
-
-            view.animate()
-                .alpha(0.03f)
-                .setDuration(95L)
-                .start()
-
-            // Wait for RecyclerView to apply new margins
-            view.post {
-                if (tvEmbeddedFocusedView == view) {
-                    centerChildUnderFixedFocus(
-                        tvRecyclerView,
-                        tvFixedFocusOverlay,
-                        view
-                    )
-                }
-                projectTvItemIntoHero(item)
-            }
-        }
-
-        tvAdapter.onItemFocusLost = {
-            tvFixedFocusOverlay.strokeWidth = 0
-        }
-
-        //  Search  --------------------------------------------------------------------------------
-        searchAdapter = GridAdapter2(mutableListOf(), R.layout.item_grid)
-        searchRecyclerView = findViewById(R.id.SearchResults)
-        searchRecyclerView.layoutManager = GridLayoutManager(this@Shows_Page, 4)
-
-        searchRecyclerView.adapter = searchAdapter
-        searchRecyclerView.addItemDecoration(EqualSpaceItemDecoration(Spacing))
-        setupSearchUi()
 
         // Filter  ---------------------------------------------------------------------------------
         filterAdapter = FilterAdapter(mutableListOf(), R.layout.item_filter)
@@ -897,8 +565,8 @@ class Shows_Page : AppCompatActivity() {
         }
         filterAdapter.onItemFocusLost = {
         }
-        fliterRecyclerView = findViewById<RecyclerView>(R.id.filterResults)
-        fliterRecyclerView.layoutManager = GridLayoutManager(this@Shows_Page, GlobalUtils.calculateSpanCountV2(this, 160, gapUsed))
+        fliterRecyclerView = requireView().findViewById<RecyclerView>(R.id.filterResults)
+        fliterRecyclerView.layoutManager = GridLayoutManager(requireActivity(), GlobalUtils.calculateSpanCountV2(requireActivity(), 160, gapUsed))
         fliterRecyclerView.adapter = filterAdapter
         fliterRecyclerView.addItemDecoration(EqualSpaceItemDecoration(Spacing))
 
@@ -914,8 +582,8 @@ class Shows_Page : AppCompatActivity() {
                 .start()
         }
 
-        val realityFixedFocusOverlay = findViewById<View>(R.id.realityFixedFocusOverlay)
-        realityRecyclerView = findViewById(R.id.realityRecyclerView)
+        val realityFixedFocusOverlay = requireView().findViewById<View>(R.id.realityFixedFocusOverlay)
+        realityRecyclerView = requireView().findViewById(R.id.realityRecyclerView)
         realityAdapter = FilterAdapter(mutableListOf(), R.layout.item_list2)
         realityAdapter.onItemFocused = { view, item ->
             backgroundContainer.visibility = View.VISIBLE
@@ -936,7 +604,7 @@ class Shows_Page : AppCompatActivity() {
 
 
         realityRecyclerView.layoutManager = LinearLayoutManager(
-            this@Shows_Page,
+            requireActivity(),
             LinearLayoutManager.HORIZONTAL,
             false
         )
@@ -967,8 +635,8 @@ class Shows_Page : AppCompatActivity() {
                 .start()
         }
 
-        val thrillFixedFocusOverlay = findViewById<View>(R.id.thrillFixedFocusOverlay)
-        thrillRecyclerView = findViewById<RecyclerView>(R.id.ThrillsRecyclerView)
+        val thrillFixedFocusOverlay = requireView().findViewById<View>(R.id.thrillFixedFocusOverlay)
+        thrillRecyclerView = requireView().findViewById<RecyclerView>(R.id.ThrillsRecyclerView)
         thrillAdapter = FilterAdapter(mutableListOf(), R.layout.item_list2)
         thrillAdapter.onItemFocused = { view, item ->
             backgroundContainer.visibility = View.VISIBLE
@@ -986,7 +654,7 @@ class Shows_Page : AppCompatActivity() {
 
         }
         thrillRecyclerView.layoutManager = LinearLayoutManager(
-            this@Shows_Page,
+            requireActivity(),
             LinearLayoutManager.HORIZONTAL,
             false
         )
@@ -1009,9 +677,9 @@ class Shows_Page : AppCompatActivity() {
         }
         genreAdapter.onItemFocusLost = {
         }
-        genreRecyclerView = findViewById(R.id.genresRecyclerView)
+        genreRecyclerView = requireView().findViewById(R.id.genresRecyclerView)
         genreRecyclerView.layoutManager = LinearLayoutManager(
-            this@Shows_Page,
+            requireActivity(),
             LinearLayoutManager.HORIZONTAL,
             false
         )
@@ -1019,32 +687,15 @@ class Shows_Page : AppCompatActivity() {
         genreRecyclerView.layoutManager?.scrollToPosition(0)
         //------------------------------------------------------------------------------------------
 
-        faveRecyclerView = findViewById(R.id.faveRecycler)
+        faveRecyclerView = requireView().findViewById(R.id.faveRecycler)
         faveRecyclerView.layoutManager =LinearLayoutManager(
-            this@Shows_Page,
+            requireActivity(),
             LinearLayoutManager.HORIZONTAL,
             false
         )
         faveRecyclerView.addItemDecoration(EqualSpaceItemDecoration(Spacing))
 
-        //------------------------------------------------------------------------------------------
 
-        notificationRecyclerView = findViewById<RecyclerView>(R.id.notificationRecycler)
-        notificationRecyclerView.layoutManager = LinearLayoutManager(this)
-        val clearBtn = findViewById<TextView>(R.id.clearNotBtn)
-
-        clearBtn.setOnClickListener {
-            lifecycleScope.launch(Dispatchers.IO) {
-                db.clearAllTvNotifications(userId)
-            }
-            notificationAdapter.clearItems()
-        }
-
-        //------------------------------------------------------------------------------------------
-
-        watchRecyclerView = findViewById(R.id.watchingRecycler)
-        watchRecyclerView.layoutManager = GridLayoutManager(this@Shows_Page, GlobalUtils.calculateSpanCountV2(this@Shows_Page,160,gapUsed))
-        watchRecyclerView.addItemDecoration(EqualSpaceItemDecoration(Spacing))
 
     }
 
@@ -1101,11 +752,8 @@ class Shows_Page : AppCompatActivity() {
 
     private fun HomeData() {
 
-        val inflater = LayoutInflater.from(this)
-        val container = findViewById<FrameLayout>(R.id.spotlightShows)
-
-
-
+        val inflater = LayoutInflater.from(requireActivity())
+        val container = requireView().findViewById<FrameLayout>(R.id.spotlightShows)
 
         lifecycleScope.launch {
 
@@ -1161,8 +809,7 @@ class Shows_Page : AppCompatActivity() {
                     } else {
                         item.optString("first_air_date", "")
                     }
-                    val year =
-                        if (release_date.length >= 4) release_date.substring(0, 4) else release_date
+                    val year = GlobalUtils.formatDateString(release_date)
 
                     //val vote_average = item.optString("vote_average", "").substring(0, 3)
                     val voteAverageRaw = item.optString("vote_average", "")
@@ -1225,7 +872,7 @@ class Shows_Page : AppCompatActivity() {
                         .centerInside()
                         .thumbnail(
                             Glide.with(card.context)
-                                .load(SliderBackdrop)
+                                .load(backdrop_path)
                                 .sizeMultiplier(0.3f)
                         )
                         .into(SliderBackdrop)
@@ -1244,12 +891,17 @@ class Shows_Page : AppCompatActivity() {
 
                 }
 
-                GlobalUtils.setupCardStackFromContainer(container)
-                LoadingAnimation.hide(this@Shows_Page)
+                if (moviesArray3.length() > 0){
+                    GlobalUtils.setupCardStackFromContainer(container)
+                    requireView().findViewById<FrameLayout>(R.id.SpotlightSection).visibility = View.VISIBLE
+                    //LoadingAnimation.hide(requireActivity())
+                }
+
+
             } else {
                 return@launch
-                //LoadingAnimation.setup(this@Shows_Page, R.raw.error)
-                //LoadingAnimation.show(this@Shows_Page)
+                //LoadingAnimation.setup(requireActivity(), R.raw.error)
+                //LoadingAnimation.show(requireActivity())
 
             }
         }
@@ -1299,11 +951,11 @@ class Shows_Page : AppCompatActivity() {
         }
 
         // Setup RecyclerView
-        val recyclerView = findViewById<RecyclerView>(R.id.CategoryRecyclerView)
+        val recyclerView = requireView().findViewById<RecyclerView>(R.id.CategoryRecyclerView)
         val adapter = CategoryAdapter(categoryItems, R.layout.item_category)
 
         val layoutManager = LinearLayoutManager(
-            this,
+            requireActivity(),
             LinearLayoutManager.HORIZONTAL,
             false
         )
@@ -1441,6 +1093,7 @@ class Shows_Page : AppCompatActivity() {
                     )
 
                     withContext(Dispatchers.Main) {
+                    if (!isAdded || view == null) return@withContext
                         adapter.addItem(Item)
                         isLoading  = false
 
@@ -1448,7 +1101,12 @@ class Shows_Page : AppCompatActivity() {
                     }
                 }
                 withContext(Dispatchers.Main) {
+                    if (!isAdded || view == null) return@withContext
                     adapter.isLoadingMore = false
+                    if (adapter.itemCount > 0) {
+                        requireView().findViewById<FrameLayout>(R.id.HomeContentSection).visibility =
+                            View.VISIBLE
+                    }
                 }
             }
         }
@@ -1593,6 +1251,9 @@ class Shows_Page : AppCompatActivity() {
                     if (wasEmpty) {
                         genreRecyclerView.scrollToPosition(0)
                         wasEmpty =  false
+
+                        requireView().findViewById<LinearLayout>(R.id.filterSection).visibility = View.VISIBLE
+
                     }
 
 
@@ -1618,13 +1279,13 @@ class Shows_Page : AppCompatActivity() {
         genreAdapter.onAddMoreClicked = { loadMoreGenre() }
 
         // --- UI Setup ---
-        val comedyBtn = findViewById<TextView>(R.id.genreComedy)
-        val actionBtn = findViewById<TextView>(R.id.genreAction)
-        val sciFiBtn = findViewById<TextView>(R.id.genreSCIFI)
-        val animationBtn = findViewById<TextView>(R.id.genreAnimation)
-        val familyBtn = findViewById<TextView>(R.id.genreFamily)
-        val romanceBtn = findViewById<TextView>(R.id.genreRomance)
-        val dramaBtn = findViewById<TextView>(R.id.genreDrama)
+        val comedyBtn = requireView().findViewById<TextView>(R.id.genreComedy)
+        val actionBtn = requireView().findViewById<TextView>(R.id.genreAction)
+        val sciFiBtn = requireView().findViewById<TextView>(R.id.genreSCIFI)
+        val animationBtn = requireView().findViewById<TextView>(R.id.genreAnimation)
+        val familyBtn = requireView().findViewById<TextView>(R.id.genreFamily)
+        val romanceBtn = requireView().findViewById<TextView>(R.id.genreRomance)
+        val dramaBtn = requireView().findViewById<TextView>(R.id.genreDrama)
 
         val allGenreButtons = listOf(comedyBtn, actionBtn, sciFiBtn, animationBtn, familyBtn, romanceBtn, dramaBtn)
 
@@ -1669,7 +1330,7 @@ class Shows_Page : AppCompatActivity() {
         isLoadingMoreMovies = true
         movieAdapter.isLoadingMore = true
 
-        CoroutineScope(Dispatchers.IO).launch {
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             repeat(3) { attempt ->
                 try {
                     val urlM = "https://api.themoviedb.org/3/discover/movie?include_video=true&language=en-US&page=$currentMoviePage&sort_by=popularity.desc"
@@ -1716,6 +1377,8 @@ class Shows_Page : AppCompatActivity() {
                                 ""
                             }
 
+                        GlobalUtils.preloadMovieImages(requireContext(), imgUrl2, imgUrl)
+
                         movies.add(
                             MovieItemOne(
                                 title = title,
@@ -1729,6 +1392,7 @@ class Shows_Page : AppCompatActivity() {
                             )
                         )
                         withContext(Dispatchers.Main) {
+                    if (!isAdded || view == null) return@withContext
                             movieAdapter.addItem(
                                     MovieItemOne(
                                     title = title,
@@ -1736,7 +1400,7 @@ class Shows_Page : AppCompatActivity() {
                                     posterUlr = imgUrl2,
                                     imdbCode = id,
                                     type = "movie",
-                                    year = year,
+                                    year = GlobalUtils.formatDateString(year),
                                     rating = "${String.format("%.1f", rating)}imdb",
                                     runtime = "⏱$runtime min"
                                 )
@@ -1746,57 +1410,25 @@ class Shows_Page : AppCompatActivity() {
 
                     // ✅ Update UI once per batch
                     withContext(Dispatchers.Main) {
+                    if (!isAdded || view == null) return@withContext
                         //movieAdapter.addItem(movies)
                         isLoadingMoreMovies = false
                         movieAdapter.isLoadingMore = false
 
-                        if (!initialMovieHeroPopulated) {
-                            initialMovieHeroPopulated = true
-
-                            delay(3000)
-                            movieRecyclerView.post {
-                                Log.d("...._MAIN", "Initial movie hero populate d 1")
-                                val firstView =
-                                    movieRecyclerView.findViewHolderForAdapterPosition(0)?.itemView
-                                        ?: return@post
-
-                                Log.d("...._MAIN", "Initial movie hero populated 2")
-
-                                // Apply the same visual state as focus
-                                val lp = firstView.layoutParams as RecyclerView.LayoutParams
-
-                                val focusedMargin =
-                                    (movieFixedFocusOverlay.width * 0.3f).toInt()
-
-                                lp.marginStart = focusedMargin
-                                lp.marginEnd = focusedMargin
-
-                                firstView.layoutParams = lp
-
-                                firstView.alpha = 0.03f
-
-                                centerChildUnderFixedFocus(
-                                    movieRecyclerView,
-                                    movieFixedFocusOverlay,
-                                    firstView
-                                )
-                                //projectMovieItemIntoHero(movies.first())
-                                movies.getOrNull(0)?.let {
-                                    projectMovieItemIntoHero(it)
-                                }
-
-                                movieEmbeddedFocusedView = firstView
-                            }
+                        if (movieAdapter.itemCount > 0) {
+                            requireView().findViewById<LinearLayout>(R.id.MovieSection).visibility = View.VISIBLE
                         }
-                        LoadingAnimation.hide(this@Shows_Page)
+
+                        //LoadingAnimation.hide(requireActivity())
                     }
 
                     return@launch // success → stop repeating
                 } catch (e: IOException) {
                     withContext(Dispatchers.Main) {
+                    if (!isAdded || view == null) return@withContext
                         Log.e("DEBUG_SHOWS PAGE", "Network error ", e)
-                        LoadingAnimation.setup(this@Shows_Page, R.raw.error)
-                        LoadingAnimation.show(this@Shows_Page)
+                        //LoadingAnimation.setup(requireActivity(), R.raw.error)
+                        //LoadingAnimation.show(requireActivity())
                     }
                     delay(30_000)
                 } catch (e: Exception) {
@@ -1806,6 +1438,7 @@ class Shows_Page : AppCompatActivity() {
             }
 
             withContext(Dispatchers.Main) {
+                    if (!isAdded || view == null) return@withContext
                 isLoadingMoreMovies = false
                 movieAdapter.isLoadingMore = false
             }
@@ -1822,7 +1455,7 @@ class Shows_Page : AppCompatActivity() {
     private fun fetchTvShows() {
         isLoadingMoreTv = true
         tvAdapter.isLoadingMore = true
-        CoroutineScope(Dispatchers.IO).launch {
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
 
             repeat(5) { attempt ->
                 try {
@@ -1860,11 +1493,7 @@ class Shows_Page : AppCompatActivity() {
                             ""
                         }
                         val showD = "SS$numberOfSeasons EPS$episodeNumber"
-                        val firstAirDate = if (jsonObject.getString("first_air_date").length >= 4) {
-                            jsonObject.getString("first_air_date").substring(0, 4)
-                        } else {
-                            jsonObject.getString("first_air_date")
-                        }
+                        val firstAirDate = jsonObject.getString("first_air_date")
 
                         val voteAverage = "☆" + jsonObject.getString("vote_average").substring(0, 3)
 
@@ -1898,63 +1527,26 @@ class Shows_Page : AppCompatActivity() {
                             posterUlr = imgUrl2,
                             imdbCode = id,
                             type = type,
-                            year = firstAirDate,
+                            year =   GlobalUtils.formatDateString(firstAirDate),
                             rating = voteAverage,
                             runtime = showD
                         )
 
                         withContext(Dispatchers.Main) {
+                    if (!isAdded || view == null) return@withContext
                             tvAdapter.addItem(MovieItemOne)
                         }
                     }
 
                     withContext(Dispatchers.Main) {
+                    if (!isAdded || view == null) return@withContext
                         isLoadingMoreTv = false
                         tvAdapter.isLoadingMore = false
-                        LoadingAnimation.hide(this@Shows_Page)
 
-                        /*
-
-                        if (!initialtvHeroPopulated) {
-                            initialtvHeroPopulated = true
-
-                            delay(3000)
-                            tvRecyclerView.post {
-                                Log.d("...._MAIN", "Initial movie hero populate d 1")
-                                val firstView =
-                                    tvRecyclerView.findViewHolderForAdapterPosition(0)?.itemView
-                                        ?: return@post
-
-                                Log.d("...._MAIN", "Initial movie hero populated 2")
-
-                                // Apply the same visual state as focus
-                                val lp = firstView.layoutParams as RecyclerView.LayoutParams
-
-                                val focusedMargin =
-                                    (tvFixedFocusOverlay.width * 0.3f).toInt()
-
-                                lp.marginStart = focusedMargin
-                                lp.marginEnd = focusedMargin
-
-                                firstView.layoutParams = lp
-
-                                firstView.alpha = 0.03f
-
-                                centerChildUnderFixedFocus(
-                                    tvRecyclerView,
-                                    tvFixedFocusOverlay,
-                                    firstView
-                                )
-                                //projectTvItemIntoHero(movies.first())
-                                movies.getOrNull(0)?.let {
-                                   // projectTvItemIntoHero(it)
-                                }
-
-                                tvEmbeddedFocusedView = firstView
-                            }
-                          }
-                         */
-
+                        if (tvAdapter.itemCount > 0) {
+                            requireView().findViewById<LinearLayout>(R.id.tvSection).visibility = View.VISIBLE
+                        }
+                        //LoadingAnimation.hide(requireActivity())
                     }
 
                     Log.e("DEBUG_TAG_TvShows 4", movies.toString())
@@ -1962,9 +1554,10 @@ class Shows_Page : AppCompatActivity() {
                     return@launch
                 } catch (e: IOException) {
                         withContext(Dispatchers.Main) {
+                    if (!isAdded || view == null) return@withContext
                             Log.e("DEBUG_SHOWS PAGE", "Network error ", e)
-                            LoadingAnimation.setup(this@Shows_Page, R.raw.error)
-                            LoadingAnimation.show(this@Shows_Page)
+                            //LoadingAnimation.setup(requireActivity(), R.raw.error)
+                            //LoadingAnimation.show(requireActivity())
                         }
                         delay(30_000)
 
@@ -1974,6 +1567,7 @@ class Shows_Page : AppCompatActivity() {
                     currentTvPage--
                 }
                 withContext(Dispatchers.Main) {
+                    if (!isAdded || view == null) return@withContext
                     isLoadingMoreTv = false
                     tvAdapter.isLoadingMore = false
                 }
@@ -1990,178 +1584,14 @@ class Shows_Page : AppCompatActivity() {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////
-
-    private fun setupSearchUi() {
-
-        val searchInput = findViewById<EditText>(R.id.HomeSearchInput)
-        val keyboardLayout = findViewById<LinearLayout>(R.id.keyboard_layout)
-        val keyboardManager = CustomKeyboardManager(
-            this,
-            searchInput,
-            keyboardLayout,
-            object : OnSearchListener {
-                override fun EnterActionTrigger(query: String) {
-                    val searchTerm = query.trim()
-                    if (searchTerm.isNotEmpty()) {
-                        performSearch(searchTerm)
-                    }
-                }
-            }
-        )
-        keyboardManager.showKeyboard()
-        //keyboardManager.hideKeyboard()
-        keyboardManager.isKeyboardVisible()
-
-    }
-
-    private fun performSearch(searchTerm:String) {
-        CoroutineScope(Dispatchers.IO).launch {
-            repeat(3) { attempt ->
-                try {
-
-                    Log.e("SEARCH RESULTS", searchTerm)
-
-                    // --- Background work (network request) ---
-                    val url =
-                        "https://api.themoviedb.org/3/search/multi?include_adult=false&query=$searchTerm"
-                    val connection = URL(url).openConnection() as HttpURLConnection
-                    connection.requestMethod = "GET"
-                    connection.setRequestProperty("accept", "application/json")
-                    connection.setRequestProperty(
-                        "Authorization",
-                        "Bearer ${BuildConfig.TM_K}"
-                    )
-
-                    val response = connection.inputStream.bufferedReader().use { it.readText() }
-                    val jsonObject = JSONObject(response)
-
-                    Log.e("SEARCH RESULTS", jsonObject.toString())
-                    val moviesArray = jsonObject.getJSONArray("results")
-
-                    //Log.e("SEARCH RESULTS", moviesArray.toString())
-
-
-                    withContext(Dispatchers.Main)  {
-                        val find = findViewById<TextView>(R.id.searchResultsDisplay)
-                        find.text = "Search Results for: $searchTerm (${moviesArray.length()})"
-                        searchAdapter.clearItems()
-                    }
-
-                    for (i in 0 until moviesArray.length()) {
-                        val current = moviesArray.getJSONObject(i)
-                        current.remove("overview")
-                        current.remove("genre_ids")
-                        current.remove("popularity")
-                        current.remove("video")
-
-                        val mediaType = current.optString("media_type", "movie")
-
-                        var title = "Unknown"
-                        var info = ""
-                        var date = ""
-                        var voteAverage = ""
-                        var imgUrl = ""
-                        var poster = ""
-
-                        Log.e("SEARCH RESULTS $i", current.toString())
-                        when (mediaType) {
-                            "person" -> {
-                                title = current.optString(
-                                    "name",
-                                    current.optString("original_name", "Unknown")
-                                )
-                                imgUrl = "https://image.tmdb.org/t/p/w500" + current.optString(
-                                    "profile_path",
-                                    ""
-                                )
-                                poster = current.optString("profile_path", "null")
-                                info = current.optString("known_for_department", "")
-                                voteAverage = ""
-                            }
-
-                            "tv" -> {
-                                title = current.optString(
-                                    "name",
-                                    current.optString("original_name", "Unknown")
-                                )
-                                date =
-                                    current.optString("first_air_date")
-                                        .takeIf { it.isNotEmpty() }
-                                        ?.substring(0, 4) ?: ""
-                                imgUrl = "https://image.tmdb.org/t/p/w500" + current.optString(
-                                    "poster_path",
-                                    ""
-                                )
-                                poster = current.optString("poster_path", "null")
-                                info = ""
-                                voteAverage =
-                                    current.optDouble("vote_average", 0.0).toInt()
-                                        .toString() + " ★"
-                            }
-
-                            "movie" -> {
-                                title = current.optString("original_title", "Unknown")
-                                date =
-                                    current.optString("release_date").takeIf { it.isNotEmpty() }
-                                        ?.substring(0, 4) ?: ""
-                                imgUrl = "https://image.tmdb.org/t/p/w500" + current.optString(
-                                    "poster_path",
-                                    ""
-                                )
-                                poster = current.optString("poster_path", "null")
-                                info = "" // TODO: runtime if available
-                                voteAverage = current.optDouble("vote_average", 0.0).toInt()
-                                    .toString() + " ★"
-                            }
-                        }
-
-                        if (poster.isBlank() || poster.endsWith("null")) continue
-
-                        val id = current.getString("id")
-
-
-                        //movies.add(MovieItem(title, imgUrl, id, type))
-
-                        val movieItem = MovieItem(
-                            title = title,
-                            imageUrl = imgUrl,
-                            imdbCode = id,
-                            type = mediaType,
-                            year = date,
-                            rating = voteAverage,
-                            runtime = info
-                        )
-
-                        withContext(Dispatchers.Main) {
-                            searchAdapter.addItem(movieItem)
-                        }
-
-
-
-
-                    }
-
-
-                    return@launch
-                } catch (e: Exception) {
-                    Log.e("SEARCH RESULTS ERROR", "S ERROR", e)
-                    delay(10_000)
-                }
-            }
-        }
-    }
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-
-    private fun filter(){
+private fun filter(){
 
         //filter options buttons
-        val filterTypeBtn = findViewById<TextView>(R.id.FilterTypeBtn)
-        val filterCountryBtn = findViewById<TextView>(R.id.FilterCountryBtn)
-        val filterSortBtn = findViewById<TextView>(R.id.FilterSortBtn)
-        val filterGenreBtn = findViewById<TextView>(R.id.FilterGenreBtn)
-        val filterYearBtn = findViewById<TextView>(R.id.FilterYearBtn)
+        val filterTypeBtn = requireView().findViewById<TextView>(R.id.FilterTypeBtn)
+        val filterCountryBtn = requireView().findViewById<TextView>(R.id.FilterCountryBtn)
+        val filterSortBtn = requireView().findViewById<TextView>(R.id.FilterSortBtn)
+        val filterGenreBtn = requireView().findViewById<TextView>(R.id.FilterGenreBtn)
+        val filterYearBtn = requireView().findViewById<TextView>(R.id.FilterYearBtn)
 
 
         // Filter data
@@ -2226,7 +1656,7 @@ class Shows_Page : AppCompatActivity() {
         val selectedsortOptions = mutableSetOf<String>()
         val selectedyearOptions   = mutableSetOf<String>()
 
-        val filterDisplay = findViewById<TextView>(R.id.FilterDisplay)
+        val filterDisplay = requireView().findViewById<TextView>(R.id.FilterDisplay)
         var movieUrl: String
         var tvUrl: String
         var filterPage = 1
@@ -2285,7 +1715,7 @@ class Shows_Page : AppCompatActivity() {
                 movieUrl = ""
             } else {}
 
-            CoroutineScope(Dispatchers.IO).launch {
+            viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
 
                 val urlM = "$movieUrl&page=$filterPage"
                 val urlT = "$tvUrl&page=$filterPage"
@@ -2392,6 +1822,7 @@ class Shows_Page : AppCompatActivity() {
                     )
 
                     withContext(Dispatchers.Main) {
+                    if (!isAdded || view == null) return@withContext
                         filterAdapter.addItem(Item)
                         isLoadingFliter = false
                         filterAdapter.isLoadingMore = false
@@ -2483,7 +1914,7 @@ class Shows_Page : AppCompatActivity() {
         currentSelection: Int,
         onDone: (String) -> Unit
     ) {
-        val builder = AlertDialog.Builder(this, R.style.CustomDialogTheme)
+        val builder = AlertDialog.Builder(requireActivity(), R.style.CustomDialogTheme)
         builder.setTitle(title)
 
         builder.setSingleChoiceItems(options.toTypedArray(), currentSelection) { dialog, which ->
@@ -2504,7 +1935,7 @@ class Shows_Page : AppCompatActivity() {
         val labels = options.map { it.label }.toTypedArray()
         val checkedItems = options.map { selectedKeys.contains(it.value) }.toBooleanArray()
 
-        val builder = AlertDialog.Builder(this, R.style.CustomDialogTheme)
+        val builder = AlertDialog.Builder(requireActivity(), R.style.CustomDialogTheme)
         builder.setTitle(title)
 
         builder.setMultiChoiceItems(labels, checkedItems) { _, index, isChecked ->
@@ -2611,110 +2042,19 @@ class Shows_Page : AppCompatActivity() {
     ////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-    private fun notificationS() {
-        lifecycleScope.launch {
-            // Fetch from DB on IO thread
-            val dbNotifications = withContext(Dispatchers.IO) {
-                db.getAllTvNotifications(userId)
-            }
 
-            if (dbNotifications.size > 0) findViewById<CardView>(R.id.cNotificationAnimeIcon).visibility = View.VISIBLE
-
-            // Update UI on Main thread
-            val notificationItems = dbNotifications.map { item ->
-
-                Log.d(
-                    "Not_tv",
-                    """
-                notificationId: ${item["id"]}
-                anime_id: ${item["anime_id"]}
-                title: ${item["title"]}
-                poster: ${item["poster"]}
-                noOfSeason: ${item["noOfSeason"]}
-                lastSeason: ${item["lastSeason"]}
-                lastEpisode: ${item["lastEpisode"]}
-                notify_at: ${item["notify_at"]}
-                """.trimIndent()
-                )
-
-                NotificationItem(
-                    notificationId = item["id"]?.toString().orEmpty(),
-                    imdbCode = item["tv_id"]?.toString().orEmpty(),
-                    title = item["title"]?.toString().orEmpty(),
-                    imageUrl = item["poster"],
-                    info = "Season ${item["lastSeason"]} - Episode ${item["lastEpisode"]}",
-                    type = "tv",
-                    newSeason = item["lastSeason"]?.toString().orEmpty(),
-                    newEpisode = item["lastEpisode"]?.toString().orEmpty(),
-                    time = item["notify_at"]?.toString().orEmpty()
-                )
-            }
-
-            // UI updates
-            findViewById<TextView>(R.id.notificationHeadline).text =
-                "notifications (${notificationItems.size})"
-
-            if (!::notificationAdapter.isInitialized) {
-                notificationAdapter = NotificationAdapter(
-                    items = notificationItems.toMutableList(),
-                    layoutResId = R.layout.item_notification,
-                    db,
-                    userId
-                )
-                notificationRecyclerView.adapter = notificationAdapter
-            } else {
-                notificationAdapter.updateItems(notificationItems)
-            }
-        }
-    }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 
-    private fun watchedList() {
-        lifecycleScope.launch {
-            val userId = sm.getUserId()
-
-            // Fetch both lists in parallel on IO
-            val (movies, tvShows) = withContext(Dispatchers.IO) {
-                coroutineScope {
-                    val mv = async { db.getContinueWatchingAll(userId, "movie") }
-                    val tv = async { db.getContinueWatchingAll(userId, "tv") }
-                    mv.await() to tv.await()
-                }
-            }
-
-            // Combine + sort
-            val combinedList = (movies + tvShows)
-                .sortedByDescending { it["updated_at"]?.toLongOrNull() ?: 0L }
-
-            // ✅ Check if the list has items before showing the UI
-            if (combinedList.isNotEmpty()) {
-
-                // Adapter setup / update
-                if (!::watchAdapter.isInitialized) {
-                    watchAdapter = cWatchingAdapter(
-                        combinedList.toMutableList(),
-                        R.layout.item_watched
-                    )
-                    watchRecyclerView.adapter = watchAdapter
-                } else {
-                    watchAdapter.updateItems(combinedList)
-                }
-                watchingSection.visibility = View.VISIBLE
-            } else {
-                // ✅ Hide the section completely if there is nothing to watch
-                watchingSection.visibility = View.GONE
-            }
-        }
-    }
+    
 
 
 
     private fun setupBackPressedCallback() {
-        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+        requireActivity().onBackPressedDispatcher.addCallback(requireActivity(), object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
 
             }

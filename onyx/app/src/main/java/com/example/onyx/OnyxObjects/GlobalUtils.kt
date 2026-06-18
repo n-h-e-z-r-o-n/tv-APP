@@ -1,5 +1,6 @@
 package com.example.onyx.OnyxObjects
 
+import java.time.DayOfWeek
 import android.animation.ValueAnimator
 import android.app.Activity
 import android.app.UiModeManager
@@ -53,15 +54,19 @@ import java.net.URL
 import kotlin.Float
 import kotlin.random.Random
 import android.webkit.CookieManager
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.DiskCacheStrategy
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.text.SimpleDateFormat
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.util.Date
 import java.util.Locale
-
+import java.time.format.DateTimeParseException
 
 private val interpolator = AccelerateDecelerateInterpolator()
 
@@ -1465,4 +1470,87 @@ object GlobalUtils {
         }
     }
 
+
+    fun formatDateString(dateString: String): String {
+        return try {
+            // The professional, thread-safe parser
+            val parsedDate = LocalDate.parse(dateString, DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+            val standardFormat = parsedDate.format(DateTimeFormatter.ofPattern("MMM yyyy"))
+
+            when {
+                // 1. Future Releases
+                parsedDate.isAfter(LocalDate.now()) -> "$standardFormat 🚀 (Upcoming)"
+
+                // 2. Specific Pop Culture & Cinematic Dates
+                parsedDate.monthValue == 5 && parsedDate.dayOfMonth == 4 -> "$standardFormat ⚔️ (May the 4th)"
+                parsedDate.monthValue == 10 && parsedDate.dayOfMonth == 31 -> "$standardFormat 🎃 (Spooky Premiere)"
+                parsedDate.monthValue == 12 && parsedDate.dayOfMonth == 25 -> "$standardFormat 🎄 (Holiday Release)"
+                parsedDate.monthValue == 2 && parsedDate.dayOfMonth == 29 -> "$standardFormat ✨ (Leap Year Magic)"
+
+                // 3. The "Friday the 13th" Horror Trope Check!
+                parsedDate.dayOfWeek == DayOfWeek.FRIDAY && parsedDate.dayOfMonth == 13 -> "$standardFormat 🔪 (Friday the 13th!)"
+
+                // 4. Eras & Decades
+                parsedDate.year < 1980 -> "$standardFormat 🎞️ (Golden Era)"
+                parsedDate.year in 1980..1989 -> "$standardFormat 📼 (VHS Era)"
+                parsedDate.year in 1990..1999 -> "$standardFormat 💿 (DVD Era)"
+
+                // 5. The Random Loot Table (Using a d100 roll for percentages)
+                else -> {
+                    val dropRate = Random.nextInt(100) // Rolls a number from 0 to 99
+                    when {
+                        dropRate < 5 -> "$standardFormat 🍿"   // 5% chance
+                        dropRate < 10 -> "$standardFormat 🎬"  // 5% chance
+                        dropRate < 12 -> "$standardFormat 🎟️"  // 2% chance (Admit One)
+                        dropRate < 14 -> "$standardFormat 🕶️"  // 2% chance (3D Glasses)
+                        dropRate == 99 -> "$standardFormat 👽 (Out of this world)" // 1% Ultra-Rare drop!
+
+                        // 85% of the time, act completely professional
+                        else -> standardFormat
+                    }
+                }
+            }
+
+        } catch (e: DateTimeParseException) {
+            // The cheeky error handler
+            if (dateString.isBlank() || dateString.equals("N/A", ignoreCase = true)) {
+                "Lost in the Archives 🕵️‍♂️"
+            } else {
+                dateString
+            }
+        } catch (e: Exception) {
+            // Absolute fallback just in case
+            dateString
+        }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+    /**
+     * Preloads movie images into the Glide disk cache in the background.
+     */
+     fun preloadMovieImages(context: Context, primaryUrl: String, secondaryUrl: String) {
+
+         return
+        /*
+        val appContext = context.applicationContext
+
+        if (primaryUrl.isNotBlank()) {
+            Glide.with(appContext)
+                .load(primaryUrl)
+                .diskCacheStrategy(DiskCacheStrategy.ALL)
+                .preload()
+        }
+
+        if (secondaryUrl.isNotBlank() && secondaryUrl != primaryUrl) {
+            Glide.with(appContext)
+                .load(secondaryUrl)
+                .diskCacheStrategy(DiskCacheStrategy.ALL)
+                .preload()
+        }
+
+         */
+    }
 }

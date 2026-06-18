@@ -7,7 +7,6 @@ import android.view.View
 import android.view.WindowManager
 import android.widget.LinearLayout
 import android.widget.TextView
-import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -28,7 +27,9 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.util.Locale
 
-class Category_Page : AppCompatActivity() {
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
+class CategoryFragment : Fragment(R.layout.fragment_category) {
 
     private lateinit var moviesRecyclerView: RecyclerView
     private lateinit var tvRecyclerView: RecyclerView
@@ -56,27 +57,27 @@ class Category_Page : AppCompatActivity() {
 
     private val movieCache = mutableListOf<MovieItemOne>()
     private val tvCache = mutableListOf<MovieItemOne>()
-    private val cachePrefs by lazy { getSharedPreferences("CategoryCache", Context.MODE_PRIVATE) }
+    private val cachePrefs by lazy { requireActivity().getSharedPreferences("CategoryCache", Context.MODE_PRIVATE) }
 
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        GlobalUtils.applyTheme(this)
-        super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContentView(R.layout.activity_category_page)
-        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        //LoadingAnimation.setup(this, R.raw.line_loading)
-        //LoadingAnimation.show(this)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        GlobalUtils.applyTheme(requireActivity())
+        super.onViewCreated(view, savedInstanceState)
+        
+        
+        requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        //LoadingAnimation.setup(requireActivity(), R.raw.line_loading)
+        //LoadingAnimation.show(requireActivity())
 
-        categoryTitle = findViewById(R.id.CategoryTitle)
+        categoryTitle = requireView().findViewById(R.id.CategoryTitle)
         categoryTitle.requestFocus()
 
-        companyId = intent.getStringExtra("company_id").orEmpty()
-        companyName = intent.getStringExtra("company_name") ?: "Collection"
+        companyId = requireActivity().intent.getStringExtra("company_id").orEmpty()
+        companyName = requireActivity().intent.getStringExtra("company_name") ?: "Collection"
 
         if (companyId.isBlank()) {
             Log.e("Category_Page", "Missing company_id, closing activity.")
-            finish()
+            // requireActivity().finish()
             return
         }
 
@@ -95,10 +96,10 @@ class Category_Page : AppCompatActivity() {
     private fun setupRecyclerViews() {
         val itemWidthDp = 289
 
-        moviesRecyclerView = findViewById(R.id.CategoryMoviesRecyclerView)
-        //moviesRecyclerView.layoutManager = GridLayoutManager(this@Category_Page, GlobalUtils.calculateSpanCount(this, itemWidthDp))
+        moviesRecyclerView = requireView().findViewById(R.id.CategoryMoviesRecyclerView)
+        //moviesRecyclerView.layoutManager = GridLayoutManager(requireActivity(), GlobalUtils.calculateSpanCount(requireActivity(), itemWidthDp))
         moviesRecyclerView.layoutManager = LinearLayoutManager(
-            this,
+            requireActivity(),
             LinearLayoutManager.HORIZONTAL,
             false
         )
@@ -110,10 +111,10 @@ class Category_Page : AppCompatActivity() {
         moviesRecyclerView.adapter = moviesAdapter
         moviesAdapter.onAddMoreClicked = { loadMoreMovies() }
 
-        tvRecyclerView = findViewById(R.id.CategoryTvRecyclerView)
-        //tvRecyclerView.layoutManager = GridLayoutManager(this@Category_Page, GlobalUtils.calculateSpanCount(this, itemWidthDp))
+        tvRecyclerView = requireView().findViewById(R.id.CategoryTvRecyclerView)
+        //tvRecyclerView.layoutManager = GridLayoutManager(requireActivity(), GlobalUtils.calculateSpanCount(requireActivity(), itemWidthDp))
         tvRecyclerView.layoutManager =  LinearLayoutManager(
-            this,
+            requireActivity(),
             LinearLayoutManager.HORIZONTAL,
             false
         )
@@ -199,7 +200,7 @@ class Category_Page : AppCompatActivity() {
         isLoadingMovies = true
         moviesAdapter.isLoadingMore = true
 
-        CoroutineScope(Dispatchers.IO).launch {
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             repeat(3) { attempt ->
                 try {
                     val url =
@@ -264,6 +265,7 @@ class Category_Page : AppCompatActivity() {
                     }
 
                     withContext(Dispatchers.Main) {
+                    if (!isAdded || view == null) return@withContext
                         val wasEmpty = movieCache.isEmpty()
 
                         if (list.isNotEmpty()) {
@@ -296,9 +298,10 @@ class Category_Page : AppCompatActivity() {
             }
 
             withContext(Dispatchers.Main) {
+                    if (!isAdded || view == null) return@withContext
                 isLoadingMovies = false
                 moviesAdapter.isLoadingMore = false
-                LoadingAnimation.hide(this@Category_Page)
+                LoadingAnimation.hide(requireActivity())
             }
         }
     }
@@ -310,7 +313,7 @@ class Category_Page : AppCompatActivity() {
         isLoadingTv = true
         tvAdapter.isLoadingMore = true
 
-        CoroutineScope(Dispatchers.IO).launch {
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             repeat(3) { attempt ->
                 try {
                     val url =
@@ -375,6 +378,7 @@ class Category_Page : AppCompatActivity() {
                     }
 
                     withContext(Dispatchers.Main) {
+                    if (!isAdded || view == null) return@withContext
                         val wasEmpty = tvCache.isEmpty()
 
                         if (list.isNotEmpty()) {
@@ -393,7 +397,7 @@ class Category_Page : AppCompatActivity() {
                         currentTvPage++
                         isLoadingTv = false
                         tvAdapter.isLoadingMore = false
-                        LoadingAnimation.hide(this@Category_Page)
+                        LoadingAnimation.hide(requireActivity())
                     }
                     return@launch
                 } catch (e: Exception) {
@@ -407,9 +411,10 @@ class Category_Page : AppCompatActivity() {
             }
 
             withContext(Dispatchers.Main) {
+                    if (!isAdded || view == null) return@withContext
                 isLoadingTv = false
                 tvAdapter.isLoadingMore = false
-                LoadingAnimation.hide(this@Category_Page)
+                LoadingAnimation.hide(requireActivity())
             }
         }
     }

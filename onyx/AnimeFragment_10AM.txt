@@ -1,0 +1,40 @@
+Created At: 2026-06-18T10:58:11Z
+Completed At: 2026-06-18T10:58:12Z
+
+				The command completed successfully.
+				Output:
+				
+  app\src\main\java\com\example\onyx\ShowsFragment.kt:302:            tvFavoritesList()
+  app\src\main\java\com\example\onyx\ShowsFragment.kt:303:            notificationS()
+> app\src\main\java\com\example\onyx\ShowsFragment.kt:304:            watchedList()
+  app\src\main\java\com\example\onyx\ShowsFragment.kt:305:
+  app\src\main\java\com\example\onyx\ShowsFragment.kt:306:        }
+  app\src\main\java\com\example\onyx\ShowsFragment.kt:332:
+  app\src\main\java\com\example\onyx\ShowsFragment.kt:333:         */
+> app\src\main\java\com\example\onyx\ShowsFragment.kt:334:        watchedList()
+  app\src\main\java\com\example\onyx\ShowsFragment.kt:335:
+  app\src\main\java\com\example\onyx\ShowsFragment.kt:336:
+  app\src\main\java\com\example\onyx\ShowsFragment.kt:2315:
+  app\src\main\java\com\example\onyx\ShowsFragment.kt:2316:
+> app\src\main\java\com\example\onyx\ShowsFragment.kt:2317:    private fun watchedList() {
+  app\src\main\java\com\example\onyx\ShowsFragment.kt:2318:        lifecycleScope.launch {
+  app\src\main\java\com\example\onyx\ShowsFragment.kt:2319:            val userId = sm.getUserId()
+  app\src\main\java\com\example\onyx\AnimeFragment.kt:303:         ////setupSearchUi()
+  app\src\main\java\com\example\onyx\AnimeFragment.kt:304:         //loadPopularAnime()
+> app\src\main\java\com\example\onyx\AnimeFragment.kt:305:        animeWatchedList()
+  app\src\main\java\com\example\onyx\AnimeFragment.kt:306:        notificationS()
+  app\src\main\java\com\example\onyx\AnimeFragment.kt:307:
+  app\src\main\java\com\example\onyx\AnimeFragment.kt:366:         */
+  app\src\main\java\com\example\onyx\AnimeFragment.kt:367:
+> app\src\main\java\com\example\onyx\AnimeFragment.kt:368:        animeWatchedList()
+  app\src\main\java\com\example\onyx\AnimeFragment.kt:369:        animeFavoritesList()
+  app\src\main\java\com\example\onyx\AnimeFragment.kt:370:
+  app\src\main\java\com\example\onyx\AnimeFragment.kt:823:     
+///////////////////////////////////////////////////////////////////////////////////////////////
+  app\src\main\java\com\example\onyx\AnimeFragment.kt:824:
+> app\src\main\java\com\example\onyx\AnimeFragment.kt:825:        private fun animeWatchedList(){
+  app\src\main\java\com\example\onyx\AnimeFragment.kt:826:            lifecycleScope.launch(Dispatchers.Main) {
+  app\src\main\java\com\example\onyx\AnimeFragment.kt:827:                val userId = sm.getUserId()
+
+
+

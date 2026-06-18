@@ -52,6 +52,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.json.JSONObject
 
 @UnstableApi
 class Anime_Video_Player : AppCompatActivity(), Player.Listener {
@@ -233,9 +234,9 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
                 if (jsonObject==null) return@launch
 
                 val data =  jsonObject.getJSONObject("data")
-                val name = data.getJSONObject("anime").getJSONObject("info").getString("name")
+                val name = data.getString("name")
                 val seasons = data.getJSONArray("seasons")?: JSONArray()
-                val poster = data.getJSONObject("anime").getJSONObject("info").getString("poster")
+                val poster = data.getString("poster")
 
                 seasonTitleWidget.text  = name
 
@@ -273,10 +274,12 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
 
                             val jsonObject = fetchAnime.animeInfo(season_id)
                             if (jsonObject!=null){
-                                val data = jsonObject.getJSONObject("data")
-                                val name = data.getJSONObject("anime").getJSONObject("info").getString("name")
-                                val id = data.getJSONObject("anime").getJSONObject("info").getString("id")
-                                val poster = data.getJSONObject("anime").getJSONObject("info").getString("poster")
+                                val data =  jsonObject.getJSONObject("data")
+                                val name = data.getString("name")
+                                val seasons = data.getJSONArray("seasons")?: JSONArray()
+                                val poster = data.getString("poster")
+                                val id = data.getString("id")
+
 
                                 seasonTitleWidget.text  = name
 
@@ -401,25 +404,51 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
 
                     val dataServers = jsonObjectServerInfo.getJSONObject("data")
 
-                    val subServers = dataServers.getJSONArray("sub")
-                    val dubServers = dataServers.getJSONArray("dub")
-                    val rawServers = dataServers.getJSONArray("raw")
+                    val subServersRaw = dataServers.optJSONArray("sub") ?: JSONArray()
+                    val dubServersRaw = dataServers.optJSONArray("dub") ?: JSONArray()
+
+                    fun cleanArray(input: JSONArray): JSONArray {
+                        val result = JSONArray()
+
+                        for (i in 0 until input.length()) {
+                            val obj = input.optJSONObject(i) ?: continue
+                            val link = obj.optString("link")
+
+                            if (link.contains(".m3u8")) {
+                                result.put(obj)
+                            }
+                        }
+
+                        return result
+                    }
+
+                    val subServers = cleanArray(subServersRaw)
+                    val dubServers = cleanArray(dubServersRaw)
 
                     // Determine initial default
-                    val (defaultServerName, defaultCategory) = when {
-                        dubServers.length() > 0 -> dubServers.getJSONObject(0)
-                            .getString("serverName") to "dub"
+                    val (defaultServerName, defaultCategory, videoLink) = when {
+                        dubServers.length() > 0 -> {
+                            val server = dubServers.getJSONObject(0)
+                            Triple(
+                                server.getString("server"),
+                                "dub",
+                                server.getString("link")
+                            )
+                        }
 
-                        subServers.length() > 0 -> subServers.getJSONObject(0)
-                            .getString("serverName") to "sub"
-
-                        rawServers.length() > 0 -> rawServers.getJSONObject(0)
-                            .getString("serverName") to "raw"
+                        subServers.length() > 0 -> {
+                            val server = subServers.getJSONObject(0)
+                            Triple(
+                                server.getString("server"),
+                                "sub",
+                                server.getString("link")
+                            )
+                        }
 
                         else -> return@launch
                     }
 
-                    fetchServerSources(episodeId, defaultServerName, defaultCategory)
+                    fetchServerSources(episodeId, defaultServerName, defaultCategory, videoLink)
 
                     val btnServer = findViewById<TextView>(R.id.btn_server)
 
@@ -454,7 +483,8 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
 
                             for (i in 0 until servers.length()) {
                                 val server = servers.getJSONObject(i)
-                                val serverName = server.getString("serverName")
+                                val serverName = server.getString("server")
+                                val vlink = server.getString("link")
 
                                 val serverBtn = Button(this@Anime_Video_Player).apply {
                                     text = serverName
@@ -478,7 +508,9 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
                                         ).show()
                                         dialog?.dismiss()
 
-                                        fetchServerSources(episodeId, serverName, title)
+                                        if (vlink.isNotBlank()) {
+                                            fetchServerSources(episodeId, serverName, title, vlink)
+                                        }
                                     }
                                 }
                                 container.addView(serverBtn)
@@ -488,7 +520,6 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
                         // Add sections
                         addServerSection("sub", subServers)
                         addServerSection("dub", dubServers)
-                        addServerSection("raw", rawServers)
 
                         builder.setView(scrollView)
                         builder.setNegativeButton("Cancel", null)
@@ -513,20 +544,14 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
         }
     }
 
-    private fun fetchServerSources(episodeId: String, serverName: String, category: String) {
+    private fun fetchServerSources(episodeId: String, serverName: String, category: String, vidUrl: String) {
         lifecycleScope.launch(Dispatchers.Main) {
-            val maxAttempts = 3
-            var attempt = 0
 
-            while (attempt < maxAttempts) {
-                val jsonObjectServerInfo = withContext(Dispatchers.IO) {
-                    fetchAnime.animeEpisodeStreamingLinks(episodeId, serverName, category)
-                }
-                if (jsonObjectServerInfo != null) {
+
 
                     Log.e(
                         "ANIME_PLAYER",
-                        "PlAYER STARTED: $episodeId  , serverName: $serverName , category: $category, "
+                        "PlAYER STARTED: $episodeId  , serverName: $serverName , category: $category, vidUrl: $vidUrl "
                     )
 
 
@@ -540,12 +565,9 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
                     currentEpisodeNumber = holdEpisodeNo
 
 
-                    val data = jsonObjectServerInfo.getJSONObject("data")
 
-                    val sources = data.getJSONArray("sources")
-                    val vidUrl = sources.getJSONObject(0).getString("url")
                     videoUrl = vidUrl
-                    val referer = data.getJSONObject("headers").optString("Referer")
+                    //val referer = data.getJSONObject("headers").optString("Referer")
 
                     Log.e(
                         "ANIME_PLAYER",
@@ -561,7 +583,8 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
                     hasAppliedResumePosition = false
                     // (Re)initialize player with new stream
                     exoPlayer?.release()
-                    exoPlayer = initializePlayer(vidUrl, referer)
+                    //exoPlayer = initializePlayer(vidUrl, referer)
+                    exoPlayer = initializePlayer(vidUrl)
                     exoPlayer?.let { player ->
                         playerView.player = player
                         player.addListener(this@Anime_Video_Player)
@@ -571,15 +594,7 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
                         updateQualityButton()
                     }
 
-                    break
-                }
-                attempt++
-                Log.e(
-                    "ANIME_PLAYER",
-                    "PlAYER FAILED: $episodeId  , serverName: $serverName , category: $category,"
-                )
-                delay(3000) // ⏳ wait 3 seconds before retry
-            }
+
         }
     }
 

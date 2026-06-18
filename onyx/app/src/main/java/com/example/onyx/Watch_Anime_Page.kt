@@ -175,13 +175,13 @@ class Watch_Anime_Page : AppCompatActivity() {
         val sub = data.getJSONObject("stats").getJSONObject("episodes").optString("sub", "")
         val dub = data.getJSONObject("stats").getJSONObject("episodes").optString("dub", "")
         val aired = data.getString("aired")
-        //val status = data.getJSONObject("anime").getJSONObject("moreInfo").getString("status")
-        //val studios = data.getJSONObject("anime").getJSONObject("moreInfo").getString("studios")
+
         val genresArray = data.getJSONArray("genres")
         var genre = ""
         for (i in 0 until genresArray.length()) {
             genre = genre +" ~ " +genresArray.getString(i)
         }
+        val studio = data.getString("studios")
 
         //tmdbRelation(japaneseName, type)
 
@@ -247,7 +247,7 @@ class Watch_Anime_Page : AppCompatActivity() {
             rating = rating,
             quality = quality,
             duration = duration,
-            posterF = poster,
+            backdrop = backdrop,
             sub=sub,
             dub=dub,
             aired=aired,
@@ -509,7 +509,7 @@ class Watch_Anime_Page : AppCompatActivity() {
         rating :String,
         quality :String,
         duration :String,
-        posterF :String,
+        backdrop :String?,
         sub:String,
         dub:String,
         aired:String,
@@ -557,7 +557,7 @@ class Watch_Anime_Page : AppCompatActivity() {
                     rating,
                     quality,
                     duration,
-                    poster,
+                    backdrop?:poster,
                     sub,
                     dub,
                     aired,

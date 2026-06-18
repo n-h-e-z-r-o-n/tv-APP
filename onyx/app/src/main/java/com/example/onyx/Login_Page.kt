@@ -115,7 +115,7 @@ class Login_Page : AppCompatActivity() {
         if (userId == -1) {
             // No user logged in → redirect to Login page
         }else{
-            startActivity(Intent(this, Shows_Page::class.java))
+            startActivity(Intent(this, HomeActivity::class.java))
             finish()
         }
 
@@ -161,7 +161,7 @@ class Login_Page : AppCompatActivity() {
                 if (activeSub) {
                     sm.saveUserId(userId.toInt())
                     sm.saveAvatar(userAvatar.toString())
-                    startActivity(Intent(this, Shows_Page::class.java))
+                    startActivity(Intent(this, HomeActivity::class.java))
 
                 } else {
                     lifecycleScope.launch {
@@ -169,7 +169,7 @@ class Login_Page : AppCompatActivity() {
                         if (ipState.equals("KE", ignoreCase = true)) {
                             startActivity(Intent(this@Login_Page, PayWall::class.java))
                         } else {
-                            startActivity(Intent(this@Login_Page, Shows_Page::class.java))
+                            startActivity(Intent(this@Login_Page, HomeActivity::class.java))
                         }
                     }
                 }

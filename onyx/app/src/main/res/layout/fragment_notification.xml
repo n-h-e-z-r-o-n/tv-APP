@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/BG_color"
+    tools:context=".notificationFragment">
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+
+    <LinearLayout
+        android:id="@+id/notificationPageAnime"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="10dp">
+
+            <TextView
+                android:id="@+id/notificationHeadline"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="notifications"
+                android:textStyle="bold"
+                android:fontFamily="@font/p"
+                android:textSize="13sp"
+                android:alpha="0.5"
+                android:textColor="?attr/FG_color"
+                tools:ignore="HardcodedText"
+                />
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"/>
+
+            <TextView
+                android:id="@+id/clearNotBtn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Clear All"
+                android:textColor="#FFFFFF"
+                android:shadowColor="#000000"
+                android:shadowDx="1"
+                android:shadowDy="1"
+                android:shadowRadius="2"
+                android:paddingHorizontal="15dp"
+                android:paddingVertical="2dp"
+                android:background="@drawable/filter_button"
+                android:layout_marginEnd="20dp"
+                tools:ignore="HardcodedText" />
+
+        </LinearLayout>
+
+
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/notificationRecycler"
+            android:layout_height="match_parent"
+            android:layout_width="match_parent"
+            android:clipToPadding="false"
+            android:scrollbars="none"
+            tools:ignore="RtlSymmetry"/>
+
+    </LinearLayout>
+
+    </androidx.core.widget.NestedScrollView>
+</FrameLayout>

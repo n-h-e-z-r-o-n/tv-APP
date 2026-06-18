@@ -194,7 +194,7 @@
                     <ImageView
                         android:layout_width="25dp"
                         android:layout_height="25dp"
-                        android:src="@drawable/ic_anime_search"
+                        android:src="@drawable/ic_search"
                         app:tint="?attr/FG_color"
                         tools:ignore="ContentDescription" />
 

@@ -5,7 +5,7 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".Anime_Page"
+    tools:context=".AnimeFragment"
     android:background="@android:color/transparent">
 
 
@@ -48,354 +48,7 @@
              android:orientation="horizontal">
 
 
-
-        <LinearLayout
-            android:id="@+id/NavBar"
-            android:layout_width="70dp"
-            android:layout_height="match_parent"
-            android:layout_gravity="center_vertical"
-            android:layout_marginVertical="5dp"
-            android:orientation="vertical"
-            android:gravity="center"
-            android:elevation="15dp"
-            >
-
-        <androidx.cardview.widget.CardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="10dp"
-            android:layout_gravity="center_vertical"
-            app:cardCornerRadius="20dp"
-            android:elevation="15dp"
-            app:cardBackgroundColor="?attr/BG_color_up">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="vertical"
-                android:padding="5dp"
-                android:background="@android:color/transparent" >
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginBottom="20dp"
-                    android:alpha="0.6"
-                    tools:ignore="UseCompoundDrawables">
-
-
-                    <ImageView
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:src="@drawable/ic_anime_logo"
-                        app:tint="?attr/FG_color"
-                        tools:ignore="ContentDescription" />
-
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:gravity="center"
-                        android:layout_gravity="center_vertical"
-                        android:layout_height="wrap_content"
-                        android:text="Anime"
-                        android:fontFamily="@font/n"
-                        android:textSize="30sp"
-                        android:textStyle="bold"
-                        android:singleLine="true"
-                        android:textColor="?attr/FG_color"
-                        tools:ignore="HardcodedText"
-                        android:shadowColor="?attr/AccentColor"
-                        android:shadowDx="2"
-                        android:shadowDy="2"
-                        android:shadowRadius="4"/>
-                </LinearLayout>
-
-                <LinearLayout
-                    android:id="@+id/HomeAnimeBtn"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="9dp"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:focusableInTouchMode="true"
-                    android:gravity="center_vertical"
-                    android:nextFocusLeft="@+id/HomeAnimeBtn"
-                    android:nextFocusUp="@+id/cNotificationAnimeBtn"
-                    android:nextFocusDown="@+id/DubbedAnimeBtn"
-                    android:background="@drawable/background_hovor"
-                    android:padding="5dp"
-                    tools:ignore="UseCompoundDrawables,UselessParent">
-
-                    <ImageView
-                        android:layout_width="25dp"
-                        android:layout_height="25dp"
-                        android:src="@drawable/ic_anime_home"
-                        app:tint="?attr/FG_color"
-                        tools:ignore="ContentDescription" />
-
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="9dp"
-                        android:fontFamily="@font/n"
-                        android:text="Home"
-                        android:singleLine="true"
-                        android:textColor="?attr/FG_color"
-                        android:textSize="18sp"
-                        tools:ignore="HardcodedText,SmallSp" />
-
-                </LinearLayout>
-
-
-                <LinearLayout
-                    android:id="@+id/DubbedAnimeBtn"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="15dp"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:focusableInTouchMode="true"
-                    android:gravity="center_vertical"
-                    android:nextFocusLeft="@+id/DubbedAnimeBtn"
-                    android:nextFocusUp="@+id/HomeAnimeBtn"
-                    android:nextFocusDown="@+id/PopularAnimeBtn"
-                    android:background="@drawable/background_hovor"
-                    android:padding="5dp"
-                    tools:ignore="UseCompoundDrawables,UselessParent">
-
-                    <ImageView
-                        android:layout_width="25dp"
-                        android:layout_height="25dp"
-                        android:src="@drawable/ic_anime_dubbed"
-                        app:tint="?attr/FG_color"
-                        tools:ignore="ContentDescription" />
-
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="9dp"
-                        android:fontFamily="@font/n"
-                        android:singleLine="true"
-                        android:text="Dubbed"
-                        android:textColor="?attr/FG_color"
-                        android:textSize="18sp"
-                        tools:ignore="HardcodedText,SmallSp" />
-
-                </LinearLayout>
-
-
-                <LinearLayout
-                    android:id="@+id/PopularAnimeBtn"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="9dp"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:focusableInTouchMode="true"
-                    android:gravity="center_vertical"
-                    android:nextFocusLeft="@+id/PopularAnimeBtn"
-                    android:nextFocusUp="@+id/DubbedAnimeBtn"
-                    android:nextFocusDown="@+id/SearchAnimeBtn"
-                    android:background="@drawable/background_hovor"
-                    android:padding="5dp"
-                    tools:ignore="UseCompoundDrawables,UselessParent">
-
-                    <ImageView
-                        android:layout_width="25dp"
-                        android:layout_height="25dp"
-                        android:src="@drawable/ic_anime_popular"
-                        app:tint="?attr/FG_color"
-                        tools:ignore="ContentDescription" />
-
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="9dp"
-                        android:fontFamily="@font/n"
-                        android:text="Popular"
-                        android:textColor="?attr/FG_color"
-                        android:textSize="17sp"
-                        android:singleLine="true"
-                        tools:ignore="HardcodedText,SmallSp" />
-
-                </LinearLayout>
-
-
-                <LinearLayout
-                    android:id="@+id/SearchAnimeBtn"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="9dp"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:focusableInTouchMode="true"
-                    android:gravity="center_vertical"
-                    android:nextFocusLeft="@+id/SearchAnimeBtn"
-                    android:nextFocusUp="@+id/PopularAnimeBtn"
-                    android:nextFocusDown="@+id/FavAnimeBtn"
-                    android:background="@drawable/background_hovor"
-                    android:padding="5dp"
-                    tools:ignore="UseCompoundDrawables,UselessParent">
-
-                    <ImageView
-                        android:layout_width="25dp"
-                        android:layout_height="25dp"
-                        android:src="@drawable/ic_anime_search"
-                        app:tint="?attr/FG_color"
-                        tools:ignore="ContentDescription" />
-
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="9dp"
-                        android:fontFamily="@font/n"
-                        android:text="Search"
-                        android:singleLine="true"
-                        android:textColor="?attr/FG_color"
-                        android:textSize="18sp"
-                        tools:ignore="HardcodedText,SmallSp" />
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:id="@+id/FavAnimeBtn"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="9dp"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:focusableInTouchMode="true"
-                    android:gravity="center_vertical"
-                    android:nextFocusLeft="@+id/FavAnimeBtn"
-                    android:nextFocusUp="@+id/SearchAnimeBtn"
-                    android:nextFocusDown="@+id/cWatchAnimeBtn"
-                    android:background="@drawable/background_hovor"
-                    android:padding="5dp"
-                    tools:ignore="UseCompoundDrawables,UselessParent">
-
-                    <ImageView
-                        android:layout_width="25dp"
-                        android:layout_height="25dp"
-                        android:src="@drawable/heart1"
-                        app:tint="?attr/FG_color"
-                        tools:ignore="ContentDescription" />
-
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="9dp"
-                        android:fontFamily="@font/n"
-                        android:text="Favorites"
-                        android:textColor="?attr/FG_color"
-                        android:textSize="18sp"
-                        android:singleLine="true"
-                        tools:ignore="HardcodedText,SmallSp" />
-
-                </LinearLayout>
-
-
-                <LinearLayout
-                    android:id="@+id/cWatchAnimeBtn"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="9dp"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:focusableInTouchMode="true"
-                    android:gravity="center_vertical"
-                    android:nextFocusUp="@+id/FavAnimeBtn"
-                    android:nextFocusDown="@+id/cNotificationAnimeBtn"
-                    android:nextFocusLeft="@+id/cWatchAnimeBtn"
-                    android:padding="5dp"
-                    android:background="@drawable/background_hovor"
-                    tools:ignore="UselessParent">
-
-                    <ImageView
-                        android:layout_width="25dp"
-                        android:layout_height="25dp"
-                        android:src="@drawable/clock"
-                        app:tint="?attr/FG_color"
-                        tools:ignore="ContentDescription" />
-
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="9dp"
-                        android:text="Watching"
-                        android:fontFamily="@font/n"
-                        android:textColor="?attr/FG_color"
-                        android:textSize="17sp"
-                        android:singleLine="true"
-                        tools:ignore="HardcodedText,SmallSp" />
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:id="@+id/cNotificationAnimeBtn"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="9dp"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:focusableInTouchMode="true"
-                    android:gravity="center_vertical"
-                    android:nextFocusUp="@+id/cWatchAnimeBtn"
-                    android:nextFocusDown="@+id/HomeAnimeBtn"
-                    android:nextFocusLeft="@+id/cNotificationAnimeBtn"
-                    android:padding="5dp"
-                    android:background="@drawable/background_hovor"
-                    tools:ignore="UselessParent">
-
-                    <FrameLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content">
-
-                        <androidx.cardview.widget.CardView
-                            android:id="@+id/cNotificationAnimeIcon"
-                            android:layout_width="9dp"
-                            android:layout_height="9dp"
-                            app:cardCornerRadius="50dp"
-                            android:layout_gravity="right"
-                            android:visibility="gone"
-                            app:cardBackgroundColor="@android:color/holo_red_light"
-                            tools:ignore="RtlHardcoded" />
-
-                        <ImageView
-                            android:layout_width="25dp"
-                            android:layout_height="25dp"
-                            android:src="@drawable/ic_notification"
-                            app:tint="?attr/FG_color"
-                            android:layout_marginRight="5dp"
-                            tools:ignore="ContentDescription" />
-                    </FrameLayout>
-
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="4dp"
-                        android:text="Notification"
-                        android:fontFamily="@font/n"
-                        android:singleLine="true"
-                        android:textColor="?attr/FG_color"
-                        android:textSize="18sp"
-                        tools:ignore="HardcodedText,SmallSp" />
-
-                </LinearLayout>
-            </LinearLayout>
-        </androidx.cardview.widget.CardView>
-        </LinearLayout>
-
-
-
-        <LinearLayout
+          <LinearLayout
             android:id="@+id/contentContainer"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -403,10 +56,10 @@
             android:orientation="horizontal"
             android:layout_gravity="center"
             android:overScrollMode="never"
-            android:layout_marginVertical="10dp"
             tools:ignore="RtlSymmetry">
 
             <ScrollView
+                android:id="@+id/activityScrollVIEW"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:fillViewport="true"
@@ -429,22 +82,45 @@
                         android:layout_height="match_parent"
                         android:orientation="vertical"
                         tools:ignore="UselessParent"
-                        android:visibility="gone">
-
+                        android:visibility="visible">
 
                         <FrameLayout
-                            android:id="@+id/spotlightAnimes"
+                            android:id="@+id/animeSpotlightSection"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_gravity="center"
-                            android:focusable="false"
-                            android:focusableInTouchMode="false"
-                            android:descendantFocusability="afterDescendants"
-                            android:clipChildren="false"
-                            android:clipToPadding="false"/>
+                            >
+
+                                <FrameLayout
+                                    android:id="@+id/spotlightAnimes"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_gravity="center"
+                                    android:focusable="false"
+                                    android:focusableInTouchMode="false"
+                                    android:descendantFocusability="afterDescendants"
+                                    android:clipChildren="false"
+                                    android:clipToPadding="false"
+                                    android:layout_marginBottom="10dp"/>
+
+                               <LinearLayout
+                                   android:layout_width="match_parent"
+                                   android:focusable="true"
+                                   android:clickable="false"
+                                   android:layout_gravity="bottom"
+                                   android:layout_marginHorizontal="10dp"
+                                   android:layout_marginVertical="5dp"
+                                   android:layout_height="1dp"
+                                   android:background="@drawable/card_focus"/>
+
+                        </FrameLayout>
+
+
+
+
 
 
                         <LinearLayout
+                            android:id="@+id/animeTrendingSection"
                             android:layout_width="match_parent"
                             android:orientation="vertical"
                             android:layout_height="wrap_content">
@@ -475,6 +151,18 @@
                                 android:scrollbars="none"
                                 tools:ignore="NestedWeights" />
 
+                        </LinearLayout>
+
+
+
+
+
+                        <LinearLayout
+                            android:id="@+id/animeAiringSection"
+                            android:layout_width="match_parent"
+                            android:orientation="vertical"
+                            android:layout_height="wrap_content">
+
                             <TextView
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
@@ -500,9 +188,168 @@
                                 tools:ignore="NestedWeights"
                                 android:nextFocusUp="@+id/Anime_Trending_widget"
                                 android:nextFocusDown="@+id/Anime_Airing_widget"/>
+                        </LinearLayout>
 
+
+
+
+
+                        <LinearLayout
+                            android:id="@+id/dubbSection"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Dubbed Page Anime"
+                                android:textStyle="bold"
+                                android:fontFamily="@font/p"
+                                android:textSize="13sp"
+                                android:textColor="?attr/FG_color"
+                                android:alpha="0.4"
+                                android:layout_marginTop="10dp"
+                                tools:ignore="HardcodedText"/>
+
+                            <FrameLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="320dp"
+                                android:layout_marginVertical="10dp"
+                                android:clipChildren="false"
+                                android:clipToPadding="false">
+
+                                <androidx.recyclerview.widget.RecyclerView
+                                    android:id="@+id/dubbedRecycler"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="match_parent"
+                                    android:layout_gravity="center_vertical"
+                                    android:clipToPadding="false"
+                                    android:paddingStart="30dp"
+                                    android:scrollbars="none"
+                                    tools:itemCount="1"
+                                    tools:listitem="@layout/item_grid"
+                                    tools:ignore="RtlSymmetry,TooDeepLayout" />
+
+                                <!-- Fixed info card -->
+                                <com.google.android.material.card.MaterialCardView
+                                    android:id="@+id/dubbFixedFocusOverlay"
+                                    android:layout_width="527dp"
+                                    android:layout_height="320dp"
+                                    android:layout_gravity="start|center_vertical"
+                                    android:layout_marginStart="30dp"
+                                    android:focusable="false"
+                                    android:clickable="false"
+                                    android:alpha="0"
+                                    android:importantForAccessibility="no"
+                                    app:cardCornerRadius="12dp"
+                                    app:strokeWidth="0dp"
+                                    app:strokeColor="?attr/AccentColor"
+                                    app:cardBackgroundColor="?attr/BG_color_up"
+                                    app:cardElevation="0dp">
+
+
+                                    <ImageView
+                                        android:id="@+id/dubbOverlayPoster"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="match_parent"
+                                        android:src="@raw/gradient_img"
+                                        android:scaleType="centerCrop"
+                                        tools:src="@drawable/splash_img"
+                                        tools:ignore="ContentDescription" />
+
+                                    <View
+                                        android:layout_width="match_parent"
+                                        android:layout_height="match_parent"
+                                        android:background="@drawable/overlay_bottom_gradient_bg"/>
+
+                                    <LinearLayout
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_gravity="bottom"
+                                        android:layout_marginStart="20dp"
+                                        android:layout_marginBottom="10dp"
+                                        android:orientation="vertical">
+
+                                        <TextView
+                                            android:id="@+id/dubbOverlayTitle"
+                                            android:layout_width="match_parent"
+                                            android:layout_height="wrap_content"
+                                            android:textColor="#FFFFFF"
+                                            android:textStyle="bold"/>
+
+                                        <TextView
+                                            android:id="@+id/dubbOverlayYear"
+                                            android:layout_width="wrap_content"
+                                            android:textColor="#FFFFFF"
+                                            android:layout_height="wrap_content"/>
+
+                                        <TextView
+                                            android:id="@+id/dubbOverlayRating"
+                                            android:textColor="#FFFFFF"
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"/>
+
+                                    </LinearLayout>
+                                </com.google.android.material.card.MaterialCardView>
+                            </FrameLayout>
 
                         </LinearLayout>
+
+
+
+
+
+
+                        <LinearLayout
+                            android:id="@+id/favoriteSection"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Favorites"
+                                android:textAllCaps="true"
+                                android:layout_marginStart="10dp"
+                                android:textSize="5sp"
+                                android:fontFamily="@font/p"
+                                android:textColor="?attr/FG_color"
+                                android:alpha="0.4"
+                                tools:ignore="HardcodedText,SmallSp" />
+
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Favorites List"
+                                android:layout_marginStart="10dp"
+                                android:fontFamily="@font/p"
+                                android:textStyle="bold"
+                                android:textSize="20sp"
+                                android:textColor="?attr/FG_color"
+                                tools:ignore="HardcodedText" />
+
+
+                            <androidx.recyclerview.widget.RecyclerView
+                                android:id="@+id/faveRecycler"
+                                android:layout_height="wrap_content"
+                                android:layout_width="match_parent"
+                                android:nestedScrollingEnabled="false"
+                                android:clipToPadding="false"
+                                android:focusable="false"
+                                android:scrollbars="none"
+                                android:layout_margin="4dp"
+                                tools:ignore="RtlSymmetry"/>
+
+                        </LinearLayout>
+
+
+
+
+
+                        
 
                     </LinearLayout>
 
@@ -512,30 +359,9 @@
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:orientation="vertical"
-                        android:visibility="gone">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Dubbed Page Anime"
-                            android:textStyle="bold"
-                            android:fontFamily="@font/p"
-                            android:textSize="13sp"
-                            android:textColor="?attr/FG_color"
-                            android:alpha="0.4"
-                            android:layout_marginTop="10dp"
-                            tools:ignore="HardcodedText"/>
+                        android:visibility="gone"/>
 
 
-                        <androidx.recyclerview.widget.RecyclerView
-                            android:id="@+id/dubbedRecycler"
-                            android:layout_height="wrap_content"
-                            android:layout_width="wrap_content"
-                            android:clipToPadding="false"
-                            android:scrollbars="none"
-                            tools:ignore="RtlSymmetry"/>
-
-                    </LinearLayout>
 
 
 
@@ -582,7 +408,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:orientation="horizontal"
-                        android:visibility="visible">
+                        android:visibility="gone">
 
                         <LinearLayout
                             android:layout_width="280dp"
@@ -697,6 +523,98 @@
 
 
                     </LinearLayout>
+
+                    <!-- //////////////////////// ANIME FAVORITE PAGE ////////////////////////////////////// -->
+                    <LinearLayout
+                        android:id="@+id/FavPageAnime"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:visibility="gone">
+
+
+
+
+                    </LinearLayout>
+
+                    <!-- //////////////////////// WATCHLIST PAGE ////////////////////////////////////// -->
+                   <LinearLayout
+                       android:id="@+id/WatchedListPageAnime"
+                       android:layout_width="match_parent"
+                       android:layout_height="match_parent"
+                       android:orientation="vertical"
+                       android:visibility="gone">
+
+
+                   </LinearLayout>
+
+                    <!-- //////////////////////// NOTIFICATION  PAGE ////////////////////////////////////// -->
+                    <LinearLayout
+                        android:id="@+id/notificationPageAnime"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:visibility="gone">
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:layout_marginTop="10dp">
+
+                            <TextView
+                                android:id="@+id/notificationHeadline"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="notifications"
+                                android:textStyle="bold"
+                                android:fontFamily="@font/p"
+                                android:textSize="13sp"
+                                android:alpha="0.5"
+                                android:textColor="?attr/FG_color"
+                                tools:ignore="HardcodedText"
+                                />
+
+                            <View
+                                android:layout_width="0dp"
+                                android:layout_height="match_parent"
+                                android:layout_weight="1"/>
+
+                            <TextView
+                                android:id="@+id/clearNotBtn"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Clear All"
+                                android:textColor="#FFFFFF"
+                                android:shadowColor="#000000"
+                                android:shadowDx="1"
+                                android:shadowDy="1"
+                                android:shadowRadius="2"
+                                android:paddingHorizontal="15dp"
+                                android:paddingVertical="2dp"
+                                android:background="@drawable/filter_button"
+                                android:layout_marginRight="20dp"
+                                tools:ignore="HardcodedText" />
+
+                        </LinearLayout>
+
+
+
+                        <androidx.recyclerview.widget.RecyclerView
+                            android:id="@+id/notificationRecycler"
+                            android:layout_height="match_parent"
+                            android:layout_width="match_parent"
+                            android:clipToPadding="false"
+                            android:scrollbars="none"
+                            tools:ignore="RtlSymmetry"/>
+
+                    </LinearLayout>
+
+
+                </LinearLayout>
+            </ScrollView>
+
+        </LinearLayout>
 
                     <!-- //////////////////////// ANIME FAVORITE PAGE ////////////////////////////////////// -->
                     <LinearLayout
@@ -1061,19 +979,18 @@
                             android:scrollbars="none"
                             tools:ignore="RtlSymmetry"/>
 
-                    </LinearLayout>
 
 
-                </LinearLayout>
-            </ScrollView>
 
-        </LinearLayout>
+
+
+
 
         <include layout="@layout/laod_animation" />
 
         </LinearLayout>
-    </androidx.cardview.widget.CardView>
 
-    <include layout="@layout/side_bar" android:visibility="gone"/>
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+
+
+

@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?attr/BG_color"
-    tools:context=".Profile_Page">
+    tools:context=".ProfileFragment">
 
     <ImageView
         android:id="@+id/backgroundImgContainer"
@@ -621,6 +621,6 @@
 
     </androidx.cardview.widget.CardView>
 
-    <include layout="@layout/side_bar" android:visibility="gone"/>
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

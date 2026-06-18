@@ -35,14 +35,13 @@
             android:name=".testpage"
             android:exported="false" />
         <activity
+            android:name=".HomeActivity"
+            android:exported="false" />
+        <activity
             android:name=".Login_Page"
             android:exported="false" />
-        <activity
-            android:name=".Category_Page"
-            android:exported="false" />
-        <activity
-            android:name=".Shows_Page"
-            android:exported="false" />
+
+
         <activity
             android:name=".Instraction"
             android:exported="false" />
@@ -52,9 +51,7 @@
         <activity
             android:name=".Watch_Anime_Page"
             android:exported="false" />
-        <activity
-            android:name=".Anime_Page"
-            android:exported="false" />
+
         <activity
             android:name=".PayWall"
             android:exported="false" />
@@ -62,9 +59,7 @@
             android:name=".Actor_Page"
             android:exported="false"
             android:launchMode="singleTop" />
-        <activity
-            android:name=".Profile_Page"
-            android:exported="false" />
+
         <activity
             android:name=".TermsAndConditionsActivity"
             android:exported="false"

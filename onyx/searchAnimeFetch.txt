@@ -1,0 +1,77 @@
+private  fun searchAnimeFetch(searchTerm:String){
+             val searchTextDisplay = requireView().findViewById<TextView>(R.id.searchTextDisplay)
+
+             searchAdapter.clearItems()
+
+             viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                 repeat(1) { attempt ->
+                     try {
+
+                         val url = "$urlHome/api/v2/anime/search?q=$searchTerm&page=1"
+                         val connection = URL(url).openConnection() as HttpURLConnection
+                         connection.requestMethod = "GET"
+                         connection.setRequestProperty("accept", "application/json")
+
+                         val response = connection.inputStream.bufferedReader().use { it.readText() }
+                         Log.e("ANIME_STATUS search", response.toString())
+
+                         val jsonObject = org.json.JSONObject(response)
+                         Log.e("ANIME_STATUS search", jsonObject.toString())
+                         val dataFetch = jsonObject.getJSONObject("data")
+                         val  searchData = dataFetch.getJSONArray("animes")
+                         Log.e("ANIME_STATUS SEARCH-R", dataFetch.toString())
+                         var searchDataItmes = mutableListOf<AnimeSearchItem>()
+
+
+                         withContext(Dispatchers.Main) {
+                    if (!isAdded || view == null) return@withContext
+                             if(searchData.length() == 0) {
+                                 searchTextDisplay.text = "No Results Found"
+                             }else{
+                                 searchTextDisplay.text = "Search results for: $searchTerm"
+                             }
+                         }
+
+
+
+                         for (i in 0 until searchData.length()) {
+                             val item = searchData.getJSONObject(i)
+                             val title = item.getString("name")
+                             val imageUrl = item.getString("poster")
+                             val id = item.getString("id")
+                             val type = item.getString("type")
+                             val sub = item.getJSONObject("episodes").optString("sub", "")
+                             val dub = item.getJSONObject("episodes").optString("dub", "")
+
+
+
+                             val searchItem = AnimeSearchItem(
+                                 id,
+                                 title,
+                                 imageUrl,
+                                 type,
+                                 sub,
+                                 dub,
+                             )
+
+                             withContext(Dispatchers.Main) {
+                    if (!isAdded || view == null) return@withContext
+                                 searchAdapter.addItem(searchItem)
+                             }
+
+                         }
+
+
+                         return@launch
+                     } catch (e: Exception) {
+                         delay(20_000)
+                         Log.e("ANIME_STATUS S-Error", "Error fetching data", e)
+                         return@launch
+                     }
+                 }
+             }
+             isLoadingMoreRecently = false
+         }
+
+
+    

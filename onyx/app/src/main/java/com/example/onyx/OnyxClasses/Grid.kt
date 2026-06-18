@@ -26,7 +26,6 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.request.target.Target
 import com.example.onyx.Actor_Page
 import com.example.onyx.Anime_Video_Player
-import com.example.onyx.Category_Page
 import com.example.onyx.Database.AppDatabase
 import com.example.onyx.FetchData.TMDBapi
 import com.example.onyx.OnyxObjects.GlobalUtils
@@ -391,6 +390,8 @@ class FilterAdapter(
 
         // Glide Image Loading (wait until ImageView is measured)
         holder.itemView.post {
+            val ctx = holder.itemView.context
+            if (ctx is android.app.Activity && (ctx.isDestroyed || ctx.isFinishing)) return@post
             val currentHeight = holder.itemView.height
             val currentWidth = holder.itemView.width
             val sizeH = (currentHeight * 2f).toInt()
@@ -611,6 +612,8 @@ class CategoryAdapter(
 
         // ✅ wait until ImageView is measured
         holder.category_image.post {
+            val ctx = holder.itemView.context
+            if (ctx is android.app.Activity && (ctx.isDestroyed || ctx.isFinishing)) return@post
             val currentHeight = holder.category_image.height
             val size = (currentHeight  * 1.5f).toInt()
 
@@ -634,7 +637,7 @@ class CategoryAdapter(
 
         holder.CardViewSquare.setOnClickListener {
             val context = holder.itemView.context
-            val intent = Intent(context, Category_Page::class.java).apply {
+            val intent = Intent(context, com.example.onyx.HomeActivity::class.java).apply {
                 putExtra("company_id", imdbCode)
                 putExtra("company_name", companyName)
             }

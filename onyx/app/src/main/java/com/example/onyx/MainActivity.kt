@@ -36,8 +36,8 @@ class MainActivity : AppCompatActivity() {
         installSplashScreen()
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        GlobalUtils.applyTheme(this)
         setContentView(R.layout.activity_main)
-
         supportActionBar?.hide()
         setupBackPressedCallback()
 
@@ -76,11 +76,13 @@ class MainActivity : AppCompatActivity() {
                 //startActivity(Intent(this@MainActivity, Instraction::class.java))
 
                 val r = GlobalUtils.ipCheck(this@MainActivity)
-                startActivity(Intent(this@MainActivity, Login_Page::class.java))
+                startActivity(Intent(this@MainActivity, HomeActivity::class.java))
+                finish()
 
             } else {
                 val r = GlobalUtils.ipCheck(this@MainActivity)
-                startActivity(Intent(this@MainActivity, Login_Page::class.java))
+                startActivity(Intent(this@MainActivity, HomeActivity::class.java))
+                finish()
             }
         }
         //startActivity(Intent(this@MainActivity, Watch_Page::class.java))

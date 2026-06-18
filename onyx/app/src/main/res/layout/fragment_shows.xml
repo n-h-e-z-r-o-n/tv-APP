@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?attr/BG_color_up"
-    tools:context=".Shows_Page">
+    tools:context=".c">
 
 
     <ImageView
@@ -117,7 +117,6 @@
                                 android:id="@+id/HomePage"
                                 android:layout_width="match_parent"
                                 android:layout_height="match_parent"
-                                android:visibility="gone"
                                 android:orientation="vertical">
 
                                 <FrameLayout
@@ -125,14 +124,7 @@
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content">
 
-                                    <include
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="match_parent"
-                                        layout="@layout/nabbar_show"/>
-
-
                                     <LinearLayout
-                                        android:layout_marginStart="70dp"
                                         android:layout_width="match_parent"
                                         android:layout_height="match_parent"
                                         android:orientation="vertical">
@@ -266,6 +258,8 @@
                                                 tools:src="@drawable/splash_img"
                                                 tools:ignore="ContentDescription" />
 
+
+
                                             <View
                                                 android:layout_width="match_parent"
                                                 android:layout_height="match_parent"
@@ -305,7 +299,7 @@
 
 
                                 <LinearLayout
-                                    android:id="@+id/browseRow"
+                                    android:id="@+id/filterSection"
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
                                     android:orientation="vertical">
@@ -640,45 +634,7 @@
                                 </LinearLayout>
 
 
-                                <LinearLayout
-                                    android:id="@+id/watchingSection"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:orientation="vertical"
-                                    android:paddingBottom="20dp">
-
-                                    <TextView
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:text="Watching"
-                                        android:textAllCaps="true"
-                                        android:layout_marginStart="10dp"
-                                        android:textSize="5sp"
-                                        android:fontFamily="@font/p"
-                                        android:textColor="?attr/FG_color"
-                                        android:alpha="0.4"
-                                        tools:ignore="HardcodedText,SmallSp" />
-
-
-                                    <TextView
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:text="Continue Watching"
-                                        android:layout_marginStart="10dp"
-                                        android:fontFamily="@font/p"
-                                        android:textStyle="bold"
-                                        android:textSize="20sp"
-                                        android:textColor="?attr/FG_color"
-                                        tools:ignore="HardcodedText" />
-
-                                <androidx.recyclerview.widget.RecyclerView
-                                    android:id="@+id/watchingRecycler"
-                                    android:layout_height="match_parent"
-                                    android:layout_width="match_parent"
-                                    android:clipToPadding="false"
-                                    android:scrollbars="none"
-                                    tools:ignore="RtlSymmetry"/>
-                                </LinearLayout>
+                                
 
 
 
@@ -738,114 +694,6 @@
                             </LinearLayout>
 
 
-
-                        <!-- //////////////////////// Search PAGE //////////////////////////////////// -->
-
-                            <LinearLayout
-                                android:id="@+id/searchPage"
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:orientation="horizontal"
-                                android:nextFocusLeft="@+id/searchContainerHome"
-                                android:visibility="gone"
-                                tools:ignore="DisableBaselineAlignment">
-
-
-                                <LinearLayout
-                                    android:layout_width="280dp"
-                                    android:layout_height="match_parent"
-                                    android:orientation="vertical">
-
-                                    <LinearLayout
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="35dp"
-                                        android:layout_marginTop="0dp"
-                                        android:layout_marginBottom="30dp"
-                                        android:orientation="horizontal"
-                                        android:focusableInTouchMode="true">
-
-                                        <!-- Search Icon -->
-                                        <ImageView
-                                            android:layout_width="20dp"
-                                            android:layout_height="match_parent"
-                                            android:src="@drawable/ic_microphone"
-                                            app:tint="?attr/FG_color"
-                                            android:background="?attr/transparentEffect"
-                                            tools:ignore="ContentDescription" />
-
-
-                                        <!-- Search Text Input -->
-                                        <EditText
-                                            android:id="@+id/HomeSearchInput"
-                                            android:layout_width="250dp"
-                                            android:layout_height="match_parent"
-                                            android:hint="Search movies,shows..."
-                                            android:textColor="?attr/FG_color"
-                                            android:textColorHint="?attr/FG_color"
-                                            android:padding = "3dp"
-                                            android:inputType="text"
-                                            android:textSize="15sp"
-                                            android:singleLine="true"
-                                            android:clickable="false"
-                                            android:focusable="false"
-                                            android:fontFamily="@font/p"
-                                            android:focusableInTouchMode="true"
-                                            android:background="?attr/transparentEffect"
-                                            android:imeOptions="actionSearch"
-                                            tools:ignore="Autofill,HardcodedText" />
-
-                                    </LinearLayout>
-
-                                    <include layout="@layout/keyboard_layout"/>
-                                </LinearLayout>
-
-                                <LinearLayout
-                                    android:layout_width="0dp"
-                                    android:layout_weight="1"
-                                    android:layout_height="match_parent"
-                                    android:orientation="vertical">
-                                    <TextView
-                                        android:id="@+id/searchResultsDisplay"
-                                        android:layout_width="match_parent"
-                                        android:layout_height="wrap_content"
-                                        android:text="Show Search Results"
-                                        android:textStyle="bold"
-                                        android:fontFamily="@font/n"
-                                        android:textSize="20sp"
-                                        android:paddingStart="10dp"
-                                        android:textColor="#FFFFFF"
-                                        android:shadowColor="#000000"
-                                        android:shadowDx="1"
-                                        android:shadowDy="1"
-                                        android:shadowRadius="2"
-                                        tools:ignore="HardcodedText,RtlSymmetry"
-                                        android:layout_marginTop="7dp"/>
-
-                                    <LinearLayout
-                                        android:layout_width="match_parent"
-                                        android:layout_height="match_parent"
-                                        android:focusableInTouchMode="false"
-                                        android:focusable="false"
-                                        android:clickable="false"
-                                        android:orientation="vertical">
-
-                                        <androidx.recyclerview.widget.RecyclerView
-                                            android:id="@+id/SearchResults"
-                                            android:layout_width="match_parent"
-                                            android:layout_height="wrap_content"
-                                            android:clipToPadding="false"
-                                            android:overScrollMode="never"
-                                            android:scrollbars="vertical"
-                                            android:layout_margin="4dp" />
-                                    </LinearLayout>
-
-
-
-
-
-
-                                </LinearLayout>
-                            </LinearLayout>
 
                         <!-- //////////////////////// Filter PAGE //////////////////////////////////// -->
                             <LinearLayout
@@ -991,100 +839,7 @@
                                     tools:ignore="NestedWeights" />
 
                             </LinearLayout>
-                        <!-- //////////////////////// Fav PAGE //////////////////////////////////// -->
 
-
-                            <LinearLayout
-                                android:id="@+id/FavePage"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:orientation="vertical"
-                                android:visibility="gone">
-
-
-
-
-                            </LinearLayout>
-                        <!-- //////////////////////// CWATCH PAGE //////////////////////////////////// -->
-
-
-                            <LinearLayout
-                                android:id="@+id/cWatchPage"
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:visibility="gone"
-                                android:orientation="vertical">
-
-
-
-
-
-                            </LinearLayout>
-
-                            <!-- //////////////////////// Notification PAGE //////////////////////////////////// -->
-
-
-                            <LinearLayout
-                                android:id="@+id/cNotificationPage"
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:visibility="gone"
-                                android:orientation="vertical">
-
-
-                                    <LinearLayout
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:orientation="horizontal" >
-
-                                        <TextView
-                                            android:id="@+id/notificationHeadline"
-                                            android:layout_width="wrap_content"
-                                            android:layout_height="wrap_content"
-                                            android:text="notifications"
-                                            android:textStyle="bold"
-                                            android:fontFamily="@font/p"
-                                            android:textSize="13sp"
-                                            android:alpha="0.5"
-                                            android:textColor="?attr/FG_color"
-                                            tools:ignore="HardcodedText"
-                                            />
-
-                                        <View
-                                            android:layout_width="0dp"
-                                            android:layout_height="match_parent"
-                                            android:layout_weight="1"/>
-
-                                        <TextView
-                                            android:id="@+id/clearNotBtn"
-                                            android:layout_width="wrap_content"
-                                            android:layout_height="wrap_content"
-                                            android:text="Clear All"
-                                            android:fontFamily="@font/n"
-                                            android:textColor="#FFFFFF"
-                                            android:shadowColor="#000000"
-                                            android:shadowDx="1"
-                                            android:shadowDy="1"
-                                            android:shadowRadius="2"
-                                            android:paddingHorizontal="15dp"
-                                            android:paddingVertical="2dp"
-                                            android:background="@drawable/filter_button"
-                                            android:layout_marginEnd="20dp"
-                                            tools:ignore="HardcodedText" />
-
-                                    </LinearLayout>
-
-
-
-                                    <androidx.recyclerview.widget.RecyclerView
-                                        android:id="@+id/notificationRecycler"
-                                        android:layout_height="match_parent"
-                                        android:layout_width="match_parent"
-                                        android:clipToPadding="false"
-                                        android:scrollbars="none"
-                                        tools:ignore="RtlSymmetry"/>
-
-                                </LinearLayout>
 
                         </LinearLayout>
 
@@ -1098,6 +853,6 @@
     </androidx.cardview.widget.CardView>
 
 
-    <include layout="@layout/side_bar" android:visibility="gone"/>
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

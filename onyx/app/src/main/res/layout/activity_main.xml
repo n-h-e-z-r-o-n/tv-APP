@@ -53,16 +53,16 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:fontFamily="@font/p"
+            android:fontFamily="@font/a"
             android:gravity="center"
             android:maxLines="1"
             android:shadowColor="@android:color/white"
             android:shadowDx="5"
             android:shadowDy="6"
             android:shadowRadius="4"
-            android:text="♘"
-            android:textColor="#152755"
-            android:textSize="290sp"
+            android:text="ONYX"
+            android:textColor="#000000"
+            android:textSize="150sp"
             tools:ignore="HardcodedText" />
 
     </LinearLayout>

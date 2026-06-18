@@ -323,116 +323,170 @@ data class AnimeSearchItem(
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class AnimeGridAdapter(
-    private val items: MutableList<AiringAnimeItem>,
-    private val layoutResId: Int
-) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+    private val items: MutableList<AnimeGridItem>,
+    private val layoutResId: Int,
+) : RecyclerView.Adapter<AnimeGridAdapter.ViewHolder>() {
 
     companion object {
         private const val VIEW_TYPE_MOVIE = 0
         private const val VIEW_TYPE_ADD_BUTTON = 1
         private var lastKeyTime = 0L
-        private val KEY_DEBOUNCE_DELAY = 150L // ms
+        private val KEY_DEBOUNCE_DELAY = 430L // ms
     }
 
     var onAddMoreClicked: (() -> Unit)? = null
+    var onItemFocused: ((View, AnimeGridItem) -> Unit)? = null
+    var onItemFocusLost: (() -> Unit)? = null
 
-    // ViewHolder for anime items
-    inner class AnimeViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val CardViewcontiner: CardView = view.findViewById(R.id.CardViewcontiner)
-        val Movie_image: ImageView = view.findViewById(R.id.itemImage)
-        val title: TextView = view.findViewById(R.id.cardTitle)
-        val cardType: TextView = view.findViewById(R.id.cardType)
-        val cardDub: TextView = view.findViewById(R.id.cardDub)
-        val cardSub: TextView = view.findViewById(R.id.cardSub)
-    }
-
-    // ViewHolder for add button
-    inner class AddButtonViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        init {
-            view.setOnClickListener {
-                // Move focus to second last item before calling the function
-                val secondLastPosition = items.size - 1
-                if (secondLastPosition >= 0) {
-                    // Find the recyclerView and set focus to second last item
-                    val recyclerView = itemView.parent as? RecyclerView
-                    recyclerView?.layoutManager?.findViewByPosition(secondLastPosition)?.requestFocus()
-                }
-
-                // Then call the add more function
-                onAddMoreClicked?.invoke()
-            }
+    var isLoadingMore = false
+        set(value) {
+            field = value
+            notifyItemChanged(items.size) // refresh the "Add More" item only
         }
+
+    // Unified ViewHolder (Nullable views to safely handle both standard items and the Add button)
+    inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        val CardViewcontiner: CardView? = view.findViewById(R.id.CardViewcontiner)
+        val Movie_image: ImageView? = view.findViewById(R.id.itemImage)
+        val title: TextView? = view.findViewById(R.id.cardTitle)
+        val cardType: TextView? = view.findViewById(R.id.cardType)
+        val cardDub: TextView? = view.findViewById(R.id.cardDub)
+        val cardSub: TextView? = view.findViewById(R.id.cardSub)
     }
 
     override fun getItemViewType(position: Int): Int {
+        // The last item is the "Add More" button
         return if (position == items.size) VIEW_TYPE_ADD_BUTTON else VIEW_TYPE_MOVIE
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-        return when (viewType) {
-            VIEW_TYPE_ADD_BUTTON -> {
-                val view = LayoutInflater.from(parent.context)
-                    .inflate(R.layout.item_add_more, parent, false)
-                AddButtonViewHolder(view)
-            }
-            else -> {
-                val view = LayoutInflater.from(parent.context)
-                    .inflate(layoutResId, parent, false)
-                AnimeViewHolder(view)
-            }
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val layoutId = if (viewType == VIEW_TYPE_ADD_BUTTON) {
+            R.layout.item_add_more
+        } else {
+            layoutResId
         }
+
+        val view = LayoutInflater.from(parent.context).inflate(layoutId, parent, false)
+        return ViewHolder(view)
     }
 
-    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        when (holder) {
-            is AnimeViewHolder -> {
-                val currentItem = items[position]
-                val title = currentItem.title
-                val imageUrl = currentItem.imageUrl
-                val imdbCode = currentItem.id
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
 
-                holder.title.text = title
-                holder.cardSub.text = currentItem.sub
-                holder.cardDub.text = if (currentItem.dub == "null" || currentItem.dub.isEmpty()) "0" else currentItem.dub
-                holder.cardType.text = currentItem.type
+        // ==========================================
+        // 1. HANDLE "ADD MORE" BUTTON
+        // ==========================================
+        if (getItemViewType(position) == VIEW_TYPE_ADD_BUTTON) {
+            val content = holder.itemView.findViewById<View>(R.id.addMoreContent)
+            val loading = holder.itemView.findViewById<View>(R.id.addMoreLoading)
 
-                Glide.with(holder.itemView.context)
-                    .load(imageUrl)
-                    .override(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL)
-                    .centerInside()
-                    .into(holder.Movie_image)
+            if (isLoadingMore) {
+                content?.visibility = View.GONE
+                loading?.visibility = View.VISIBLE
+                holder.itemView.isClickable = false
+                holder.itemView.isFocusable = false
+            } else {
+                content?.visibility = View.VISIBLE
+                loading?.visibility = View.GONE
+                holder.itemView.isClickable = true
+                holder.itemView.isFocusable = true
+            }
 
-                holder.CardViewcontiner.setOnClickListener {
-                    val context = holder.itemView.context
-                    val intent = Intent(context, Watch_Anime_Page::class.java)
-                    intent.putExtra("anime_code", imdbCode)
-                    intent.putExtra("anime_poster", imageUrl)
-                    context.startActivity(intent)
-                }
+            // Fallback click listener
+            holder.itemView.setOnClickListener {
+                if (!isLoadingMore) {
+                    isLoadingMore = true
+                    val recycler = holder.itemView.parent as RecyclerView
+                    val prevPosition = holder.bindingAdapterPosition - 1
 
-                holder.CardViewcontiner.setOnKeyListener { v, keyCode, event ->
-                    if (event.action != KeyEvent.ACTION_DOWN) return@setOnKeyListener false
-                    val now = System.currentTimeMillis()
-                    if (now - lastKeyTime < KEY_DEBOUNCE_DELAY) return@setOnKeyListener true
-                    lastKeyTime = now
-
-                    when (keyCode) {
-                        KeyEvent.KEYCODE_DPAD_LEFT -> {
-                            if (position == 0) return@setOnKeyListener true
-                        }
-                        KeyEvent.KEYCODE_DPAD_RIGHT -> {
-                            if (position == items.size) {
-                                return@setOnKeyListener true
-                            }
-
+                    if (prevPosition >= 0) {
+                        recycler.post {
+                            recycler.findViewHolderForAdapterPosition(prevPosition)
+                                ?.itemView
+                                ?.requestFocus()
                         }
                     }
-                    false
+                    onAddMoreClicked?.invoke()
                 }
             }
-            is AddButtonViewHolder -> {
-                // Nothing to bind for the add button
+            return
+        }
+
+        // ==========================================
+        // 2. HANDLE STANDARD ANIME ITEM
+        // ==========================================
+        val currentItem = items[position]
+        val title = currentItem.title
+        val imageUrl = currentItem.poster
+        val imdbCode = currentItem.id
+
+        holder.title?.text = title
+        holder.cardSub?.text = currentItem.sub
+        holder.cardDub?.text = if (currentItem.dub == "null" || currentItem.dub.isEmpty()) "0" else currentItem.dub
+        holder.cardType?.text = currentItem.type
+
+        holder.Movie_image?.let {
+            Glide.with(holder.itemView.context)
+                .load(imageUrl)
+                .override(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL)
+                .centerInside()
+                .into(it)
+        }
+
+        // Apply listeners to the root view to match GridAdapter exactly
+        holder.itemView.setOnClickListener {
+            val context = holder.itemView.context
+            val intent = Intent(context, Watch_Anime_Page::class.java).apply {
+                putExtra("anime_code", imdbCode)
+                putExtra("anime_poster", imageUrl)
             }
+            context.startActivity(intent)
+        }
+
+        // ==========================================
+        // 3. TV FOCUS PREFETCH LOGIC
+        // ==========================================
+        holder.itemView.setOnFocusChangeListener { v, hasFocus ->
+            if (hasFocus) {
+                onItemFocused?.invoke(v, currentItem) // show popup
+
+                // ✅ Trigger load when focused on the last 6 items
+                val prefetchThreshold = 6
+                val currentPos = holder.bindingAdapterPosition
+
+                if (!isLoadingMore && currentPos != RecyclerView.NO_POSITION && currentPos >= items.size - prefetchThreshold) {
+                    // Defer BOTH the flag flip (which triggers notifyItemChanged)
+                    // and the callback until after the current layout/scroll pass
+                    // finishes. Flipping isLoadingMore synchronously here was the
+                    // crash: focus events can land mid-layout on TV D-pad nav,
+                    // and notifyItemChanged() throws if called at that point.
+                    v.post {
+                        if (!isLoadingMore) {
+                            isLoadingMore = true
+                            onAddMoreClicked?.invoke()
+                        }
+                    }
+                }
+            } else {
+                onItemFocusLost?.invoke()   // hide popup
+            }
+        }
+
+        holder.itemView.setOnKeyListener { _, keyCode, event ->
+            if (event.action != KeyEvent.ACTION_DOWN) return@setOnKeyListener false
+            val now = System.currentTimeMillis()
+            if (now - lastKeyTime < KEY_DEBOUNCE_DELAY) return@setOnKeyListener true
+            lastKeyTime = now
+
+            val currentPos = holder.bindingAdapterPosition
+            when (keyCode) {
+                KeyEvent.KEYCODE_DPAD_LEFT -> {
+                    if (currentPos == 0) return@setOnKeyListener true
+                }
+                KeyEvent.KEYCODE_DPAD_RIGHT -> {
+                    if (currentPos == items.size) return@setOnKeyListener true
+                }
+            }
+            false
         }
     }
 
@@ -440,22 +494,46 @@ class AnimeGridAdapter(
         return items.size + 1
     }
 
-    fun addItem(item: AiringAnimeItem) {
+    fun addItem(item: AnimeGridItem) {
         items.add(item)
         notifyItemInserted(items.size - 1)
     }
 
-    fun addItems(newItems: List<AiringAnimeItem>) {
+    fun addItems(newItems: List<AnimeGridItem>) {
         val startPos = items.size
         items.addAll(newItems)
         notifyItemRangeInserted(startPos, newItems.size)
     }
 
     fun clearItems() {
+        val size = items.size
         items.clear()
-        notifyDataSetChanged()
+        notifyItemRangeRemoved(0, size) // Smooth removal
     }
+
+    fun getItem(position: Int): AnimeGridItem? = items.getOrNull(position)
 }
+
+
+data class AnimeGridItem(
+    val id: String,
+    val anilistId: String,
+    val malId: String,
+    val title: String,
+    val japaneseTitle: String,
+    val poster: String,
+    val backdropUrl: String?,
+    val description: String,
+    val releaseDate: String,
+    val type: String,
+    val quality: String,
+    val status: String,
+    val genres: List<String>,
+    val duration: String,
+    val sub: String,
+    val dub: String,
+    val rating: String
+)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////

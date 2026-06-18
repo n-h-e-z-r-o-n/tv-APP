@@ -3,43 +3,39 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/sideBar"
-    android:layout_width="wrap_content"
+    android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:visibility="visible"
+    android:background="@drawable/overlay_left_gradient_bg"
     app:layout_constraintTop_toTopOf="parent"
     app:layout_constraintBottom_toBottomOf="parent"
     app:layout_constraintStart_toStartOf="parent">
-
 
     <androidx.cardview.widget.CardView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical"
         app:cardElevation="5dp"
-        app:cardBackgroundColor="?attr/transparentEffect"
+        app:cardBackgroundColor="?attr/BG_color_up"
         app:cardCornerRadius="300dp"
         android:layout_margin="10dp"
-        android:orientation="vertical"
-        tools:ignore="UselessParent">
-
-
+        tools:ignore="UselessParent"/>
 
         <LinearLayout
-            android:layout_width="44dp"
-            android:layout_height="match_parent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:background="?attr/transparentEffect"
-            >
-
+            android:layout_marginStart="20dp"
+            android:layout_gravity="center_vertical">
 
             <LinearLayout
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="30dp"
                 android:layout_marginTop="10dp"
                 android:gravity="center_vertical"
-                android:orientation="vertical">
+                android:orientation="horizontal">
 
                 <ImageButton
                     android:id="@+id/sidebarBtnShows"
@@ -48,13 +44,12 @@
                     android:layout_gravity="center_horizontal"
                     android:background="@android:color/transparent"
                     android:clickable="true"
-                    android:contentDescription="Tv"
+                    android:contentDescription="Tv Shows"
                     android:focusable="true"
                     android:nextFocusLeft="@id/sidebarBtnShows"
-                    android:nextFocusRight="@id/sidebarBtnShows"
                     android:nextFocusUp="@id/sidebarBtnProfile"
                     android:nextFocusDown="@id/sidebarBtnAnime"
-                    android:src="@drawable/ic_movie"
+                    android:src="@drawable/ic_anime_home"
                     app:tint="@color/nav_icon_color_selector"
                     tools:ignore="HardcodedText,DuplicateSpeakableTextCheck,TouchTargetSizeCheck" />
 
@@ -73,11 +68,11 @@
             </LinearLayout>
 
             <LinearLayout
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="30dp"
                 android:gravity="center_vertical"
-                android:orientation="vertical">
+                android:orientation="horizontal">
 
                 <ImageButton
                     android:id="@+id/sidebarBtnAnime"
@@ -86,13 +81,12 @@
                     android:layout_gravity="center_horizontal"
                     android:background="@android:color/transparent"
                     android:clickable="true"
-                    android:contentDescription="Tv"
+                    android:contentDescription="Anime"
                     android:focusable="true"
                     android:nextFocusLeft="@id/sidebarBtnAnime"
-                    android:nextFocusRight="@id/sidebarBtnAnime"
                     android:nextFocusUp="@id/sidebarBtnShows"
-                    android:nextFocusDown="@id/sidebarBtnProfile"
-                    android:src="@drawable/ic_anime"
+                    android:nextFocusDown="@id/sidebarSearchBtn"
+                    android:src="@drawable/ic_anime_dubbed"
                     app:tint="@color/nav_icon_color_selector"
                     tools:ignore="HardcodedText,TouchTargetSizeCheck" />
 
@@ -110,19 +104,144 @@
                     tools:ignore="HardcodedText,InefficientWeight,SmallSp" />
             </LinearLayout>
 
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="30dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <ImageButton
+                    android:id="@+id/sidebarSearchBtn"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_gravity="center_horizontal"
+                    android:background="@android:color/transparent"
+                    android:clickable="true"
+                    android:contentDescription="Search"
+                    android:focusable="true"
+                    android:nextFocusLeft="@id/sidebarSearchBtn"
+                    android:nextFocusUp="@id/sidebarBtnAnime"
+                    android:nextFocusDown="@id/sidebarWatchListBtn"
+                    android:src="@drawable/ic_search"
+                    app:tint="@color/nav_icon_color_selector"
+                    tools:ignore="HardcodedText,TouchTargetSizeCheck" />
+
+                <TextView
+                    android:id="@+id/sidebarLabelSearch"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:alpha="0.5"
+                    android:ellipsize="end"
+                    android:gravity="center"
+                    android:maxLines="1"
+                    android:text="Search"
+                    android:textColor="?attr/FG_color"
+                    android:textSize="9sp"
+                    tools:ignore="HardcodedText,InefficientWeight,SmallSp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="30dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <ImageButton
+                    android:id="@+id/sidebarWatchListBtn"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_gravity="center_horizontal"
+                    android:background="@android:color/transparent"
+                    android:clickable="true"
+                    android:contentDescription="Watchlist"
+                    android:focusable="true"
+                    android:nextFocusLeft="@id/sidebarWatchListBtn"
+                    android:nextFocusUp="@id/sidebarSearchBtn"
+                    android:nextFocusDown="@id/sidebarNotificationBtn"
+                    android:src="@drawable/clock"
+                    app:tint="@color/nav_icon_color_selector"
+                    tools:ignore="HardcodedText,TouchTargetSizeCheck" />
+
+                <TextView
+                    android:id="@+id/sidebarLabelWatchList"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:alpha="0.5"
+                    android:ellipsize="end"
+                    android:gravity="center"
+                    android:maxLines="1"
+                    android:text="Watching"
+                    android:textColor="?attr/FG_color"
+                    android:textSize="9sp"
+                    tools:ignore="HardcodedText,InefficientWeight,SmallSp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="30dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <FrameLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal">
+
+                    <androidx.cardview.widget.CardView
+                        android:id="@+id/cNotificationAnimeIcon"
+                        android:layout_width="9dp"
+                        android:layout_height="9dp"
+                        app:cardCornerRadius="50dp"
+                        android:layout_gravity="top|end"
+                        android:visibility="visible"
+                        app:cardBackgroundColor="@android:color/holo_red_light"
+                        tools:ignore="RtlHardcoded" />
+
+                    <ImageButton
+                        android:id="@+id/sidebarNotificationBtn"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="@android:color/transparent"
+                        android:clickable="true"
+                        android:contentDescription="Notifications"
+                        android:focusable="true"
+                        android:nextFocusLeft="@id/sidebarNotificationBtn"
+                        android:nextFocusUp="@id/sidebarWatchListBtn"
+                        android:nextFocusDown="@id/sidebarBtnProfile"
+                        android:src="@drawable/ic_notification"
+                        app:tint="@color/nav_icon_color_selector"
+                        tools:ignore="HardcodedText,TouchTargetSizeCheck" />
+                </FrameLayout>
+
+                <TextView
+                    android:id="@+id/sidebarLabelNotification"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:alpha="0.5"
+                    android:ellipsize="end"
+                    android:gravity="center"
+                    android:maxLines="1"
+                    android:text="Alerts"
+                    android:textColor="?attr/FG_color"
+                    android:textSize="9sp"
+                    tools:ignore="HardcodedText,InefficientWeight,SmallSp" />
+            </LinearLayout>
+
             <androidx.cardview.widget.CardView
                 android:id="@+id/sidebarBtnProfile"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                android:layout_marginBottom="10dp"
-                android:layout_gravity="bottom|center_horizontal"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:layout_margin="3dp"
+                android:layout_gravity="bottom"
                 android:clickable="true"
                 android:focusable="true"
                 android:focusableInTouchMode="true"
                 android:foreground="@drawable/cast_focus"
                 android:nextFocusLeft="@id/sidebarBtnProfile"
-                android:nextFocusRight="@id/sidebarBtnProfile"
-                android:nextFocusUp="@id/sidebarBtnAnime"
+                android:nextFocusUp="@id/sidebarNotificationBtn"
                 android:nextFocusDown="@id/sidebarBtnShows"
                 app:cardBackgroundColor="?attr/transparentEffect"
                 app:cardCornerRadius="100dp"
@@ -146,13 +265,11 @@
                     android:text="Profile"
                     android:textColor="?attr/FG_color"
                     android:textSize="14sp"
-                    android:visibility="gone"
                     tools:ignore="HardcodedText" />
 
             </androidx.cardview.widget.CardView>
 
-
         </LinearLayout>
-    </androidx.cardview.widget.CardView>
+
 
 </FrameLayout>
