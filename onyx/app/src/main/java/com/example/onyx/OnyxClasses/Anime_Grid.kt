@@ -328,7 +328,7 @@ data class AnimeSearchItem(
 class AnimeGridAdapter(
     private val items: MutableList<AnimeGridItem>,
     private val layoutResId: Int,
-) : RecyclerView.Adapter<AnimeGridAdapter.ViewHolder>() {
+) : RecyclerView.Adapter<AnimeGridAdapter.ViewHolder>(), FocusableAdapter<AnimeGridItem> {
 
     companion object {
         private const val VIEW_TYPE_MOVIE = 0
@@ -338,8 +338,8 @@ class AnimeGridAdapter(
     }
 
     var onAddMoreClicked: (() -> Unit)? = null
-    var onItemFocused: ((View, AnimeGridItem) -> Unit)? = null
-    var onItemFocusLost: (() -> Unit)? = null
+    override var onItemFocused: ((View, AnimeGridItem) -> Unit)? = null
+    override var onItemFocusLost: (() -> Unit)? = null
 
     var isLoadingMore = false
         set(value) {
@@ -514,7 +514,7 @@ class AnimeGridAdapter(
         notifyItemRangeRemoved(0, size) // Smooth removal
     }
 
-    fun getItem(position: Int): AnimeGridItem? = items.getOrNull(position)
+    override fun getItem(position: Int): AnimeGridItem? = items.getOrNull(position)
 }
 
 

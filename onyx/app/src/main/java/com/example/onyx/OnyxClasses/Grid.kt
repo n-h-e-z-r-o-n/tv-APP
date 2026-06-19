@@ -49,7 +49,7 @@ import kotlinx.coroutines.withContext
 class GridAdapter(
     private val items: MutableList<MovieItemOne>,
     private val layoutResId: Int,
-) : RecyclerView.Adapter<GridAdapter.ViewHolder>() {
+) : RecyclerView.Adapter<GridAdapter.ViewHolder>(), FocusableAdapter<MovieItemOne> {
 
     companion object {
         private const val VIEW_TYPE_MOVIE = 0
@@ -59,8 +59,9 @@ class GridAdapter(
     }
 
     var onAddMoreClicked: (() -> Unit)? = null
-    var onItemFocused: ((View, MovieItemOne) -> Unit)? = null
-    var onItemFocusLost: (() -> Unit)? = null
+    override var onItemFocused: ((View, MovieItemOne) -> Unit)? = null
+    override var onItemFocusLost: (() -> Unit)? = null
+    override fun getItem(position: Int): MovieItemOne? = items.getOrNull(position)
     var isLoadingMore = false
         set(value) {
             field = value

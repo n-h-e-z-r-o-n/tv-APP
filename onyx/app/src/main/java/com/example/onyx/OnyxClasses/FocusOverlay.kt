@@ -64,7 +64,6 @@ class FocusOverlay<T> (
 
 
             try {
-                val setOnItemFocused = adapter.javaClass.methods.find { it.name == "setOnItemFocused" }
                 val focusAction: (View, T) -> Unit = { view, item ->
                     overlay.strokeWidth = 3
 
@@ -106,13 +105,15 @@ class FocusOverlay<T> (
                         projectItemAction(item)
                     }
                 }
-                setOnItemFocused?.invoke(adapter, focusAction)
-
-                val setOnItemFocusLost = adapter.javaClass.methods.find { it.name == "setOnItemFocusLost" }
                 val focusLostAction: () -> Unit = {
                     overlay.strokeWidth = 0
                 }
-                setOnItemFocusLost?.invoke(adapter, focusLostAction)
+                if (adapter is FocusableAdapter<*>) {
+                    @Suppress("UNCHECKED_CAST")
+                    val focusableAdapter = adapter as FocusableAdapter<T>
+                    focusableAdapter.onItemFocused = focusAction
+                    focusableAdapter.onItemFocusLost = focusLostAction
+                }
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -136,12 +137,10 @@ class FocusOverlay<T> (
 
                     // 1. Get the data dynamically
                     var firstItem: T? = null
-                    try {
-                        val getItemMethod = adapter.javaClass.methods.find { it.name == "getItem" }
+                    if (adapter is FocusableAdapter<*>) {
                         @Suppress("UNCHECKED_CAST")
-                        firstItem = getItemMethod?.invoke(adapter, 0) as? T
-                    } catch (e: Exception) {
-                        e.printStackTrace()
+                        val focusableAdapter = adapter as FocusableAdapter<T>
+                        firstItem = focusableAdapter.getItem(0)
                     }
 
                     if (firstItem == null) return@post

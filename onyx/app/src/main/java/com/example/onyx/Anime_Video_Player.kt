@@ -400,7 +400,7 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
                 val jsonObjectServerInfo = withContext(Dispatchers.IO) { fetchAnime.animeEpisodeServers(episodeId) }
                 if (jsonObjectServerInfo != null) {
 
-                    Log.e("ANIME_PLAYER", "StreamingLinks=$episodeId FETCHED")
+                    Log.d("ANIME_PLAYER", "StreamingLinks=$jsonObjectServerInfo FETCHED")
 
                     val dataServers = jsonObjectServerInfo.getJSONObject("data")
 
@@ -413,10 +413,17 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
                         for (i in 0 until input.length()) {
                             val obj = input.optJSONObject(i) ?: continue
                             val link = obj.optString("link")
+                            val type = obj.optString("type")
 
+                            /*
                             if (link.contains(".m3u8")) {
                                 result.put(obj)
+                            }*/
+
+                            if (type != "embed") {
+                                result.put(obj)
                             }
+                            //result.put(obj)
                         }
 
                         return result
@@ -426,29 +433,46 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
                     val dubServers = cleanArray(dubServersRaw)
 
                     // Determine initial default
-                    val (defaultServerName, defaultCategory, videoLink) = when {
+                    val defaultSource = when {
                         dubServers.length() > 0 -> {
                             val server = dubServers.getJSONObject(0)
-                            Triple(
-                                server.getString("server"),
-                                "dub",
-                                server.getString("link")
+                            StreamSource(
+                                serverName = server.getString("server"),
+                                category = "dub",
+                                videoLink = server.getString("link"),
+                                referer = server.optJSONObject("headers")?.optString("Referer"),
+                                origin = server.optJSONObject("headers")?.optString("Origin"),
+                                userAgent = server.optJSONObject("headers")?.optString("User-Agent")
+
                             )
                         }
 
                         subServers.length() > 0 -> {
                             val server = subServers.getJSONObject(0)
-                            Triple(
-                                server.getString("server"),
-                                "sub",
-                                server.getString("link")
+                            StreamSource(
+                                serverName = server.getString("server"),
+                                category = "sub",
+                                videoLink = server.getString("link"),
+                                referer = server.optJSONObject("headers")?.optString("Referer"),
+                                origin = server.optJSONObject("headers")?.optString("Origin"),
+                                userAgent = server.optJSONObject("headers")?.optString("User-Agent")
                             )
                         }
 
                         else -> return@launch
                     }
 
-                    fetchServerSources(episodeId, defaultServerName, defaultCategory, videoLink)
+                    //fetchServerSources(episodeId, defaultServerName, defaultCategory, videoLink)
+
+                    fetchServerSources(
+                        episodeId,
+                        defaultSource.serverName,
+                        defaultSource.category,
+                        defaultSource.videoLink,
+                        referer =  defaultSource.referer, // Make sure to pass this!
+                        origin = defaultSource.origin,
+                        userAgent = defaultSource.userAgent
+                    )
 
                     val btnServer = findViewById<TextView>(R.id.btn_server)
 
@@ -485,6 +509,9 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
                                 val server = servers.getJSONObject(i)
                                 val serverName = server.getString("server")
                                 val vlink = server.getString("link")
+                                val referer = server.getJSONObject("headers").optString("Referer")
+                                val orign = server.getJSONObject("headers").optString("Origin")
+                                val userAgent = server.optJSONObject("headers")?.optString("User-Agent")
 
                                 val serverBtn = Button(this@Anime_Video_Player).apply {
                                     text = serverName
@@ -509,7 +536,7 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
                                         dialog?.dismiss()
 
                                         if (vlink.isNotBlank()) {
-                                            fetchServerSources(episodeId, serverName, title, vlink)
+                                            fetchServerSources(episodeId, serverName, title, vlink, referer,  orign, userAgent)
                                         }
                                     }
                                 }
@@ -544,14 +571,12 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
         }
     }
 
-    private fun fetchServerSources(episodeId: String, serverName: String, category: String, vidUrl: String) {
+    private fun fetchServerSources(episodeId: String, serverName: String, category: String, vidUrl: String , referer: String?, origin:String?, userAgent:String?) {
         lifecycleScope.launch(Dispatchers.Main) {
-
-
 
                     Log.e(
                         "ANIME_PLAYER",
-                        "PlAYER STARTED: $episodeId  , serverName: $serverName , category: $category, vidUrl: $vidUrl "
+                        "PlAYER STARTED: $episodeId  , \nserverName: $serverName , \ncategory: $category, \nvidUrl: $vidUrl , \nReferer: $referer , \norigin: $origin, userAgent: $userAgent\n\n"
                     )
 
 
@@ -567,12 +592,9 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
 
 
                     videoUrl = vidUrl
-                    //val referer = data.getJSONObject("headers").optString("Referer")
+                    //val referer = "https://www.miruro.tv/" //data.getJSONObject("headers").optString("Referer")
 
-                    Log.e(
-                        "ANIME_PLAYER",
-                        "Loaded server=$serverName category=$category vidUrl=$vidUrl"
-                    )
+
 
 
                     val btnServer = findViewById<TextView>(R.id.btn_server)
@@ -583,8 +605,8 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
                     hasAppliedResumePosition = false
                     // (Re)initialize player with new stream
                     exoPlayer?.release()
-                    //exoPlayer = initializePlayer(vidUrl, referer)
-                    exoPlayer = initializePlayer(vidUrl)
+                    exoPlayer = initializePlayer(vidUrl, referer, origin, userAgent)
+                    //exoPlayer = initializePlayer(vidUrl)
                     exoPlayer?.let { player ->
                         playerView.player = player
                         player.addListener(this@Anime_Video_Player)
@@ -1169,7 +1191,7 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
         }
     }
 
-    private fun initializePlayer(videoUrl: String, referer: String? = null): ExoPlayer {
+    private fun initializePlayer(videoUrl: String, referer: String? = null, origin: String?, userAgent: String?): ExoPlayer {
         releasePlayer()
 
         val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
@@ -1199,9 +1221,11 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
 
         // ✅ Add headers here
         val headers = mutableMapOf<String, String>()
-        headers["User-Agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+        //headers["User-Agent"] = userAgent.toString()
+        userAgent?.let { headers["User-Agent"] = it }
         referer?.let { headers["Referer"] = it }
-        headers["Origin"] = "https://megacloud.blog"
+        origin?.let { headers["Origin"] = it }
+        //headers["Origin"] = origin.toString()
 
         val dataSourceFactory = DefaultHttpDataSource.Factory()
             .setDefaultRequestProperties(headers)
@@ -1440,3 +1464,12 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
         Log.d("Video_payer", "Available qualities updated: $availableQualities")
     }
 }
+
+data class StreamSource(
+    val serverName: String,
+    val category: String,
+    val videoLink: String,
+    val referer: String?,
+    val origin: String?,
+    val userAgent: String?
+)
