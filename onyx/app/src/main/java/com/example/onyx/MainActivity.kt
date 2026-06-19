@@ -75,13 +75,13 @@ class MainActivity : AppCompatActivity() {
                 //sm.saveAvatar("profile_avatars/1.png")
                 //startActivity(Intent(this@MainActivity, Instraction::class.java))
 
-                val r = GlobalUtils.ipCheck(this@MainActivity)
-                startActivity(Intent(this@MainActivity, HomeActivity::class.java))
-                finish()
+                //val r = GlobalUtils.ipCheck(this@MainActivity)
+                //startActivity(Intent(this@MainActivity, Login_Page::class.java))
+                //finish()
 
             } else {
                 val r = GlobalUtils.ipCheck(this@MainActivity)
-                startActivity(Intent(this@MainActivity, HomeActivity::class.java))
+                startActivity(Intent(this@MainActivity, Login_Page::class.java))
                 finish()
             }
         }

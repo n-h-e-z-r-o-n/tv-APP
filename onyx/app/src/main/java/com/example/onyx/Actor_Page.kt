@@ -47,15 +47,9 @@ class Actor_Page : AppCompatActivity() {
 
 
                 // Calculate span count dynamically
-                val widthInPixels = this@Actor_Page.resources.getDimension(R.dimen.grid_item_width)
-                val density = this@Actor_Page.resources.displayMetrics.density
-                val widthInDp = widthInPixels / density
                 val displayMetrics = resources.displayMetrics
-                val screenWidthPx = displayMetrics.widthPixels
-                val itemMinWidthPx = ((widthInDp + 15) * displayMetrics.density).toInt() // 160dp per item
-                val spanCount = maxOf(1, screenWidthPx / itemMinWidthPx)
 
-                recyclerView.layoutManager = GridLayoutManager(this@Actor_Page, spanCount)
+                recyclerView.layoutManager = GridLayoutManager(this@Actor_Page, 4)
                 recyclerView.adapter = adapter
                 val spacing = (19 * displayMetrics.density).toInt()
                 recyclerView.addItemDecoration(EqualSpaceItemDecoration(spacing))

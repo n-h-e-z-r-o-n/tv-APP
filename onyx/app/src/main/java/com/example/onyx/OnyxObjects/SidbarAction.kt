@@ -189,12 +189,9 @@ object NavAction {
             Glide.with(activity)
                 .load(avatarPath)
                 .transform(CircleCrop())
-                .placeholder(R.drawable.tv_banner)
-                .error(R.drawable.tv_banner)
                 .dontAnimate()
                 .into(imageView)
         } catch (e: Exception) {
-            imageView.setImageResource(R.drawable.tv_banner)
         }
     }
 }

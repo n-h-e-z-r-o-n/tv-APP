@@ -113,20 +113,13 @@ class Login_Page : AppCompatActivity() {
 
         val userId = sm.getUserId()
         if (userId == -1) {
-            // No user logged in → redirect to Login page
+            InitializeWindgets()         // Setup
+            loadProfiles()         // Load existing profiles
+            setupBackPressedCallback()
         }else{
             startActivity(Intent(this, HomeActivity::class.java))
             finish()
         }
-
-        InitializeWindgets()         // Setup
-        loadProfiles()         // Load existing profiles
-        setupBackPressedCallback()
-
-
-
-
-
     }
 
     private fun InitializeWindgets() {

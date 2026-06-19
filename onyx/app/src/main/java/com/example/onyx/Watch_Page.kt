@@ -359,7 +359,7 @@ class Watch_Page : AppCompatActivity() {
                 //season_count_widget.text = "$no_of_season Seasons"
                 createSeasonButtons(no_of_season, validSeasons, showId)
             }else{
-                fetchStreamLinks(showId, showType, showTitle, showPoster, showBackdrop, showSno="0", showEno="0")
+                //fetchStreamLinks(showId, showType, showTitle, showPoster, showBackdrop, showSno="0", showEno="0")
             }
 
             // ---------- BUTTONS ------------------------------------------------------------------

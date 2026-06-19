@@ -33,7 +33,7 @@ import com.example.onyx.FetchData.TMDBapi
 import com.example.onyx.OnyxObjects.GlobalUtils
 import com.example.onyx.Play
 import com.example.onyx.R
-import com.example.onyx.Watch_Anime_Page
+import com.example.onyx.WatchAnimeFragment
 import com.example.onyx.Watch_Page
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -1341,11 +1341,11 @@ class FavAdapter(
         holder.itemView.setOnClickListener {
             val context = holder.itemView.context
             if (type == "anime") {
-                val intent = Intent(context, Watch_Anime_Page::class.java).apply {
-                    putExtra("anime_code", imdbCode)
-                    putExtra("anime_poster", posterUrl)
-                }
-                context.startActivity(intent)
+                val args = android.os.Bundle().apply {
+    putString("anime_code", imdbCode)
+    putString("anime_poster", posterUrl)
+}
+(context as com.example.onyx.HomeActivity).navigateToFragment(com.example.onyx.WatchAnimeFragment(), args)
             } else {
                 val intent = Intent(context, Watch_Page::class.java).apply {
                     putExtra("imdb_code", imdbCode)
@@ -1819,11 +1819,11 @@ class NotificationAdapter(
                     }
 
 
-                    val intent = Intent(context, Watch_Anime_Page::class.java)
-
-                    intent.putExtra("anime_code", imdbCode)
-                    intent.putExtra("anime_poster", imageUrl)
-                    context.startActivity(intent)
+                    val args = android.os.Bundle().apply {
+    putString("anime_code", imdbCode)
+    putString("anime_poster", imageUrl)
+}
+(context as com.example.onyx.HomeActivity).navigateToFragment(com.example.onyx.WatchAnimeFragment(), args)
 
                 }else {
                     val intent = Intent(context, Watch_Page::class.java)

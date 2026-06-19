@@ -7,6 +7,7 @@ import android.os.Looper
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.ImageButton
 import android.widget.ImageView
@@ -45,7 +46,11 @@ import kotlinx.coroutines.cancelChildren
 import kotlin.collections.mutableListOf
 
 
-class Watch_Anime_Page : AppCompatActivity() {
+import androidx.fragment.app.Fragment
+import com.example.onyx.databinding.FragmentWatchAnimePageBinding
+import com.google.android.material.card.MaterialCardView
+
+class WatchAnimeFragment : Fragment(R.layout.fragment_watch_anime_page) {
     private var urlHome = BuildConfig.A_K
     private lateinit var db: AppDatabase
     private lateinit var  sm: SessionManger
@@ -70,20 +75,31 @@ class Watch_Anime_Page : AppCompatActivity() {
 
 
 
+    private var _binding: FragmentWatchAnimePageBinding? = null
+    private val binding get() = _binding!!
 
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        // 2. Inflate the layout using the generated binding class
+        _binding = FragmentWatchAnimePageBinding.inflate(inflater, container, false)
+        return binding.root
+    }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        GlobalUtils.applyTheme(this)
-        enableEdgeToEdge()
-        setContentView(R.layout.activity_watch_anime_page)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        GlobalUtils.applyTheme(requireActivity())
 
         setupBackPressedCallback()
 
-        db = AppDatabase(this)
-        sm = SessionManger(this)
-        fetchAnime = AnimeApi(this)
-        fetchTMDB = TMDBapi(this)
+        LoadingAnimation.setup(requireContext(), view, R.raw.line_loading)
+        LoadingAnimation.show(view)
+
+        db = AppDatabase(requireContext())
+        sm = SessionManger(requireContext())
+        fetchAnime = AnimeApi(requireContext())
+        fetchTMDB = TMDBapi(requireContext())
 
         userId = sm.getUserId()
 
@@ -92,7 +108,7 @@ class Watch_Anime_Page : AppCompatActivity() {
 
         //------------------------------------------------------------------------------------------
 
-        mainSection = findViewById(R.id.mainSection)
+        mainSection = requireView().findViewById(R.id.mainSection)
 
         //------------------------------------------------------------------------------------------
 
@@ -104,7 +120,7 @@ class Watch_Anime_Page : AppCompatActivity() {
 
         SeasonIMGArray = mutableListOf<String>()
         //------------------------------------------------------------------------------------------
-        animeId = intent.getStringExtra("anime_code")?: ""
+        animeId = arguments?.getString("anime_code")?: ""
 
         /*
         Log.e("ANIME_Watch id", animeId)
@@ -115,7 +131,7 @@ class Watch_Anime_Page : AppCompatActivity() {
         }
          */
 
-        CoroutineScope(Dispatchers.Main).launch {
+        viewLifecycleOwner.lifecycleScope.launch {
 
             Log.e("ANIME_Watch id", animeId)
             if (animeId.isNotEmpty()){
@@ -136,14 +152,12 @@ class Watch_Anime_Page : AppCompatActivity() {
 
         // Remove all handler callbacks
         Handler(Looper.getMainLooper()).removeCallbacksAndMessages(null)
-
-        finish()
     }
 
 
 
 
-    private fun getInfo(Id: String){
+    private suspend fun getInfo(Id: String){
 
 
         val jsonObject = fetchAnime.animeInfo(Id)
@@ -158,6 +172,7 @@ class Watch_Anime_Page : AppCompatActivity() {
         val id = data.getString("id")
         poster = data.getString("poster")
         backdrop = data.getString("backdrop")
+        val logo = data.optString("tmdbLogoUrl", "")
 
         val anilistId = data.getString("anilistId")
         val malId = data.getString("malId")
@@ -181,7 +196,6 @@ class Watch_Anime_Page : AppCompatActivity() {
         }
         val studio = data.getString("studios")
 
-        //tmdbRelation(japaneseName, type)
 
         val  seasons = data.getJSONArray("seasons")?: JSONArray()
         val  relatedAnimes = data.getJSONArray("relatedAnimes")?: JSONArray()
@@ -193,18 +207,18 @@ class Watch_Anime_Page : AppCompatActivity() {
         saveData.remove("mostPopularAnimes")
 
 
-        findViewById<TextView>(R.id.watchTitle).text = name
-        findViewById<TextView>(R.id.watchRating).text = rating
-        findViewById<TextView>(R.id.watchRuntime).text = duration
-        findViewById<TextView>(R.id.watchType).text = type
-        findViewById<TextView>(R.id.watchQuality).text = quality
-        findViewById<TextView>(R.id.watchSub).text = sub
-        findViewById<TextView>(R.id.watchDub).text = dub
-        findViewById<TextView>(R.id.watchYear).text = aired
-        findViewById<TextView>(R.id.watchOverview).text = description
-        findViewById<TextView>(R.id.watchGenres).text = genre
+        binding.watchTitle.text = name
+        binding.watchRating.text = rating
+        binding.watchRuntime.text = duration
+        binding.watchType.text = type
+        binding.watchQuality.text = quality
+        binding.watchSub.text = sub
+        binding.watchDub.text = dub
+        binding.watchYear.text = GlobalUtils.formatDateString(aired)
+        binding.watchOverview.text = description
+        binding.watchGenres.text = genre
 
-        val posterWidget = findViewById<ImageView>(R.id.WatchImage)
+        val posterWidget = requireView().findViewById<ImageView>(R.id.WatchImage)
         Glide.with(posterWidget.context)
             .load(poster)
             .fitCenter()
@@ -213,25 +227,46 @@ class Watch_Anime_Page : AppCompatActivity() {
 
 
 
-        val backdrop_Widget = findViewById<ImageView>(R.id.backdropWidget)
-        findViewById<ImageView>(R.id.WatchImage).visibility = View.GONE
-        Glide.with(this@Watch_Anime_Page)
+        val backdrop_Widget = requireView().findViewById<ImageView>(R.id.backdropWidget)
+        requireView().findViewById<ImageView>(R.id.WatchImage).visibility = View.GONE
+        Glide.with(requireContext())
             .load(backdrop)
             .centerInside()
             .into(backdrop_Widget)
 
 
-        if (seasons.length() > 0){
-            createSeasonButtons(seasons.length(), seasons )
-            findViewById<TextView>(R.id.SeasonHeadline).visibility = View.VISIBLE
-        }else{
-            findViewById<TextView>(R.id.SeasonHeadline).visibility = View.GONE
-            findViewById<TextView>(R.id.selected_seasonShow).text = "EPISODES"
+        LoadingAnimation.hide(requireView())
 
-            getEpisodes(id)
+
+
+
+
+        try {
+            if (!logo.isEmpty()){
+                val cShowLogo = requireView().findViewById<ImageView>(R.id.cShowLogo)
+
+                Glide.with(requireContext())
+                    .load(logo)
+                    .centerInside()
+                    .into(cShowLogo)
+                binding.watchTitle.visibility = View.GONE
+            }
+
+        }catch (e: Exception){
+            binding.watchTitle.text = name
         }
 
-        showRecommendation(relatedAnimes, recommendedAnime)
+
+        if (seasons.length() == 1){
+            binding.SeasonHeadline.visibility = View.GONE
+            getEpisodes(id)
+        }else if (seasons.length() > 1){
+            binding.SeasonHeadline.visibility = View.VISIBLE
+            createSeasonButtons(seasons.length(), seasons )
+        }else{
+            binding.SeasonHeadline.text = "Unavailable"
+        }
+
 
         setupFavoriteButton(
             animeId = animeId,
@@ -250,75 +285,23 @@ class Watch_Anime_Page : AppCompatActivity() {
             genre=genre,
             seasons = seasons.toString()
         )
+
+
+        //showRecommendation(relatedAnimes, recommendedAnime)
+
+
+
     }
 
-    private fun tmdbRelation(animeName:String, animeType:String ) {
-        val type = if (animeType.equals("tv", ignoreCase = true)) {
-            "tv"
-        } else {
-            "movie"
-        }
-        CoroutineScope(Dispatchers.IO).launch {
-
-            val url_s =
-                "https://api.themoviedb.org/3/discover/$type?with_keywords=210024|287501&include_adult=true&with_text_query=${animeName}"
-
-            val Connection = URL(url_s).openConnection() as HttpURLConnection
-
-            Connection.requestMethod = "GET"
-            Connection.setRequestProperty("accept", "application/json")
-            Connection.setRequestProperty(
-                "Authorization",
-                "Bearer ${BuildConfig.TM_K}"
-            )
-
-            val logosResponse = Connection.inputStream.bufferedReader().use { it.readText() }
-            val jsonObjectImg = JSONObject(logosResponse)
-
-            val resultArray = jsonObjectImg.getJSONArray("results")
-
-            Log.e("DEBUG_Watch_Images", "$animeName, AType: $animeType, UrlTYPE: $type")
-            Log.e("DEBUG_Watch_Images", jsonObjectImg.toString())
-            Log.e("DEBUG_Watch_Images", resultArray.toString())
-
-            if(resultArray.length() > 0){
-                val item = resultArray.getJSONObject(0)
-                val id = item.getString("id")
-                val backdrop = item.optString("backdrop_path", item.optString("poster_path", ""))
-                val title = item.getString("name")
-                //poster = "https://image.tmdb.org/t/p/original/$backdrop"
-
-                SeasonIMGArray.add("https://image.tmdb.org/t/p/original/$backdrop")
-
-                withContext(Dispatchers.Main) {
-                    val cShowLogo = findViewById<ImageView>(R.id.cShowLogo)
-                    val textLogo = findViewById<TextView>(R.id.watchTitle)
-                    fetchTMDB.fetchLogos(type, id, cShowLogo, textLogo)
-
-                    Log.e("DEBUG_Watch_Images", resultArray.toString())
-
-                    val backdrop_Widget = findViewById<ImageView>(R.id.backdropWidget)
-
-                    findViewById<ImageView>(R.id.WatchImage).visibility = View.GONE
-
-                    Glide.with(this@Watch_Anime_Page)
-                        .load("https://image.tmdb.org/t/p/original/$backdrop")
-                        .centerInside()
-                        .into(backdrop_Widget)
-
-                }
-            }
-        }
-    }
 
     private fun createSeasonButtons(
         noOfSeasons: Int,
         seasonData: JSONArray
     ) {
-        val container = findViewById<LinearLayout>(R.id.anime_season_selector_container)
+        val container = requireView().findViewById<LinearLayout>(R.id.anime_season_selector_container)
         container.removeAllViews()
 
-        val inflater = LayoutInflater.from(this)
+        val inflater = LayoutInflater.from(requireContext())
 
         for (i in 0 until noOfSeasons) {
             val season = seasonData.getJSONObject(i)
@@ -334,31 +317,6 @@ class Watch_Anime_Page : AppCompatActivity() {
 
             SeasonIMGArray.add(imageUrl)
 
-            /*
-            val params = FrameLayout.LayoutParams(
-                GlobalUtils.dpToPx(120, seasonBtn.context),   // width
-                GlobalUtils.dpToPx(38, seasonBtn.context),    // height
-            )
-            params.marginEnd =  GlobalUtils.dpToPx(0, this)
-            seasonBtn.layoutParams = params
-             */
-
-
-
-            /*
-            val seasonImage = cardView.findViewById<ImageView>(R.id.SeasonImage)
-
-            if (imageUrl.isNotEmpty()) {
-                Glide.with(this)
-                    .load(imageUrl)
-                    .centerCrop()
-                    .into(seasonImage)
-            }
-             */
-
-
-
-
             seasonBtn.setOnClickListener {
 
                 selectedSeasonView?.isSelected = false
@@ -366,7 +324,7 @@ class Watch_Anime_Page : AppCompatActivity() {
 
                 selectedSeasonView = seasonBtn
 
-                findViewById<TextView>(R.id.selected_seasonShow).text = "List of episodes ($title)"
+                requireView().findViewById<TextView>(R.id.selected_seasonShow).text = "List of episodes ($title)"
 
                 getEpisodes(season_id)
             }
@@ -377,7 +335,7 @@ class Watch_Anime_Page : AppCompatActivity() {
     }
     @OptIn(UnstableApi::class)
     private fun getEpisodes(seasonId: String){
-        val container = findViewById<LinearLayout>(R.id.anime_episodes_selector_container)
+        val container = requireView().findViewById<LinearLayout>(R.id.anime_episodes_selector_container)
         container.removeAllViews()
 
         val jsonObject = fetchAnime.animeEpisodes(seasonId)
@@ -391,7 +349,7 @@ class Watch_Anime_Page : AppCompatActivity() {
         val  episodes = data.getJSONArray("episodes")
 
 
-        val inflater = LayoutInflater.from(this@Watch_Anime_Page)
+        val inflater = LayoutInflater.from(requireContext())
 
         for (i in 0 until episodes.length()) {
             val episode = episodes.getJSONObject(i)
@@ -403,20 +361,17 @@ class Watch_Anime_Page : AppCompatActivity() {
             val cWatchSeek_bar = cardView.findViewById<SeekBar>(R.id.cWatchSeek_bar)
 
 
-            /*try{
-                val imageUrl = SeasonIMGArray.random()
-                Glide.with(this)
-                    .load(imageUrl)
-                    .centerCrop()
-                    .into(epImg)
-            }catch (e:Exception){}
-             */
-
-
-
             val eTitle = episode.optString("title", "${i + 1}")
             val eNumber = episode.optString("number", "")
             val episodeId = episode.optString("episodeId", "")
+            val eImageUrl = episode.optString("image", "")
+
+            try{
+                Glide.with(this)
+                    .load(eImageUrl)
+                    .centerCrop()
+                    .into(epImg)
+            }catch (e:Exception){}
 
 
             epTitle.text = eTitle
@@ -431,8 +386,8 @@ class Watch_Anime_Page : AppCompatActivity() {
             cardView.setOnClickListener {
                 Log.e("ANIME_episodeId ", "episodeId: $episodeId")
 
-                //Anime_Video_Player.playVideoExternally(this@Watch_Anime_Page, episodeId, eNumber, seasonId, eTitle)
-                Anime_Video_Player.playVideoExternally(this@Watch_Anime_Page, episodeId, eNumber, seasonId)
+                //Anime_Video_Player.playVideoExternally(requireContext(), episodeId, eNumber, seasonId, eTitle)
+                Anime_Video_Player.playVideoExternally(requireContext(), episodeId, eNumber, seasonId)
             }
             container.addView(cardView)
         }
@@ -485,8 +440,8 @@ class Watch_Anime_Page : AppCompatActivity() {
         }
 
 
-        val recyclerView = findViewById<RecyclerView>(R.id.animeWatchRecommendation)
-        recyclerView.layoutManager = GridLayoutManager(this@Watch_Anime_Page, GlobalUtils.calculateSpanCount(this@Watch_Anime_Page, 170))
+        val recyclerView = requireView().findViewById<RecyclerView>(R.id.animeWatchRecommendation)
+        recyclerView.layoutManager = GridLayoutManager(requireContext(), GlobalUtils.calculateSpanCount(requireContext(), 170))
         recyclerView.adapter = AnimeAiringAdapter(RecommendationItems, R.layout.anime_airing_item)
 
         val spacing = (19 * resources.displayMetrics.density).toInt() // 16dp to px
@@ -515,13 +470,13 @@ class Watch_Anime_Page : AppCompatActivity() {
 
     ) {
         val userId = sm.getUserId()
-        val favoriteButton =  findViewById<LinearLayout>(R.id.favoriteButton)
-        val favoriteButtonImg =  findViewById<ImageView>(R.id.favoriteButtonImg)
-        val favoriteButtonText =  findViewById<TextView>(R.id.favoriteButtonText)
+        val favoriteButton =  binding.favoriteButton
+        val favoriteButtonImg =  binding.favoriteButtonImg
+        val favoriteButtonText =  binding.favoriteButtonText
 
 
 
-
+        favoriteButton.requestFocus()
 
         @RequiresApi(Build.VERSION_CODES.O)
         fun applyIcon() {
@@ -567,7 +522,7 @@ class Watch_Anime_Page : AppCompatActivity() {
 
 
     private fun setupBackPressedCallback() {
-        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
 
 
@@ -579,7 +534,7 @@ class Watch_Anime_Page : AppCompatActivity() {
 
 
                 // If controls are hidden, exit the video player
-                finish()
+                requireActivity().supportFragmentManager.popBackStack()
 
             }
         })

@@ -1,250 +1,99 @@
-<!-- res/layout/item_grid.xml -->
-<androidx.cardview.widget.CardView
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:focusable="false"
-    android:focusableInTouchMode="false"
-    app:cardElevation="0dp"
-    app:cardBackgroundColor="?attr/BG_color"
-    android:foreground="@drawable/spotlight_selector"
-    >
+    android:layout_height="wrap_content">
 
-
-
-    <FrameLayout
-        android:layout_width="wrap_content"
+    <!-- res/layout/item_grid.xml -->
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_gravity="end">
+        android:focusable="false"
+        android:focusableInTouchMode="false"
+        app:cardElevation="0dp"
+        android:id="@+id/currentContent"
+        app:cardBackgroundColor="?attr/BG_color"
+        >
 
-       <ProgressBar
-           android:layout_marginEnd="90dp"
-           android:layout_width="80dp"
-           android:layout_gravity="center"
-           android:layout_height="80dp"
-           android:indeterminate="true"
-           android:indeterminateTint="?attr/AccentColor"/>
-
-        <ImageView
-            android:id="@+id/cardBackdrop"
+        <FrameLayout
             android:layout_width="wrap_content"
-            android:layout_gravity="end"
             android:layout_height="match_parent"
-            android:adjustViewBounds="true"
-            android:scaleType="fitXY"
-            tools:src="@raw/gradient_img"
-            tools:ignore="ContentDescription" />
+            android:layout_marginBottom="100dp"
+            android:layout_gravity="end">
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="30dp"
-            android:background="@drawable/overlay_bottom_gradient_bg"
-            android:orientation="horizontal"
-            android:layout_gravity="bottom" />
+            <ProgressBar
+                android:layout_marginEnd="90dp"
+                android:layout_width="80dp"
+                android:layout_gravity="center"
+                android:layout_height="80dp"
+                android:indeterminate="true"
+                android:indeterminateTint="?attr/AccentColor"/>
 
-        <LinearLayout
-            android:layout_width="100dp"
-            android:layout_height="match_parent"
-            android:background="@drawable/overlay_left_gradient_bg"
-            android:orientation="horizontal"
-            android:layout_gravity="start" />
-
-    </FrameLayout>
-
-
-
-    <LinearLayout
-        android:layout_width="300dp"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:layout_gravity="bottom"
-        android:layout_marginStart="10dp"
-        android:layout_marginBottom="15dp">
-
-        <TextView
-            android:id="@+id/cardTitle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom"
-            android:ellipsize="end"
-            android:maxLines="3"
-            android:singleLine="false"
-            tools:text="Sakamoto Days Part 2"
-            android:textColor="#FFFFFF"
-            android:textSize="40sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="5dp"
-            android:fontFamily="@font/p"
-            android:shadowColor="#000000"
-            android:shadowDx="5"
-            android:shadowDy="6"
-            android:shadowRadius="4"
-            tools:ignore="HardcodedText,Suspicious0dp"/>
-
-        <TextView
-            android:id="@+id/cardGenre"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:ellipsize="end"
-            android:maxLines="1"
-            tools:text="Action"
-            android:singleLine="false"
-            android:textColor="#FFFFFF"
-            android:shadowColor="#000000"
-            android:shadowDx="2"
-            android:shadowDy="2"
-            android:shadowRadius="3"
-            android:paddingHorizontal="2dp"
-            android:textSize="13sp"
-            tools:ignore="HardcodedText,Suspicious0dp"
-            android:textStyle="bold"
-            android:layout_marginBottom="9dp"
-            android:fontFamily="sans-serif"
-            android:alpha="0.8"
-            />
-
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="10dp"
-
-            android:gravity="center">
-
-
-            <androidx.cardview.widget.CardView
+            <ImageView
+                android:id="@+id/cardBackdrop"
                 android:layout_width="wrap_content"
+                android:layout_gravity="end"
                 android:layout_height="match_parent"
-                app:cardCornerRadius="4dp"
-                android:layout_gravity="center_horizontal"
-                app:cardBackgroundColor="?attr/AccentColor"
-                android:elevation="0dp"
-                >
-
-                <TextView
-                    android:id="@+id/cardQuality"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:ellipsize="end"
-                    android:maxLines="1"
-                    android:text="HD"
-                    android:layout_marginHorizontal="3dp"
-                    android:singleLine="true"
-                    android:textColor="#FFFFFF"
-                    android:shadowColor="#000000"
-                    android:shadowDx="2"
-                    android:shadowDy="2"
-                    android:shadowRadius="3"
-                    android:paddingHorizontal="2dp"
-                    android:textSize="11sp"
-                    tools:ignore="HardcodedText,Suspicious0dp"
-                    android:gravity="center"
-                    android:layout_gravity="center"
-                    android:textStyle="bold"
-                    />
-
-            </androidx.cardview.widget.CardView>
-
-
-
-
-
-            <TextView
-                android:id="@+id/cardPg"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:ellipsize="end"
-                android:maxLines="1"
-                tools:text="PG-13"
-                android:singleLine="true"
-                android:textColor="#FFFFFF"
-                android:shadowColor="#000000"
-                android:shadowDx="2"
-                android:shadowDy="2"
-                android:shadowRadius="3"
-                android:paddingHorizontal="2dp"
-                android:textSize="10sp"
-                tools:ignore="HardcodedText,SmallSp,Suspicious0dp"
-                android:gravity="center"
-                android:layout_gravity="center"
-                android:textStyle="bold"
-                android:layout_marginStart="9dp"
-
-
-                />
-
-
-
-
-            <TextView
-                android:id="@+id/cardType"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:ellipsize="end"
-                android:maxLines="1"
-                tools:text="Mv"
-                android:fontFamily="@font/a"
-                android:singleLine="true"
-                android:textColor="#FFFFFF"
-                android:shadowColor="#000000"
-                android:shadowDx="2"
-                android:shadowDy="2"
-                android:shadowRadius="3"
-                android:paddingHorizontal="2dp"
-                android:textSize="13sp"
-                tools:ignore="HardcodedText,Suspicious0dp"
-                android:gravity="center"
-                android:layout_gravity="center"
-                android:layout_marginStart="9dp"
-                />
-
+                android:adjustViewBounds="true"
+                android:scaleType="fitXY"
+                tools:src="@raw/gradient_img"
+                tools:ignore="ContentDescription" />
 
             <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="9dp"
-                tools:ignore="UseCompoundDrawables">
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:background="@drawable/overlay_left_gradient_bg"
+                android:orientation="vertical"
+                android:gravity="center"/>
 
-                <ImageView
-                    android:layout_width="15dp"
-                    android:layout_height="15dp"
-                    android:layout_gravity="bottom"
-                    android:src="@drawable/ic_stars"
-                    app:tint="?attr/AccentColor"
-                    tools:ignore="ContentDescription" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/overlay_bottom_gradient_bg"
+                android:layout_gravity="bottom"/>
 
-                <TextView
-                    android:id="@+id/cardRating"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:layout_gravity="bottom"
-                    android:ellipsize="end"
-                    android:maxLines="1"
-                    tools:text="9.7"
-                    android:singleLine="false"
-                    android:textColor="#FFFFFF"
-                    android:shadowColor="#000000"
-                    android:shadowDx="2"
-                    android:shadowDy="2"
-                    android:shadowRadius="3"
-                    android:paddingHorizontal="2dp"
-                    android:textSize="13sp"
-                    tools:ignore="HardcodedText,Suspicious0dp"
-                    android:gravity="center"/>
+        </FrameLayout>
 
-            </LinearLayout>
 
+
+        <LinearLayout
+            android:layout_width="300dp"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_gravity="bottom"
+            android:layout_marginStart="10dp"
+            android:layout_marginBottom="200dp">
 
             <TextView
-                android:id="@+id/cardYear"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
+                android:id="@+id/cardTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
                 android:layout_gravity="bottom"
                 android:ellipsize="end"
+                android:maxLines="3"
+                android:singleLine="false"
+                tools:text="Sakamoto Days Part 2"
+                android:textColor="#FFFFFF"
+                android:textSize="40sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="5dp"
+                android:fontFamily="@font/p"
+                android:shadowColor="#000000"
+                android:shadowDx="5"
+                android:shadowDy="6"
+                android:shadowRadius="4"
+                tools:ignore="HardcodedText,Suspicious0dp"/>
+
+            <TextView
+                android:id="@+id/cardGenre"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
                 android:maxLines="1"
-                tools:text="2025"
+                tools:text="Action"
                 android:singleLine="false"
                 android:textColor="#FFFFFF"
                 android:shadowColor="#000000"
@@ -254,37 +103,326 @@
                 android:paddingHorizontal="2dp"
                 android:textSize="13sp"
                 tools:ignore="HardcodedText,Suspicious0dp"
-                android:gravity="center"
-                android:layout_marginStart="9dp"/>
+                android:textStyle="bold"
+                android:layout_marginBottom="9dp"
+                android:fontFamily="sans-serif"
+                android:alpha="0.8"
+                />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="10dp"
+
+                android:gravity="center">
+
+
+                <androidx.cardview.widget.CardView
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    app:cardCornerRadius="4dp"
+                    android:layout_gravity="center_horizontal"
+                    app:cardBackgroundColor="?attr/AccentColor"
+                    android:elevation="0dp"
+                    >
+
+                    <TextView
+                        android:id="@+id/cardQuality"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:text="HD"
+                        android:layout_marginHorizontal="3dp"
+                        android:singleLine="true"
+                        android:textColor="#FFFFFF"
+                        android:shadowColor="#000000"
+                        android:shadowDx="2"
+                        android:shadowDy="2"
+                        android:shadowRadius="3"
+                        android:paddingHorizontal="2dp"
+                        android:textSize="11sp"
+                        tools:ignore="HardcodedText,Suspicious0dp"
+                        android:gravity="center"
+                        android:layout_gravity="center"
+                        android:textStyle="bold"
+                        />
+
+                </androidx.cardview.widget.CardView>
+                <TextView
+                    android:id="@+id/cardPg"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    tools:text="PG-13"
+                    android:singleLine="true"
+                    android:textColor="#FFFFFF"
+                    android:shadowColor="#000000"
+                    android:shadowDx="2"
+                    android:shadowDy="2"
+                    android:shadowRadius="3"
+                    android:paddingHorizontal="2dp"
+                    android:textSize="10sp"
+                    tools:ignore="HardcodedText,SmallSp,Suspicious0dp"
+                    android:gravity="center"
+                    android:layout_gravity="center"
+                    android:textStyle="bold"
+                    android:layout_marginStart="9dp" />
+
+                <TextView
+                    android:id="@+id/cardType"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    tools:text="Mv"
+                    android:fontFamily="@font/a"
+                    android:singleLine="true"
+                    android:textColor="#FFFFFF"
+                    android:shadowColor="#000000"
+                    android:shadowDx="2"
+                    android:shadowDy="2"
+                    android:shadowRadius="3"
+                    android:paddingHorizontal="2dp"
+                    android:textSize="13sp"
+                    tools:ignore="HardcodedText,Suspicious0dp"
+                    android:gravity="center"
+                    android:layout_gravity="center"
+                    android:layout_marginStart="9dp"
+                    />
+
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="9dp"
+                    tools:ignore="UseCompoundDrawables">
+
+                    <ImageView
+                        android:layout_width="15dp"
+                        android:layout_height="15dp"
+                        android:layout_gravity="bottom"
+                        android:src="@drawable/ic_stars"
+                        app:tint="?attr/AccentColor"
+                        tools:ignore="ContentDescription" />
+
+                    <TextView
+                        android:id="@+id/cardRating"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:layout_gravity="bottom"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        tools:text="9.7"
+                        android:singleLine="false"
+                        android:textColor="#FFFFFF"
+                        android:shadowColor="#000000"
+                        android:shadowDx="2"
+                        android:shadowDy="2"
+                        android:shadowRadius="3"
+                        android:paddingHorizontal="2dp"
+                        android:textSize="13sp"
+                        tools:ignore="HardcodedText,Suspicious0dp"
+                        android:gravity="center"/>
+
+                </LinearLayout>
+
+
+                <TextView
+                    android:id="@+id/cardYear"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="bottom"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    tools:text="2025"
+                    android:singleLine="false"
+                    android:textColor="#FFFFFF"
+                    android:shadowColor="#000000"
+                    android:shadowDx="2"
+                    android:shadowDy="2"
+                    android:shadowRadius="3"
+                    android:paddingHorizontal="2dp"
+                    android:textSize="13sp"
+                    tools:ignore="HardcodedText,Suspicious0dp"
+                    android:gravity="center"
+                    android:layout_marginStart="9dp"/>
+
+            </LinearLayout>
+
+
+
+
+            <TextView
+                android:id="@+id/cardOverview"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                android:ellipsize="end"
+                android:maxLines="5"
+                android:singleLine="false"
+                android:fontFamily="serif"
+                android:textColor="#FFFFFF"
+                android:shadowColor="#000000"
+                android:shadowDx="1"
+                android:shadowDy="1"
+                tools:text="Five years ago, a tear in the fabric of reality brought creatures to our world from an alternate dimension bent on our destruction. A father hides his daughter on an island to keep her safe while he prepares her for survival and the"
+                android:shadowRadius="1"
+                android:textSize="13sp"
+                android:layout_marginBottom="20dp"
+                tools:ignore="Suspicious0dp"
+                />
 
         </LinearLayout>
+    </androidx.cardview.widget.CardView>
 
 
+    <ScrollView
+        android:id="@+id/HomeInnerScrollView"
+        android:layout_width="match_parent"
+        android:layout_height="210dp"
+        android:layout_gravity="bottom"
+        android:clipToPadding="false"
+        tools:ignore="NestedScrolling">
 
-
-        <TextView
-            android:id="@+id/cardOverview"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="bottom"
-            android:ellipsize="end"
-            android:maxLines="5"
-            android:singleLine="false"
-            android:fontFamily="serif"
-            android:textColor="#FFFFFF"
-            android:shadowColor="#000000"
-            android:shadowDx="1"
-            android:shadowDy="1"
-            tools:text="Five years ago, a tear in the fabric of reality brought creatures to our world from an alternate dimension bent on our destruction. A father hides his daughter on an island to keep her safe while he prepares her for survival and the"
-            android:shadowRadius="1"
-            android:textSize="13sp"
-            android:layout_marginBottom="20dp"
-            tools:ignore="Suspicious0dp"
-            />
+            android:orientation="vertical"
+            tools:ignore="TooDeepLayout">
+
+            <LinearLayout
+                android:id="@+id/realityRow"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="COLLECTION"
+                    android:layout_marginStart="10dp"
+                    android:textSize="5sp"
+                    android:fontFamily="@font/p"
+                    android:textColor="?attr/FG_color"
+                    android:alpha="0.4"
+                    tools:ignore="HardcodedText,SmallSp" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Reality Spotlight"
+                    android:layout_marginStart="10dp"
+                    android:fontFamily="@font/p"
+                    android:textStyle="bold"
+                    android:textSize="20sp"
+                    android:textColor="?attr/FG_color"
+                    tools:ignore="HardcodedText" />
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="bottom"
+                    android:clipChildren="false"
+                    android:clipToPadding="false">
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/realityRecyclerView"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:clipToPadding="false"
+                        android:paddingStart="95dp"
+                        android:paddingEnd="500dp"
+                        android:scrollbars="none"
+                        tools:ignore="RtlSymmetry" />
+
+                    <View
+                        android:id="@+id/realityFixedFocusOverlay"
+                        android:layout_width="103dp"
+                        android:layout_height="153dp"
+                        android:layout_gravity="start|center_vertical"
+                        android:layout_marginStart="90dp"
+                        android:alpha="0"
+                        android:background="@drawable/background_focus"
+                        android:clickable="false"
+                        android:focusable="false"
+                        android:importantForAccessibility="no" />
+
+                </FrameLayout>
+            </LinearLayout>
 
 
-    </LinearLayout>
 
 
 
-</androidx.cardview.widget.CardView>
+
+
+            <LinearLayout
+                android:id="@+id/thrillsRow"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginVertical="10dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="COLLECTION"
+                    android:layout_marginStart="10dp"
+                    android:textSize="5sp"
+                    android:fontFamily="@font/p"
+                    android:textColor="?attr/FG_color"
+                    android:alpha="0.4"
+                    tools:ignore="HardcodedText,SmallSp" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Chills &amp; Thrills"
+                    android:layout_marginStart="10dp"
+                    android:fontFamily="@font/p"
+                    android:textStyle="bold"
+                    android:textSize="20sp"
+                    android:textColor="?attr/FG_color"
+                    tools:ignore="HardcodedText" />
+
+
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="bottom"
+                    android:clipChildren="false"
+                    android:clipToPadding="false">
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/ThrillsRecyclerView"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:clipToPadding="false"
+                        android:paddingStart="95dp"
+                        android:paddingEnd="500dp"
+                        android:scrollbars="none"
+                        tools:ignore="RtlSymmetry" />
+
+                    <View
+                        android:id="@+id/thrillFixedFocusOverlay"
+                        android:layout_width="104dp"
+                        android:layout_height="154dp"
+                        android:layout_gravity="start|center_vertical"
+                        android:layout_marginStart="90dp"
+                        android:alpha="0"
+                        android:background="@drawable/background_focus"
+                        android:clickable="false"
+                        android:focusable="false"
+                        android:importantForAccessibility="no" />
+
+                </FrameLayout>
+
+            </LinearLayout>
+
+
+        </LinearLayout>
+    </ScrollView>
+</FrameLayout>

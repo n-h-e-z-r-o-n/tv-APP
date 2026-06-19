@@ -10,6 +10,7 @@ import androidx.fragment.app.Fragment
 import com.example.onyx.OnyxObjects.GlobalUtils
 import com.example.onyx.OnyxObjects.NavAction
 import android.widget.ImageView
+import androidx.lifecycle.Lifecycle
 import com.bumptech.glide.Glide
 import com.example.onyx.OnyxObjects.LoadingAnimation
 
@@ -108,11 +109,14 @@ class HomeActivity : AppCompatActivity() {
         val transaction = fm.beginTransaction()
 
         if (activeFragment != null) {
+            // 1. Hide and FREEZE the currently active fragment
             transaction.hide(activeFragment!!)
+            transaction.setMaxLifecycle(activeFragment!!, Lifecycle.State.STARTED)
         }
 
         var targetFragment = fm.findFragmentByTag(tag)
         if (targetFragment == null) {
+            // If the fragment doesn't exist, create it
             targetFragment = when (tag) {
                 "shows" -> ShowsFragment()
                 "anime" -> AnimeFragment()
@@ -134,10 +138,35 @@ class HomeActivity : AppCompatActivity() {
                 "search" -> searchFragment = targetFragment as SearchFragment
             }
         } else {
+            // 2. Show and WAKE UP the returning fragment
             transaction.show(targetFragment)
+            transaction.setMaxLifecycle(targetFragment, Lifecycle.State.RESUMED)
         }
 
         activeFragment = targetFragment
+        transaction.commit()
+    }
+    
+    fun navigateToFragment(fragment: Fragment, args: Bundle? = null) {
+        if (args != null) {
+            fragment.arguments = args
+        }
+        val fm = supportFragmentManager
+        val transaction = fm.beginTransaction()
+        
+        // Hide all visible fragments to prevent focus bleeding
+        fm.fragments.filter { it.isVisible }.forEach { 
+            transaction.hide(it) 
+        }
+
+
+        val currentFragment = fm.findFragmentById(R.id.fragmentContainer)
+        if (currentFragment != null) {
+            transaction.hide(currentFragment)
+        }
+
+        transaction.add(R.id.fragmentContainer, fragment)
+        transaction.addToBackStack(null)
         transaction.commit()
     }
     

@@ -7,7 +7,6 @@
                 android:type="linear"
                 android:centerX="50%"
                 android:centerY="50%"
-                android:gradientRadius="900dp"
                 android:angle="270"
                 android:startColor="@android:color/transparent"
                 android:endColor="?attr/AccentColor"
@@ -24,10 +23,9 @@
                 android:type="linear"
                 android:centerX="50%"
                 android:centerY="50%"
-                android:gradientRadius="900dp"
                 android:angle="270"
                 android:startColor="@android:color/transparent"
-                android:endColor="#90E5E4E2"
+                android:endColor="#40E5E4E2"
                 />
 
             <stroke android:width="0dp" android:color="?attr/AccentColor" />
@@ -42,7 +40,6 @@
                 android:centerX="50%"
                 android:centerY="80%"
                 android:angle="270"
-                android:gradientRadius="400dp"
                 android:startColor="@android:color/transparent"
                 android:endColor="@android:color/transparent"
                 />

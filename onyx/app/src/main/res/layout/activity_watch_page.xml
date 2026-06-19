@@ -37,9 +37,11 @@
 
                 <!-- Backdrop image -->
                 <FrameLayout
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:layout_gravity="right"
+                    android:layout_marginStart="150dp"
+                    android:layout_marginBottom="100dp"
                     tools:ignore="RtlHardcoded">
 
                     <!-- Backdrop image -->
@@ -48,24 +50,27 @@
                         android:layout_width="wrap_content"
                         android:layout_height="match_parent"
                         android:scaleType="centerCrop"
-                        android:src="@raw/movie_backdrop"
+                        tools:src="@raw/movie_backdrop"
                         android:layout_gravity="end"
                         android:adjustViewBounds="true"
                         tools:ignore="ContentDescription" />
 
-                    <!-- Gradient overlay left-->
+
                     <LinearLayout
-                        android:layout_width="300dp"
+                        android:id="@+id/blurContainer"
+                        android:layout_width="match_parent"
                         android:layout_height="match_parent"
+                        android:layout_gravity="center"
                         android:background="@drawable/overlay_left_gradient_bg"
-                        android:alpha="1"/>
+                        android:orientation="vertical"
+                        android:gravity="center"/>
 
                     <LinearLayout
                         android:layout_width="match_parent"
-                        android:layout_height="20dp"
-                        android:layout_gravity="bottom"
-                        android:alpha="1"
-                        android:background="@drawable/overlay_bottom_gradient_bg" />
+                        android:layout_height="match_parent"
+                        android:background="@drawable/overlay_bottom_gradient_bg"
+                        android:layout_gravity="bottom"/>
+
 
 
                     <FrameLayout
@@ -83,6 +88,8 @@
                             android:visibility="gone"
                             android:layout_height="match_parent"
                             />
+
+
 
                     </FrameLayout>
 
@@ -138,7 +145,7 @@
                             android:ellipsize="end"
                             android:maxLines="3"
                             android:maxWidth="400dp"
-                            android:text="Movie Title"
+                            tools:text="Movie Title"
                             android:textColor="?attr/FG_color"
                             android:fontFamily="@font/p"
                             android:textSize="40sp"
@@ -215,7 +222,7 @@
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:layout_marginStart="2dp"
-                                    android:text="8.5"
+                                    tools:text="8.5"
                                     android:layout_gravity="center"
                                     android:textColor="#FFFFFF"
                                     android:shadowColor="#000000"
@@ -245,7 +252,7 @@
                                 android:maxLines="1"
                                 android:fontFamily="@font/q"
                                 android:gravity="center"
-                                android:text=""
+                                tools:text=""
                                 android:textColor="#FFFFFF"
                                 android:shadowColor="#000000"
                                 android:shadowDx="1"
@@ -284,7 +291,7 @@
                                     android:id="@+id/Runtime_widget"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="2h 3min"
+                                    tools:text="2h 3min"
                                     android:textColor="#FFFFFF"
                                     android:shadowColor="#000000"
                                     android:shadowDx="1"
@@ -317,7 +324,7 @@
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:layout_marginTop="1dp"
-                                    android:text="2025"
+                                    tools:text="2025"
                                     android:textColor="#FFFFFF"
                                     android:shadowColor="#000000"
                                     android:shadowDx="1"
@@ -357,7 +364,7 @@
                                     android:id="@+id/PG_widget"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="13"
+                                    tools:text="13"
                                     android:textColor="#FFFFFF"
                                     android:shadowColor="#000000"
                                     android:shadowDx="1"
@@ -437,7 +444,7 @@
                             android:id="@+id/Genres_widget"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Science fiction     drama   - action"
+                            tools:text="Science fiction     drama   - action"
                             android:textColor="#FFFFFF"
                             android:shadowColor="#000000"
                             android:shadowDx="1"
@@ -479,14 +486,14 @@
                                 android:ellipsize="end"
                                 android:maxLines="3"
                                 android:singleLine="false"
-                                android:text="An assassin, trained in the ways of the Ruska Roma, embarks on a quest for vengeance following the death of her father."
+                                tools:text="An assassin, trained in the ways of the Ruska Roma, embarks on a quest for vengeance following the death of her father."
                                 android:textColor="#FFFFFF"
                                 android:shadowColor="#000000"
                                 android:shadowDx="2"
                                 android:shadowDy="2"
                                 android:shadowRadius="3"
                                 android:textSize="13sp"
-                                android:fontFamily="@font/p"
+                                android:fontFamily="serif"
                                 tools:ignore="HardcodedText"
                                 />
 

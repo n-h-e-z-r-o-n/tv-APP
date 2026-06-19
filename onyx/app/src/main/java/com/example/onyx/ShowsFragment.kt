@@ -201,14 +201,13 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
 
         GlobalUtils.setHeightToMatchScreen(SpotlightSection)
         GlobalUtils.setHeightToMatchScreen(HomeContentSection)
-        //GlobalUtils.setHeightToMatchScreen(favoriteSection)
 
 
 
         GlobalUtils.snapRowToTopOnFocus(activityScrollVIEW, SpotlightSection)
         GlobalUtils.centerParentOnFocus(activityScrollVIEW, HomeContentSection)
         GlobalUtils.centerParentOnFocus(activityScrollVIEW, movieSection)
-        GlobalUtils.centerParentOnFocus(activityScrollVIEW, favoriteSection)
+        GlobalUtils.centerParentOnFocus(activityScrollVIEW, filterSection)
         GlobalUtils.centerParentOnFocus(activityScrollVIEW, tvSection)
         GlobalUtils.centerParentOnFocus(activityScrollVIEW, favoriteSection)
 
@@ -266,7 +265,7 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
             categoryShow()
             loadFilterContent(realityAdapter, "&with_genres=10764", false)
             loadFilterContent(thrillAdapter, "&with_genres=27", true)
-            //genreFilter()
+            genreFilter()
             fetchMovies()
             fetchTvShows()
             //filter()
@@ -571,7 +570,7 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
         realityRecyclerView = requireView().findViewById(R.id.realityRecyclerView)
         realityAdapter = FilterAdapter(mutableListOf(), R.layout.item_list2)
         realityAdapter.onItemFocused = { view, item ->
-            backgroundContainer.visibility = View.VISIBLE
+            currentContent.visibility = View.VISIBLE
             updateContentJob?.cancel()
             updateContentJob = lifecycleScope.launch {
                 delay(300)
@@ -581,7 +580,7 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
             centerChildUnderFixedFocus(realityRecyclerView, realityFixedFocusOverlay, view)
         }
         realityAdapter.onItemFocusLost = {
-            backgroundContainer.visibility = View.GONE
+            currentContent.visibility = View.GONE
             realityRecyclerView.post {
                 realitySetFixedFocusOverlayVisible( realityFixedFocusOverlay,realityRecyclerView.hasFocus()                )
             }
@@ -624,7 +623,7 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
         thrillRecyclerView = requireView().findViewById<RecyclerView>(R.id.ThrillsRecyclerView)
         thrillAdapter = FilterAdapter(mutableListOf(), R.layout.item_list2)
         thrillAdapter.onItemFocused = { view, item ->
-            backgroundContainer.visibility = View.VISIBLE
+            currentContent.visibility = View.VISIBLE
             updateContentJob?.cancel()
             updateContentJob = lifecycleScope.launch {
                 delay(300)
@@ -634,7 +633,7 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
             centerChildUnderFixedFocus(thrillRecyclerView, thrillFixedFocusOverlay, view)
         }
         thrillAdapter.onItemFocusLost = {
-            backgroundContainer.visibility = View.GONE
+            currentContent.visibility = View.GONE
             realitySetFixedFocusOverlayVisible( thrillFixedFocusOverlay,thrillRecyclerView.hasFocus()                )
 
         }
@@ -658,7 +657,7 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
 
         genreAdapter = FilterAdapter(mutableListOf(), R.layout.item_list)
         genreAdapter.onItemFocused = { view, item ->
-            backgroundContainer.visibility = View.VISIBLE
+            //backgroundContainer.visibility = View.VISIBLE
         }
         genreAdapter.onItemFocusLost = {
         }
