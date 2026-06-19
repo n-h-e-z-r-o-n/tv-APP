@@ -10,20 +10,6 @@
 
 
 
-    <ImageView
-        android:id="@+id/backgroundImgContainer"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:scaleType="centerCrop"
-        android:src="?attr/themeImage"
-        tools:ignore="ContentDescription" />
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="?attr/transparentEffect"/>
-
-
     <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -97,7 +83,7 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:layout_gravity="center"
-                                android:focusable="false"
+                                android:focusable="true"
                                 android:focusableInTouchMode="false"
                                 android:descendantFocusability="afterDescendants"
                                 android:clipChildren="false"
@@ -107,8 +93,11 @@
                                  android:layout_width="match_parent"
                                  android:layout_marginVertical="5dp"
                                  android:layout_height="1dp"
+                                 android:nextFocusLeft="@+id/spotlightAnimes"
+                                 android:nextFocusRight="@+id/spotlightAnimes"
+                                 android:nextFocusUp="@+id/spotlightAnimes"
                                  android:focusable="true"
-                                 android:clickable="true"/>
+                                 android:clickable="false"/>
 
 
 
@@ -583,12 +572,12 @@
                 </LinearLayout>
             </ScrollView>
 
-        </LinearLayout>
-
-        <include layout="@layout/laod_animation" />
-
+         </LinearLayout>
         </LinearLayout>
     </androidx.cardview.widget.CardView>
+
+    <include layout="@layout/laod_animation" />
+
 
 
 

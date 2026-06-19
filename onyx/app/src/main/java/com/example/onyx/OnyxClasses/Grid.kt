@@ -3,6 +3,7 @@ package com.example.onyx.OnyxClasses
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.graphics.Color
+import android.graphics.ColorMatrix
 import android.graphics.Rect
 import android.text.format.DateUtils
 import android.util.Log
@@ -17,6 +18,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.OptIn
 import androidx.cardview.widget.CardView
+import androidx.compose.ui.graphics.ColorMatrixColorFilter
 import androidx.media3.common.util.UnstableApi
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -1742,6 +1744,8 @@ class NotificationAdapter(
         //val image: ImageView = view.findViewById(R.id.notification_title)
         val showTitle: TextView = view.findViewById(R.id.notification_title)
         val message: TextView = view.findViewById(R.id.notification_message)
+
+        val backdrop: ImageView = view.findViewById(R.id.notification_backdrop)
         val imageContainer: ImageView = view.findViewById(R.id.notification_icon)
         val timeContainer: TextView = view.findViewById(R.id.timestamp_text)
 
@@ -1787,10 +1791,12 @@ class NotificationAdapter(
         holder.message.text =  info
 
 
+
+        // 2. Load the image with Glide
         Glide.with(holder.itemView.context)
             .load(imageUrl)
             .centerInside()
-            .into(holder.imageContainer)
+            .into(holder.backdrop)
 
 
         holder.itemView.setOnClickListener {

@@ -83,21 +83,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
         db = AppDatabase(requireActivity())         // Initialize database
         sm = SessionManger(requireActivity())         // Initialize session manager
 
-        
 
-
-        ////////////////////////////////////////////////////////////////////////////////////////////
-        val loadingImageView = requireView().findViewById<ImageView>(R.id.backgroundImgContainer)
-
-        val typedValue = TypedValue()
-        requireActivity().theme.resolveAttribute(R.attr.themeImage, typedValue, true)
-
-        Glide.with(requireActivity())
-            .asGif()
-            .load( typedValue.resourceId)
-            .into(loadingImageView)
-
-        ////////////////////////////////////////////////////////////////////////////////////////////
         val profileImage = requireView().findViewById<ImageView>(R.id.ProfileImg)
         val assetPath = "file:///android_asset/${sm.getUserAvatar()}"
         Glide.with(requireActivity())

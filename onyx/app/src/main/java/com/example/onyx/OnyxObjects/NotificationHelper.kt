@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.lifecycle.lifecycleScope
 import com.example.onyx.Database.AppDatabase
 import com.example.onyx.Database.SessionManger
+import com.example.onyx.FetchData.AnimeApi
 import com.example.onyx.FetchData.TMDBapi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -28,7 +29,6 @@ object NotificationHelper {
 
 
         for (item in tvList) {
-
             Log.d("Fav_tv", "show_id: ${item["show_id"]}")
             Log.d("Fav_tv", "title: ${item["title"]}")
             Log.d("Fav_tv", "poster: ${item["poster"]}")
@@ -114,13 +114,14 @@ object NotificationHelper {
         var results = false
 
 
-        val fetch = TMDBapi(context)
+        val fetch = AnimeApi(context)
 
-        //Log.e("anime_Notification Fav", "animeList:  ${animeList.toString()}")
+        Log.e("anime_Notification Fav", "animeList:  ${animeList.toString()}")
 
         for (item in animeList) {
             try{
-                /*
+                Log.d("Not_anime", "\n\n\n")
+                Log.d("Not_anime", "userId: $userId")
                 Log.d("Not_anime", "anime_id: ${item["anime_id"]}")
                 Log.d("Not_anime", "title: ${item["name"]}")
                 Log.d("Not_anime", "poster: ${item["poster"]}")
@@ -128,7 +129,7 @@ object NotificationHelper {
                 Log.d("Not_anime", "seasons: ${item["seasons"]}")
                 Log.d("Not_anime", "sub: ${item["sub"]}")
                 Log.d("Not_anime", "dub: ${item["dub"]}")
-                 */
+
 
                 val animeId = item["anime_id"]
                 val name = item["name"]
@@ -149,16 +150,22 @@ object NotificationHelper {
 
 
 
-                val data = fetch.fetchAnimeData(item["anime_id"].toString())
+                val jsonObject = fetch.animeInfo(item["anime_id"].toString())
+
+
+                if (jsonObject==null){
+                    break
+                }
+
+                val data = jsonObject.getJSONObject("data")
+
                 if (data != null) {
-                    val subFetched =
-                        data.getJSONObject("anime").getJSONObject("info").getJSONObject("stats")
-                            .getJSONObject("episodes").optString("sub", "").toIntOrNull() ?: 0
-                    val dubFetched =
-                        data.getJSONObject("anime").getJSONObject("info").getJSONObject("stats")
-                            .getJSONObject("episodes").optString("dub", "").toIntOrNull() ?: 0
+                    val subFetched = data.getJSONObject("stats").getJSONObject("episodes").optString("sub", "").toIntOrNull() ?: 0
+                    val dubFetched = data.getJSONObject("stats").getJSONObject("episodes").optString("dub", "").toIntOrNull() ?: 0
                     val seasonsFetched = data.getJSONArray("seasons").length()?:0
 
+                    Log.d("Not_anime", "subFetched: ${subFetched}")
+                    Log.d("Not_anime", "dubFetched: ${dubFetched}")
 
                     var notSub = 0
                     var notDub = 0
@@ -169,6 +176,9 @@ object NotificationHelper {
                     if (dubFetched > dubStored) {
                         notDub = dubFetched
                     }
+
+                    Log.d("Not_anime", "notSub: ${notSub}")
+                    Log.d("Not_anime", "notDub: ${notDub}")
 
 
                     if (subFetched > subStored || dubFetched > dubStored) {
@@ -183,6 +193,9 @@ object NotificationHelper {
                             seasonsStored = 0
                         )
                         db.updateAnimeProgress(userId, animeId.toString(), subFetched, dubFetched)
+
+                        Log.d("Not_anime", "anime_Notification added,  animeId: $animeId\n")
+
 
                         results = true
                     }

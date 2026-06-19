@@ -97,8 +97,6 @@ class Watch_Page : AppCompatActivity() {
 
         setupBackPressedCallback()
 
-        LoadingAnimation.setup(this@Watch_Page, R.raw.line_loading)
-        LoadingAnimation.show(this@Watch_Page)
 
         fetch = TMDBapi(this)
         db = AppDatabase(this)
@@ -191,7 +189,7 @@ class Watch_Page : AppCompatActivity() {
                 }
 
                 if (jsonObject == null) {
-                    LoadingAnimation.setup(this@Watch_Page, R.raw.error)
+                    //LoadingAnimation.setup(this@Watch_Page, R.raw.error)
                     return@launch
                 }
 
@@ -200,7 +198,7 @@ class Watch_Page : AppCompatActivity() {
             } catch (e: Exception) {
 
                 Log.e("Watch_Page", "Failed to fetch data", e)
-                LoadingAnimation.setup(this@Watch_Page, R.raw.error)
+               // LoadingAnimation.setup(this@Watch_Page, R.raw.error)
             }
         }
 
@@ -424,7 +422,7 @@ class Watch_Page : AppCompatActivity() {
 
             //--------------------------------------------------------------------------------------
 
-            LoadingAnimation.hide(this@Watch_Page)
+            //LoadingAnimation.hide(this@Watch_Page)
             Cast_Data(showId.toString(), showType.toString())
             Watch_Recomendation_Data(showId.toString(), showType.toString())
 

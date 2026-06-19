@@ -1,80 +1,95 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?attr/BG_color"
+    android:orientation="vertical"
     tools:context=".WatchingFragment">
 
-
-    <LinearLayout
+    <ScrollView
+        android:id="@+id/fragmentScrollView"
         android:layout_width="match_parent"
-        android:orientation="vertical"
-        android:layout_height="wrap_content"
-        android:id="@+id/showsWatchingSection">
+        android:layout_height="wrap_content">
 
-        <TextView
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text=" Top Airing Anime"
-            android:textStyle="bold"
-            android:fontFamily="@font/p"
-            android:textSize="18sp"
-            android:textColor="#FFFFFF"
-            android:shadowColor="#000000"
-            android:shadowDx="2"
-            android:shadowDy="2"
-            android:shadowRadius="3"
-            tools:ignore="HardcodedText"
-            android:layout_marginTop="10dp"/>
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/showsWatchingRecycler"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:clipToPadding="false"
-            android:overScrollMode="never"
-            android:scrollbars="none"
-            tools:ignore="NestedWeights"
-            android:nextFocusUp="@+id/Anime_Trending_widget"
-            android:nextFocusDown="@+id/Anime_Airing_widget"/>
-
-    </LinearLayout>
+            android:orientation="vertical">
 
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:orientation="vertical"
-        android:layout_height="wrap_content"
-        android:id="@+id/animeWatchingSection">
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text=" Top Airing Anime"
-            android:textStyle="bold"
-            android:fontFamily="@font/p"
-            android:textSize="18sp"
-            android:textColor="#FFFFFF"
-            android:shadowColor="#000000"
-            android:shadowDx="2"
-            android:shadowDy="2"
-            android:shadowRadius="3"
-            tools:ignore="HardcodedText"
-            android:layout_marginTop="10dp"/>
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:orientation="vertical"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/showsWatchingSection">
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/animeWatchingRecycler"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:clipToPadding="false"
-            android:overScrollMode="never"
-            android:scrollbars="none"
-            tools:ignore="NestedWeights"
-            android:nextFocusUp="@+id/Anime_Trending_widget"
-            android:nextFocusDown="@+id/Anime_Airing_widget"/>
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="  Show Watchlist"
+                            android:textStyle="bold"
+                            android:fontFamily="@font/p"
+                            android:textSize="18sp"
+                            android:textColor="#FFFFFF"
+                            android:shadowColor="#000000"
+                            android:shadowDx="2"
+                            android:shadowDy="2"
+                            android:shadowRadius="3"
+                            tools:ignore="HardcodedText"
+                            android:layout_marginTop="10dp"/>
 
-    </LinearLayout>
+                        <androidx.recyclerview.widget.RecyclerView
+                            android:id="@+id/showsWatchingRecycler"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:clipToPadding="false"
+                            android:overScrollMode="never"
+                            android:scrollbars="none"
+                            tools:ignore="NestedWeights"
+                            android:nextFocusUp="@+id/Anime_Trending_widget"
+                            android:nextFocusDown="@+id/Anime_Airing_widget"/>
+
+                    </LinearLayout>
 
 
-</FrameLayout>
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:orientation="vertical"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/animeWatchingSection">
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="  Anime WatchList"
+                            android:textStyle="bold"
+                            android:fontFamily="@font/p"
+                            android:textSize="18sp"
+                            android:textColor="#FFFFFF"
+                            android:shadowColor="#000000"
+                            android:shadowDx="2"
+                            android:shadowDy="2"
+                            android:shadowRadius="3"
+                            tools:ignore="HardcodedText"
+                            android:layout_marginTop="10dp"/>
+
+                        <androidx.recyclerview.widget.RecyclerView
+                            android:id="@+id/animeWatchingRecycler"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:clipToPadding="false"
+                            android:overScrollMode="never"
+                            android:scrollbars="none"
+                            tools:ignore="NestedWeights"
+                            android:nextFocusUp="@+id/Anime_Trending_widget"
+                            android:nextFocusDown="@+id/Anime_Airing_widget"/>
+
+                    </LinearLayout>
+
+        </LinearLayout>
+
+    </ScrollView>
+
+</LinearLayout>

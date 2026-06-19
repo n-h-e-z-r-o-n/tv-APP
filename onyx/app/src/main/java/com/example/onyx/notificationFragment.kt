@@ -24,6 +24,7 @@ import com.example.onyx.OnyxClasses.NotificationItem
 import com.example.onyx.OnyxClasses.cWatchingAdapter
 import com.example.onyx.databinding.FragmentNotificationBinding
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -44,7 +45,7 @@ class notificationFragment :  Fragment(R.layout.fragment_notification) {
 
         db = AppDatabase(requireActivity())
         sm = SessionManger(requireActivity())
-        val userId = sm.getUserId()
+        userId = sm.getUserId()
 
 
         notificationRecyclerView = requireView().findViewById<RecyclerView>(R.id.notificationRecycler)
@@ -58,8 +59,7 @@ class notificationFragment :  Fragment(R.layout.fragment_notification) {
             notificationAdapter.clearItems()
         }
 
-        showNotificationS()
-        animeNotificationS()
+        loadNotifications()
     }
 
 
@@ -74,12 +74,13 @@ class notificationFragment :  Fragment(R.layout.fragment_notification) {
                 db.getAllAnimeNotifications(userId)
             }
 
+            Log.e("anime_notifications", " userId: $userId , notificationsFromDb: $notificationsFromDb  ")
+
             // Headline
             requireView().findViewById<TextView>(R.id.notificationHeadline).text =  "notifications"
 
-            if (notificationsFromDb.size > 0) requireActivity().findViewById<CardView>(R.id.cNotificationAnimeIcon).visibility = View.VISIBLE
+            //if (notificationsFromDb.size > 0) requireActivity().findViewById<CardView>(R.id.cNotificationAnimeIcon).visibility = View.VISIBLE
 
-            // Map DB → UI model
             val notifications = notificationsFromDb.map { item ->
                 //Log.e("anime_Not_fetched", "xyz:" + item["subStored"]?.let { it::class } + item["seasons"] )
 
@@ -178,6 +179,89 @@ class notificationFragment :  Fragment(R.layout.fragment_notification) {
                 notificationRecyclerView.adapter = notificationAdapter
             } else {
                 notificationAdapter.updateItems(notificationItems)
+            }
+        }
+    }
+
+
+    private fun loadNotifications() {
+        lifecycleScope.launch {
+            // 1. Fetch concurrently using async instead of withContext
+            val animeNotificationsDeferred = async(Dispatchers.IO) {
+                db.getAllAnimeNotifications(userId)
+            }
+            val tvNotificationsDeferred = async(Dispatchers.IO) {
+                db.getAllTvNotifications(userId)
+            }
+
+            // 2. Await the results of the Deferred objects
+            val notificationsFromDb = animeNotificationsDeferred.await()
+            val dbTvNotifications = tvNotificationsDeferred.await()
+
+            // Map anime notifications
+            val animeItems = notificationsFromDb.map { item ->
+                val subcount = item["subStored"]?.toString()?.toIntOrNull() ?: 0
+                val dubcount = item["dubStored"]?.toString()?.toIntOrNull() ?: 0
+
+                // 3. Cleaner string building to prevent trailing newlines
+                val infoText = buildString {
+                    if (subcount > 0) append("Episode $subcount [SUB] available NOW\n\n")
+                    if (dubcount > 0) append("Episode $dubcount [DUB] available NOW")
+                }.trimEnd()
+
+                NotificationItem(
+                    notificationId = item["id"]?.toString().orEmpty(),
+                    imdbCode = item["anime_id"]?.toString().orEmpty(),
+                    title = item["title"]?.toString().orEmpty(),
+                    imageUrl = item["poster"]?.toString(),
+                    info = infoText,
+                    type = "anime",
+                    newSeason = item["subStored"]?.toString().orEmpty(),
+                    newEpisode = item["dubStored"]?.toString().orEmpty(),
+                    time = item["notify_at"]?.toString().orEmpty()
+                )
+            }
+
+            // Map TV notifications
+            val tvItems = dbTvNotifications.map { item ->
+                NotificationItem(
+                    notificationId = item["id"]?.toString().orEmpty(),
+                    imdbCode = item["tv_id"]?.toString().orEmpty(),
+                    title = item["title"]?.toString().orEmpty(),
+                    imageUrl = item["poster"]?.toString(),
+                    info = "Season ${item["lastSeason"]} - Episode ${item["lastEpisode"]}",
+                    type = "tv",
+                    newSeason = item["lastSeason"]?.toString().orEmpty(),
+                    newEpisode = item["lastEpisode"]?.toString().orEmpty(),
+                    time = item["notify_at"]?.toString().orEmpty()
+                )
+            }
+
+            // 4. More idiomatic list concatenation
+            val allNotifications = (animeItems + tvItems).toMutableList()
+
+            // Uncomment if you decide to sort them later
+            // allNotifications.sortByDescending { it.time }
+
+            // UI Updates
+            if (allNotifications.isNotEmpty()) {
+                requireActivity().findViewById<CardView>(R.id.cNotificationAnimeIcon)?.visibility = View.VISIBLE
+            }
+
+            // Headline
+            requireView().findViewById<TextView>(R.id.notificationHeadline).text = "notifications (${allNotifications.size})"
+
+            // Adapter setup / update
+            if (!::notificationAdapter.isInitialized) {
+                notificationAdapter = NotificationAdapter(
+                    items = allNotifications,
+                    layoutResId = R.layout.item_notification,
+                    db,
+                    userId
+                )
+                notificationRecyclerView.adapter = notificationAdapter
+            } else {
+                notificationAdapter.updateItems(allNotifications)
             }
         }
     }

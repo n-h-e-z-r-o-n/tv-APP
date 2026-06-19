@@ -5,22 +5,9 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?attr/BG_color_up"
-    tools:context=".c">
+    android:background="@android:color/transparent"
+    tools:context=".ShowsFragment">
 
-
-    <ImageView
-        android:id="@+id/backgroundImgContainer"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:scaleType="centerCrop"
-        android:src="?attr/themeImage"
-        tools:ignore="ContentDescription" />
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="?attr/transparentEffect"/>
 
     <!-- Floating popup -->
     <androidx.cardview.widget.CardView
@@ -85,9 +72,6 @@
 
 
 
-
-
-
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_gravity="end"
@@ -127,7 +111,8 @@
                                     <LinearLayout
                                         android:layout_width="match_parent"
                                         android:layout_height="match_parent"
-                                        android:orientation="vertical">
+                                        android:orientation="vertical"
+                                        tools:ignore="UselessParent">
 
                                             <FrameLayout
                                                 android:id="@+id/spotlightShows"
@@ -135,11 +120,23 @@
                                                 android:layout_height="0dp"
                                                 android:layout_weight="1"
                                                 android:layout_gravity="center"
-                                                android:focusable="false"
+                                                android:focusable="true"
                                                 android:focusableInTouchMode="false"
                                                 android:descendantFocusability="afterDescendants"
                                                 android:clipChildren="false"
-                                                android:clipToPadding="false"/>
+                                                android:clipToPadding="false"
+                                                tools:ignore="TooDeepLayout" />
+
+
+                                            <View
+                                                android:layout_width="match_parent"
+                                                android:layout_marginVertical="5dp"
+                                                android:layout_height="1dp"
+                                                android:nextFocusLeft="@+id/spotlightShows"
+                                                android:nextFocusRight="@+id/spotlightShows"
+                                                android:nextFocusUp="@+id/spotlightShows"
+                                                android:focusable="true"
+                                                android:clickable="false"/>
 
 
                                             <androidx.recyclerview.widget.RecyclerView
@@ -847,8 +844,10 @@
 
 
 
-                    <include layout="@layout/laod_animation"/>
                 </LinearLayout>
+
+                <include layout="@layout/laod_animation"/>
+
         </FrameLayout>
     </androidx.cardview.widget.CardView>
 

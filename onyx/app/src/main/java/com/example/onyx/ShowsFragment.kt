@@ -93,11 +93,9 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
     private var updateContentJob: kotlinx.coroutines.Job? = null
 
 
-
     private lateinit var backgroundContainer: View
     private lateinit var SpotlightSection: FrameLayout
     private lateinit var HomeContentSection: FrameLayout
-
     private lateinit var favoriteSection: LinearLayout
     private lateinit var currentContent: CardView
 
@@ -163,15 +161,15 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         GlobalUtils.applyTheme(requireActivity())
         super.onViewCreated(view, savedInstanceState)
-        
+
         
         requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
-        LoadingAnimation.setup(requireActivity(), R.raw.line_loading)
-        //LoadingAnimation.show(requireActivity())
+        LoadingAnimation.setup(requireContext(), view, R.raw.line_loading)
+        LoadingAnimation.show(view)
         
         fetchTMDB = TMDBapi(requireActivity())
-        db = AppDatabase(requireActivity())         // Initialize database
+        db = AppDatabase(requireActivity())
         sm = SessionManger(requireActivity())
         userId = sm.getUserId()
 
@@ -261,19 +259,6 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
         ////////////////////////////////////////////////////////////////////////////////////////////
 
         setupRecyclerViews()
-
-
-        ////////////////////////////////////////////////////////////////////////////////////////////
-        val loadingImageView = requireView().findViewById<ImageView>(R.id.backgroundImgContainer)
-
-        val typedValue = TypedValue()
-        requireActivity().theme.resolveAttribute(R.attr.themeImage, typedValue, true)
-
-        Glide.with(requireActivity())
-            .asGif()
-            .load( typedValue.resourceId)
-            .into(loadingImageView)
-        ////////////////////////////////////////////////////////////////////////////////////////////
 
 
         lifecycleScope.launch {
@@ -895,6 +880,7 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
                     GlobalUtils.setupCardStackFromContainer(container)
                     requireView().findViewById<FrameLayout>(R.id.SpotlightSection).visibility = View.VISIBLE
                     //LoadingAnimation.hide(requireActivity())
+                    LoadingAnimation.hide(requireView())
                 }
 
 
@@ -902,6 +888,9 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
                 return@launch
                 //LoadingAnimation.setup(requireActivity(), R.raw.error)
                 //LoadingAnimation.show(requireActivity())
+
+                LoadingAnimation.setup(requireContext(), requireView(), R.raw.error)
+                LoadingAnimation.show(requireView())
 
             }
         }
@@ -1419,7 +1408,7 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
                             requireView().findViewById<LinearLayout>(R.id.MovieSection).visibility = View.VISIBLE
                         }
 
-                        //LoadingAnimation.hide(requireActivity())
+                        LoadingAnimation.hide(requireView())
                     }
 
                     return@launch // success → stop repeating
@@ -1546,7 +1535,7 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
                         if (tvAdapter.itemCount > 0) {
                             requireView().findViewById<LinearLayout>(R.id.tvSection).visibility = View.VISIBLE
                         }
-                        //LoadingAnimation.hide(requireActivity())
+                        LoadingAnimation.hide(requireView())
                     }
 
                     Log.e("DEBUG_TAG_TvShows 4", movies.toString())
@@ -2023,6 +2012,8 @@ private fun filter(){
                 } else {
                     faveAdapter.updateItems(items)
                 }
+
+                delay(4000)
 
                 favoriteSection.visibility = View.VISIBLE
 

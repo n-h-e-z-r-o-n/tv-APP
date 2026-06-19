@@ -5,21 +5,10 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?attr/BG_color"
+    android:background="@android:color/transparent"
     tools:context=".ProfileFragment">
 
-    <ImageView
-        android:id="@+id/backgroundImgContainer"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:scaleType="centerCrop"
-        android:src="?attr/themeImage"
-        tools:ignore="ContentDescription" />
 
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="?attr/transparentEffect"/>
 
 
     <androidx.cardview.widget.CardView

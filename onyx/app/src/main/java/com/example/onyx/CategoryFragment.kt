@@ -301,7 +301,6 @@ class CategoryFragment : Fragment(R.layout.fragment_category) {
                     if (!isAdded || view == null) return@withContext
                 isLoadingMovies = false
                 moviesAdapter.isLoadingMore = false
-                LoadingAnimation.hide(requireActivity())
             }
         }
     }
@@ -397,7 +396,6 @@ class CategoryFragment : Fragment(R.layout.fragment_category) {
                         currentTvPage++
                         isLoadingTv = false
                         tvAdapter.isLoadingMore = false
-                        LoadingAnimation.hide(requireActivity())
                     }
                     return@launch
                 } catch (e: Exception) {
@@ -414,7 +412,6 @@ class CategoryFragment : Fragment(R.layout.fragment_category) {
                     if (!isAdded || view == null) return@withContext
                 isLoadingTv = false
                 tvAdapter.isLoadingMore = false
-                LoadingAnimation.hide(requireActivity())
             }
         }
     }

@@ -1,6 +1,7 @@
 package com.example.onyx
 
 import android.os.Bundle
+import android.util.TypedValue
 import android.view.View
 import android.widget.ImageButton
 import androidx.appcompat.app.AppCompatActivity
@@ -9,6 +10,8 @@ import androidx.fragment.app.Fragment
 import com.example.onyx.OnyxObjects.GlobalUtils
 import com.example.onyx.OnyxObjects.NavAction
 import android.widget.ImageView
+import com.bumptech.glide.Glide
+import com.example.onyx.OnyxObjects.LoadingAnimation
 
 class HomeActivity : AppCompatActivity() {
 
@@ -27,6 +30,19 @@ class HomeActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         GlobalUtils.applyTheme(this)
         setContentView(R.layout.activity_home)
+
+
+        ////////////////////////////////////////////////////////////////////////////////////////////
+        val loadingImageView = findViewById<ImageView>(R.id.AnimationBG)
+
+        val typedValue = TypedValue()
+        theme.resolveAttribute(R.attr.themeImage, typedValue, true)
+
+        Glide.with(this)
+            .asGif()
+            .load( typedValue.resourceId)
+            .into(loadingImageView)
+        ///////////////////////////////////////////////////////////////////////////////////////////
 
         // Set up the sidebar (using existing logic, but we need to override the click behavior)
         NavAction.setupSidebar(this)

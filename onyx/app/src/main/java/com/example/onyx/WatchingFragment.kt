@@ -3,6 +3,7 @@ package com.example.onyx
 import android.os.Bundle
 import android.view.View
 import android.widget.LinearLayout
+import android.widget.ScrollView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -10,6 +11,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.onyx.Database.AppDatabase
 import com.example.onyx.Database.SessionManger
 import com.example.onyx.OnyxClasses.cWatchingAdapter
+import com.example.onyx.OnyxObjects.GlobalUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -30,8 +32,14 @@ class WatchingFragment : Fragment(R.layout.fragment_watching) {
         super.onViewCreated(view, savedInstanceState)
         db = AppDatabase(requireContext())
         sm = SessionManger(requireActivity())
+        val fragmentScrollView = requireView().findViewById<ScrollView>(R.id.fragmentScrollView)
+
         showsWatchingSection = view.findViewById(R.id.showsWatchingSection)
         animeWatchingSection = view.findViewById(R.id.animeWatchingSection)
+
+        GlobalUtils.centerParentOnFocus(fragmentScrollView, showsWatchingSection)
+        GlobalUtils.centerParentOnFocus(fragmentScrollView, animeWatchingSection)
+
 
         showsWatchingRecycler = view.findViewById(R.id.showsWatchingRecycler)
         showsWatchingRecycler.layoutManager = LinearLayoutManager(
@@ -79,6 +87,26 @@ class WatchingFragment : Fragment(R.layout.fragment_watching) {
                     showsWatchingSection.visibility = View.GONE
                 }
             }
+        }
+    }
+
+
+
+    override fun onHiddenChanged(hidden: Boolean) {
+        super.onHiddenChanged(hidden)
+        if (hidden) {
+            // The fragment is now hidden, so bring back the bottom nav for the other fragments
+        } else {
+            if (this::showsWatchAdapter.isInitialized) {
+                showsWatchAdapter.clearItems()
+            }
+
+            if (this::animeWatchAdapter.isInitialized) {
+                animeWatchAdapter.clearItems()
+            }
+
+            animeWatchedList()
+            showsWatchedList()
         }
     }
 

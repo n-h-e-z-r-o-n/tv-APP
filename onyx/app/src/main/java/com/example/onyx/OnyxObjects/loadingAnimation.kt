@@ -1,6 +1,6 @@
 package com.example.onyx.OnyxObjects
 
-import android.app.Activity
+import android.content.Context
 import android.view.View
 import android.widget.ImageView
 import com.bumptech.glide.Glide
@@ -10,23 +10,27 @@ object LoadingAnimation {
 
     private var currentAnimationRes: Int = R.raw.line_loading // default
 
-    fun setup(activity: Activity, animationRes: Int = R.raw.line_loading) {
+    // Pass the root View (from Activity or Fragment) to find the views
+    fun setup(context: Context, rootView: View, animationRes: Int = R.raw.line_loading) {
         currentAnimationRes = animationRes
-        val loadingImageView = activity.findViewById<ImageView>(R.id.loadingGif)
+        val loadingImageView = rootView.findViewById<ImageView>(R.id.loadingGif)
 
-        Glide.with(activity)
-            .asGif()
-            .load(animationRes)
-            .into(loadingImageView)
+        // Safe call in case the layout doesn't contain the loadingGif ID
+        loadingImageView?.let {
+            Glide.with(context)
+                .asGif()
+                .load(animationRes)
+                .into(it)
+        }
     }
 
-    fun show(activity: Activity) {
-        val container = activity.findViewById<View>(R.id.loadingContainer)
+    fun show(rootView: View) {
+        val container = rootView.findViewById<View>(R.id.loadingContainer)
         container?.visibility = View.VISIBLE
     }
 
-    fun hide(activity: Activity) {
-        val container = activity.findViewById<View>(R.id.loadingContainer)
+    fun hide(rootView: View) {
+        val container = rootView.findViewById<View>(R.id.loadingContainer)
         container?.visibility = View.GONE
     }
 }

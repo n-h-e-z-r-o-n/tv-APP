@@ -110,9 +110,8 @@ class AnimeFragment : Fragment(R.layout.fragment_anime) {
          GlobalUtils.applyTheme(requireActivity())
 
 
-
-         LoadingAnimation.setup(requireActivity(), R.raw.line_loading)
-         LoadingAnimation.show(requireActivity())
+         LoadingAnimation.setup(requireContext(), view, R.raw.line_loading)
+         LoadingAnimation.show(view)
 
 
          db = AppDatabase(requireActivity())         // Initialize database==
@@ -120,17 +119,6 @@ class AnimeFragment : Fragment(R.layout.fragment_anime) {
          fetchAnimeAPI = AnimeApi(requireActivity())
 
          userId = sm.getUserId()
-
-        ////////////////////////////////////////////////////////////////////////////////////////////
-         val loadingImageView = requireView().findViewById<ImageView>(R.id.backgroundImgContainer)
-
-         val typedValue = TypedValue()
-
-         Glide.with(requireActivity())
-             .asGif()
-             .load( typedValue.resourceId)
-             .into(loadingImageView)
-         ///////////////////////////////////////////////////////////////////////////////////////////
 
 
          val activityScrollVIEW = requireView().findViewById<ScrollView>(R.id.activityScrollVIEW)
@@ -145,6 +133,7 @@ class AnimeFragment : Fragment(R.layout.fragment_anime) {
          animeSpotlightSection.visibility = View.GONE
          animeTrendingSection.visibility = View.GONE
          animeAiringSection.visibility = View.GONE
+         dubbSection.visibility = View.GONE
          favoriteSection.visibility = View.GONE
 
 
@@ -191,64 +180,14 @@ class AnimeFragment : Fragment(R.layout.fragment_anime) {
              projectDubbItemIntoHero(item)
          }
 
-
-
          dubbedAdapter.onAddMoreClicked = { loadDubbedAnime() }
 
 
 
 
-         ///////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-         //------------------------------------------------------------------------------------------
-         val gapUsed = 70
-
-         //-----------------------------------------------------------------------------------------
-         /*
-         searchRecyclerView = requireView().findViewById(R.id.SearchRecycler)
-         searchRecyclerView.layoutManager =  object : GridLayoutManager(requireActivity(), 3){
-
-             override fun onInterceptFocusSearch(focused: View, direction: Int): View? {
-                 val currentPosition = getPosition(focused)
-                 if (currentPosition == RecyclerView.NO_POSITION) return null
-
-                 if (direction == View.FOCUS_RIGHT) {
-                     val span = spanCount
-                     val isLastColumn = (currentPosition + 1) % span == 0
-                     val nextRowFirstPos = currentPosition + 1
-
-                     if (isLastColumn) {
-                         if (nextRowFirstPos >= itemCount) {
-                             // Block focus at end of grid
-                             return focused
-                         }
-
-                         // Ensure view exists (scroll if needed)
-                         val nextView = findViewByPosition(nextRowFirstPos)
-                         return nextView ?: run {
-                             searchRecyclerView.scrollToPosition(nextRowFirstPos)
-                             focused
-                         }
-                     }
-                 }
-
-                 return super.onInterceptFocusSearch(focused, direction)
-             }
-
-         }
-         searchAdapter  = AnimeSearchAdapter(mutableListOf(), R.layout.anime_airing_item)
-         searchRecyclerView.adapter = searchAdapter
-         searchRecyclerView.addItemDecoration(EqualSpaceItemDecoration(tvSpacing))
-
-
-        */
-
          //------------------------------------------------------------------------------------------
 
          faveRecyclerView = requireView().findViewById(R.id.faveRecycler)
-
          faveRecyclerView.layoutManager = LinearLayoutManager(
              requireActivity(),
              LinearLayoutManager.HORIZONTAL,
@@ -383,7 +322,6 @@ class AnimeFragment : Fragment(R.layout.fragment_anime) {
              val jsonObject = withContext(Dispatchers.IO) {fetchAnimeAPI.animeHome()}
 
              if (jsonObject == null){
-                 LoadingAnimation.setup(requireActivity(), R.raw.error)
                  return@launch
              }
 
@@ -402,6 +340,7 @@ class AnimeFragment : Fragment(R.layout.fragment_anime) {
 
              if (spotlightAnimes.length() > 0) {
                  requireView().findViewById<LinearLayout>(R.id.animeSpotlightSection).visibility = View.VISIBLE
+                 LoadingAnimation.hide(requireView())
              }
 
              for (i in 0 until spotlightAnimes.length()) {
@@ -458,15 +397,17 @@ class AnimeFragment : Fragment(R.layout.fragment_anime) {
 
              if (trendingAnimes.length() > 0) {
                  requireView().findViewById<LinearLayout>(R.id.animeTrendingSection).visibility = View.VISIBLE
+                 LoadingAnimation.hide(requireView())
              }
              if (topAiringAnimes.length() > 0) {
                  requireView().findViewById<LinearLayout>(R.id.animeAiringSection).visibility = View.VISIBLE
+                 LoadingAnimation.hide(requireView())
+
              }
              showTrending(trendingAnimes)
              showAiring(topAiringAnimes)
 
              GlobalUtils.setupCardStackFromContainer(SpotlightContaner)
-             LoadingAnimation.hide(requireActivity())
          }
      }
 
@@ -640,10 +581,10 @@ class AnimeFragment : Fragment(R.layout.fragment_anime) {
                         dubbedAdapter.addItems(animeGridItems)
 
                         if (isInitialLoad) {
+                            requireView().findViewById<LinearLayout>(R.id.dubbSection).visibility = View.VISIBLE
                             dubbedRecyclerView.scrollToPosition(0)
+                            LoadingAnimation.hide(requireView())
                         }
-
-
 
 
                         delay(3000)
@@ -667,23 +608,6 @@ class AnimeFragment : Fragment(R.layout.fragment_anime) {
             }
         }
     }
-
-     ////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    /*
-
-*/
-
-
-     ///////////////////////////////////////////////////////////////////////////////////////////////
-     ///////////////////////////////////////////////////////////////////////////////////////////////
-
 
 
     private fun animeFavoritesList() {

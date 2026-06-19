@@ -26,8 +26,7 @@ class Actor_Page : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_actor_page)
-        LoadingAnimation.setup(this@Actor_Page, R.raw.line_loading)
-        LoadingAnimation.show(this@Actor_Page)
+
 
 
         val cast_id = intent.getStringExtra("imdb_code")
@@ -179,7 +178,6 @@ class Actor_Page : AppCompatActivity() {
 
                         withContext(Dispatchers.Main) {
                             adapter.addItem(movieItem)  // 👈 add one at a time
-                            LoadingAnimation.hide(this@Actor_Page)
                         }
                 }
             }catch (e:Exception){

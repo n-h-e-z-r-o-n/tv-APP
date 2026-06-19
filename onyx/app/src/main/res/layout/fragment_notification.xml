@@ -28,9 +28,10 @@
                 android:layout_height="wrap_content"
                 android:text="notifications"
                 android:textStyle="bold"
-                android:fontFamily="@font/p"
+                android:fontFamily="serif"
+                android:layout_marginStart="70dp"
                 android:textSize="13sp"
-                android:alpha="0.5"
+                android:alpha="0.8"
                 android:textColor="?attr/FG_color"
                 tools:ignore="HardcodedText"
                 />
@@ -66,6 +67,7 @@
             android:layout_width="match_parent"
             android:clipToPadding="false"
             android:scrollbars="none"
+            tools:listitem="@layout/item_notification"
             tools:ignore="RtlSymmetry"/>
 
     </LinearLayout>

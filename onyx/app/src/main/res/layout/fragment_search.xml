@@ -10,112 +10,112 @@
     tools:context=".SearchFragment">
 
 
+    <LinearLayout
+        android:layout_width="280dp"
+        android:layout_height="match_parent"
+        android:background="?attr/transparentEffect"
+        android:orientation="vertical"
+        tools:ignore="TextSizeCheck">
+
+
         <LinearLayout
-            android:layout_width="280dp"
-            android:layout_height="match_parent"
-            android:background="?attr/transparentEffect"
-            android:orientation="vertical">
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:orientation="vertical"
+            tools:ignore="UselessParent">
 
-
-
-            <LinearLayout
-                android:layout_gravity="center"
+            <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                tools:ignore="UselessParent">
-
-                  <TextView
-                      android:layout_width="wrap_content"
-                      android:layout_height="wrap_content"
-                      android:text="Search"
-                      android:textColor="#FFFFFF"
-                      android:fontFamily="serif"
-                      android:textStyle="bold"
-                      android:textSize="40sp"
-                      tools:ignore="HardcodedText" />
+                android:fontFamily="serif"
+                android:text="Search"
+                android:textColor="#FFFFFF"
+                android:textSize="40sp"
+                android:textStyle="bold"
+                tools:ignore="HardcodedText" />
 
 
-                <com.google.android.material.button.MaterialButtonToggleGroup
-                    android:id="@+id/searchCategoryToggle"
+            <com.google.android.material.button.MaterialButtonToggleGroup
+                android:id="@+id/searchCategoryToggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="8dp"
+                app:checkedButton="@+id/btnAnime"
+                app:singleSelection="true">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnAnime"
+                    style="?attr/materialButtonOutlinedStyle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center_horizontal"
-                    android:layout_marginTop="16dp"
-                    android:layout_marginBottom="8dp"
-                    app:singleSelection="true"
-                    app:checkedButton="@+id/btnAnime">
+                    android:text="Anime"
+                    android:textColor="?attr/FG_color"
+                    app:backgroundTint="@color/toggle_background"
+                    app:strokeColor="@color/card_stroke"
+                    tools:ignore="HardcodedText,TextContrastCheck" />
 
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnAnime"
-                        style="?attr/materialButtonOutlinedStyle"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Anime"
-                        android:textColor="?attr/FG_color"
-                        app:strokeColor="@color/card_stroke"
-                        tools:ignore="HardcodedText" />
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnNormalShows"
+                    style="?attr/materialButtonOutlinedStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Normal Shows"
+                    android:textColor="?attr/FG_color"
+                    app:backgroundTint="@color/toggle_background"
+                    app:strokeColor="@color/card_stroke"
+                    tools:ignore="HardcodedText" />
 
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnNormalShows"
-                        style="?attr/materialButtonOutlinedStyle"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Normal Shows"
-                        android:textColor="?attr/FG_color"
-                        app:strokeColor="@color/card_stroke"
-                        tools:ignore="HardcodedText" />
-
-                </com.google.android.material.button.MaterialButtonToggleGroup>
+            </com.google.android.material.button.MaterialButtonToggleGroup>
 
 
-                    <com.google.android.material.card.MaterialCardView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="5dp"
-                        android:layout_marginHorizontal="4dp"
-                        app:strokeWidth="0dp"
-                        app:cardCornerRadius="6dp"
-                        app:strokeColor="?attr/AccentColor"
-                        android:layout_marginBottom="20dp"
-                        app:cardBackgroundColor="#000000">
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="4dp"
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="20dp"
+                app:cardBackgroundColor="#000000"
+                app:cardCornerRadius="6dp"
+                app:strokeColor="?attr/AccentColor"
+                app:strokeWidth="0dp">
 
-                        <LinearLayout
-                            android:alpha="0"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:background="?attr/AccentColor"/>
-
-
-
-                        <EditText
-                            android:id="@+id/searchView"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:hint="Search for anime..."
-                            android:textColor="?attr/FG_color"
-                            android:textColorHint="?attr/FG_color"
-                            android:padding = "10dp"
-                            android:inputType="text"
-                            android:textSize="15sp"
-                            android:singleLine="true"
-                            android:clickable="false"
-                            android:focusable="false"
-                            android:fontFamily="@font/p"
-                            android:focusableInTouchMode="true"
-                            android:background="@android:color/transparent"
-                            android:imeOptions="actionSearch"
-                            tools:ignore="Autofill,HardcodedText" />
-
-                    </com.google.android.material.card.MaterialCardView>
-
-                    <include layout="@layout/keyboard_layout"/>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:alpha="0"
+                    android:background="?attr/AccentColor" />
 
 
+                <EditText
+                    android:id="@+id/searchView"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@android:color/transparent"
+                    android:clickable="false"
+                    android:focusable="false"
+                    android:focusableInTouchMode="true"
+                    android:fontFamily="@font/p"
+                    android:hint="Search for anime..."
+                    android:imeOptions="actionSearch"
+                    android:inputType="text"
+                    android:padding="10dp"
+                    android:singleLine="true"
+                    android:textColor="?attr/FG_color"
+                    android:textColorHint="?attr/FG_color"
+                    android:textSize="15sp"
+                    tools:ignore="Autofill,HardcodedText,TouchTargetSizeCheck" />
 
-            </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <include layout="@layout/keyboard_layout" />
+
 
         </LinearLayout>
+
+    </LinearLayout>
 
 
 
@@ -132,20 +132,22 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
+
             <TextView
                 android:id="@+id/searchTextDisplay"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Search Results"
-                android:textStyle="bold"
-                android:fontFamily="serif"                            android:textSize="20sp"
-                android:textColor="#FFFFFF"
+                android:layout_marginTop="7dp"
+                android:fontFamily="serif"
                 android:shadowColor="#000000"
                 android:shadowDx="1"
                 android:shadowDy="1"
                 android:shadowRadius="2"
-                tools:ignore="HardcodedText,RtlSymmetry"
-                android:layout_marginTop="7dp"/>
+                android:text="Search Results"
+                android:textColor="#FFFFFF"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                tools:ignore="HardcodedText,RtlSymmetry,TextContrastCheck" />
 
 
 

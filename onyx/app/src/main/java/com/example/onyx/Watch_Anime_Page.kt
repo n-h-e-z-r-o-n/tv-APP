@@ -102,7 +102,6 @@ class Watch_Anime_Page : AppCompatActivity() {
 
 
 
-        LoadingAnimation.setup(this@Watch_Anime_Page, R.raw.line_loading)
         SeasonIMGArray = mutableListOf<String>()
         //------------------------------------------------------------------------------------------
         animeId = intent.getStringExtra("anime_code")?: ""
@@ -146,7 +145,6 @@ class Watch_Anime_Page : AppCompatActivity() {
 
     private fun getInfo(Id: String){
 
-        LoadingAnimation.show(this@Watch_Anime_Page)
 
         val jsonObject = fetchAnime.animeInfo(Id)
 
@@ -234,8 +232,6 @@ class Watch_Anime_Page : AppCompatActivity() {
         }
 
         showRecommendation(relatedAnimes, recommendedAnime)
-        LoadingAnimation.hide(this@Watch_Anime_Page)
-
 
         setupFavoriteButton(
             animeId = animeId,

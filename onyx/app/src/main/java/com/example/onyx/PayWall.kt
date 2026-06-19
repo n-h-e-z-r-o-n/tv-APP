@@ -290,7 +290,6 @@ class PayWall : AppCompatActivity() {
 
 
     private fun   loadTrendingMovies() {
-        LoadingAnimation.show(this@PayWall)
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
