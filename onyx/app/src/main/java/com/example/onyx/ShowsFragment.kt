@@ -144,10 +144,6 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
     private lateinit var faveRecyclerView: RecyclerView
     private lateinit var faveAdapter: FavAdapter
 
-    private lateinit var notificationAdapter: NotificationAdapter
-    private lateinit var  notificationRecyclerView: RecyclerView
-
-    private lateinit var watchRecyclerView: RecyclerView
     private lateinit var watchAdapter: cWatchingAdapter
 
 
@@ -162,12 +158,12 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
         GlobalUtils.applyTheme(requireActivity())
         super.onViewCreated(view, savedInstanceState)
 
-        
+
         requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         LoadingAnimation.setup(requireContext(), view, R.raw.line_loading)
         LoadingAnimation.show(view)
-        
+
         fetchTMDB = TMDBapi(requireActivity())
         db = AppDatabase(requireActivity())
         sm = SessionManger(requireActivity())
@@ -213,26 +209,6 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
 
 
         ////////////////////////////////////////////////////////////////////////////////////////////
-        val navBar = requireView().findViewById<LinearLayout>(R.id.NavBar)
-
-        val HomeBtn = requireView().findViewById<LinearLayout>(R.id.HomeBtn)
-        val MoviesBtn = requireView().findViewById<LinearLayout>(R.id.MoviesBtn)
-        val seriesBtn = requireView().findViewById<LinearLayout>(R.id.seriesBtn)
-        val SearchBtn = requireView().findViewById<LinearLayout>(R.id.SearchBtn)
-        val FilterBtn = requireView().findViewById<LinearLayout>(R.id.FilterBtn)
-        val FavBtn = requireView().findViewById<LinearLayout>(R.id.FavBtn)
-        val cWatchBtn = requireView().findViewById<LinearLayout>(R.id.cWatchBtn)
-        val cNotificationBtn = requireView().findViewById<LinearLayout>(R.id.cNotificationBtn)
-
-
-        ////////////////////////////////////////////////////////////////////////////////////////////
-
-        val HomePage = requireView().findViewById<LinearLayout>(R.id.HomePage)
-
-
-
-
-
 
 
         val homeScrollView = requireView().findViewById<ScrollView>(R.id.HomeInnerScrollView)
@@ -244,21 +220,9 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
         GlobalUtils.snapRowToTopOnFocus(homeScrollView, thrillsRow)
 
 
-
-
-        ////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-
-
-
-
-
         ////////////////////////////////////////////////////////////////////////////////////////////
 
         setupRecyclerViews()
-
 
         lifecycleScope.launch {
             HomeData()
@@ -270,7 +234,6 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
             fetchTvShows()
             //filter()
             tvFavoritesList()
-
         }
 
     }
@@ -283,22 +246,6 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
             watchAdapter.clearItems()
         }
 
-
-        /*
-        if(this::notificationAdapter.isInitialized){
-            notificationAdapter.clearItems()
-        }
-        notificationS()
-
-
-
-        if (this::faveAdapter.isInitialized) {
-            faveAdapter.clearItems()
-        }
-
-        //tvFavoritesList()
-
-         */
 
 
         // Only request focus if nothing has focus
@@ -328,7 +275,6 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
 
 
         // Remove all handler callbacks
-        Handler(Looper.getMainLooper()).removeCallbacksAndMessages(null)
 
         // requireActivity().finish()
     }
@@ -2033,22 +1979,5 @@ private fun filter(){
 
 
 
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-    
-
-
-
-    private fun setupBackPressedCallback() {
-        requireActivity().onBackPressedDispatcher.addCallback(requireActivity(), object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-
-            }
-        })
-    }
 
 }

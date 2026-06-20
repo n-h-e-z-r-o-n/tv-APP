@@ -335,7 +335,6 @@ class Video_payer : AppCompatActivity(), Player.Listener {
                     hideControls()
                 } else {
 
-                    Handler(Looper.getMainLooper()).removeCallbacksAndMessages(null)
 
                     // If controls are hidden, exit the video player
                     finish()
@@ -722,7 +721,6 @@ class Video_payer : AppCompatActivity(), Player.Listener {
         lifecycleScope.coroutineContext.cancelChildren()
 
         // Remove all handler callbacks
-        Handler(Looper.getMainLooper()).removeCallbacksAndMessages(null)
 
         // Abandon audio focus
         val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
@@ -731,7 +729,6 @@ class Video_payer : AppCompatActivity(), Player.Listener {
         // Clear player view
         playerView.player = null
 
-        Handler(Looper.getMainLooper()).removeCallbacksAndMessages(null)
 
         finish()
     }

@@ -445,7 +445,6 @@ class Play : AppCompatActivity() {
         // Cancel any running coroutines
         lifecycleScope.coroutineContext.cancelChildren()
 
-        Handler(Looper.getMainLooper()).removeCallbacksAndMessages(null)
 
 
         // Finish activity

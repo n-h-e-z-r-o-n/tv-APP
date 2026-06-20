@@ -28,6 +28,7 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.request.target.Target
 import com.example.onyx.Actor_Page
 import com.example.onyx.Anime_Video_Player
+import com.example.onyx.CategoryFragment
 import com.example.onyx.Database.AppDatabase
 import com.example.onyx.FetchData.TMDBapi
 import com.example.onyx.OnyxObjects.GlobalUtils
@@ -640,11 +641,13 @@ class CategoryAdapter(
 
         holder.CardViewSquare.setOnClickListener {
             val context = holder.itemView.context
-            val intent = Intent(context, com.example.onyx.HomeActivity::class.java).apply {
-                putExtra("company_id", imdbCode)
-                putExtra("company_name", companyName)
+
+
+            val args = android.os.Bundle().apply {
+                putString("company_id", imdbCode)
+                putString("company_name", companyName)
             }
-            context.startActivity(intent)
+            (context as com.example.onyx.HomeActivity).navigateToFragment(CategoryFragment(), args)
         }
 
         holder.CardViewSquare.setOnFocusChangeListener { v, hasFocus ->

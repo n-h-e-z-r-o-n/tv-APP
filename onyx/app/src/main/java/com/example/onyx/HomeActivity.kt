@@ -16,8 +16,8 @@ import com.example.onyx.OnyxObjects.LoadingAnimation
 
 class HomeActivity : AppCompatActivity() {
 
-    private var showsFragment: ShowsFragment? = null
-    private var animeFragment: AnimeFragment? = null
+     var showsFragment: ShowsFragment? = null
+     var animeFragment: AnimeFragment? = null
     private var profileFragment: ProfileFragment? = null
     private var watchingFragment: WatchingFragment? = null
 
@@ -108,10 +108,20 @@ class HomeActivity : AppCompatActivity() {
         val fm = supportFragmentManager
         val transaction = fm.beginTransaction()
 
-        if (activeFragment != null) {
-            // 1. Hide and FREEZE the currently active fragment
-            transaction.hide(activeFragment!!)
-            transaction.setMaxLifecycle(activeFragment!!, Lifecycle.State.STARTED)
+        // Define your VIP list of core sidebar tabs
+        val coreNavigationTags = listOf("shows", "anime", "profile", "watching", "notifications", "search")
+
+        // 1. Find ALL currently visible fragments
+        fm.fragments.filter { it.isVisible }.forEach { fragment ->
+
+            if (coreNavigationTags.contains(fragment.tag)) {
+                // It IS a main sidebar tab -> Hide and FREEZE it
+                transaction.hide(fragment)
+                transaction.setMaxLifecycle(fragment, Lifecycle.State.STARTED)
+            } else {
+                // It is a sub-screen (like WatchAnimeFragment) -> DESTROY it completely
+                transaction.remove(fragment)
+            }
         }
 
         var targetFragment = fm.findFragmentByTag(tag)
@@ -146,29 +156,64 @@ class HomeActivity : AppCompatActivity() {
         activeFragment = targetFragment
         transaction.commit()
     }
-    
+
     fun navigateToFragment(fragment: Fragment, args: Bundle? = null) {
         if (args != null) {
             fragment.arguments = args
         }
         val fm = supportFragmentManager
         val transaction = fm.beginTransaction()
-        
-        // Hide all visible fragments to prevent focus bleeding
-        fm.fragments.filter { it.isVisible }.forEach { 
-            transaction.hide(it) 
+
+        // Hide all currently visible fragments (keeps them alive in the background)
+        fm.fragments.filter { it.isVisible }.forEach {
+            transaction.hide(it)
+            // Optional: Cap the lifecycle just like you do in switchFragment
+            transaction.setMaxLifecycle(it, Lifecycle.State.STARTED)
         }
 
-
-        val currentFragment = fm.findFragmentById(R.id.fragmentContainer)
-        if (currentFragment != null) {
-            transaction.hide(currentFragment)
-        }
-
+        // Add the new fragment, but DO NOT call addToBackStack()
         transaction.add(R.id.fragmentContainer, fragment)
-        transaction.addToBackStack(null)
         transaction.commit()
     }
+
+    fun navigateAndDestroyCurrent(newFragment: Fragment, args: Bundle? = null) {
+        if (args != null) {
+            newFragment.arguments = args
+        }
+        val fm = supportFragmentManager
+        val transaction = fm.beginTransaction()
+
+        // Find the currently visible fragment(s) and destroy them completely
+        fm.fragments.filter { it.isVisible }.forEach { visibleFragment ->
+            transaction.remove(visibleFragment)
+        }
+
+        // Add the new fragment
+        transaction.add(R.id.fragmentContainer, newFragment)
+        transaction.commit()
+    }
+
+    fun navigateToExistingAndDestroyCurrent(existingFragment: Fragment, fragmentToDestroy: Fragment) {
+        val fm = supportFragmentManager
+        val transaction = fm.beginTransaction()
+
+        // 1. Explicitly destroy the target fragment for maximum safety
+        transaction.remove(fragmentToDestroy)
+
+        // 2. Show the returning fragment
+        if (existingFragment.isAdded) {
+            transaction.show(existingFragment)
+
+            // Wake up the returning fragment's lifecycle
+            transaction.setMaxLifecycle(existingFragment, Lifecycle.State.RESUMED)
+        } else {
+            // Fallback: Add it if it somehow hasn't been added yet
+            transaction.add(R.id.fragmentContainer, existingFragment)
+        }
+
+        transaction.commit()
+    }
+
     
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
@@ -181,4 +226,8 @@ class HomeActivity : AppCompatActivity() {
         super.onResume()
         GlobalUtils.hideSystemUI(this)
     }
+
+
+
+
 }

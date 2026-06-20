@@ -1,12 +1,18 @@
 package com.example.onyx
 
 import android.content.Context
+import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.view.WindowManager
+import android.view.animation.LinearInterpolator
+import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.ProgressBar
+import android.widget.ScrollView
 import android.widget.TextView
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -29,18 +35,25 @@ import java.util.Locale
 
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
-class CategoryFragment : Fragment(R.layout.fragment_category) {
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.DataSource
+import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.bumptech.glide.load.engine.GlideException
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
+import com.bumptech.glide.request.RequestListener
+import com.bumptech.glide.request.target.Target
+import com.example.onyx.FetchData.TMDBapi
+import com.example.onyx.OnyxClasses.FocusOverlay
+import com.google.android.material.card.MaterialCardView
+import kotlinx.coroutines.cancelChildren
 
-    private lateinit var moviesRecyclerView: RecyclerView
-    private lateinit var tvRecyclerView: RecyclerView
+class CategoryFragment : Fragment(R.layout.fragment_category) {
+    private lateinit var fragmentBackCallback: OnBackPressedCallback
+    private lateinit var fetchTMDB: TMDBapi
+
     private lateinit var moviesAdapter: GridAdapter
     private lateinit var tvAdapter: GridAdapter
-    private lateinit var moviesButton: LinearLayout
-    private lateinit var tvButton: LinearLayout
-    private lateinit var moviesButtonText: TextView
-    private lateinit var tvButtonText: TextView
     private lateinit var categoryTitle: TextView
-    private lateinit var categorySubtitle: TextView
 
     private var companyId: String = ""
     private var companyName: String = "Collection"
@@ -63,23 +76,39 @@ class CategoryFragment : Fragment(R.layout.fragment_category) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         GlobalUtils.applyTheme(requireActivity())
         super.onViewCreated(view, savedInstanceState)
-        
-        
-        requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        //LoadingAnimation.setup(requireActivity(), R.raw.line_loading)
-        //LoadingAnimation.show(requireActivity())
+
+        setupBackPressedCallback()
+
+        fetchTMDB = TMDBapi(requireActivity())
+
+        //------------------------------------------------------------------------------------------
+
+        val fragmentScrollVIEW = requireView().findViewById<ScrollView>(R.id.fragmentScrollVIEW)
+        val movieSection = requireView().findViewById<LinearLayout>(R.id.MovieSection)
+        val tvSection = requireView().findViewById<LinearLayout>(R.id.tvSection)
+
+        movieSection.visibility = View.GONE
+        tvSection.visibility = View.GONE
+
+
+        GlobalUtils.centerParentOnFocus(fragmentScrollVIEW, movieSection)
+        GlobalUtils.centerParentOnFocus(fragmentScrollVIEW, tvSection)
+
+        //------------------------------------------------------------------------------------------
 
         categoryTitle = requireView().findViewById(R.id.CategoryTitle)
         categoryTitle.requestFocus()
 
-        companyId = requireActivity().intent.getStringExtra("company_id").orEmpty()
-        companyName = requireActivity().intent.getStringExtra("company_name") ?: "Collection"
+        companyId = arguments?.getString("company_id")?: ""
+        companyName = arguments?.getString("company_name")?: ""
+
+
 
         if (companyId.isBlank()) {
-            Log.e("Category_Page", "Missing company_id, closing activity.")
-            // requireActivity().finish()
+            Log.e("Category_Page", "Missing company_id, closing activity. $companyId, $companyName")
             return
         }
+        Log.e("Category_Page", "\n company_id: $companyId,\n company_name: $companyName, \n Bearer ${BuildConfig.TM_K}")
 
         categoryTitle.text = companyName
 
@@ -94,38 +123,163 @@ class CategoryFragment : Fragment(R.layout.fragment_category) {
     }
 
     private fun setupRecyclerViews() {
-        val itemWidthDp = 289
 
-        moviesRecyclerView = requireView().findViewById(R.id.CategoryMoviesRecyclerView)
-        //moviesRecyclerView.layoutManager = GridLayoutManager(requireActivity(), GlobalUtils.calculateSpanCount(requireActivity(), itemWidthDp))
-        moviesRecyclerView.layoutManager = LinearLayoutManager(
+        //------------------------------------------------------------------------------------------
+
+        val moviesRecyclerView = requireView().findViewById<RecyclerView>(R.id.MoviesRecyclerView)
+        val movieFixedFocusOverlay = requireView().findViewById<MaterialCardView>(R.id.movieFixedFocusOverlay)
+        moviesRecyclerView.layoutManager  =  LinearLayoutManager(
             requireActivity(),
             LinearLayoutManager.HORIZONTAL,
             false
         )
-
-        val movieSpacing = (15 * resources.displayMetrics.density).toInt()
-        //moviesRecyclerView.addItemDecoration(EqualSpaceItemDecoration(movieSpacing))
-
-        moviesAdapter = GridAdapter(mutableListOf(), R.layout.item_grid2)
+        moviesRecyclerView.addItemDecoration(EqualSpaceItemDecoration(20))
+        moviesAdapter = GridAdapter(mutableListOf(), R.layout.item_grid)
         moviesRecyclerView.adapter = moviesAdapter
+
         moviesAdapter.onAddMoreClicked = { loadMoreMovies() }
 
-        tvRecyclerView = requireView().findViewById(R.id.CategoryTvRecyclerView)
-        //tvRecyclerView.layoutManager = GridLayoutManager(requireActivity(), GlobalUtils.calculateSpanCount(requireActivity(), itemWidthDp))
-        tvRecyclerView.layoutManager =  LinearLayoutManager(
+        FocusOverlay<MovieItemOne>(
+            overlay = movieFixedFocusOverlay,
+            recyclerView = moviesRecyclerView,
+            adapter = moviesAdapter
+        ) { item ->
+            projectMovieItemIntoHero(item)
+        }
+
+        //------------------------------------------------------------------------------------------
+
+        val tvFixedFocusOverlay = requireView().findViewById<MaterialCardView>(R.id.tvFixedFocusOverlay)
+        val tvRecyclerView = requireView().findViewById<RecyclerView>(R.id.TVsRecyclerView)
+        tvRecyclerView.layoutManager  =  LinearLayoutManager(
             requireActivity(),
             LinearLayoutManager.HORIZONTAL,
             false
         )
-
-        val tvSpacing = (15 * resources.displayMetrics.density).toInt()
-        //tvRecyclerView.addItemDecoration(EqualSpaceItemDecoration(tvSpacing))
-
-        tvAdapter = GridAdapter(mutableListOf(), R.layout.item_grid2)
+        tvRecyclerView.addItemDecoration(EqualSpaceItemDecoration(20))
+        tvAdapter = GridAdapter(mutableListOf(), R.layout.item_grid)
         tvRecyclerView.adapter = tvAdapter
+
+        FocusOverlay<MovieItemOne>(
+            overlay = tvFixedFocusOverlay,
+            recyclerView = tvRecyclerView,
+            adapter = tvAdapter
+        ) { item ->
+            projectTvItemIntoHero(item)
+        }
         tvAdapter.onAddMoreClicked = { loadMoreTv() }
+
     }
+
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+
+    private fun projectMovieItemIntoHero(item: MovieItemOne) {
+        try {
+            val view = requireView()
+            val overlayPoster = view.findViewById<ImageView>(R.id.movieOverlayPoster)
+            val titleText = view.findViewById<TextView>(R.id.movieoOverlayTitle)
+            val yearText = view.findViewById<TextView>(R.id.movieOverlayYear)
+            val ratingText = view.findViewById<TextView>(R.id.movieOverlayRating)
+            val overlayCard = view.findViewById<MaterialCardView>(R.id.movieFixedFocusOverlay)
+
+            val heroImage = if (item.backdropUrl.isNotBlank() && item.backdropUrl != "null") {
+                item.backdropUrl
+            } else {
+                item.posterUlr
+            }
+
+            // 1. Cross-fade the text content
+            val fadeDuration = 250L
+            titleText.animate().alpha(0f).setDuration(fadeDuration).withEndAction {
+                // Update text after it fades out
+                titleText.text = item.title
+                yearText.text = item.year
+                ratingText.text = item.rating
+                overlayCard.alpha = 1f
+
+                // Fade text back in
+                titleText.animate().alpha(1f).setDuration(fadeDuration).start()
+                yearText.animate().alpha(1f).setDuration(fadeDuration).start()
+                ratingText.animate().alpha(1f).setDuration(fadeDuration).start()
+            }.start()
+
+            yearText.animate().alpha(0f).setDuration(fadeDuration).start()
+            ratingText.animate().alpha(0f).setDuration(fadeDuration).start()
+
+            // 2. Load Image with Cross-fade and Panning Animation
+            Glide.with(requireContext())
+                .load(heroImage)
+                .transition(DrawableTransitionOptions.withCrossFade(150)) // Glide cross-fade
+                .centerCrop()
+                .diskCacheStrategy(DiskCacheStrategy.ALL)
+                .listener(object : RequestListener<Drawable> {
+                    override fun onLoadFailed(
+                        e: GlideException?,
+                        model: Any?,
+                        target: com.bumptech.glide.request.target.Target<Drawable>,
+                        isFirstResource: Boolean
+                    ): Boolean {
+                        return false
+                    }
+
+                    override fun onResourceReady(
+                        resource: Drawable,
+                        model: Any,
+                        target: Target<Drawable>?,
+                        dataSource: DataSource,
+                        isFirstResource: Boolean
+                    ): Boolean {
+                        // Cancel any previous panning animation to prevent jank
+                        overlayPoster.animate().cancel()
+
+                        // Start position: Shifted slightly to the right
+                        overlayPoster.translationX = 60f
+
+                        // Pan slowly to the left (Ken Burns effect)
+                        overlayPoster.animate()
+                            .translationX(0f)
+                            .setDuration(200)
+                            .setInterpolator(LinearInterpolator())
+                            .start()
+
+                        return false
+                    }
+                })
+                .into(overlayPoster)
+
+        } catch (e: Exception) {
+            Log.e("projectMovieItemIntoHero", e.toString())
+        }
+    }
+
+    private fun projectTvItemIntoHero(item: MovieItemOne) {
+        try {
+            val overlayPoster = requireView().findViewById<ImageView>(R.id.tvOverlayPoster)
+
+            requireView().findViewById<TextView>(R.id.tvOverlayTitle).text = item.title
+            requireView().findViewById<TextView>(R.id.tvOverlayYear).text = item.year
+            requireView().findViewById<TextView>(R.id.tvOverlayRating).text = item.rating
+            requireView().findViewById<MaterialCardView>(R.id.tvFixedFocusOverlay).alpha = 1f
+
+
+            val heroImage = if (item.backdropUrl.isNotBlank() && item.backdropUrl != "null") {
+                item.backdropUrl
+            } else {
+                item.posterUlr
+            }
+
+            Glide.with(requireContext())
+                .load(heroImage)
+                .centerCrop()
+                .diskCacheStrategy(DiskCacheStrategy.ALL)
+                .into(overlayPoster)
+
+        }catch (e: Exception){
+            Log.e("projectTvItemIntoHero", e.toString())
+        }
+    }
+    //////////////////////////////////////////////////////////////////////////////////////////////
 
 
 
@@ -205,14 +359,12 @@ class CategoryFragment : Fragment(R.layout.fragment_category) {
                 try {
                     val url =
                         "https://api.themoviedb.org/3/discover/movie?include_adult=true&with_companies=$companyId&page=$currentMoviePage"
-                    val connection = (URL(url).openConnection() as HttpURLConnection).apply {
-                        requestMethod = "GET"
-                        setRequestProperty("accept", "application/json")
-                        setRequestProperty("Authorization", "Bearer ${BuildConfig.TM_K}")
+
+                    val payload = fetchTMDB.fetchDiscoverMovie("with_companies=$companyId&page=$currentMoviePage")
+                    if (payload == null) {
+                        return@launch
                     }
 
-                    val response = connection.inputStream.bufferedReader().use { it.readText() }
-                    val payload = JSONObject(response)
                     totalMoviePages = payload.optInt("total_pages", totalMoviePages)
 
                     val seenIds = movieCache.map { it.imdbCode }.toMutableSet()
@@ -272,14 +424,13 @@ class CategoryFragment : Fragment(R.layout.fragment_category) {
                             movieCache.addAll(list)
                             moviesAdapter.addItems(list)
                             saveCache(getMoviesCacheKey(companyId), movieCache)
+                            requireView().findViewById<LinearLayout>(R.id.MovieSection).visibility = View.VISIBLE
+                            requireView().findViewById<ProgressBar>(R.id.progress_bar).visibility = View.GONE
+
+
                         }
 
-                        if (wasEmpty) {
-                            moviesRecyclerView.post {
-                                (moviesRecyclerView.layoutManager as? LinearLayoutManager)
-                                    ?.scrollToPositionWithOffset(0, 0)
-                            }
-                        }
+
 
                         currentMoviePage++
                         isLoadingMovies = false
@@ -315,16 +466,12 @@ class CategoryFragment : Fragment(R.layout.fragment_category) {
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             repeat(3) { attempt ->
                 try {
-                    val url =
-                        "https://api.themoviedb.org/3/discover/tv?include_adult=true&with_companies=$companyId&page=$currentTvPage"
-                    val connection = (URL(url).openConnection() as HttpURLConnection).apply {
-                        requestMethod = "GET"
-                        setRequestProperty("accept", "application/json")
-                        setRequestProperty("Authorization", "Bearer ${BuildConfig.TM_K}")
+
+                    val payload = fetchTMDB.fetchDiscoverTv("with_companies=$companyId&page=$currentTvPage")
+                    if (payload == null) {
+                        return@launch
                     }
 
-                    val response = connection.inputStream.bufferedReader().use { it.readText() }
-                    val payload = JSONObject(response)
                     totalTvPages = payload.optInt("total_pages", totalTvPages)
 
                     val seenIds = tvCache.map { it.imdbCode }.toMutableSet()
@@ -384,14 +531,11 @@ class CategoryFragment : Fragment(R.layout.fragment_category) {
                             tvCache.addAll(list)
                             tvAdapter.addItems(list)
                             saveCache(getTvCacheKey(companyId), tvCache)
+                            requireView().findViewById<LinearLayout>(R.id.tvSection).visibility = View.VISIBLE
+                            requireView().findViewById<ProgressBar>(R.id.progress_bar).visibility = View.GONE
                         }
 
-                        if (wasEmpty) {
-                            tvRecyclerView.post {
-                                (tvRecyclerView.layoutManager as? LinearLayoutManager)
-                                    ?.scrollToPositionWithOffset(0, 0)
-                            }
-                        }
+
 
                         currentTvPage++
                         isLoadingTv = false
@@ -428,6 +572,38 @@ class CategoryFragment : Fragment(R.layout.fragment_category) {
         if (isLoadingTv) return
         if (currentTvPage > totalTvPages) return
         fetchTv()
+    }
+
+
+    private fun setupBackPressedCallback() {
+        // 1. Assign it to the variable we created
+        fragmentBackCallback = object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+
+                // Cancel any running coroutines
+                lifecycleScope.coroutineContext.cancelChildren()
+
+                val homeActivity = context as HomeActivity
+                homeActivity.showsFragment?.let { existingShowsAnimeTab ->
+                    homeActivity.navigateToExistingAndDestroyCurrent(existingShowsAnimeTab, this@CategoryFragment)
+                } ?: run {
+                    homeActivity.navigateToFragment(ShowsFragment())
+                }
+            }
+        }
+
+        // 2. Add it to the dispatcher
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, fragmentBackCallback)
+    }
+
+
+
+    override fun onResume() {
+        super.onResume()
+        if (::fragmentBackCallback.isInitialized) {
+            fragmentBackCallback.remove()
+            requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, fragmentBackCallback)
+        }
     }
 
 }

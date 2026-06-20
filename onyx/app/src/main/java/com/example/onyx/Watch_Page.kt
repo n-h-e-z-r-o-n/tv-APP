@@ -432,7 +432,6 @@ class Watch_Page : AppCompatActivity() {
         // Cancel any running coroutines
         lifecycleScope.coroutineContext.cancelChildren()
 
-        Handler(Looper.getMainLooper()).removeCallbacksAndMessages(null)
 
         episodesAdapter.clear()
 
@@ -1183,7 +1182,6 @@ class Watch_Page : AppCompatActivity() {
                      lifecycleScope.coroutineContext.cancelChildren()
 
                      // Remove all handler callbacks
-                     Handler(Looper.getMainLooper()).removeCallbacksAndMessages(null)
 
 
                     // If controls are hidden, exit the video player

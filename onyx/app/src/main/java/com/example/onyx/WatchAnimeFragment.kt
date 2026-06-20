@@ -51,6 +51,9 @@ import com.example.onyx.databinding.FragmentWatchAnimePageBinding
 import com.google.android.material.card.MaterialCardView
 
 class WatchAnimeFragment : Fragment(R.layout.fragment_watch_anime_page) {
+
+    private lateinit var fragmentBackCallback: OnBackPressedCallback
+
     private var urlHome = BuildConfig.A_K
     private lateinit var db: AppDatabase
     private lateinit var  sm: SessionManger
@@ -151,7 +154,6 @@ class WatchAnimeFragment : Fragment(R.layout.fragment_watch_anime_page) {
         lifecycleScope.coroutineContext.cancelChildren()
 
         // Remove all handler callbacks
-        Handler(Looper.getMainLooper()).removeCallbacksAndMessages(null)
     }
 
 
@@ -521,23 +523,37 @@ class WatchAnimeFragment : Fragment(R.layout.fragment_watch_anime_page) {
     }
 
 
-    private fun setupBackPressedCallback() {
-        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
 
+
+    private fun setupBackPressedCallback() {
+        // 1. Assign it to the variable we created
+        fragmentBackCallback = object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
 
                 // Cancel any running coroutines
                 lifecycleScope.coroutineContext.cancelChildren()
 
-                // Remove all handler callbacks
-                Handler(Looper.getMainLooper()).removeCallbacksAndMessages(null)
-
-
-                // If controls are hidden, exit the video player
-                requireActivity().supportFragmentManager.popBackStack()
-
+                val homeActivity = context as HomeActivity
+                homeActivity.animeFragment?.let { existingAnimeTab ->
+                    homeActivity.navigateToExistingAndDestroyCurrent(existingAnimeTab, this@WatchAnimeFragment)
+                } ?: run {
+                    homeActivity.navigateToFragment(AnimeFragment())
+                }
             }
-        })
+        }
+
+        // 2. Add it to the dispatcher
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, fragmentBackCallback)
+    }
+
+
+
+    override fun onResume() {
+        super.onResume()
+        if (::fragmentBackCallback.isInitialized) {
+            fragmentBackCallback.remove()
+            requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, fragmentBackCallback)
+        }
     }
 
 

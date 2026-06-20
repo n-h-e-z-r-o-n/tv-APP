@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
@@ -8,12 +8,6 @@
     android:background="?attr/BG_color"
     tools:context=".CategoryFragment">
 
-    <ImageView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:scaleType="centerCrop"
-        android:src="?attr/themeImage"
-        tools:ignore="ContentDescription" />
 
     <View
         android:layout_width="match_parent"
@@ -21,16 +15,29 @@
         android:background="?attr/transparentEffect"/>
 
 
-    <FrameLayout
+    <ProgressBar
+        android:id="@+id/progress_bar"
+        android:layout_width="80dp"
+        android:layout_gravity="center"
+        android:layout_height="80dp"
+        android:layout_marginTop="60dp"
+        android:indeterminate="true"
+        android:indeterminateTint="?attr/AccentColor"/>
+
+    <ScrollView
+        android:id="@+id/fragmentScrollVIEW"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="?attr/transparentEffect">
+        android:fillViewport="true"
+        android:scrollbars="none"
+        android:overScrollMode="never">
+
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
             android:background="?attr/transparentEffect"
-            android:padding="13dp"
             android:orientation="vertical">
 
                 <TextView
@@ -48,64 +55,243 @@
                     android:ellipsize="end"
                     android:maxLines="1"
                     android:paddingHorizontal="3dp"
-                    android:layout_gravity="top|start"
+                    android:layout_gravity="center_horizontal"
                     tools:text="Marvel Studios" />
 
+            <LinearLayout
+                android:id="@+id/MovieSection"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_gravity="center_vertical"
+                tools:ignore="TooManyViews">
+
                 <TextView
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:text="Library"
+                    android:textAllCaps="true"
+                    android:layout_marginStart="10dp"
+                    android:textSize="5sp"
                     android:fontFamily="@font/p"
-                    android:textColor="#FFFFFF"
-                    android:shadowColor="#000000"
-                    android:shadowDx="1"
-                    android:shadowDy="1"
-                    android:shadowRadius="1"
-                    android:textSize="23sp"
+                    android:textColor="?attr/FG_color"
+                    android:alpha="0.4"
+                    tools:ignore="HardcodedText,SmallSp" />
+
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Movie"
+                    android:layout_marginStart="10dp"
+                    android:fontFamily="@font/p"
                     android:textStyle="bold"
+                    android:textSize="20sp"
+                    android:textColor="?attr/FG_color"
+                    tools:ignore="HardcodedText" />
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="320dp"
                     android:layout_marginVertical="10dp"
-                    android:ellipsize="end"
-                    android:maxLines="1"
-                    android:paddingHorizontal="10dp"
-                    android:text="Movies" />
+                    android:clipChildren="false"
+                    android:clipToPadding="false">
 
                     <androidx.recyclerview.widget.RecyclerView
-                        android:id="@+id/CategoryMoviesRecyclerView"
+                        android:id="@+id/MoviesRecyclerView"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center"
+                        android:layout_height="match_parent"
                         android:clipToPadding="false"
-                        android:overScrollMode="never"
+                        android:layout_marginStart="30dp"
                         android:scrollbars="none"
+                        android:paddingHorizontal="400dp"
+                        tools:itemCount="1"
+                        tools:listitem="@layout/item_grid"
                         tools:ignore="RtlSymmetry" />
 
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:fontFamily="@font/p"
-                        android:textColor="#FFFFFF"
-                        android:shadowColor="#000000"
-                        android:shadowDx="1"
-                        android:shadowDy="1"
-                        android:layout_marginVertical="10dp"
-                        android:shadowRadius="1"
-                        android:textSize="23sp"
-                        android:textStyle="bold"
-                        android:ellipsize="end"
-                        android:maxLines="1"
-                        android:paddingHorizontal="10dp"
-                        android:text="TV Shows" />
+                    <!-- Fixed info card -->
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/movieFixedFocusOverlay"
+                        android:layout_width="527dp"
+                        android:layout_height="320dp"
+                        android:layout_gravity="center"
+                        android:layout_marginStart="30dp"
+                        android:focusable="false"
+                        android:clickable="false"
+                        android:alpha="0"
+                        android:importantForAccessibility="no"
+                        app:cardCornerRadius="12dp"
+                        app:strokeWidth="0dp"
+                        app:strokeColor="?attr/AccentColor"
+                        app:cardBackgroundColor="?attr/BG_color_up"
+                        app:cardElevation="0dp">
+
+
+                        <ImageView
+                            android:id="@+id/movieOverlayPoster"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:src="@raw/gradient_img"
+                            android:scaleType="centerCrop"
+                            tools:src="@drawable/splash_img"
+                            tools:ignore="ContentDescription" />
+
+
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:background="@drawable/overlay_bottom_gradient_bg"/>
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="bottom"
+                            android:layout_marginStart="20dp"
+                            android:layout_marginBottom="10dp"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/movieoOverlayTitle"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:textColor="#FFFFFF"
+                                android:textStyle="bold"/>
+
+                            <TextView
+                                android:id="@+id/movieOverlayYear"
+                                android:layout_width="wrap_content"
+                                android:textColor="#FFFFFF"
+                                android:layout_height="wrap_content"/>
+
+                            <TextView
+                                android:id="@+id/movieOverlayRating"
+                                android:textColor="#FFFFFF"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"/>
+
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+                </FrameLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/tvSection"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_gravity="center_vertical"
+                tools:ignore="TooManyViews">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Television"
+                    android:textAllCaps="true"
+                    android:layout_marginStart="10dp"
+                    android:textSize="5sp"
+                    android:fontFamily="@font/p"
+                    android:textColor="?attr/FG_color"
+                    android:alpha="0.4"
+                    tools:ignore="HardcodedText,SmallSp" />
+
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Series"
+                    android:layout_marginStart="10dp"
+                    android:fontFamily="@font/p"
+                    android:textStyle="bold"
+                    android:textSize="20sp"
+                    android:textColor="?attr/FG_color"
+                    tools:ignore="HardcodedText" />
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="320dp"
+                    android:layout_marginVertical="10dp"
+                    android:clipChildren="false"
+                    android:clipToPadding="false">
 
                     <androidx.recyclerview.widget.RecyclerView
-                        android:id="@+id/CategoryTvRecyclerView"
+                        android:id="@+id/TVsRecyclerView"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
+                        android:layout_height="match_parent"
                         android:clipToPadding="false"
-                        android:overScrollMode="never"
                         android:scrollbars="none"
+                        android:paddingHorizontal="400dp"
+                        tools:itemCount="1"
+                        tools:listitem="@layout/item_grid"
                         tools:ignore="RtlSymmetry" />
+
+                    <!-- Fixed info card -->
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/tvFixedFocusOverlay"
+                        android:layout_width="527dp"
+                        android:layout_height="320dp"
+                        android:layout_gravity="center"
+                        android:layout_marginStart="30dp"
+                        android:focusable="false"
+                        android:clickable="false"
+                        android:alpha="0"
+                        android:importantForAccessibility="no"
+                        app:cardCornerRadius="12dp"
+                        app:strokeWidth="0dp"
+                        app:strokeColor="?attr/AccentColor"
+                        app:cardBackgroundColor="?attr/BG_color_up"
+                        app:cardElevation="0dp">
+
+
+                        <ImageView
+                            android:id="@+id/tvOverlayPoster"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:src="@raw/gradient_img"
+                            android:scaleType="centerCrop"
+                            tools:src="@drawable/splash_img"
+                            tools:ignore="ContentDescription" />
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:background="@drawable/overlay_bottom_gradient_bg"/>
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="bottom"
+                            android:layout_marginStart="20dp"
+                            android:layout_marginBottom="10dp"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/tvOverlayTitle"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:textColor="#FFFFFF"
+                                android:textStyle="bold"/>
+
+                            <TextView
+                                android:id="@+id/tvOverlayYear"
+                                android:layout_width="wrap_content"
+                                android:textColor="#FFFFFF"
+                                android:layout_height="wrap_content"/>
+
+                            <TextView
+                                android:id="@+id/tvOverlayRating"
+                                android:textColor="#FFFFFF"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"/>
+
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+                </FrameLayout>
+            </LinearLayout>
+
+
+
         </LinearLayout>
+    </ScrollView>
 
-
-    </FrameLayout>
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+</FrameLayout>

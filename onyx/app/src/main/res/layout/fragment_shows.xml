@@ -165,6 +165,7 @@
 
 
                                             <include
+                                                android:id="@+id/selectedContentConfig"
                                                 android:layout_width="match_parent"
                                                 android:layout_height="match_parent"
                                                 layout="@layout/item_selected_content"/>
@@ -222,8 +223,8 @@
                                             android:layout_width="match_parent"
                                             android:layout_height="match_parent"
                                             android:clipToPadding="false"
-                                            android:layout_marginStart="30dp"
                                             android:scrollbars="none"
+                                            android:paddingHorizontal="400dp"
                                             tools:itemCount="1"
                                             tools:listitem="@layout/item_grid"
                                             tools:ignore="RtlSymmetry" />
@@ -516,7 +517,7 @@
                                             android:layout_height="match_parent"
                                             android:clipToPadding="false"
                                             android:scrollbars="none"
-                                            android:paddingStart="30dp"
+                                            android:paddingHorizontal="400dp"
                                             tools:itemCount="1"
                                             tools:listitem="@layout/item_grid"
                                             tools:ignore="RtlSymmetry" />

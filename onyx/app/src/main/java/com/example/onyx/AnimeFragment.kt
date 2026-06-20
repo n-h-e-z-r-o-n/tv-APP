@@ -203,7 +203,6 @@ class AnimeFragment : Fragment() {
 
             if (spotlightAnimes.length() > 0) {
                 binding.animeSpotlightSection.visibility = View.VISIBLE
-                LoadingAnimation.hide(requireView())
             }
 
             for (i in 0 until spotlightAnimes.length()) {
@@ -257,17 +256,18 @@ class AnimeFragment : Fragment() {
 
             if (trendingAnimes.length() > 0) {
                 binding.animeTrendingSection.visibility = View.VISIBLE
-                LoadingAnimation.hide(requireView())
             }
             if (topAiringAnimes.length() > 0) {
                 binding.animeAiringSection.visibility = View.VISIBLE
-                LoadingAnimation.hide(requireView())
             }
 
             showTrending(trendingAnimes)
             showAiring(topAiringAnimes)
 
             GlobalUtils.setupCardStackFromContainer(binding.spotlightAnimes)
+
+            LoadingAnimation.hide(requireView())
+
         }
     }
 
@@ -386,7 +386,6 @@ class AnimeFragment : Fragment() {
                         if (isInitialLoad) {
                             binding.dubbSection.visibility = View.VISIBLE
                             binding.dubbedRecycler.scrollToPosition(0)
-                            LoadingAnimation.hide(requireView())
                         }
                         delay(3000)
                         dubbedAdapter.isLoadingMore = false
