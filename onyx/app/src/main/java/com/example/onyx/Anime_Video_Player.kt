@@ -47,6 +47,7 @@ import com.example.onyx.Database.AppDatabase
 import com.example.onyx.Database.SessionManger
 import com.example.onyx.FetchData.AnimeApi
 import com.example.onyx.OnyxObjects.GlobalUtils
+import com.google.android.material.card.MaterialCardView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -105,7 +106,8 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
     private lateinit var btnRewind: ImageButton
     private lateinit var btnFastForward: ImageButton
     private lateinit var btnMute: ImageButton
-    private lateinit var btnSpeed: Button
+    private lateinit var btnSpeed: MaterialCardView
+    private lateinit var btnSpeedText: TextView
     private lateinit var btnSubtitles: ImageButton
     private lateinit var btnQuality: TextView
     private lateinit var btnRefresh: ImageButton
@@ -163,8 +165,8 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
         setupBackPressedCallback()
     }
 
-    private fun fetchResumePosition(): Long {
-        return if (currentEpisodeId.isNotBlank()) {
+    private suspend fun fetchResumePosition(): Long = withContext(Dispatchers.IO) {
+        if (currentEpisodeId.isNotBlank()) {
             db.getResumePosition(userId, currentEpisodeId.toString(), "anime").toLong()
         } else {
             0L
@@ -184,6 +186,7 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
         btnFastForward = findViewById(R.id.btn_fast_forward)
         btnMute = findViewById(R.id.btn_mute)
         btnSpeed = findViewById(R.id.btn_speed)
+        btnSpeedText = findViewById(R.id.btn_speed_text)
         btnSubtitles = findViewById(R.id.btn_subtitles)
         btnQuality = findViewById(R.id.btn_quality)
         btnRefresh = findViewById(R.id.btn_refresh)
@@ -270,26 +273,25 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
                         }
 
                         seasonBtn.setOnClickListener {
+                            if (isSeasonLoading) return@setOnClickListener
                             isSeasonLoading = true
 
-                            val jsonObject = fetchAnime.animeInfo(season_id)
-                            if (jsonObject!=null){
-                                val data =  jsonObject.getJSONObject("data")
-                                val name = data.getString("name")
-                                val seasons = data.getJSONArray("seasons")?: JSONArray()
-                                val poster = data.getString("poster")
-                                val id = data.getString("id")
+                            lifecycleScope.launch(Dispatchers.Main) {
+                                val jsonObject = withContext(Dispatchers.IO) { fetchAnime.animeInfo(season_id) }
+                                if (jsonObject!=null){
+                                    val data =  jsonObject.getJSONObject("data")
+                                    val name = data.getString("name")
+                                    val poster = data.getString("poster")
+                                    val id = data.getString("id")
 
+                                    seasonTitleWidget.text  = name
 
-                                seasonTitleWidget.text  = name
+                                    holdSeasonTitle = name
+                                    holdPoster = poster
+                                    holdSeasonId = id
+                                }
 
-                                holdSeasonTitle = name
-                                holdPoster = poster
-                                holdSeasonId = id
-                            }
-
-                            lifecycleScope.launch {
-                                getEpisodes(season_id )
+                                getEpisodes(season_id)
                                 isSeasonLoading = false
                             }
                         }
@@ -303,23 +305,21 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
                         }
                     }
                 }else{
-
                     holdSeasonTitle = name
                     holdPoster = poster
                     holdSeasonId = SeasonId
 
                     getEpisodes(SeasonId)
-
                 }
         }
     }
 
 
-    private fun getEpisodes(season_id: String){
+    private suspend fun getEpisodes(season_id: String){
         EpisodeContiner.removeAllViews()
 
         val inflater = LayoutInflater.from(this)
-        val EpisodesjsonObject = fetchAnime.animeEpisodes(season_id)
+        val EpisodesjsonObject = withContext(Dispatchers.IO) { fetchAnime.animeEpisodes(season_id) }
 
         if (EpisodesjsonObject != null){
             val data = EpisodesjsonObject.getJSONObject("data")
@@ -785,7 +785,6 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
                     } else {
                         lastBackPressTime = currentTime
                         showMenu() // optional: or just show a toast
-
                     }
                 }
             }
@@ -885,12 +884,14 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
             player.stop()
             player.clearMediaItems()
 
-            // Re-fetch resume position
-            resumePosition = fetchResumePosition()
+            lifecycleScope.launch(Dispatchers.Main) {
+                // Re-fetch resume position
+                resumePosition = fetchResumePosition()
 
-            player.setMediaItem(currentItem)
-            player.prepare()
-            player.play()
+                player.setMediaItem(currentItem)
+                player.prepare()
+                player.play()
+            }
         }
     }
 
@@ -970,7 +971,7 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
     }
 
     private fun updateSpeedButton() {
-        btnSpeed.text = "${currentSpeed}x"
+        btnSpeedText.text = "${currentSpeed}x"
     }
 
     private fun updateQualityButton() {

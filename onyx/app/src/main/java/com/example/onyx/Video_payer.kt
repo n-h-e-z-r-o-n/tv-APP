@@ -1,6 +1,5 @@
 package com.example.onyx
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
@@ -30,25 +29,25 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import androidx.media3.ui.PlayerView
 import androidx.media3.common.util.UnstableApi
-import java.text.SimpleDateFormat
-import java.util.*
-
-
-import com.example.onyx.Database.AppDatabase
-import com.example.onyx.Database.SessionManger
-import com.example.onyx.OnyxObjects.GlobalUtils
-import kotlin.text.toLongOrNull
 import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
+import com.example.onyx.Database.AppDatabase
+import com.example.onyx.Database.SessionManger
+import com.example.onyx.OnyxObjects.GlobalUtils
+import com.google.android.material.card.MaterialCardView
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancelChildren
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @UnstableApi
 class Video_payer : AppCompatActivity(), Player.Listener {
 
+    // ── Show metadata ──────────────────────────────────────────────────────────
     private lateinit var db: AppDatabase
-    private lateinit var  sm: SessionManger
-    private  var  userId = -1
+    private lateinit var sm: SessionManger
+    private var userId = -1
     private var resumePosition: Long = 0L
     private var showId: String = ""
     private var showType: String = ""
@@ -58,73 +57,84 @@ class Video_payer : AppCompatActivity(), Player.Listener {
     private var showSNo: String = ""
     private var showENo: String = ""
     private var videoUrl: String = ""
-
     private var userAgent: String = ""
-
     private var referer: String = ""
 
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////
-
-
+    // ── Views ──────────────────────────────────────────────────────────────────
     private lateinit var playerView: PlayerView
     private lateinit var progressBar: ProgressBar
     private lateinit var overlayContainer: View
     private lateinit var bottomBar: LinearLayout
     private lateinit var centerOverlay: FrameLayout
-
-    // Control buttons
     private lateinit var btnPlayPause: ImageButton
     private lateinit var btnRewind: ImageButton
     private lateinit var btnFastForward: ImageButton
     private lateinit var btnMute: ImageButton
-    private lateinit var btnSpeed: Button
+    private lateinit var btnSpeed: MaterialCardView
+
+    private lateinit var btn_speed_text: TextView
     private lateinit var btnSubtitles: ImageButton
     private lateinit var btnQuality: TextView
     private lateinit var btnRefresh: ImageButton
     private lateinit var btnSettings: ImageButton
     private lateinit var btnClose: ImageButton
     private lateinit var btnFullscreen: ImageButton
-
-
-    // Seek bar and time displays
     private lateinit var seekBar: SeekBar
     private lateinit var txtCurrentTime: TextView
     private lateinit var txtDuration: TextView
 
+    // ── Player state ───────────────────────────────────────────────────────────
     private var exoPlayer: ExoPlayer? = null
+    private var currentVideoUrl: String? = null
+
     private var isControlsVisible = true
     private var isFullscreen = false
     private var isMuted = false
     private var currentSpeed = 1.0f
+    private var currentSpeedIndex = 2         // index into playbackSpeeds; 2 = 1.0x
+    private var currentQualityIndex = 0
+    private var availableQualities: List<String> = listOf("Auto")
+    private var qualityOptions: List<String> = listOf("Auto")
+
+    // ── Gesture detection ──────────────────────────────────────────────────────
     private var lastTapTime = 0L
     private var tapCount = 0
-    private var progressHandler = Handler(Looper.getMainLooper())
+
+    // ── Progress tracking ──────────────────────────────────────────────────────
+    /** Cached duration to avoid repeated player calls inside the 1-s tick */
+    private var cachedDuration = 0L
+    private val progressHandler = Handler(Looper.getMainLooper())
     private var progressRunnable: Runnable? = null
+    private var saveCounter = 0
 
-    // Playback speeds
+    // ── Audio focus ────────────────────────────────────────────────────────────
+    private lateinit var audioManager: AudioManager
+    private val audioFocusChangeListener = AudioManager.OnAudioFocusChangeListener { focusChange ->
+        when (focusChange) {
+            AudioManager.AUDIOFOCUS_LOSS,
+            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> exoPlayer?.pause()
+            AudioManager.AUDIOFOCUS_GAIN           -> exoPlayer?.play()
+        }
+    }
+
+    // ── Constants ──────────────────────────────────────────────────────────────
     private val playbackSpeeds = listOf(0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 2.0f)
-    private var currentSpeedIndex = 2 // Default to 1.0x
 
-    // Quality options - will be populated from tracks
-    private var qualityOptions = listOf("Auto")
-    private var currentQualityIndex = 0
-    
-    // Player management variables (merged from PlayerManager)
-    private var currentVideoUrl: String? = null
-    private var availableQualities: List<String> = listOf("Auto")
-    private var saveCounter = 0 // Counter for auto-save
+    // ──────────────────────────────────────────────────────────────────────────
+    // Lifecycle
+    // ──────────────────────────────────────────────────────────────────────────
 
     override fun onCreate(savedInstanceState: Bundle?) {
         GlobalUtils.applyTheme(this)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_video_payer)
-        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)         // Prevent screen from sleeping while this Activity is visible
 
+        // Keep screen on while playing
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
-        db = AppDatabase(this)         // Initialize database
+        audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        db = AppDatabase(this)
         sm = SessionManger(this)
-
         userId = sm.getUserId()
 
         initializeViews()
@@ -134,159 +144,122 @@ class Video_payer : AppCompatActivity(), Player.Listener {
         setupBackPressedCallback()
     }
 
-    private fun initializeViews() {
-        playerView = findViewById(R.id.player_view)
-        progressBar = findViewById(R.id.progress_bar)
-        overlayContainer = findViewById(R.id.overlay_container)
-        bottomBar = findViewById(R.id.bottom_bar)
-        centerOverlay = findViewById(R.id.center_overlay)
-
-        // Control buttons
-        btnPlayPause = findViewById(R.id.btn_play_pause)
-        btnRewind = findViewById(R.id.btn_rewind)
-        btnFastForward = findViewById(R.id.btn_fast_forward)
-        btnMute = findViewById(R.id.btn_mute)
-        btnSpeed = findViewById(R.id.btn_speed)
-        btnSubtitles = findViewById(R.id.btn_subtitles)
-        btnQuality = findViewById(R.id.btn_quality)
-        btnRefresh = findViewById(R.id.btn_refresh)
-        btnSettings = findViewById(R.id.btn_settings)
-        btnClose = findViewById(R.id.btn_close)
-        btnFullscreen = findViewById(R.id.btn_fullscreen)
-
-        // Seek bar and time displays
-        seekBar = findViewById(R.id.seek_bar)
-        txtCurrentTime = findViewById(R.id.txt_current_time)
-        txtDuration = findViewById(R.id.txt_duration)
+    override fun onPause() {
+        super.onPause()
+        saveContinueWatching()
+        exoPlayer?.pause()
+        stopProgressTracking()
     }
 
-    private fun fetchResumePosition(): Long {
-        return if (showType == "movie") {
-            db.getResumePosition(userId, showId, showType).toLong()
-        } else {
-            val itemId = "${showId}_S${showSNo}_E${showENo}"
-            db.getResumePosition(userId, itemId, showType).toLong()
-        }
+    override fun onResume() {
+        super.onResume()
+        // Tracking resumes automatically via onIsPlayingChanged
+        exoPlayer?.play()
+    }
+
+    override fun onDestroy() {
+        saveContinueWatching()
+        stopProgressTracking()
+        progressHandler.removeCallbacksAndMessages(null)
+        lifecycleScope.coroutineContext.cancelChildren()
+        releasePlayer()
+        playerView.player = null
+        // Note: do NOT call finish() here — already being destroyed
+        super.onDestroy()
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Setup
+    // ──────────────────────────────────────────────────────────────────────────
+
+    private fun initializeViews() {
+        playerView       = findViewById(R.id.player_view)
+        progressBar      = findViewById(R.id.progress_bar)
+        overlayContainer = findViewById(R.id.overlay_container)
+        bottomBar        = findViewById(R.id.bottom_bar)
+        centerOverlay    = findViewById(R.id.center_overlay)
+        btnPlayPause     = findViewById(R.id.btn_play_pause)
+        btnRewind        = findViewById(R.id.btn_rewind)
+        btnFastForward   = findViewById(R.id.btn_fast_forward)
+        btnMute          = findViewById(R.id.btn_mute)
+        btnSpeed         = findViewById(R.id.btn_speed)
+        btn_speed_text   = findViewById(R.id.btn_speed_text)
+        btnSubtitles     = findViewById(R.id.btn_subtitles)
+        btnQuality       = findViewById(R.id.btn_quality)
+        btnRefresh       = findViewById(R.id.btn_refresh)
+        btnSettings      = findViewById(R.id.btn_settings)
+        btnClose         = findViewById(R.id.btn_close)
+        btnFullscreen    = findViewById(R.id.btn_fullscreen)
+        seekBar          = findViewById(R.id.seek_bar)
+        txtCurrentTime   = findViewById(R.id.txt_current_time)
+        txtDuration      = findViewById(R.id.txt_duration)
     }
 
     private fun setupPlayer() {
-
-
-        videoUrl = intent.getStringExtra("video_url")?: ""
-        referer = intent.getStringExtra("referer")?: ""
-        userAgent = intent.getStringExtra("userAgent")?: ""
-        showId = intent.getStringExtra("showId")?: ""
-        showType = intent.getStringExtra("showType")?: ""
-        showTitle = intent.getStringExtra("showTitle")?: ""
-        showPoster = intent.getStringExtra("showPoster")?: ""
+        videoUrl     = intent.getStringExtra("video_url")   ?: ""
+        referer      = intent.getStringExtra("referer")     ?: ""
+        userAgent    = intent.getStringExtra("userAgent")   ?: ""
+        showId       = intent.getStringExtra("showId")      ?: ""
+        showType     = intent.getStringExtra("showType")    ?: ""
+        showTitle    = intent.getStringExtra("showTitle")   ?: ""
+        showPoster   = intent.getStringExtra("showPoster")  ?: ""
         showBackdrop = intent.getStringExtra("showBackdrop")?: ""
-        showSNo = intent.getStringExtra("showSNo")?: ""
-        showENo = intent.getStringExtra("showENo")?: ""
+        showSNo      = intent.getStringExtra("showSNo")     ?: ""
+        showENo      = intent.getStringExtra("showENo")     ?: ""
 
-        resumePosition = fetchResumePosition()
+        if (videoUrl.isEmpty()) {
+            Toast.makeText(this, "No video URL provided", Toast.LENGTH_SHORT).show()
+            finish()
+            return
+        }
 
-
-
-
-        if (!videoUrl.isNullOrEmpty()) {
-            exoPlayer = initializePlayer(videoUrl)
-            
+        lifecycleScope.launch(Dispatchers.Main) {
+            resumePosition = withContext(Dispatchers.IO) { fetchResumePosition() }
+            exoPlayer = buildPlayer(videoUrl)
             exoPlayer?.let { player ->
                 playerView.player = player
-                player.addListener(this)
+                player.addListener(this@Video_payer)
                 updatePlayPauseButton()
                 updateMuteButton()
                 updateSpeedButton()
                 updateQualityButton()
-                // Initial quality options - will be updated when tracks are available
                 qualityOptions = availableQualities
             }
-        } else {
-            Toast.makeText(this, "No video URL provided", Toast.LENGTH_SHORT).show()
-            finish()
         }
     }
 
     private fun setupControls() {
-        // Play/Pause button
-        btnPlayPause.setOnClickListener {
-            togglePlayPause()
-        }
-
+        btnPlayPause.setOnClickListener { togglePlayPause() }
+        btnMute.setOnClickListener      { toggleMute() }
+        btnSpeed.setOnClickListener     { showSpeedDialog() }
+        btnQuality.setOnClickListener   { showQualityDialog() }
+        btnRefresh.setOnClickListener   { refreshVideo() }
+        btnSettings.setOnClickListener  { showSettingsDialog() }
+        btnClose.setOnClickListener     { finish() }
+        btnFullscreen.setOnClickListener{ toggleFullscreen() }
 
         btnFastForward.setOnKeyListener { _, keyCode, event ->
-            if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER) {
-                if (event.action == KeyEvent.ACTION_DOWN) {
-                    if (event.isLongPress) seekRelative(10000) // repeat every long press interval
-                    else seekRelative(10000)
-                }
-                true
+            if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER && event.action == KeyEvent.ACTION_DOWN) {
+                seekRelative(10_000); true
             } else false
         }
-
         btnRewind.setOnKeyListener { _, keyCode, event ->
-            if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER) {
-                if (event.action == KeyEvent.ACTION_DOWN) {
-                    if (event.isLongPress) seekRelative(-10000)
-                    else seekRelative(-10000)
-                }
-                true
+            if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER && event.action == KeyEvent.ACTION_DOWN) {
+                seekRelative(-10_000); true
             } else false
         }
 
-        // Mute button
-        btnMute.setOnClickListener {
-            toggleMute()
-        }
-
-        // Speed button
-        btnSpeed.setOnClickListener {
-            showSpeedDialog()
-        }
-
-        // Quality button
-        btnQuality.setOnClickListener {
-            showQualityDialog()
-        }
-
-        // Refresh button
-        btnRefresh.setOnClickListener {
-            refreshVideo()
-        }
-
-        // Settings button
-        btnSettings.setOnClickListener {
-            showSettingsDialog()
-        }
-
-        // Close button
-        btnClose.setOnClickListener {
-            finish()
-        }
-
-        // Fullscreen button
-        btnFullscreen.setOnClickListener {
-            toggleFullscreen()
-        }
-
-        // Seek bar
         seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                if (fromUser) {
-                    val duration = exoPlayer?.duration ?: 0L
-                    val position = (progress * duration / 1000).toLong()
-                    txtCurrentTime.text = formatTime(position)
+                if (fromUser && cachedDuration > 0) {
+                    txtCurrentTime.text = formatTime(progress * cachedDuration / 1000)
                 }
             }
-
-            override fun onStartTrackingTouch(seekBar: SeekBar?) {
-                // No auto-hide during seek
-            }
-
+            override fun onStartTrackingTouch(seekBar: SeekBar?) = Unit
             override fun onStopTrackingTouch(seekBar: SeekBar?) {
-                val duration = exoPlayer?.duration ?: 0L
-                val position = (seekBar?.progress ?: 0) * duration / 1000
-                exoPlayer?.seekTo(position)
+                if (cachedDuration > 0) {
+                    exoPlayer?.seekTo((seekBar?.progress ?: 0) * cachedDuration / 1000)
+                }
             }
         })
     }
@@ -295,32 +268,22 @@ class Video_payer : AppCompatActivity(), Player.Listener {
         playerView.setOnTouchListener { _, event ->
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> {
-                    val currentTime = System.currentTimeMillis()
-                    if (currentTime - lastTapTime < 300) {
+                    val now = System.currentTimeMillis()
+                    if (now - lastTapTime < 300) {
                         tapCount++
                         if (tapCount == 2) {
-                            // Double tap - seek forward/backward
-                            val x = event.x
-                            val width = playerView.width
-                            if (x < width / 2) {
-                                seekRelative(-10000) // Seek back 10 seconds
-                                showSeekFeedback("-10s")
-                            } else {
-                                seekRelative(10000) // Seek forward 10 seconds
-                                showSeekFeedback("+10s")
-                            }
+                            val seekAmt = if (event.x < playerView.width / 2) -10_000L else 10_000L
+                            seekRelative(seekAmt)
+                            showSeekFeedback(if (seekAmt < 0) "-10s" else "+10s")
                             tapCount = 0
                         }
                     } else {
                         tapCount = 1
                     }
-                    lastTapTime = currentTime
+                    lastTapTime = now
                 }
                 MotionEvent.ACTION_UP -> {
-                    if (tapCount == 1) {
-                        // Single tap - toggle controls
-                        toggleControls()
-                    }
+                    if (tapCount == 1) toggleControls()
                 }
             }
             true
@@ -330,116 +293,120 @@ class Video_payer : AppCompatActivity(), Player.Listener {
     private fun setupBackPressedCallback() {
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                if (isControlsVisible) {
-                    // If controls are visible, hide them
-                    hideControls()
-                } else {
-
-
-                    // If controls are hidden, exit the video player
-                    finish()
-                }
+                if (isControlsVisible) hideControls() else finish()
             }
         })
     }
 
-    private fun togglePlayPause() {
-        exoPlayer?.let { player ->
-            if (player.isPlaying) {
-                player.pause()
-            } else {
-                player.play()
+    // ──────────────────────────────────────────────────────────────────────────
+    // Player construction
+    // ──────────────────────────────────────────────────────────────────────────
+
+    private fun buildPlayer(url: String): ExoPlayer {
+        releasePlayer()
+
+        val headers = buildMap<String, String> {
+            put("User-Agent", userAgent)
+            if (referer.isNotEmpty()) {
+                put("Referer", referer)
+                val uri = Uri.parse(referer)
+                val origin = "${uri.scheme}://${uri.host}"
+                if (origin != "null://null") put("Origin", origin)
             }
         }
+
+        if (BuildConfig.DEBUG) {
+            Log.d("Video_payer", "UA=$userAgent  referer=$referer")
+        }
+
+        val httpFactory = DefaultHttpDataSource.Factory()
+            .setDefaultRequestProperties(headers)
+            .setAllowCrossProtocolRedirects(true)
+            .setConnectTimeoutMs(15_000)       // fail fast on bad connections
+            .setReadTimeoutMs(15_000)
+
+        val mediaSourceFactory = DefaultMediaSourceFactory(
+            DefaultDataSource.Factory(this, httpFactory)
+        )
+
+        // Request audio focus with proper listener so we pause on phone calls etc.
+        val focusResult = audioManager.requestAudioFocus(
+            audioFocusChangeListener,
+            AudioManager.STREAM_MUSIC,
+            AudioManager.AUDIOFOCUS_GAIN
+        )
+        if (focusResult != AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+            Log.w("Video_payer", "Audio focus not granted — continuing anyway")
+        }
+
+        val trackSelector = DefaultTrackSelector(this).apply {
+            setParameters(
+                buildUponParameters()
+                    .setMaxVideoSize(1920, 1080)
+                    .setAllowVideoMixedMimeTypeAdaptiveness(true)
+                    .setAllowVideoNonSeamlessAdaptiveness(true)
+                    .setMaxAudioChannelCount(2)
+                    .setPreferredAudioLanguage("en")
+                    .setSelectUndeterminedTextLanguage(true)
+                    // Let ABR choose bitrate freely — forceHighest kills adaptive quality
+                    .setForceHighestSupportedBitrate(false)
+            )
+        }
+
+        val renderersFactory = DefaultRenderersFactory(this)
+            .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER)
+            // Allow more threads for software decode fallback
+            .setEnableDecoderFallback(true)
+
+        val player = ExoPlayer.Builder(this)
+            .setRenderersFactory(renderersFactory)
+            .setTrackSelector(trackSelector)
+            .setMediaSourceFactory(mediaSourceFactory)
+            // Tune load controls for streaming: bigger buffer = fewer re-buffers
+            .setLoadControl(
+                androidx.media3.exoplayer.DefaultLoadControl.Builder()
+                    .setBufferDurationsMs(
+                        /* minBufferMs   */ 15_000,
+                        /* maxBufferMs   */ 60_000,
+                        /* bufferForPlayback */ 2_500,
+                        /* bufferForPlaybackAfterRebuffer */ 5_000
+                    )
+                    .build()
+            )
+            .build()
+
+        player.setMediaItem(MediaItem.fromUri(url))
+        player.prepare()
+        player.playWhenReady = true
+        currentVideoUrl = url
+        return player
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Player controls
+    // ──────────────────────────────────────────────────────────────────────────
+
+    private fun togglePlayPause() {
+        exoPlayer?.let { if (it.isPlaying) it.pause() else it.play() }
     }
 
     private fun seekRelative(offsetMs: Long) {
-        exoPlayer?.let { player ->
-            val currentPosition = player.currentPosition
-            val newPosition = (currentPosition + offsetMs).coerceAtLeast(0)
-            player.seekTo(newPosition)
-        }
+        exoPlayer?.let { it.seekTo((it.currentPosition + offsetMs).coerceAtLeast(0)) }
     }
 
     private fun toggleMute() {
-        exoPlayer?.let { player ->
-            isMuted = !isMuted
-            player.volume = if (isMuted) 0f else 1f
-            updateMuteButton()
-        }
-    }
-
-    private fun showSpeedDialog() {
-        val speedOptions = arrayOf("0.5x", "0.75x", "1.0x", "1.25x", "1.5x", "2.0x")
-        val builder = android.app.AlertDialog.Builder(this, R.style.CustomDialogTheme)
-        builder.setTitle("Playback Speed")
-            .setSingleChoiceItems(speedOptions, currentSpeedIndex) { dialog, which ->
-                currentSpeedIndex = which
-                currentSpeed = playbackSpeeds[which]
-                exoPlayer?.setPlaybackSpeed(currentSpeed)
-                updateSpeedButton()
-                dialog.dismiss() // Auto-close dialog when option is selected
-            }
-            .setNegativeButton("Cancel", null)
-            .show()
-    }
-
-    private fun showQualityDialog() {
-        val builder = android.app.AlertDialog.Builder(this, R.style.CustomDialogTheme)
-        builder.setTitle("Video Quality")
-            .setSingleChoiceItems(qualityOptions.toTypedArray(), currentQualityIndex) { dialog, which ->
-                currentQualityIndex = which
-                setVideoQuality(which)
-                updateQualityButton()
-                Toast.makeText(this, "Quality changed to ${qualityOptions[which]}", Toast.LENGTH_SHORT).show()
-                dialog.dismiss() // Auto-close dialog when option is selected
-            }
-            .setNegativeButton("Cancel", null)
-            .show()
-    }
-
-    private fun showSettingsDialog() {
-        val settings = arrayOf("Subtitles", "Video Info")
-        val builder = android.app.AlertDialog.Builder(this, R.style.CustomDialogTheme)
-        builder.setTitle("Settings")
-            .setItems(settings) { dialog, which ->
-                when (which) {
-                    0 -> Toast.makeText(this, "Subtitles not available", Toast.LENGTH_SHORT).show()
-                    1 -> showVideoInfo()
-                }
-                dialog.dismiss() // Auto-close dialog when option is selected
-            }
-            .setNegativeButton("Cancel", null)
-            .show()
-    }
-
-    private fun showVideoInfo() {
-        exoPlayer?.let { player ->
-            val duration = formatTime(player.duration)
-            val currentPos = formatTime(player.currentPosition)
-            val quality = getCurrentVideoQuality()
-            val videoInfo = getVideoInfo()
-            val info = "Duration: $duration\nCurrent: $currentPos\nSpeed: ${currentSpeed}x\nQuality: $quality\n\n$videoInfo"
-            Toast.makeText(this, info, Toast.LENGTH_LONG).show()
-        }
+        isMuted = !isMuted
+        exoPlayer?.volume = if (isMuted) 0f else 1f
+        updateMuteButton()
     }
 
     private fun refreshVideo() {
-        val videoUrl = intent.getStringExtra("video_url")
-        if (videoUrl != null) {
-            exoPlayer?.let { player ->
-                // Save current position before refreshing effectively (if we want to resume exactly where we were)
-                // But user asked to check for "resumePosition", which usually means saved DB position.
-                // However, since we auto-save every 10s, DB might be slightly behind.
-                // Let's force a save now before reloading!
-                saveContinueWatching()
-                
-                player.stop()
-                player.clearMediaItems()
-                
-                // Fetch latest resume position from DB (which we just updated)
-                resumePosition = fetchResumePosition()
-                
+        exoPlayer?.let { player ->
+            saveContinueWatching()
+            player.stop()
+            player.clearMediaItems()
+            lifecycleScope.launch(Dispatchers.Main) {
+                resumePosition = withContext(Dispatchers.IO) { fetchResumePosition() }
                 player.setMediaItem(MediaItem.fromUri(videoUrl))
                 player.prepare()
                 player.play()
@@ -447,238 +414,81 @@ class Video_payer : AppCompatActivity(), Player.Listener {
         }
     }
 
-    private fun toggleControls() {
-        if (isControlsVisible) {
-            hideControls()
-        } else {
-            showControls()
-        }
-    }
+    // ──────────────────────────────────────────────────────────────────────────
+    // Player.Listener callbacks  (always called on the main thread by ExoPlayer)
+    // ──────────────────────────────────────────────────────────────────────────
 
-    private fun showControls() {
-        isControlsVisible = true
-        bottomBar.visibility = View.VISIBLE
-    }
-
-    private fun hideControls() {
-        isControlsVisible = false
-        bottomBar.visibility = View.GONE
-    }
-
-    private fun toggleFullscreen() {
-        isFullscreen = !isFullscreen
-        if (isFullscreen) {
-            // Enter fullscreen
-            window.decorView.systemUiVisibility = (
-                View.SYSTEM_UI_FLAG_FULLSCREEN
-                or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-            )
-            requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-            btnFullscreen.setImageResource(android.R.drawable.ic_menu_close_clear_cancel)
-        } else {
-            // Exit fullscreen
-            window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_VISIBLE
-            requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-            btnFullscreen.setImageResource(android.R.drawable.ic_menu_crop)
-        }
-    }
-
-
-    private fun showSeekFeedback(text: String) {
-        centerOverlay.removeAllViews()
-        val textView = TextView(this).apply {
-            this.text = text
-            setTextColor(Color.WHITE)
-            textSize = 24f
-            setPadding(40, 20, 40, 20)
-            setBackgroundColor(Color.parseColor("#80000000"))
-        }
-        centerOverlay.addView(textView)
-        centerOverlay.visibility = View.VISIBLE
-
-        val fadeOut = AlphaAnimation(1.0f, 0.0f).apply {
-            duration = 1000
-            setAnimationListener(object : Animation.AnimationListener {
-                override fun onAnimationStart(animation: Animation?) {}
-                override fun onAnimationEnd(animation: Animation?) {
-                    centerOverlay.visibility = View.GONE
-                }
-                override fun onAnimationRepeat(animation: Animation?) {}
-            })
-        }
-        textView.startAnimation(fadeOut)
-    }
-
-    private fun updatePlayPauseButton() {
-        exoPlayer?.let { player ->
-            btnPlayPause.setImageResource(
-                if (player.isPlaying) R.drawable.ic_pause else R.drawable.ic_play
-            )
-        }
-    }
-
-    private fun updateMuteButton() {
-        btnMute.setImageResource(
-            if (isMuted) android.R.drawable.ic_lock_silent_mode else android.R.drawable.ic_lock_silent_mode_off
-        )
-    }
-
-    private fun updateSpeedButton() {
-        btnSpeed.text = "${currentSpeed}x"
-    }
-
-    private fun updateQualityButton() {
-        // Get the current quality from the player
-        val currentQuality = getCurrentVideoQuality()
-        btnQuality.text = currentQuality
-    }
-
-    private fun formatTime(milliseconds: Long): String {
-        val totalSeconds = milliseconds / 1000
-        val hours = totalSeconds / 3600
-        val minutes = (totalSeconds % 3600) / 60
-        val seconds = totalSeconds % 60
-
-        return if (hours > 0) {
-            String.format("%d:%02d:%02d", hours, minutes, seconds)
-        } else {
-            String.format("%02d:%02d", minutes, seconds)
-        }
-    }
-
-    // Player.Listener implementation
     override fun onIsPlayingChanged(isPlaying: Boolean) {
-        runOnUiThread {
-            updatePlayPauseButton()
-            if (isPlaying) {
-                progressBar.visibility = View.GONE
-                startProgressTracking()
-            } else {
+        updatePlayPauseButton()
+        if (isPlaying) {
+            progressBar.visibility = View.GONE
+            startProgressTracking()
+        } else {
+            stopProgressTracking()
+        }
+    }
+
+    override fun onPlaybackStateChanged(state: Int) {
+        when (state) {
+            Player.STATE_BUFFERING -> {
+                progressBar.visibility = View.VISIBLE
                 stopProgressTracking()
             }
-        }
-    }
-
-    override fun onPlaybackStateChanged(playbackState: Int) {
-        runOnUiThread {
-            when (playbackState) {
-                Player.STATE_BUFFERING -> {
-                    progressBar.visibility = View.VISIBLE
-                    stopProgressTracking()
-                }
-                Player.STATE_READY -> {
-                    progressBar.visibility = View.GONE
-                    val duration = exoPlayer?.duration ?: 0L
-                    txtDuration.text = formatTime(duration)
+            Player.STATE_READY -> {
+                progressBar.visibility = View.GONE
+                cachedDuration = exoPlayer?.duration ?: 0L
+                if (cachedDuration > 0) {
+                    txtDuration.text = formatTime(cachedDuration)
                     seekBar.max = 1000
-                    // Update quality display when video is ready
-                    updateQualityButton()
-                    // Start progress tracking if playing
-                    if (exoPlayer?.isPlaying == true) {
-                        startProgressTracking()
-                    }
-
-                    // Resume from saved position if applicable
-                    if (resumePosition > 0) {
-                        exoPlayer?.seekTo(resumePosition)
-                        resumePosition = 0 // Reset so we don't seek again
-                    }
                 }
-                Player.STATE_ENDED -> {
-                    // Video ended, could restart or show next video
-                    stopProgressTracking()
-                    Toast.makeText(this, "Video ended", Toast.LENGTH_SHORT).show()
+                updateQualityButton()
+                if (exoPlayer?.isPlaying == true) startProgressTracking()
+
+                // Resume from saved DB position once — then clear it
+                if (resumePosition > 0) {
+                    exoPlayer?.seekTo(resumePosition)
+                    resumePosition = 0
                 }
             }
-        }
-    }
-
-    private fun saveContinueWatching() {
-        exoPlayer?.let { player ->
-            val duration = player.duration.toInt()
-            val lastPosition = player.currentPosition.toInt()
-
-            // Ignore very short playback
-            if (lastPosition < 5_000 || duration <= 0) return
-
-            // Run database operation in background to avoid UI jank
-            Thread {
-                if(showType=="movie"){
-
-                    db.addOrUpdateContinueWatching(
-                        userId = userId,
-                        itemId = showId,
-                        type = showType,
-                        title = showTitle,
-                        poster = showPoster,
-                        backdrop = showBackdrop,
-                        seasonNumber = showSNo,
-                        episodeNumber = showENo,
-                        lastPosition = lastPosition,
-                        duration = duration
-                    )
-
-                }else{
-                    val itemId = "${showId}_S${showSNo}_E${showENo}"
-                    db.addOrUpdateContinueWatching(
-                        userId = userId,
-                        itemId = itemId,
-                        type = showType,
-                        title = showTitle,
-                        poster = showPoster,
-                        backdrop = showBackdrop,
-                        seasonNumber = showSNo,
-                        episodeNumber = showENo,
-                        lastPosition = lastPosition,
-                        duration = duration
-                    )
-                }
-            }.start()
-
-
-        }
-    }
-
-    override fun onPositionDiscontinuity(
-        oldPosition: Player.PositionInfo,
-        newPosition: Player.PositionInfo,
-        reason: Int
-    ) {
-        runOnUiThread {
-            updateSeekBar()
-        }
-    }
-
-    override fun onVideoSizeChanged(videoSize: androidx.media3.common.VideoSize) {
-        runOnUiThread {
-            // Update quality display when video size changes
-            updateQualityButton()
+            Player.STATE_ENDED -> {
+                stopProgressTracking()
+                Toast.makeText(this, "Video ended", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
     override fun onTracksChanged(tracks: Tracks) {
-        runOnUiThread {
-            // Update quality options when tracks are available
-            updateAvailableQualities(tracks)
-            qualityOptions = availableQualities
-        }
+        updateAvailableQualities(tracks)
+        qualityOptions = availableQualities
+        updateQualityButton()
     }
 
+    override fun onVideoSizeChanged(videoSize: androidx.media3.common.VideoSize) {
+        updateQualityButton()
+    }
+
+    override fun onPositionDiscontinuity(
+        old: Player.PositionInfo,
+        new: Player.PositionInfo,
+        reason: Int
+    ) {
+        updateSeekBar()
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Progress tracking  (1-second tick on main thread)
+    // ──────────────────────────────────────────────────────────────────────────
+
     private fun startProgressTracking() {
-        stopProgressTracking() // Stop any existing tracking
+        stopProgressTracking()
         progressRunnable = object : Runnable {
             override fun run() {
                 updateSeekBar()
-                
-                // Auto-save every 10 seconds (called every 1s, so count to 10)
-                saveCounter++
-                if (saveCounter >= 10) {
+                if (++saveCounter >= 10) {
                     saveContinueWatching()
                     saveCounter = 0
                 }
-                
-                progressHandler.postDelayed(this, 1000) // Update every second
+                progressHandler.postDelayed(this, 1_000)
             }
         }
         progressHandler.post(progressRunnable!!)
@@ -690,433 +500,330 @@ class Video_payer : AppCompatActivity(), Player.Listener {
     }
 
     private fun updateSeekBar() {
-        exoPlayer?.let { player ->
-            val duration = player.duration
-            if (duration > 0) {
-                val position = player.currentPosition
-                val progress = (position * 1000 / duration).toInt()
-                seekBar.progress = progress
-                txtCurrentTime.text = formatTime(position)
-            }
+        val player = exoPlayer ?: return
+        val duration = cachedDuration.takeIf { it > 0 } ?: return
+        val position = player.currentPosition
+        seekBar.progress = (position * 1000 / duration).toInt()
+        txtCurrentTime.text = formatTime(position)
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Persist progress
+    // ──────────────────────────────────────────────────────────────────────────
+
+    private fun fetchResumePosition(): Long {
+        return if (showType == "movie") {
+            db.getResumePosition(userId, showId, showType).toLong()
+        } else {
+            db.getResumePosition(userId, "${showId}_S${showSNo}_E${showENo}", showType).toLong()
         }
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        saveContinueWatching() // Save progress before destroying
-        stopProgressTracking()
-        releasePlayerWithAudioFocus()
+    private fun saveContinueWatching() {
+        val player = exoPlayer ?: return
+        val duration     = player.duration.toInt()
+        val lastPosition = player.currentPosition.toInt()
+        if (lastPosition < 5_000 || duration <= 0) return
 
-        progressHandler.removeCallbacksAndMessages(null)
+        val itemId = if (showType == "movie") showId
+                     else "${showId}_S${showSNo}_E${showENo}"
 
-        // Release player properly
+        // Fire-and-forget on IO thread — does not hold a reference to the Activity
+        lifecycleScope.launch(Dispatchers.IO) {
+            db.addOrUpdateContinueWatching(
+                userId        = userId,
+                itemId        = itemId,
+                type          = showType,
+                title         = showTitle,
+                poster        = showPoster,
+                backdrop      = showBackdrop,
+                seasonNumber  = showSNo,
+                episodeNumber = showENo,
+                lastPosition  = lastPosition,
+                duration      = duration
+            )
+        }
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // UI helpers
+    // ──────────────────────────────────────────────────────────────────────────
+
+    private fun toggleControls()  { if (isControlsVisible) hideControls() else showControls() }
+    private fun showControls()    { isControlsVisible = true;  bottomBar.visibility = View.VISIBLE }
+    private fun hideControls()    { isControlsVisible = false; bottomBar.visibility = View.GONE }
+
+    private fun toggleFullscreen() {
+        isFullscreen = !isFullscreen
+        @Suppress("DEPRECATION")
+        if (isFullscreen) {
+            window.decorView.systemUiVisibility =
+                View.SYSTEM_UI_FLAG_FULLSCREEN or
+                View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
+                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+            requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+            btnFullscreen.setImageResource(android.R.drawable.ic_menu_close_clear_cancel)
+        } else {
+            window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_VISIBLE
+            requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+            btnFullscreen.setImageResource(android.R.drawable.ic_menu_crop)
+        }
+    }
+
+    private fun showSeekFeedback(text: String) {
+        centerOverlay.removeAllViews()
+        val tv = TextView(this).apply {
+            this.text = text
+            setTextColor(Color.WHITE)
+            textSize = 24f
+            setPadding(40, 20, 40, 20)
+            setBackgroundColor(Color.parseColor("#80000000"))
+        }
+        centerOverlay.addView(tv)
+        centerOverlay.visibility = View.VISIBLE
+        tv.startAnimation(AlphaAnimation(1f, 0f).apply {
+            duration = 1000
+            setAnimationListener(object : Animation.AnimationListener {
+                override fun onAnimationStart(a: Animation?) = Unit
+                override fun onAnimationRepeat(a: Animation?) = Unit
+                override fun onAnimationEnd(a: Animation?) {
+                    centerOverlay.visibility = View.GONE
+                }
+            })
+        })
+    }
+
+    private fun updatePlayPauseButton() {
+        btnPlayPause.setImageResource(
+            if (exoPlayer?.isPlaying == true) R.drawable.ic_pause else R.drawable.ic_play
+        )
+    }
+
+    private fun updateMuteButton() {
+        btnMute.setImageResource(
+            if (isMuted) android.R.drawable.ic_lock_silent_mode
+            else         android.R.drawable.ic_lock_silent_mode_off
+        )
+    }
+
+    private fun updateSpeedButton()   { btn_speed_text.text = "${currentSpeed}x" }
+    private fun updateQualityButton() { btnQuality.text = getCurrentVideoQuality() }
+
+    private fun formatTime(ms: Long): String {
+        val s  = ms / 1000
+        val h  = s / 3600
+        val m  = (s % 3600) / 60
+        val sc = s % 60
+        return if (h > 0) "%d:%02d:%02d".format(h, m, sc)
+               else       "%02d:%02d".format(m, sc)
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Dialogs
+    // ──────────────────────────────────────────────────────────────────────────
+
+    private fun showSpeedDialog() {
+        val options = arrayOf("0.5x", "0.75x", "1.0x", "1.25x", "1.5x", "2.0x")
+        android.app.AlertDialog.Builder(this, R.style.CustomDialogTheme)
+            .setTitle("Playback Speed")
+            .setSingleChoiceItems(options, currentSpeedIndex) { dialog, which ->
+                currentSpeedIndex = which
+                currentSpeed = playbackSpeeds[which]
+                exoPlayer?.setPlaybackSpeed(currentSpeed)
+                updateSpeedButton()
+                dialog.dismiss()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun showQualityDialog() {
+        android.app.AlertDialog.Builder(this, R.style.CustomDialogTheme)
+            .setTitle("Video Quality")
+            .setSingleChoiceItems(qualityOptions.toTypedArray(), currentQualityIndex) { dialog, which ->
+                currentQualityIndex = which
+                setVideoQuality(which)
+                updateQualityButton()
+                Toast.makeText(this, "Quality: ${qualityOptions[which]}", Toast.LENGTH_SHORT).show()
+                dialog.dismiss()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun showSettingsDialog() {
+        android.app.AlertDialog.Builder(this, R.style.CustomDialogTheme)
+            .setTitle("Settings")
+            .setItems(arrayOf("Subtitles", "Video Info")) { _, which ->
+                when (which) {
+                    0 -> Toast.makeText(this, "Subtitles not available", Toast.LENGTH_SHORT).show()
+                    1 -> showVideoInfo()
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun showVideoInfo() {
+        val player = exoPlayer ?: return
+        val fmt = player.videoFormat
+        val info = buildString {
+            append("Duration: ${formatTime(player.duration)}\n")
+            append("Position: ${formatTime(player.currentPosition)}\n")
+            append("Speed: ${currentSpeed}x\n")
+            append("Quality: ${getCurrentVideoQuality()}\n")
+            if (fmt != null) {
+                append("\nResolution: ${fmt.width}×${fmt.height}\n")
+                append("Codec: ${fmt.codecs}\n")
+                append("Bitrate: ${fmt.bitrate / 1000} kbps\n")
+                append("Frame rate: ${fmt.frameRate} fps")
+            }
+        }
+        Toast.makeText(this, info, Toast.LENGTH_LONG).show()
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Quality management
+    // ──────────────────────────────────────────────────────────────────────────
+
+    private fun setVideoQuality(index: Int) {
+        val player = exoPlayer ?: return
+        val selector = player.trackSelector as? DefaultTrackSelector ?: return
+        if (index >= availableQualities.size) return
+
+        val label = availableQualities[index]
+        val height = label.removeSuffix("p").toIntOrNull()
+
+        val params = selector.buildUponParameters()
+
+        if (label == "Auto" || height == null) {
+            selector.setParameters(
+                params.clearVideoSizeConstraints()
+                    .setMaxVideoSize(1920, 1080)
+                    .setAllowVideoMixedMimeTypeAdaptiveness(true)
+                    .setAllowVideoNonSeamlessAdaptiveness(true)
+            )
+        } else {
+            val width = when {
+                height >= 2160 -> 3840
+                height >= 1440 -> 2560
+                height >= 1080 -> 1920
+                height >= 720  -> 1280
+                height >= 480  -> 854
+                height >= 360  -> 640
+                else           -> 426
+            }
+            selector.setParameters(
+                params.setMaxVideoSize(width, height)
+                    .setMinVideoSize(width, height)
+                    .setAllowVideoMixedMimeTypeAdaptiveness(false)
+                    .setAllowVideoNonSeamlessAdaptiveness(false)
+            )
+        }
+        if (BuildConfig.DEBUG) Log.d("Video_payer", "Quality set to $label")
+    }
+
+    private fun getCurrentVideoQuality(): String {
+        val fmt = exoPlayer?.videoFormat ?: return "Auto"
+        return when {
+            fmt.width >= 1920 && fmt.height >= 1080 -> "1080p"
+            fmt.width >= 1280 && fmt.height >= 720  -> "720p"
+            fmt.width >= 854  && fmt.height >= 480  -> "480p"
+            fmt.width >= 640  && fmt.height >= 360  -> "360p"
+            fmt.width >= 426  && fmt.height >= 240  -> "240p"
+            else                                    -> "Auto"
+        }
+    }
+
+    private fun updateAvailableQualities(tracks: Tracks) {
+        val videoGroup = tracks.groups.find { it.type == C.TRACK_TYPE_VIDEO } ?: run {
+            availableQualities = listOf("Auto")
+            return
+        }
+
+        val labels = (0 until videoGroup.length)
+            .map { videoGroup.getTrackFormat(it) }
+            .filter { it.width > 0 && it.height > 0 }
+            .map { fmt ->
+                when {
+                    fmt.width >= 1920 && fmt.height >= 1080 -> "1080p"
+                    fmt.width >= 1280 && fmt.height >= 720  -> "720p"
+                    fmt.width >= 854  && fmt.height >= 480  -> "480p"
+                    fmt.width >= 640  && fmt.height >= 360  -> "360p"
+                    fmt.width >= 426  && fmt.height >= 240  -> "240p"
+                    else -> "${fmt.height}p"
+                }
+            }
+            .distinct()
+            .sortedByDescending { it.removeSuffix("p").toIntOrNull() ?: 0 }
+
+        availableQualities = listOf("Auto") + labels
+        if (BuildConfig.DEBUG) Log.d("Video_payer", "Qualities: $availableQualities")
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Player release
+    // ──────────────────────────────────────────────────────────────────────────
+
+    private fun releasePlayer() {
         exoPlayer?.let { player ->
+            player.removeListener(this)
             player.stop()
             player.clearMediaItems()
             player.release()
             exoPlayer = null
+            currentVideoUrl = null
+            availableQualities = listOf("Auto")
         }
-
-        // Cancel all coroutines
-        lifecycleScope.coroutineContext.cancelChildren()
-
-        // Remove all handler callbacks
-
-        // Abandon audio focus
-        val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        audioManager.abandonAudioFocus(null)
-
-        // Clear player view
-        playerView.player = null
-
-
-        finish()
+        audioManager.abandonAudioFocus(audioFocusChangeListener)
     }
 
-    override fun onPause() {
-        super.onPause()
-        saveContinueWatching() // Save progress when paused
-        exoPlayer?.pause()
-        stopProgressTracking()
-    }
-
-    override fun onResume() {
-        super.onResume()
-        exoPlayer?.play()
-        // Progress tracking will start automatically when onIsPlayingChanged is called
-    }
+    // ──────────────────────────────────────────────────────────────────────────
+    // Key events
+    // ──────────────────────────────────────────────────────────────────────────
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        when (keyCode) {
-            KeyEvent.KEYCODE_DPAD_UP -> {
-                // Only show controls if they are hidden
-                if (!isControlsVisible) {
-                    showControls()
-                    return true
-                }
-            }
+        if (keyCode == KeyEvent.KEYCODE_DPAD_UP && !isControlsVisible) {
+            showControls()
+            return true
         }
         return super.onKeyDown(keyCode, event)
     }
-    
-    // ===== PlayerManager functionality merged into this class =====
-    
-    companion object {
-        fun playVideoExternally(context: Context, videoUrl: String, referer: String?, userAgent: String?, showId: String,showType: String,showTitle: String, showPoster: String, showBackdrop: String, showSNo: String,showENo: String,) {
-            val intent = Intent(context, Video_payer::class.java).apply {
-                putExtra("video_url", videoUrl)
-                putExtra("referer", referer)
-                putExtra("userAgent", userAgent)
-                putExtra("showId", showId)
-                putExtra("showType", showType)
-                putExtra("showTitle", showTitle)
-                putExtra("showPoster", showPoster)
-                putExtra("showBackdrop", showBackdrop)
-                putExtra("showSNo", showSNo)
-                putExtra("showENo", showENo)
 
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+    // ──────────────────────────────────────────────────────────────────────────
+    // Companion — static launcher
+    // ──────────────────────────────────────────────────────────────────────────
+
+    companion object {
+        fun playVideoExternally(
+            context: Context,
+            videoUrl: String,
+            referer: String?,
+            userAgent: String?,
+            showId: String,
+            showType: String,
+            showTitle: String,
+            showPoster: String,
+            showBackdrop: String,
+            showSNo: String,
+            showENo: String
+        ) {
+            val intent = Intent(context, Video_payer::class.java).apply {
+                putExtra("video_url",   videoUrl)
+                putExtra("referer",     referer)
+                putExtra("userAgent",   userAgent)
+                putExtra("showId",      showId)
+                putExtra("showType",    showType)
+                putExtra("showTitle",   showTitle)
+                putExtra("showPoster",  showPoster)
+                putExtra("showBackdrop",showBackdrop)
+                putExtra("showSNo",     showSNo)
+                putExtra("showENo",     showENo)
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or
+                        Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                        Intent.FLAG_ACTIVITY_SINGLE_TOP
             }
             context.startActivity(intent)
         }
-    }
-
-    private fun initializePlayer(videoUrl: String): ExoPlayer {
-
-        releasePlayer()
-
-
-        val headers = mutableMapOf<String, String>()
-
-        headers["User-Agent"] = userAgent
-        headers["Referer"] = referer
-
-
-        val uri = Uri.parse(referer)
-        headers["Origin"] = "${uri.scheme}://${uri.host}"
-
-        Log.d("EXPO", " $userAgent \n referer: $referer \n Origin: ${headers["Origin"]}")
-
-        //userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36"
-
-        // HTTP datasource with custom User-Agent
-        val httpDataSourceFactory = DefaultHttpDataSource.Factory()
-            //.setUserAgent(userAgent)
-
-            .setDefaultRequestProperties(headers)
-            .setAllowCrossProtocolRedirects(true)
-
-        val dataSourceFactory = DefaultDataSource.Factory(this, httpDataSourceFactory)
-
-        val mediaSourceFactory = DefaultMediaSourceFactory(dataSourceFactory)
-
-        // Request audio focus
-        val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        val result = audioManager.requestAudioFocus(
-            null,
-            AudioManager.STREAM_MUSIC,
-            AudioManager.AUDIOFOCUS_GAIN
-        )
-
-        if (result != AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-            Log.w("Video_payer", "Audio focus not granted, but continuing playback")
-        }
-
-        val trackSelector = DefaultTrackSelector(this).apply {
-            setParameters(
-                buildUponParameters()
-                    .setMaxVideoSize(1920, 1080)
-                    .setPreferredVideoMimeType("video/mp4")
-                    .setAllowVideoMixedMimeTypeAdaptiveness(true)
-                    .setAllowVideoNonSeamlessAdaptiveness(true)
-                    .setMaxAudioChannelCount(2)
-                    .setPreferredAudioLanguage("en")
-                    .setSelectUndeterminedTextLanguage(true)
-                    .setForceHighestSupportedBitrate(true)
-            )
-        }
-
-        val renderersFactory = DefaultRenderersFactory(this)
-            .setExtensionRendererMode(
-                DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER
-            )
-
-        val player = ExoPlayer.Builder(this)
-            .setRenderersFactory(renderersFactory)
-            .setTrackSelector(trackSelector)
-            .setMediaSourceFactory(mediaSourceFactory)
-            .build()
-
-        val mediaItem = MediaItem.fromUri(videoUrl)
-
-        player.setMediaItem(mediaItem)
-
-        player.addListener(object : Player.Listener {
-            override fun onTracksChanged(tracks: Tracks) {
-                updateAvailableQualities(tracks)
-            }
-        })
-
-        player.prepare()
-        player.playWhenReady = true
-
-        currentVideoUrl = videoUrl
-
-        return player
-    }
-
-    private fun initializePlayer_old(videoUrl: String): ExoPlayer {
-        releasePlayer()
-
-        val userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36"
-        
-        // Request audio focus to prevent multiple audio streams
-        val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        val result = audioManager.requestAudioFocus(
-            null,
-            AudioManager.STREAM_MUSIC,
-            AudioManager.AUDIOFOCUS_GAIN
-        )
-        
-        if (result != AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-            Log.w("Video_payer", "Audio focus not granted, but continuing with playback")
-        }
-
-        val trackSelector = DefaultTrackSelector(this).apply {
-            setParameters(
-                buildUponParameters()
-                    .setMaxVideoSize(1920, 1080) // Allow up to 1080p by default
-                    .setPreferredVideoMimeType("video/mp4")
-                    .setAllowVideoMixedMimeTypeAdaptiveness(true)
-                    .setAllowVideoNonSeamlessAdaptiveness(true)
-                    .setMaxAudioChannelCount(2) // Limit to stereo audio
-                    .setPreferredAudioLanguage("en") // Prefer English audio
-                    .setSelectUndeterminedTextLanguage(true) // Select first available audio track
-                    .setForceHighestSupportedBitrate(true) // Force single track selection
-            )
-        }
-
-        val renderersFactory = DefaultRenderersFactory(this)
-            .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER)
-
-        val player = ExoPlayer.Builder(this)
-            .setRenderersFactory(renderersFactory)
-            .setTrackSelector(trackSelector)
-            .build()
-            .apply {
-                val mediaItem = MediaItem.fromUri(videoUrl)
-                setMediaItem(mediaItem)
-                addListener(object : Player.Listener {
-                    override fun onTracksChanged(tracks: Tracks) {
-                        updateAvailableQualities(tracks)
-                    }
-                })
-                prepare()
-                playWhenReady = true
-            }
-
-        currentVideoUrl = videoUrl
-        return player
-    }
-    
-    private fun releasePlayer() {
-        exoPlayer?.let { player ->
-            player.release()
-            exoPlayer = null
-            currentVideoUrl = null
-            availableQualities = listOf("Auto")
-        }
-    }
-    
-    private fun releasePlayerWithAudioFocus() {
-        exoPlayer?.let { player ->
-            player.release()
-            exoPlayer = null
-            currentVideoUrl = null
-            availableQualities = listOf("Auto")
-        }
-        
-        // Abandon audio focus when releasing player
-        val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        audioManager.abandonAudioFocus(null)
-    }
-    
-    private fun setVideoQuality(qualityIndex: Int) {
-        exoPlayer?.let { player ->
-            val trackSelector = player.trackSelector as? DefaultTrackSelector ?: return
-
-            Log.d("Video_payer", "Setting video quality to index: $qualityIndex")
-
-            if (qualityIndex >= availableQualities.size) {
-                Log.w("Video_payer", "Quality index $qualityIndex out of bounds")
-                return
-            }
-
-            val selectedQuality = availableQualities[qualityIndex]
-
-            when (selectedQuality) {
-                "Auto" -> {
-                    trackSelector.setParameters(
-                        trackSelector.buildUponParameters()
-                            .clearVideoSizeConstraints()
-                            .setMaxVideoSize(1920, 1080)
-                            .setAllowVideoMixedMimeTypeAdaptiveness(true)
-                            .setAllowVideoNonSeamlessAdaptiveness(true)
-                    )
-                }
-                "1080p" -> {
-                    trackSelector.setParameters(
-                        trackSelector.buildUponParameters()
-                            .setMaxVideoSize(1920, 1080)
-                            .setMinVideoSize(1920, 1080)
-                            .setAllowVideoMixedMimeTypeAdaptiveness(false)
-                            .setAllowVideoNonSeamlessAdaptiveness(false)
-                    )
-                }
-                "720p" -> {
-                    trackSelector.setParameters(
-                        trackSelector.buildUponParameters()
-                            .setMaxVideoSize(1280, 720)
-                            .setMinVideoSize(1280, 720)
-                            .setAllowVideoMixedMimeTypeAdaptiveness(false)
-                            .setAllowVideoNonSeamlessAdaptiveness(false)
-                    )
-                }
-                "480p" -> {
-                    trackSelector.setParameters(
-                        trackSelector.buildUponParameters()
-                            .setMaxVideoSize(854, 480)
-                            .setMinVideoSize(854, 480)
-                            .setAllowVideoMixedMimeTypeAdaptiveness(false)
-                            .setAllowVideoNonSeamlessAdaptiveness(false)
-                    )
-                }
-                "360p" -> {
-                    trackSelector.setParameters(
-                        trackSelector.buildUponParameters()
-                            .setMaxVideoSize(640, 360)
-                            .setMinVideoSize(640, 360)
-                            .setAllowVideoMixedMimeTypeAdaptiveness(false)
-                            .setAllowVideoNonSeamlessAdaptiveness(false)
-                    )
-                }
-                "240p" -> {
-                    trackSelector.setParameters(
-                        trackSelector.buildUponParameters()
-                            .setMaxVideoSize(426, 240)
-                            .setMinVideoSize(426, 240)
-                            .setAllowVideoMixedMimeTypeAdaptiveness(false)
-                            .setAllowVideoNonSeamlessAdaptiveness(false)
-                    )
-                }
-                else -> {
-                    // Handle custom resolutions (e.g., "1440p", "2160p", etc.)
-                    val resolution = selectedQuality.replace("p", "").toIntOrNull()
-                    if (resolution != null) {
-                        val width = when {
-                            resolution >= 2160 -> 3840 // 4K
-                            resolution >= 1440 -> 2560 // 1440p
-                            resolution >= 1080 -> 1920 // 1080p
-                            resolution >= 720 -> 1280  // 720p
-                            resolution >= 480 -> 854   // 480p
-                            resolution >= 360 -> 640   // 360p
-                            else -> 426                // 240p
-                        }
-                        val height = resolution
-                        
-                        trackSelector.setParameters(
-                            trackSelector.buildUponParameters()
-                                .setMaxVideoSize(width, height)
-                                .setMinVideoSize(width, height)
-                                .setAllowVideoMixedMimeTypeAdaptiveness(false)
-                                .setAllowVideoNonSeamlessAdaptiveness(false)
-                        )
-                    }
-                }
-            }
-
-            Log.d("Video_payer", "Quality parameters applied successfully for: $selectedQuality")
-        }
-    }
-    
-    private fun getCurrentVideoQuality(): String {
-        exoPlayer?.let { player ->
-            val videoFormat = player.videoFormat
-            if (videoFormat != null) {
-                val width = videoFormat.width
-                val height = videoFormat.height
-
-                return when {
-                    width >= 1920 && height >= 1080 -> "1080p"
-                    width >= 1280 && height >= 720 -> "720p"
-                    width >= 854 && height >= 480 -> "480p"
-                    width >= 640 && height >= 360 -> "360p"
-                    width >= 426 && height >= 240 -> "240p"
-                    else -> "Auto"
-                }
-            }
-        }
-        return "Auto"
-    }
-    
-    private fun getVideoInfo(): String {
-        exoPlayer?.let { player ->
-            val videoFormat = player.videoFormat
-            if (videoFormat != null) {
-                return "Resolution: ${videoFormat.width}x${videoFormat.height}\n" +
-                       "Codec: ${videoFormat.codecs}\n" +
-                       "Bitrate: ${videoFormat.bitrate / 1000} kbps\n" +
-                       "Frame Rate: ${videoFormat.frameRate} fps"
-            }
-        }
-        return "Video info not available"
-    }
-    
-    private fun updateAvailableQualities(tracks: Tracks) {
-        val qualities = mutableListOf("Auto")
-        
-        // Get video tracks
-        val videoTrackGroup = tracks.groups.find { it.type == C.TRACK_TYPE_VIDEO }
-        
-        if (videoTrackGroup != null) {
-            val uniqueResolutions = mutableSetOf<Pair<Int, Int>>()
-            
-            // Extract unique resolutions from available tracks
-            for (i in 0 until videoTrackGroup.length) {
-                val format = videoTrackGroup.getTrackFormat(i)
-                val width = format.width
-                val height = format.height
-                
-                if (width > 0 && height > 0) {
-                    uniqueResolutions.add(Pair(width, height))
-                }
-            }
-            
-            // Convert resolutions to quality labels and sort by resolution (highest first)
-            val qualityLabels = uniqueResolutions.map { (width, height) ->
-                when {
-                    width >= 1920 && height >= 1080 -> "1080p"
-                    width >= 1280 && height >= 720 -> "720p"
-                    width >= 854 && height >= 480 -> "480p"
-                    width >= 640 && height >= 360 -> "360p"
-                    width >= 426 && height >= 240 -> "240p"
-                    else -> "${width}p"
-                }
-            }.distinct().sortedWith(compareByDescending { 
-                when (it) {
-                    "1080p" -> 1080
-                    "720p" -> 720
-                    "480p" -> 480
-                    "360p" -> 360
-                    "240p" -> 240
-                    else -> it.replace("p", "").toIntOrNull() ?: 0
-                }
-            })
-            
-            qualities.addAll(qualityLabels)
-        }
-        
-        availableQualities = qualities
-        Log.d("Video_payer", "Available qualities updated: $availableQualities")
     }
 }

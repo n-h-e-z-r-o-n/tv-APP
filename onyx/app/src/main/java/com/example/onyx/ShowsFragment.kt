@@ -699,93 +699,94 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
 
                 Log.e("DEBUG_MAIN_Slider raw", moviesArray3.toString())
 
-                for (i in 0 until moviesArray3.length()) {
+                val parsedItems = withContext(Dispatchers.IO) {
+                    val list = mutableListOf<Map<String, String>>()
+                    for (i in 0 until moviesArray3.length()) {
+                        val item = moviesArray3.getJSONObject(i)
+                        val title = when {
+                            item.has("original_name") && !item.isNull("original_name") -> item.getString("original_name")
+                            item.has("original_title") && !item.isNull("original_title") -> item.getString("original_title")
+                            item.has("title") && !item.isNull("title") -> item.getString("title")
+                            else -> "Untitled"
+                        }
 
+                        val type = item.optString("media_type", "")
+                        if (type != "movie" && type != "tv") {
+                            continue
+                        }
 
-                    val item = moviesArray3.getJSONObject(i)
-                    val title = when {
-                        item.has("original_name") && !item.isNull("original_name") -> item.getString(
-                            "original_name"
-                        )
+                        val backdrop_path =
+                            if (item.has("backdrop_path") && !item.isNull("backdrop_path")) {
+                                "https://image.tmdb.org/t/p/original${item.getString("backdrop_path")}"
+                            } else if (item.has("poster_path") && !item.isNull("poster_path")) {
+                                "https://image.tmdb.org/t/p/original${item.getString("poster_path")}"
+                            } else {
+                                ""
+                            }
 
-                        item.has("original_title") && !item.isNull("original_title") -> item.getString(
-                            "original_title"
-                        )
+                        val pg = if (item.optString("adult") == "true") "PG-18 +" else "PG-13"
+                        val id = item.optString("id", "")
+                        val overview = item.optString("overview", "")
 
-                        item.has("title") && !item.isNull("title") -> item.getString("title")
-                        else -> "Untitled"
-                    }
-
-                    val type = item.optString("media_type", "")
-                    if (type != "movie" && type != "tv") {
-                        continue   // skip this loop iteration
-                    }
-
-                    val backdrop_path =
-                        if (item.has("backdrop_path") && !item.isNull("backdrop_path")) {
-                            "https://image.tmdb.org/t/p/original${item.getString("backdrop_path")}"
-                        } else if (item.has("poster_path") && !item.isNull("poster_path")) {
-                            "https://image.tmdb.org/t/p/original${item.getString("poster_path")}"
+                        val release_date = if (type == "movie") {
+                            item.optString("release_date", "")
                         } else {
-                            ""
+                            item.optString("first_air_date", "")
+                        }
+                        val year = GlobalUtils.formatDateString(release_date)
+
+                        val voteAverageRaw = item.optString("vote_average", "")
+                        val vote_average = if (voteAverageRaw.length >= 3) {
+                            voteAverageRaw.substring(0, 3)
+                        } else {
+                            voteAverageRaw
                         }
 
-                    val pg = if (item.optString("adult") == "true") "PG-18 +" else "PG-13"
-                    val id = item.optString("id", "")
-                    val overview = item.optString("overview", "")
+                        val genreIdsJson = item.getJSONArray("genre_ids") ?: JSONArray()
 
-                    val release_date = if (type == "movie") {
-                        item.optString("release_date", "")
-                    } else {
-                        item.optString("first_air_date", "")
-                    }
-                    val year = GlobalUtils.formatDateString(release_date)
-
-                    //val vote_average = item.optString("vote_average", "").substring(0, 3)
-                    val voteAverageRaw = item.optString("vote_average", "")
-                    val vote_average = if (voteAverageRaw.length >= 3) {
-                        voteAverageRaw.substring(0, 3)
-                    } else {
-                        voteAverageRaw
-                    }
-
-                    val poster_path = item.optString("poster_path", "")
-                    val genreIdsJson = item.getJSONArray("genre_ids") ?: JSONArray()
-
-
-                    val genreNames = mutableListOf<String>()
-                    if (type == "movie") {
-                        for (j in 0 until genreIdsJson.length()) {
-                            val genreId = genreIdsJson.getInt(j)
-                            GlobalUtils.movieGenreMap[genreId]?.let { genreNames.add(it) }
+                        val genreNames = mutableListOf<String>()
+                        if (type == "movie") {
+                            for (j in 0 until genreIdsJson.length()) {
+                                val genreId = genreIdsJson.getInt(j)
+                                GlobalUtils.movieGenreMap[genreId]?.let { genreNames.add(it) }
+                            }
+                        } else {
+                            for (j in 0 until genreIdsJson.length()) {
+                                val genreId = genreIdsJson.getInt(j)
+                                GlobalUtils.tvGenreMap[genreId]?.let { genreNames.add(it) }
+                            }
                         }
-                    } else {
-                        for (j in 0 until genreIdsJson.length()) {
-                            val genreId = genreIdsJson.getInt(j)
-                            GlobalUtils.tvGenreMap[genreId]?.let { genreNames.add(it) }
-                        }
+                        
+                        list.add(mapOf(
+                            "title" to title,
+                            "type" to type,
+                            "backdrop_path" to backdrop_path,
+                            "pg" to pg,
+                            "id" to id,
+                            "overview" to overview,
+                            "year" to year,
+                            "vote_average" to vote_average,
+                            "genreNames" to genreNames.joinToString(" • ")
+                        ))
                     }
+                    list
+                }
 
+                for (itemMap in parsedItems) {
                     val card = inflater.inflate(
                         R.layout.card_layout,
                         container,
                         false
                     ) as CardView
 
-                    card.findViewById<TextView>(R.id.cardGenre).text =
-                        genreNames.joinToString(" • ")
-
-
-
-                    card.findViewById<TextView>(R.id.cardTitle).text = title
-                    //card.findViewById<TextView>(R.id.cardGenre).text = genreNames.toString().trim('[', ']')
+                    card.findViewById<TextView>(R.id.cardGenre).text = itemMap["genreNames"]
+                    card.findViewById<TextView>(R.id.cardTitle).text = itemMap["title"]
                     card.findViewById<TextView>(R.id.cardQuality).text = "HD"
-                    card.findViewById<TextView>(R.id.cardPg).text = pg
-                    card.findViewById<TextView>(R.id.cardType).text = type
-                    card.findViewById<TextView>(R.id.cardRating).text = vote_average
-                    card.findViewById<TextView>(R.id.cardYear).text = year
-                    card.findViewById<TextView>(R.id.cardOverview).text = overview
-
+                    card.findViewById<TextView>(R.id.cardPg).text = itemMap["pg"]
+                    card.findViewById<TextView>(R.id.cardType).text = itemMap["type"]
+                    card.findViewById<TextView>(R.id.cardRating).text = itemMap["vote_average"]
+                    card.findViewById<TextView>(R.id.cardYear).text = itemMap["year"]
+                    card.findViewById<TextView>(R.id.cardOverview).text = itemMap["overview"]
 
                     val SliderBackdrop = card.findViewById<ImageView>(R.id.cardBackdrop)
 
@@ -795,30 +796,26 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
                     val sizeW = (currentWidth  * 2f).toInt()
 
                     Glide.with(card.context)
-                        .load(backdrop_path)
-                        //.override(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL)
+                        .load(itemMap["backdrop_path"])
                         .override(sizeW, sizeH)
                         .diskCacheStrategy(DiskCacheStrategy.ALL)
                         .centerInside()
                         .thumbnail(
                             Glide.with(card.context)
-                                .load(backdrop_path)
+                                .load(itemMap["backdrop_path"])
                                 .sizeMultiplier(0.3f)
                         )
                         .into(SliderBackdrop)
 
-
                     card.setOnClickListener {
                         val context = card.context
                         val intent = Intent(context, Watch_Page::class.java)
-                        intent.putExtra("imdb_code", id)
-                        intent.putExtra("type", type)
+                        intent.putExtra("imdb_code", itemMap["id"])
+                        intent.putExtra("type", itemMap["type"])
                         context.startActivity(intent)
                     }
 
-
                     container.addView(card)
-
                 }
 
                 if (moviesArray3.length() > 0){
@@ -1320,32 +1317,17 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
                                 posterUlr = imgUrl2,
                                 imdbCode = id,
                                 type = "movie",
-                                year = year,
+                                year = GlobalUtils.formatDateString(year),
                                 rating = "${String.format("%.1f", rating)}imdb",
                                 runtime = "⏱$runtime min"
                             )
                         )
-                        withContext(Dispatchers.Main) {
-                    if (!isAdded || view == null) return@withContext
-                            movieAdapter.addItem(
-                                    MovieItemOne(
-                                    title = title,
-                                    backdropUrl = imgUrl,
-                                    posterUlr = imgUrl2,
-                                    imdbCode = id,
-                                    type = "movie",
-                                    year = GlobalUtils.formatDateString(year),
-                                    rating = "${String.format("%.1f", rating)}imdb",
-                                    runtime = "⏱$runtime min"
-                                )
-                            )
-                        }
                     }
 
                     // ✅ Update UI once per batch
                     withContext(Dispatchers.Main) {
-                    if (!isAdded || view == null) return@withContext
-                        //movieAdapter.addItem(movies)
+                        if (!isAdded || view == null) return@withContext
+                        movieAdapter.addItems(movies)
                         isLoadingMoreMovies = false
                         movieAdapter.isLoadingMore = false
 
@@ -1453,27 +1435,23 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
 
                         val id = jsonObject.getString("id")
                         val type = "tv"
-                        //movies.add(MovieItemOne(title=title, backdropUrl = imgUrl, posterUlr = imgUrl2, imdbCode=id, type=type, year="", rating="", runtime=""))
-
-                        val MovieItemOne = MovieItemOne(
-                            title = title,
-                            backdropUrl = imgUrl,
-                            posterUlr = imgUrl2,
-                            imdbCode = id,
-                            type = type,
-                            year =   GlobalUtils.formatDateString(firstAirDate),
-                            rating = voteAverage,
-                            runtime = showD
+                        movies.add(
+                            MovieItemOne(
+                                title = title,
+                                backdropUrl = imgUrl,
+                                posterUlr = imgUrl2,
+                                imdbCode = id,
+                                type = type,
+                                year =   GlobalUtils.formatDateString(firstAirDate),
+                                rating = voteAverage,
+                                runtime = showD
+                            )
                         )
-
-                        withContext(Dispatchers.Main) {
-                    if (!isAdded || view == null) return@withContext
-                            tvAdapter.addItem(MovieItemOne)
-                        }
                     }
 
                     withContext(Dispatchers.Main) {
-                    if (!isAdded || view == null) return@withContext
+                        if (!isAdded || view == null) return@withContext
+                        tvAdapter.addItems(movies)
                         isLoadingMoreTv = false
                         tvAdapter.isLoadingMore = false
 

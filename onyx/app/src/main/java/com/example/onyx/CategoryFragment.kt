@@ -583,7 +583,7 @@ class CategoryFragment : Fragment(R.layout.fragment_category) {
                 // Cancel any running coroutines
                 lifecycleScope.coroutineContext.cancelChildren()
 
-                val homeActivity = context as HomeActivity
+                val homeActivity = requireActivity() as HomeActivity
                 homeActivity.showsFragment?.let { existingShowsAnimeTab ->
                     homeActivity.navigateToExistingAndDestroyCurrent(existingShowsAnimeTab, this@CategoryFragment)
                 } ?: run {
@@ -596,8 +596,6 @@ class CategoryFragment : Fragment(R.layout.fragment_category) {
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, fragmentBackCallback)
     }
 
-
-
     override fun onResume() {
         super.onResume()
         if (::fragmentBackCallback.isInitialized) {
@@ -605,5 +603,4 @@ class CategoryFragment : Fragment(R.layout.fragment_category) {
             requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, fragmentBackCallback)
         }
     }
-
 }

@@ -196,73 +196,112 @@ class AnimeFragment : Fragment() {
 
             if (jsonObject == null) return@launch
 
-            val showHomeData = jsonObject.getJSONObject("data")
-            val spotlightAnimes = showHomeData.getJSONArray("spotlightAnimes")
-            val trendingAnimes = showHomeData.getJSONArray("trendingAnimes")
-            val topAiringAnimes = showHomeData.getJSONArray("topAiringAnimes")
+            val (spotlightList, trendingList, airingList) = withContext(Dispatchers.IO) {
+                val showHomeData = jsonObject.getJSONObject("data")
+                val spotlightAnimes = showHomeData.getJSONArray("spotlightAnimes")
+                val trendingAnimes = showHomeData.getJSONArray("trendingAnimes")
+                val topAiringAnimes = showHomeData.getJSONArray("topAiringAnimes")
 
-            if (spotlightAnimes.length() > 0) {
+                val sList = mutableListOf<Map<String, String>>()
+                for (i in 0 until spotlightAnimes.length()) {
+                    val item = spotlightAnimes.getJSONObject(i)
+                    sList.add(
+                        mapOf(
+                            "title" to item.getString("name"),
+                            "overview" to item.getString("description"),
+                            "imageUrl" to item.getString("backdrop"),
+                            "id" to item.getString("id"),
+                            "type" to item.getString("type"),
+                            "runtime" to item.getString("duration"),
+                            "releaseDate" to item.getString("releaseDate"),
+                            "quality" to item.getString("quality"),
+                            "sub" to item.getJSONObject("episodes").optInt("sub", 0).toString(),
+                            "dub" to item.getJSONObject("episodes").optInt("dub", 0).toString()
+                        )
+                    )
+                }
+
+                val tList = mutableListOf<TrendingAnimeItem>()
+                for (i in 0 until trendingAnimes.length()) {
+                    val item = trendingAnimes.getJSONObject(i)
+                    tList.add(
+                        TrendingAnimeItem(
+                            id = item.getString("id"),
+                            title = item.getString("name"),
+                            imageUrl = item.getString("poster"),
+                            rank = "0$i"
+                        )
+
+                    )
+                }
+
+
+                val aList = mutableListOf<AiringAnimeItem>()
+                for (i in 0 until topAiringAnimes.length()) {
+                    val item = topAiringAnimes.getJSONObject(i)
+                    aList.add(
+                        AiringAnimeItem(
+                            id = item.getString("id"),
+                            title = item.getString("name"),
+                            imageUrl = item.getString("poster"),
+                            type = item.getString("type"),
+                            sub = item.getJSONObject("episodes").optString("sub", ""),
+                            dub = item.getJSONObject("episodes").optString("dub", "")
+                        )
+                    )
+                }
+                
+                Triple(sList, tList, aList)
+            }
+
+            if (spotlightList.isNotEmpty()) {
                 binding.animeSpotlightSection.visibility = View.VISIBLE
             }
 
-            for (i in 0 until spotlightAnimes.length()) {
+            for (item in spotlightList) {
                 val card = inflater.inflate(
                     R.layout.anime_card_spotlight,
                     binding.spotlightAnimes,
                     false
                 ) as CardView
 
-                val item = spotlightAnimes.getJSONObject(i)
-                val title = item.getString("name")
-                val overview = item.getString("description")
-                val imageUrl = item.getString("backdrop")
-                val id = item.getString("id")
-                val type = item.getString("type")
-                val runtime = item.getString("duration")
-                val releaseDate = item.getString("releaseDate")
-                val quality = item.getString("quality")
-                val sub = item.getJSONObject("episodes").optInt("sub", 0)
-                val dub = item.getJSONObject("episodes").optInt("dub", 0)
-
-                // Note: Still using findViewById here because this is a dynamically inflated child view,
-                // not the main Fragment layout. (Consider making a binding for anime_card_spotlight.xml too)
-                card.findViewById<TextView>(R.id.cardTitle).text = title
+                card.findViewById<TextView>(R.id.cardTitle).text = item["title"]
                 card.findViewById<TextView>(R.id.cardPg).text = "PG-13"
-                card.findViewById<TextView>(R.id.cardType).text = type
-                card.findViewById<TextView>(R.id.cardRuntime).text = runtime
-                card.findViewById<TextView>(R.id.cardYear).text = releaseDate
-                card.findViewById<TextView>(R.id.cardQuality).text = quality
-                card.findViewById<TextView>(R.id.cardSub).text = sub.toString()
-                card.findViewById<TextView>(R.id.cardDub).text = dub.toString()
-                card.findViewById<TextView>(R.id.cardOverview).text = overview
+                card.findViewById<TextView>(R.id.cardType).text = item["type"]
+                card.findViewById<TextView>(R.id.cardRuntime).text = item["runtime"]
+                card.findViewById<TextView>(R.id.cardYear).text = item["releaseDate"]
+                card.findViewById<TextView>(R.id.cardQuality).text = item["quality"]
+                card.findViewById<TextView>(R.id.cardSub).text = item["sub"]
+                card.findViewById<TextView>(R.id.cardDub).text = item["dub"]
+                card.findViewById<TextView>(R.id.cardOverview).text = item["overview"]
 
                 val sliderBackdrop = card.findViewById<ImageView>(R.id.SliderBackdrop)
 
                 Glide.with(this@AnimeFragment)
-                    .load(imageUrl)
+                    .load(item["imageUrl"])
                     .centerInside()
                     .into(sliderBackdrop)
 
                 card.setOnClickListener {
                     val context = card.context
                     val args = Bundle().apply {
-                        putString("anime_code", id)
-                        putString("anime_poster", imageUrl)
+                        putString("anime_code", item["id"])
+                        putString("anime_poster", item["imageUrl"])
                     }
                     (context as HomeActivity).navigateToFragment(WatchAnimeFragment(), args)
                 }
                 binding.spotlightAnimes.addView(card)
             }
 
-            if (trendingAnimes.length() > 0) {
+            if (trendingList.isNotEmpty()) {
                 binding.animeTrendingSection.visibility = View.VISIBLE
             }
-            if (topAiringAnimes.length() > 0) {
+            if (airingList.isNotEmpty()) {
                 binding.animeAiringSection.visibility = View.VISIBLE
             }
 
-            showTrending(trendingAnimes)
-            showAiring(topAiringAnimes)
+            showTrending(trendingList)
+            showAiring(airingList)
 
             GlobalUtils.setupCardStackFromContainer(binding.spotlightAnimes)
 
@@ -271,58 +310,22 @@ class AnimeFragment : Fragment() {
         }
     }
 
-    private fun showTrending(trending: JSONArray) {
-        val trendingItems = mutableListOf<TrendingAnimeItem>()
-
-        for (i in 0 until trending.length()) {
-
-            val item = trending.getJSONObject(i)
-            val title = item.getString("name")
-            val imageUrl = item.getString("poster")
-            val id = item.getString("id")
-            val ranking = "0" + i
-
-            trendingItems.add(
-                TrendingAnimeItem(
-                    id,
-                    title,
-                    imageUrl,
-                    ranking
-                )
-            )
-
-        }
-
+    private fun showTrending(trendingItems: List<TrendingAnimeItem>) {
         binding.AnimeTrendingWidget.layoutManager = LinearLayoutManager(
             requireActivity(),
             LinearLayoutManager.HORIZONTAL,
             false
         )
-        binding.AnimeTrendingWidget.adapter = AnimeTrendingAdapter(trendingItems, R.layout.anime_trending_item)
+        binding.AnimeTrendingWidget.adapter = AnimeTrendingAdapter(trendingItems.toMutableList(), R.layout.anime_trending_item)
     }
 
-    private fun showAiring(airing: JSONArray) {
-        val airingItems = mutableListOf<AiringAnimeItem>()
-        for (i in 0 until airing.length()) {
-            val item = airing.getJSONObject(i)
-            airingItems.add(
-                AiringAnimeItem(
-                    id = item.getString("id"),
-                    title = item.getString("name"),
-                    imageUrl = item.getString("poster"),
-                    type = item.getString("type"),
-                    sub = item.getJSONObject("episodes").optString("sub", ""),
-                    dub = item.getJSONObject("episodes").optString("dub", "")
-                )
-            )
-        }
-
+    private fun showAiring(airingItems: List<AiringAnimeItem>) {
         binding.AnimeAiringWidget.layoutManager = LinearLayoutManager(
             requireActivity(),
             LinearLayoutManager.HORIZONTAL,
             false
         )
-        binding.AnimeAiringWidget.adapter = AnimeAiringAdapter(airingItems, R.layout.anime_airing_item)
+        binding.AnimeAiringWidget.adapter = AnimeAiringAdapter(airingItems.toMutableList(), R.layout.anime_airing_item)
     }
 
     private fun loadDubbedAnime() {

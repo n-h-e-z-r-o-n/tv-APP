@@ -162,7 +162,7 @@ class WatchAnimeFragment : Fragment(R.layout.fragment_watch_anime_page) {
     private suspend fun getInfo(Id: String){
 
 
-        val jsonObject = fetchAnime.animeInfo(Id)
+        val jsonObject = withContext(Dispatchers.IO) { fetchAnime.animeInfo(Id) }
 
         Log.e("ANIME_Watch Data", jsonObject.toString())
         if (jsonObject==null){
@@ -312,10 +312,11 @@ class WatchAnimeFragment : Fragment(R.layout.fragment_watch_anime_page) {
             val seasonTitle = seasonBtn.findViewById<TextView>(R.id.SeasonTitle)
 
             val title = season.optString("title", "Season ${i + 1}")
+            val seasonsNo = season.optString("season", "Season ${i + 1}")
             val imageUrl = season.optString("poster", "")
             val season_id = season.optString("id", "")
 
-            seasonTitle.text = title
+            seasonTitle.text = seasonsNo
 
             SeasonIMGArray.add(imageUrl)
 
@@ -328,7 +329,9 @@ class WatchAnimeFragment : Fragment(R.layout.fragment_watch_anime_page) {
 
                 requireView().findViewById<TextView>(R.id.selected_seasonShow).text = "List of episodes ($title)"
 
-                getEpisodes(season_id)
+                viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
+                    getEpisodes(season_id)
+                }
             }
 
             container.addView(seasonBtn)
@@ -336,11 +339,11 @@ class WatchAnimeFragment : Fragment(R.layout.fragment_watch_anime_page) {
         }
     }
     @OptIn(UnstableApi::class)
-    private fun getEpisodes(seasonId: String){
+    private suspend fun getEpisodes(seasonId: String){
         val container = requireView().findViewById<LinearLayout>(R.id.anime_episodes_selector_container)
         container.removeAllViews()
 
-        val jsonObject = fetchAnime.animeEpisodes(seasonId)
+        val jsonObject = withContext(Dispatchers.IO) { fetchAnime.animeEpisodes(seasonId) }
 
         Log.e("ANIME_Watch EPISODES", jsonObject.toString())
         if (jsonObject==null){
@@ -379,10 +382,14 @@ class WatchAnimeFragment : Fragment(R.layout.fragment_watch_anime_page) {
             epTitle.text = eTitle
             epNumber.text = "E$eNumber "
 
-            val lastPos = db.getResumePosition(userId, episodeId, "anime").toLong()
-            val durationPos = db.getDurationPosition(userId, episodeId, "anime").toLong()
-            val progress = ((lastPos.toDouble() / durationPos.toDouble()) * 1000).toInt()
-            cWatchSeek_bar.progress = progress.coerceIn(0, 1000)
+            withContext(Dispatchers.IO) {
+                val lastPos = db.getResumePosition(userId, episodeId, "anime").toLong()
+                val durationPos = db.getDurationPosition(userId, episodeId, "anime").toLong()
+                withContext(Dispatchers.Main) {
+                    val progress = if (durationPos > 0) ((lastPos.toDouble() / durationPos.toDouble()) * 1000).toInt() else 0
+                    cWatchSeek_bar.progress = progress.coerceIn(0, 1000)
+                }
+            }
 
 
             cardView.setOnClickListener {
@@ -482,47 +489,51 @@ class WatchAnimeFragment : Fragment(R.layout.fragment_watch_anime_page) {
 
         @RequiresApi(Build.VERSION_CODES.O)
         fun applyIcon() {
-            val isFav = db.isFavoriteAnime(userId, animeId)
-            if (isFav) {
-                favoriteButtonImg.setImageResource(R.drawable.ic_tickfave)
-                favoriteButtonText.text = "Remove-Fav "
-            } else {
-                favoriteButtonImg.setImageResource(R.drawable.ic_addfave)
-                favoriteButtonText.text= "Add-to-Fav "
+            viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
+                val isFav = withContext(Dispatchers.IO) { db.isFavoriteAnime(userId, animeId) }
+                if (isFav) {
+                    favoriteButtonImg.setImageResource(R.drawable.ic_tickfave)
+                    favoriteButtonText.text = "Remove-Fav "
+                } else {
+                    favoriteButtonImg.setImageResource(R.drawable.ic_addfave)
+                    favoriteButtonText.text= "Add-to-Fav "
+                }
             }
         }
 
         applyIcon()
 
         favoriteButton.setOnClickListener {
-            val isFav = db.isFavoriteAnime(userId, animeId)
-            if (isFav) {
-                db.removeFavoriteAnime(userId, animeId)
-            } else {
-                db.addFavoriteAnime(
-                    userId,
-                    animeId,
-                    name,
-                    type,
-                    anilistId,
-                    malId,
-                    description,
-                    rating,
-                    quality,
-                    duration,
-                    backdrop?:poster,
-                    sub,
-                    dub,
-                    aired,
-                    genre,
-                    seasons
-                )
+            viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
+                withContext(Dispatchers.IO) {
+                    val isFav = db.isFavoriteAnime(userId, animeId)
+                    if (isFav) {
+                        db.removeFavoriteAnime(userId, animeId)
+                    } else {
+                        db.addFavoriteAnime(
+                            userId,
+                            animeId,
+                            name,
+                            type,
+                            anilistId,
+                            malId,
+                            description,
+                            rating,
+                            quality,
+                            duration,
+                            backdrop?:poster,
+                            sub,
+                            dub,
+                            aired,
+                            genre,
+                            seasons
+                        )
+                    }
+                }
+                applyIcon()
             }
-            applyIcon()
         }
     }
-
-
 
 
     private fun setupBackPressedCallback() {
@@ -533,7 +544,7 @@ class WatchAnimeFragment : Fragment(R.layout.fragment_watch_anime_page) {
                 // Cancel any running coroutines
                 lifecycleScope.coroutineContext.cancelChildren()
 
-                val homeActivity = context as HomeActivity
+                val homeActivity = requireActivity() as HomeActivity
                 homeActivity.animeFragment?.let { existingAnimeTab ->
                     homeActivity.navigateToExistingAndDestroyCurrent(existingAnimeTab, this@WatchAnimeFragment)
                 } ?: run {
@@ -546,8 +557,6 @@ class WatchAnimeFragment : Fragment(R.layout.fragment_watch_anime_page) {
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, fragmentBackCallback)
     }
 
-
-
     override fun onResume() {
         super.onResume()
         if (::fragmentBackCallback.isInitialized) {
@@ -555,7 +564,4 @@ class WatchAnimeFragment : Fragment(R.layout.fragment_watch_anime_page) {
             requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, fragmentBackCallback)
         }
     }
-
-
-
 }

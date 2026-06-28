@@ -61,7 +61,10 @@ import com.example.onyx.OnyxObjects.StreamingLinks
 import com.example.onyx.OnyxObjects.StreamingLinks.extractStreamFromServer
 import com.example.onyx.OnyxObjects.StreamingLinks.getServerUrls
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
 import kotlinx.coroutines.cancelChildren
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import com.bumptech.glide.request.target.Target
 
 class Watch_Page : AppCompatActivity() {
@@ -87,6 +90,8 @@ class Watch_Page : AppCompatActivity() {
     private lateinit var serverButton: LinearLayout
     private lateinit var UIsection1: FrameLayout
     private var episodesJob: Job? = null
+    private var streamingJob: Job? = null
+    private var trailerJob: Job? = null
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -365,7 +370,7 @@ class Watch_Page : AppCompatActivity() {
             // ---------- BUTTONS ------------------------------------------------------------------
 
             watchButton.setOnClickListener {
-                /*
+
                 val intent = Intent(this@Watch_Page, Play::class.java)
                 intent.putExtra("imdb_code", showId)
                 intent.putExtra("type", showType)
@@ -375,29 +380,59 @@ class Watch_Page : AppCompatActivity() {
                 intent.putExtra("seasonNo", "0")
                 intent.putExtra("EpisodeNo", "0")
                 startActivity(intent)
-                 */
+
+                /*
 
                 findViewById<FrameLayout>(R.id.stream_main).visibility = View.VISIBLE
                 fetchStreamLinks(showId, showType, showTitle, showPoster, showBackdrop, showSno="0", showEno="0")
-                }
+
+               */
+            }
 
             serverButton.setOnClickListener {
                 showServerDialog()
             }
 
             trailerButton.setOnClickListener {
-
                 val webView = findViewById<WebView>(R.id.trailerWebView)
-                lifecycleScope.launch {
-                    if (!trailerOn) {
-                        findViewById<TextView>(R.id.trailer_text).text = "Stop Trailer"
-                        GlobalUtils.playTrailer( this@Watch_Page,showId,showType,webView, muted = 0 )
-                        trailerOn = true
-                    } else {
-                        GlobalUtils.StopTrailer(webView)
-                        findViewById<TextView>(R.id.trailer_text).text = "Play Trailer"
-                        trailerOn = false
+                val trailerLabel = findViewById<TextView>(R.id.trailer_text)
+
+                if (!trailerOn) {
+                    // --- PLAY ---
+                    // Cancel any in-flight job (handles rapid double-taps safely)
+                    trailerJob?.cancel()
+
+                    // Disable button and show loading state immediately
+                    trailerButton.isEnabled = false
+                    trailerLabel.text = "Loading..."
+
+                    trailerJob = lifecycleScope.launch {
+                        val found = GlobalUtils.playTrailer(
+                            this@Watch_Page, showId, showType, webView, muted = 0
+                        )
+
+                        // Re-enable button regardless of outcome
+                        trailerButton.isEnabled = true
+
+                        if (found) {
+                            trailerOn = true
+                            trailerLabel.text = "Stop Trailer"
+                        } else {
+                            // Nothing to play — reset state and inform user
+                            trailerOn = false
+                            trailerLabel.text = "No Trailer Found"
+                            // Revert label back to default after 3 seconds
+                            kotlinx.coroutines.delay(3000)
+                            trailerLabel.text = "Trailer"
+                        }
                     }
+
+                } else {
+                    // --- STOP ---
+                    trailerJob?.cancel()
+                    GlobalUtils.StopTrailer(webView)
+                    trailerLabel.text = "Trailer"
+                    trailerOn = false
                 }
             }
 
@@ -429,9 +464,17 @@ class Watch_Page : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        // Cancel any running coroutines
-        lifecycleScope.coroutineContext.cancelChildren()
+        // Stop and destroy trailer WebView to prevent memory leaks and Chromium crashes
+        val webView = findViewById<WebView>(R.id.trailerWebView)
+        if (webView != null) {
+            GlobalUtils.StopTrailer(webView)
+            webView.destroy()
+        }
 
+        // Cancel all tracked jobs and coroutines
+        trailerJob?.cancel()
+        streamingJob?.cancel()
+        lifecycleScope.coroutineContext.cancelChildren()
 
         episodesAdapter.clear()
 
@@ -547,17 +590,6 @@ class Watch_Page : AppCompatActivity() {
 
     }
 
-
-
-
-
-    //setBackgroundColor(Color.parseColor("#3D5AFE"))
-    private fun resolveAttrColor(context: Context, attr: Int): Int {
-        val typedValue = TypedValue()
-        context.theme.resolveAttribute(attr, typedValue, true)
-        return typedValue.data
-    }
-
     private fun dpToPx(dp: Int): Int {
         return (dp * resources.displayMetrics.density).toInt()
     }
@@ -610,78 +642,54 @@ class Watch_Page : AppCompatActivity() {
         episodesJob?.cancel()
         episodesJob = lifecycleScope.launch {
             try {
+                val episodesList = withContext(Dispatchers.IO) {
+                    val list = mutableListOf<EpisodeItem>()
+                    val jsonObject = fetch.fetchSeasonInfo(seriesId.toString(), SelectedSeasons.toString())
+                    
+                    if (jsonObject != null) {
+                        val episodesArray = jsonObject.getJSONArray("episodes")
 
-                val jsonObject = withContext(Dispatchers.IO) {fetch.fetchSeasonInfo(seriesId.toString(), SelectedSeasons.toString())}
+                        for (i in 0 until episodesArray.length()) {
+                            val episodes = episodesArray.getJSONObject(i)?: continue
 
-                if (jsonObject != null) {
-
-                    val episodesArray = jsonObject.getJSONArray("episodes")
-
-
-                    Log.e("DEBUG_Each E json", jsonObject.toString())
-                    Log.e("DEBUG_Each E data", episodesArray.toString())
-                    Log.e("DEBUG_Each E leng", "${episodesArray.length()}")
-
-
-                    val episodesList = mutableListOf<EpisodeItem>()
-                    for (i in 0 until episodesArray.length()) {
-                        val episodes = episodesArray.getJSONObject(i)?: continue
-
-                        val episodesAirDate = episodes.optString("air_date", "")
-                        try {
-                            Log.e("DEBUG_Each E date", "airDate: $episodesAirDate,  today $today")
+                            val episodesAirDate = episodes.optString("air_date", "")
                             if (episodesAirDate.isNotBlank() && episodesAirDate != "null") {
                                 try {
                                     val airLocalDate = LocalDate.parse(episodesAirDate, formatter)
                                     if (airLocalDate.isAfter(today)) continue
-                                } catch (_: Exception) {
-                                    // ignore invalid date
-                                }
+                                } catch (_: Exception) {}
                             }
-                        } catch (e: Exception) {
-                            Log.e(
-                                "DEBUG_Each E date",
-                                "airDate: $airDate,  today $today, Error${e.message}"
+
+                            val stillPathRaw = episodes.optString("still_path", "")
+                            val runtimeRaw = episodes.optString("runtime", "")
+
+                            val stillPath = if (stillPathRaw.isNullOrEmpty() || stillPathRaw  == "null") "" else stillPathRaw
+                            val runtime = if (runtimeRaw.isNullOrEmpty() || runtimeRaw == "null") "0" else runtimeRaw
+
+                            list.add(
+                                EpisodeItem(
+                                    showTitle = showTitle,
+                                    showPoster = showPoster,
+                                    showBackdrop = showBackdrop,
+                                    episodesName = episodes.optString("name", ""),
+                                    episodesImage = stillPath,
+                                    episodesNumber = episodes.optString("episode_number", ""),
+                                    episodesRating = episodes.optString("vote_average", "0.0"),
+                                    episodesRuntime = runtime,
+                                    episodesDescription = episodes.optString("overview", ""),
+                                    seriesId = seriesId,
+                                    seasonNumber = episodes.optString("season_number", ""),
+                                    parentView = UIsection1
+                                )
                             )
                         }
-
-
-                        val stillPathRaw = episodes.optString("still_path", "")
-                        val runtimeRaw = episodes.optString("runtime", "")
-
-                        val stillPath =
-                            if (stillPathRaw.isNullOrEmpty() || stillPathRaw  == "null") "" else stillPathRaw
-                        val runtime =
-                            if (runtimeRaw.isNullOrEmpty() || runtimeRaw == "null") "0" else runtimeRaw
-
-
-                        episodesList.add(
-
-                            EpisodeItem(
-                                showTitle = showTitle,
-                                showPoster = showPoster,
-                                showBackdrop = showBackdrop,
-                                episodesName = episodes.optString("name", ""),
-                                episodesImage = stillPath,
-                                episodesNumber = episodes.optString("episode_number", ""),
-                                episodesRating = episodes.optString("vote_average", "0.0"),
-                                episodesRuntime = runtime,
-                                episodesDescription = episodes.optString("overview", ""),
-                                seriesId = seriesId,
-                                seasonNumber = episodes.optString("season_number", ""),
-                                parentView = UIsection1
-                            )
-                        )
                     }
+                    list
+                }
 
-                    Log.e("DEBUG_Each E list", "${episodesList.size}")
+                if (episodesList.isNotEmpty()) {
                     seasonEpisodesCache[cacheKey] = episodesList
-                    //episodes_recycler.adapter = EpisodesAdapter(episodesList)
-                    //episodesAdapter.updateData(episodesList)
-                    withContext(Dispatchers.Main) {
-                        //episodes_recycler.removeAllViews()
-                        episodesAdapter.updateData(episodesList)
-                    }
+                    episodesAdapter.updateData(episodesList)
                 }
             } catch (e: Exception){
                 Log.e("DEBUG_Each E Crush", "${e}")
@@ -691,150 +699,138 @@ class Watch_Page : AppCompatActivity() {
     }
 
     @OptIn(UnstableApi::class)
-    private fun fetchStreamLinks(showId:String, showType:String, showTitle:String, showPoster:String, showBackdrop:String, showSno: String, showEno:String) {
-        lifecycleScope.launch {
+    private fun fetchStreamLinks(
+        showId: String, showType: String, showTitle: String,
+        showPoster: String, showBackdrop: String, showSno: String, showEno: String
+    ) {
+        // If already fetched, just focus the first result
+        val stream_main = findViewById<FrameLayout>(R.id.stream_main)
+        val container_server = findViewById<LinearLayout>(R.id.container_server)
+        val container = findViewById<LinearLayout>(R.id.stream_links_container)
 
-            val stream_main = findViewById<FrameLayout>(R.id.stream_main)
-            val container_server = findViewById<LinearLayout>(R.id.container_server)
-            val container = findViewById<LinearLayout>(R.id.stream_links_container)
+        if (streamLinksFetched) {
+            if (container.childCount > 0) container.getChildAt(0).requestFocus()
+            return
+        }
 
-            if(!streamLinksFetched) {
+        streamLinksFetched = true
 
-                streamLinksFetched = true
+        val loadingImageView = findViewById<ImageView>(R.id.stream_links_animation)
+        Glide.with(this@Watch_Page)
+            .asGif()
+            .load(R.raw.flame_loading)
+            .into(loadingImageView)
 
-                val loadingImageView = findViewById<ImageView>(R.id.stream_links_animation)
-                Glide.with(this@Watch_Page)
-                    .asGif()
-                    .load(R.raw.flame_loading)
-                    .into(loadingImageView)
+        container.removeAllViews()
+        val inflater = LayoutInflater.from(this@Watch_Page)
+        val servers = StreamingLinks.getServerUrls(showId, showType, showSno, showEno)
 
+        // Cap concurrent WebViews at 2 to protect TV RAM
+        val semaphore = Semaphore(2)
+        var pendingCount = servers.size
 
+        // Register the focus-change listener once upfront
+        container.viewTreeObserver.addOnGlobalFocusChangeListener { _, newFocus ->
+            stream_main.visibility =
+                if (newFocus != null && container.indexOfChild(newFocus) >= 0) View.VISIBLE
+                else View.GONE
+        }
 
+        // Helper: build and wire a stream button on the Main thread
+        fun addStreamButton(serverName: String, streamUrl: com.example.onyx.OnyxObjects.StreamData) {
+            val streamBtn = inflater.inflate(R.layout.item_stream, container, false) as LinearLayout
+            streamBtn.findViewById<TextView>(R.id.stream_title).text = "$serverName Server"
+            streamBtn.findViewById<TextView>(R.id.stream_message).text = showTitle
 
-                container.removeAllViews()
-                val inflater = LayoutInflater.from(this@Watch_Page)
+            streamBtn.setOnClickListener {
+                Video_payer.playVideoExternally(
+                    this@Watch_Page,
+                    streamUrl.url, streamUrl.referer, streamUrl.userAgent,
+                    showId, showType, showTitle, showPoster, showBackdrop, showSno, showEno
+                )
+            }
 
-
-                val servers = StreamingLinks.getServerUrls(showId,
-                    showType,
-                    showSno,
-                    showEno)
-
-                for ((serverName, webUrl) in servers) {
-                    try {
-
-                        val streamUrl =  StreamingLinks.extractStreamFromServer(this@Watch_Page, webUrl, container_server)
-                        if (streamUrl != null) {
-                            val streamBtn =
-                                inflater.inflate(R.layout.item_stream, container, false) as LinearLayout
-
-                            streamBtn.findViewById<TextView>(R.id.stream_title).text =  "$serverName Server"
-                            streamBtn.findViewById<TextView>(R.id.stream_message).text = showTitle
-
-
-                            streamBtn.setOnClickListener {
-                                Log.d("Stream-Result", "Play == serverName : $serverName,  Url: $streamUrl ")
-                                Video_payer.playVideoExternally(
-                                    this@Watch_Page,
-                                    streamUrl.url,
-                                    streamUrl.referer,
-                                    streamUrl.userAgent,
-                                    showId,
-                                    showType,
-                                    showTitle,
-                                    showPoster,
-                                    showBackdrop,
-                                    showSno,
-                                    showEno
-                                )
-                            }
-
-                            streamBtn.setOnKeyListener { v, keyCode, event ->
-                                if (event.action == KeyEvent.ACTION_DOWN) {
-                                    val index = container.indexOfChild(v)
-                                    val count = container.childCount
-
-                                    when (keyCode) {
-
-                                        KeyEvent.KEYCODE_DPAD_DOWN -> {
-                                            val nextIndex = (index + 1) % count
-                                            container.getChildAt(nextIndex).requestFocus()
-                                            return@setOnKeyListener true
-                                        }
-
-                                        KeyEvent.KEYCODE_DPAD_UP -> {
-                                            val nextIndex = (index - 1 + count) % count
-                                            container.getChildAt(nextIndex).requestFocus()
-                                            return@setOnKeyListener true
-                                        }
-
-                                        KeyEvent.KEYCODE_DPAD_LEFT,
-                                        KeyEvent.KEYCODE_DPAD_RIGHT -> {
-                                            stream_main.visibility = View.GONE
-                                            watchButton.requestFocus()
-                                            return@setOnKeyListener true
-                                        }
-                                    }
-                                }
-                                false
-                            }
-                            container.addView(streamBtn)
+            streamBtn.setOnKeyListener { v, keyCode, event ->
+                if (event.action == KeyEvent.ACTION_DOWN) {
+                    val index = container.indexOfChild(v)
+                    val count  = container.childCount
+                    when (keyCode) {
+                        KeyEvent.KEYCODE_DPAD_DOWN -> {
+                            container.getChildAt((index + 1) % count).requestFocus(); true
                         }
-
-                    }catch (e: Exception) {
-                        Log.e("Stream-Result", " extractAll  Error: $e")
-                        streamLinksFetched = false
-                        loadingImageView.visibility = View.VISIBLE
+                        KeyEvent.KEYCODE_DPAD_UP -> {
+                            container.getChildAt((index - 1 + count) % count).requestFocus(); true
+                        }
+                        KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_DPAD_RIGHT -> {
+                            stream_main.visibility = View.GONE
+                            watchButton.requestFocus(); true
+                        }
+                        else -> false
                     }
-                }
+                } else false
+            }
 
+            container.addView(streamBtn)
+
+            // First result: hide loading and focus automatically
+            if (container.childCount == 1) {
                 loadingImageView.visibility = View.GONE
-                if (container.childCount > 0) {
-                    container_server.removeAllViews()
-                    if (stream_main.visibility == View.VISIBLE) {
-                        container.getChildAt(0).requestFocus()
-                    }
-                }else{
-                    val streamBtn = inflater.inflate(R.layout.item_stream, container, false) as LinearLayout
-                    streamBtn.findViewById<TextView>(R.id.stream_title).text =  "VIDEO NOT AVAILABLE"
-                     streamBtn.findViewById<TextView>(R.id.stream_title).setTextColor(Color.RED)
-                    streamBtn.findViewById<TextView>(R.id.stream_message).text = showTitle
-                    streamBtn.isClickable = false
-                    streamBtn.setOnKeyListener { v, keyCode, event ->
-                        if (event.action == KeyEvent.ACTION_DOWN) {
-                            val index = container.indexOfChild(v)
-                            val count = container.childCount
+                container_server.removeAllViews()
+                if (stream_main.visibility == View.VISIBLE) streamBtn.requestFocus()
+            }
+        }
 
-                            when (keyCode) {
-
-                                    KeyEvent.KEYCODE_DPAD_UP,
-                                    KeyEvent.KEYCODE_DPAD_DOWN,
-                                    KeyEvent.KEYCODE_DPAD_LEFT,
-                                    KeyEvent.KEYCODE_DPAD_RIGHT -> {
-                                        stream_main.visibility = View.GONE
-                                        watchButton.requestFocus()
-                                        return@setOnKeyListener true
-                                    }
-                            }
+        // Helper: show "not available" card if nothing found after all servers finish
+        fun showUnavailable() {
+            loadingImageView.visibility = View.GONE
+            if (container.childCount > 0) return  // at least one server worked
+            val streamBtn = inflater.inflate(R.layout.item_stream, container, false) as LinearLayout
+            streamBtn.findViewById<TextView>(R.id.stream_title).apply {
+                text = "VIDEO NOT AVAILABLE"
+                setTextColor(Color.RED)
+            }
+            streamBtn.findViewById<TextView>(R.id.stream_message).text = showTitle
+            streamBtn.isClickable = false
+            streamBtn.setOnKeyListener { _, keyCode, event ->
+                if (event.action == KeyEvent.ACTION_DOWN) {
+                    when (keyCode) {
+                        KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_DPAD_DOWN,
+                        KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_DPAD_RIGHT -> {
+                            stream_main.visibility = View.GONE
+                            watchButton.requestFocus(); true
                         }
-                        false
+                        else -> false
                     }
-                    container.addView(streamBtn)
-                }
+                } else false
+            }
+            container.addView(streamBtn)
+        }
 
-                container.viewTreeObserver.addOnGlobalFocusChangeListener { oldFocus, newFocus ->
-                    stream_main.visibility = if (newFocus != null && container.indexOfChild(newFocus) >= 0) {
-                        View.VISIBLE // a child of container has focus
-                    } else {
-                        View.GONE    // no child focused
+        // Launch all servers in parallel on the Main thread (WebView requires Main).
+        // The Semaphore caps how many are actively loading at once.
+        streamingJob = lifecycleScope.launch {
+            val jobs = servers.map { (serverName, webUrl) ->
+                async {
+                    semaphore.withPermit {
+                        try {
+                            val streamUrl = StreamingLinks.extractStreamFromServer(
+                                this@Watch_Page, webUrl, container_server
+                            )
+                            if (streamUrl != null) {
+                                // Already on Main thread — update UI immediately
+                                addStreamButton(serverName, streamUrl)
+                                Log.d("Stream-Result", "Server resolved: $serverName")
+                            }
+                        } catch (e: Exception) {
+                            Log.e("Stream-Result", "Error for $serverName: $e")
+                        } finally {
+                            pendingCount--
+                            if (pendingCount <= 0) showUnavailable()
+                        }
                     }
-                }
-
-            }else{
-                if (container.childCount > 0) {
-                    container.getChildAt(0).requestFocus()
                 }
             }
+            jobs.forEach { it.join() }
         }
     }
 
@@ -842,197 +838,62 @@ class Watch_Page : AppCompatActivity() {
 
 
 
-
-    private fun fetchStreamLinks_old(showId:String, showType:String, showTitle:String, showPoster:String, showBackdrop:String, showSno: String, showEno:String) {
-        lifecycleScope.launch {
-
-            val loadingImageView = findViewById<ImageView>(R.id.stream_links_animation)
-            Glide.with(this@Watch_Page)
-                .asGif()
-                .load(R.raw.flame_loading)
-                .into(loadingImageView)
-
-            val stream_main = findViewById<FrameLayout>(R.id.stream_main)
-            val container_server = findViewById<LinearLayout>(R.id.container_server)
-            val container = findViewById<LinearLayout>(R.id.stream_links_container)
-            if(!streamLinksFetched) {
-
-                container.removeAllViews()
-                val inflater = LayoutInflater.from(this@Watch_Page)
-
-                val result = withContext(Dispatchers.IO) {
-                    StreamingLinks.extractAllStreamsParallel(
-                        this@Watch_Page,
-                        container_server,
-                        showId,
-                        showType,
-                        showSno,
-                        showEno
-                    )
-                }
-
-
-                Log.d("Stream-Result", " extractAll : $result")
-
-
-
-                val keys = result.keys()
-                var i = 0
-
-                if (result.length() == 0) {
-                    // show "No streams found"
-                    streamLinksFetched = false
-
-                    return@launch
-                }else{
-                    loadingImageView.visibility = View.GONE
-                    streamLinksFetched = true
-
-                }
-
-
-
-                while (keys.hasNext()) {
-                    val serverName = keys.next()
-                    val streamUrl = result.getString(serverName)
-
-                    val streamBtn =
-                        inflater.inflate(R.layout.item_stream, container, false) as LinearLayout
-
-                    streamBtn.findViewById<TextView>(R.id.stream_title).text =  "$serverName Server"
-                    streamBtn.findViewById<TextView>(R.id.stream_message).text = showTitle
-
-
-                    streamBtn.setOnClickListener {
-                        Log.d("Stream-Result", "Play == serverName : $serverName,  Url: $streamUrl ")
-                        /*Video_payer.playVideoExternally(
-                            this@Watch_Page,
-                            streamUrl,
-                            showId,
-                            showType,
-                            showTitle,
-                            showPoster,
-                            showBackdrop,
-                            showSno,
-                            showEno
-                        )
-
-                         */
-                    }
-
-                    streamBtn.setOnKeyListener { v, keyCode, event ->
-                        if (event.action == KeyEvent.ACTION_DOWN) {
-                            val index = container.indexOfChild(v)
-                            val count = container.childCount
-
-                            when (keyCode) {
-
-                                KeyEvent.KEYCODE_DPAD_DOWN -> {
-                                    val nextIndex = (index + 1) % count
-                                    container.getChildAt(nextIndex).requestFocus()
-                                    return@setOnKeyListener true
-                                }
-
-                                KeyEvent.KEYCODE_DPAD_UP -> {
-                                    val nextIndex = (index - 1 + count) % count
-                                    container.getChildAt(nextIndex).requestFocus()
-                                    return@setOnKeyListener true
-                                }
-                                KeyEvent.KEYCODE_DPAD_LEFT -> {
-                                    stream_main.visibility = View.GONE
-                                    watchButton.requestFocus()
-                                    return@setOnKeyListener true
-
-                                }
-                                KeyEvent.KEYCODE_DPAD_RIGHT -> {
-                                    stream_main.visibility = View.GONE
-                                    watchButton.requestFocus()
-                                    return@setOnKeyListener true
-                                }
-                            }
-                        }
-                        false
-                    }
-
-                    container.addView(streamBtn)
-                    if (i == 0) {
-                        streamBtn.post { streamBtn.requestFocus() }
-                    }
-                    i++
-
-                }
-            }else{
-                if (container.childCount > 0) {
-                    container.getChildAt(0).requestFocus()
-                }
-            }
-
-        }
-    }
 
 
 
     private fun Cast_Data(show_id: String, type: String) {
-
+        lifecycleScope.launch {
+            val movies = withContext(Dispatchers.IO) {
+                val list = mutableListOf<CastItem>()
                 val jsonObject = fetch.fetchShowCast(show_id, type)
 
                 if (jsonObject != null) {
-
                     val moviesArray = jsonObject.getJSONArray("cast")
-                    Log.e("DEBUG_WATCH_Results", jsonObject.toString())
-
-                    val movies = mutableListOf<CastItem>()
                     for (i in 0 until moviesArray.length()) {
                         val item = moviesArray.getJSONObject(i)
                         val title = item.optString("original_name", "")
                         val imgUrl = "https://image.tmdb.org/t/p/original/" + item.optString("profile_path", "")
                         val cast_id = item.optString("id", "")
-                        val type = "Actor"
-                        movies.add(CastItem(title, imgUrl, cast_id, type))
+                        list.add(CastItem(title, imgUrl, cast_id, "Actor"))
                     }
-
-                    val recyclerView: RecyclerView = if (type == "tv") {
-                        findViewById(R.id.Cast_widget_tv)
-                    } else {
-                        findViewById(R.id.Cast_widget_mv)
-                    }
-
-                    recyclerView.visibility = View.VISIBLE
-                    recyclerView.layoutManager = LinearLayoutManager(
-                        this@Watch_Page,
-                        LinearLayoutManager.HORIZONTAL, // 👈 makes it horizontal
-                        false
-                    )
-                    recyclerView.adapter = CastAdapter(movies, R.layout.round_grid)
                 }
+                list
+            }
+
+            if (movies.isNotEmpty()) {
+                val recyclerView: RecyclerView = if (type == "tv") {
+                    findViewById(R.id.Cast_widget_tv)
+                } else {
+                    findViewById(R.id.Cast_widget_mv)
+                }
+
+                recyclerView.visibility = View.VISIBLE
+                recyclerView.layoutManager = LinearLayoutManager(
+                    this@Watch_Page,
+                    LinearLayoutManager.HORIZONTAL,
+                    false
+                )
+                recyclerView.adapter = CastAdapter(movies, R.layout.round_grid)
+            }
+        }
     }
 
-    private fun Watch_Recomendation_Data(show_id: String, type: String) {
+       private fun Watch_Recomendation_Data(show_id: String, type: String) {
         lifecycleScope.launch {
-
-                val jsonObject =  withContext(Dispatchers.IO) { fetch.fetchShowRecommendation(show_id, type) }
+            val movies = withContext(Dispatchers.IO) {
+                val list = mutableListOf<MovieItem>()
+                val jsonObject = fetch.fetchShowRecommendation(show_id, type)
 
                 if (jsonObject != null) {
-                    Log.e("DEBUG_WATCH_RECO", jsonObject.toString())
                     val moviesArray = jsonObject.getJSONArray("results")
-
-                    if (moviesArray.length() ==  0){  return@launch }
-
-
-                    //Log.e("DEBUG_WATCH_Results", jsonObject.toString())
-
-                    val movies = mutableListOf<MovieItem>()
-
                     for (i in 0 until moviesArray.length()) {
                         val item = moviesArray.getJSONObject(i)
-                        //val title = item.getString("original_title")
 
                         val title = if (item.has("name") && !item.isNull("name")) {
                             item.optString("name")
                         } else {
                             item.optString("title")
                         }
-                        //val imgUrl = "https://image.tmdb.org/t/p/w780" + item.getString("backdrop_path")
 
                         val imgUrl = if (item.has("backdrop_path") && !item.isNull("backdrop_path")) {
                             "https://image.tmdb.org/t/p/original${item.optString("backdrop_path", "")}"
@@ -1041,9 +902,14 @@ class Watch_Page : AppCompatActivity() {
                         } else { "" }
 
                         val imdb_code = item.optString("id", "")
-                        val type = item.optString("media_type", "")
-                        movies.add(MovieItem(title, imgUrl, imdb_code, type))
+                        val recType = item.optString("media_type", "")
+                        list.add(MovieItem(title, imgUrl, imdb_code, recType))
                     }
+                }
+                list
+            }
+
+            if (movies.isNotEmpty()) {
 
                         val recyclerView = findViewById<RecyclerView>(R.id.Recommendation_widget)
                         recyclerView.isNestedScrollingEnabled = false
@@ -1148,21 +1014,15 @@ class Watch_Page : AppCompatActivity() {
 
     private fun showServerDialog() {
 
-        val servers = listOf(
-            "VidSrc",
-            "Embed API",
-            "embedmaster",
-            "PrimeWire",
-            "vidking"
-        )
+        val servers = StreamingLinks.serversList
 
         val builder = android.app.AlertDialog.Builder(this, R.style.CustomDialogTheme)
         builder.setTitle("Select a Streaming Server (Powered by Third Parties)")
 
-            .setSingleChoiceItems(servers.toTypedArray(), GlobalUtils.getSavedServerIndex(this)) { dialog, which ->
+            .setSingleChoiceItems(servers.toTypedArray(), StreamingLinks.getSavedServerIndex(this)) { dialog, which ->
 
                 // Save selection immediately
-                GlobalUtils.saveServerIndex(this, which)
+                StreamingLinks.saveServerIndex(this, which)
                 currentServerIndex = which
 
                 Toast.makeText(this, "Server: ${servers[currentServerIndex]}", Toast.LENGTH_SHORT).show()

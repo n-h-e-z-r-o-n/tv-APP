@@ -1,5 +1,7 @@
 package com.example.onyx
 
+import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -7,26 +9,31 @@ import android.os.Looper
 import android.os.SystemClock
 import android.util.Log
 import android.util.TypedValue
+import android.view.KeyEvent
 import android.view.MotionEvent
+import android.view.View
 import android.view.ViewGroup
 import android.webkit.*
+import android.widget.FrameLayout
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.OptIn
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.util.UnstableApi
 import com.example.onyx.OnyxObjects.GlobalUtils
+import com.example.onyx.OnyxObjects.StreamingLinks
 import com.example.onyx.OnyxObjects.StreamingLinks.performCenterClick
-import kotlinx.coroutines.cancelChildren
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import java.util.concurrent.atomic.AtomicBoolean
 
 class Play : AppCompatActivity() {
 
-    @Volatile
-    private var isVideoLaunching = false
+    /**
+     * AtomicBoolean ensures only the first matching stream request launches the player,
+     * even when shouldInterceptRequest fires concurrently from multiple threads (HLS segments).
+     */
+    private val isVideoLaunching = AtomicBoolean(false)
+
     private var showId: String = ""
     private var showType: String = ""
     private var showTitle: String = ""
@@ -35,7 +42,23 @@ class Play : AppCompatActivity() {
     private var showSNo: String = ""
     private var showENo: String = ""
 
+    // Field-level WebView reference so we can cancel callbacks and destroy safely
+    private var webView: WebView? = null
 
+    // Timeout: bail out gracefully if no stream URL is intercepted in time
+    private val timeoutHandler = Handler(Looper.getMainLooper())
+    private var timeoutRunnable: Runnable? = null
+
+    // ── Virtual Mouse Cursor (always on) ─────────────────────────────────────
+    private var cursorX = 0f
+    private var cursorY = 0f
+    private var cursorView: View? = null
+
+    private val moveHandler = Handler(Looper.getMainLooper())
+    private var moveRunnable: Runnable? = null
+    private var currentStep = BASE_STEP
+
+    // ─────────────────────────────────────────────────────────────────────────
 
     @RequiresApi(Build.VERSION_CODES.N)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -44,138 +67,43 @@ class Play : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.activity_play)
 
-        /*
-        intent.putExtra("imdb_code", showId)
-        intent.putExtra("type", showType)
-        intent.putExtra("title", showTitle)
-        intent.putExtra("poster", showPoster)
-        intent.putExtra("backdrop", showBackdrop)
-        intent.putExtra("seasonNo", '0')
-        intent.putExtra("EpisodeNo", '0')
-        */
+        showId       = intent.getStringExtra("imdb_code")   ?: ""
+        showType     = intent.getStringExtra("type")         ?: ""
+        showTitle    = intent.getStringExtra("title")        ?: ""
+        showPoster   = intent.getStringExtra("poster")       ?: ""
+        showBackdrop = intent.getStringExtra("showBackdrop") ?: ""
+        showSNo      = intent.getStringExtra("seasonNo")     ?: ""
+        showENo      = intent.getStringExtra("episodeNo")    ?: ""
 
-
-        showId = intent.getStringExtra("imdb_code")?: ""
-        showType = intent.getStringExtra("type")?: ""
-        showTitle =  intent.getStringExtra("title")?: ""
-        showPoster =  intent.getStringExtra("poster")?: ""
-        showBackdrop =  intent.getStringExtra("showBackdrop")?: ""
-        showSNo =  intent.getStringExtra("seasonNo")?: ""
-        showENo =  intent.getStringExtra("episodeNo")?: ""
-
-        Log.d("DEBUG_WEBVIEW", "imdbCode: $showId - type: $showType   -title: $showTitle  -seasonNo:  $showSNo - episodeNo: $showENo ")
-        Log.d("DEBUG_WEBVIEW", "imdbCode: $showId - type: $showType   -title: $showTitle  -showPoster:  $showPoster - showBackdrop: $showBackdrop ")
-
-
-
-
-        // Increment watch statistics using GlobalUtils
-        if(showType == "movie"){
-            GlobalUtils.incrementMoviesWatched(this)
-        }else{
-            GlobalUtils.incrementSeriesWatched(this)
+        if (BuildConfig.DEBUG) {
+            Log.d("DEBUG_WEBVIEW", "id=$showId type=$showType title=$showTitle S=$showSNo E=$showENo")
+            Log.d("DEBUG_WEBVIEW", "poster=$showPoster backdrop=$showBackdrop")
         }
 
-        //-----------------------------------------------------------------------------------------
+        if (showType == "movie") GlobalUtils.incrementMoviesWatched(this)
+        else GlobalUtils.incrementSeriesWatched(this)
 
-        val webView = findViewById<WebView>(R.id.webView)
+        //----------------------------------------------------------------------
 
+        val wv = findViewById<WebView>(R.id.webView)
+        webView = wv
 
-        // Set WebView background color to avoid white flash before content loads
+        // Avoid white flash while content loads
         val typedValue = TypedValue()
         theme.resolveAttribute(R.attr.BG_color, typedValue, true)
-        webView.setBackgroundColor(typedValue.data)
+        wv.setBackgroundColor(typedValue.data)
 
-        // Setup WebView
-        webView.webChromeClient = WebChromeClient()
-        webView.webViewClient = object : WebViewClient() {
-
+        wv.webChromeClient = WebChromeClient()
+        wv.webViewClient = object : WebViewClient() {
 
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
 
+                // Step 1 – ad cleanup at 3 s
+                wv.postDelayed({ wv.evaluateJavascript(AD_CLEANUP_JS, null) }, 5000L)
 
-
-                webView.postDelayed({
-                    webView.evaluateJavascript(
-                        """
-                        (function() {
-                            // ✅ Target only known ad patterns
-                            const safeSelectors = [
-                                'iframe[src*="doubleclick"]',
-                                'iframe[src*="adservice"]',
-                                'iframe[src*="/ads"]',
-                                'div[id^="ad_"]',
-                                'div[id*="_ad_"]',
-                                '.adsbox',
-                                '#ads',
-                                '.ad-banner',
-                                '.advertisement',
-                                '.sponsor',
-                                'div[class="ad-container"]'
-                            ];
-                            
-                            safeSelectors.forEach(sel => {
-                                document.querySelectorAll(sel).forEach(el => {
-                                    el.remove();
-                                });
-                            });
-                        
-                            // ✅ Remove only large fixed-position elements covering the center
-                            const centerX = window.innerWidth / 2;
-                            const centerY = window.innerHeight / 2;
-                        
-                            document.querySelectorAll('*').forEach(el => {
-                                const style = window.getComputedStyle(el);
-                                if (style.position === 'fixed') {
-                                    const rect = el.getBoundingClientRect();
-                                    const coversCenter = rect.left <= centerX && rect.right >= centerX &&
-                                                         rect.top <= centerY && rect.bottom >= centerY;
-                        
-                                    if (coversCenter && (rect.height > 80 || rect.width > 80)) {
-                                        el.remove();
-                                    }
-                                }
-                            });
-                        
-                            // ✅ Watch for newly injected ads (MutationObserver)
-                            if (!window.__adObserverAdded) {
-                                const observer = new MutationObserver(mutations => {
-                                    mutations.forEach(m => {
-                                        m.addedNodes.forEach(node => {
-                                            if (node.nodeType === 1) {
-                                                const el = node;
-                                                if (el.matches('.adsbox, .ad-banner, iframe[src*="doubleclick"], iframe[src*="adservice"]')) {
-                                                    el.remove();
-                                                }
-                                            }
-                                        });
-                                    });
-                                });
-                        
-                                observer.observe(document.body, { childList: true, subtree: true });
-                                window.__adObserverAdded = true;
-                            }
-                        
-                            console.log('✅ Safe ad cleanup executed');
-                        })();
-                    """.trimIndent(),
-                        null
-                    )
-                }, 6000L) // ⏱️ 2-second delay */
-
-
-                /*
-                // Wait for page to render, then simulate a few center clicks
-                webView.postDelayed({
-                    simulateRepeatedCenterClicks(webView, repeatCount = 10, intervalMs = 1200L)
-                }, 3000)
-
-                 */
-
-                webView.postDelayed({
-                    webView.performCenterClick()
-                }, 6000)
+                // Step 2 – centre-click at 7 s (after ads have been removed)
+                //wv.postDelayed({ wv.performCenterClick() }, 70000L)
             }
 
             @OptIn(UnstableApi::class)
@@ -183,60 +111,46 @@ class Play : AppCompatActivity() {
                 view: WebView?,
                 request: WebResourceRequest?
             ): WebResourceResponse? {
-                val url = request?.url.toString()
+                val reqUri = request?.url ?: return super.shouldInterceptRequest(view, request)
+                val rawUrl = reqUri.toString()
 
-                val videoExtensions = listOf(
-                    ".mp4",
-                    ".m3u8",
-                    ".webm",
-                    ".mov",
-                    ".mkv",
-                    ".avi",
-                    ".flv",
-                    ".wmv",
-                    ".ts",
-                    ".m4v",
-                    ".3gp",
-                    ".ogv",
-                    ".mpeg",
-                    ".mpg",
-                    ".f4v"
-                )
-
-                val streamingIndicators = listOf(
-                    "video=", "stream=", "media=", "playback", "videoplayback",
-                    "master.m3u8", "playlist.m3u8"
-                )
-
-
-                // Check if URL is a video by extension or indicator
-                val isVideo = videoExtensions.any { url.endsWith(it) } ||
-                        streamingIndicators.any { url.contains(it) }
-
-                if (isVideo) {
-                    val headers = request?.requestHeaders
-                    val referer = headers?.get("Referer")
-                    val ua = headers?.get("User-Agent")
-
-                    runOnUiThread {
-                        // Clear WebView data and cookies before launching video player
-                        clearWebViewData()
-                        //Video_payer.playVideoExternally(this@Play, url)
-                        Video_payer.playVideoExternally(this@Play, url, referer, ua, showId, showType, showTitle, showPoster, showBackdrop, showSNo, showENo)
-
-                        finish()
-                    }
+                // ── Ad blocker (runs on every request) ────────────────────────
+                if (AD_DOMAINS.any { rawUrl.contains(it) }) {
+                    return WebResourceResponse("text/plain", "utf-8", null)
                 }
 
+                // ── Video URL detection ───────────────────────────────────────
+                // Use the path component (no query string) so we test only the
+                // file extension at the END of the path, preventing false-positive
+                // matches like "?format=mp4" or "/api/mp4-proxy/check".
+                val path = reqUri.path?.lowercase() ?: ""
+                val scheme = reqUri.scheme ?: ""
 
-                if (url.contains("doubleclick.net") ||
-                    url.contains("googlesyndication.com") ||
-                    url.contains("adservice.google.com") ||
-                    url.contains("popads.net") ||
-                    url.contains("adexchangeclear.com") ||
-                    url.contains("propellerads") ||
-                    url.contains("adsterra")) {
-                    return WebResourceResponse("text/plain", "utf-8", null) // block
+                val isVideo = scheme.startsWith("http") &&       // must be real HTTP(S)
+                              path.isNotEmpty() &&                // must have a path
+                              VIDEO_EXTENSIONS.any { ext -> path.endsWith(ext) }
+
+                if (BuildConfig.DEBUG && isVideo) {
+                    Log.d("DEBUG_WEBVIEW", "Video candidate → path=$path  full=$rawUrl")
+                }
+
+                // compareAndSet: only the FIRST matching request launches the player.
+                // All subsequent concurrent calls (HLS segments, etc.) are skipped.
+                if (isVideo && isVideoLaunching.compareAndSet(false, true)) {
+                    val headers = request.requestHeaders
+                    val referer = headers["Referer"]
+                    val ua      = headers["User-Agent"]
+                    cancelTimeout()
+                    runOnUiThread {
+                        if (BuildConfig.DEBUG) Log.d("DEBUG_WEBVIEW", "Launching player → $rawUrl")
+                        clearWebViewData()
+                        Video_payer.playVideoExternally(
+                            this@Play, rawUrl, referer, ua,
+                            showId, showType, showTitle,
+                            showPoster, showBackdrop, showSNo, showENo
+                        )
+                        finish()
+                    }
                 }
 
                 return super.shouldInterceptRequest(view, request)
@@ -247,213 +161,308 @@ class Play : AppCompatActivity() {
                 request: WebResourceRequest?
             ): Boolean {
                 val url = request?.url.toString()
-
-                return if (url.startsWith("https://vidsrc.to/") ||
-                          url.startsWith("https://player.embed-api.stream/") ||
-                          url.startsWith("https://2embed") ||
-                          url.startsWith("https://embedmaster") ||
-                          url.startsWith("https://embdmstrplayer") ||
-                          url.startsWith("https://embed.su/") ||
-                          url.startsWith("https://primewire.si/") ||
-                          url.startsWith("https://vidking.net/")
-                    ) {
-                    false
-                } else {
-                    //Toast.makeText(this@Play, "Blocked $url", Toast.LENGTH_SHORT).show()
-                    true
-                }
-
-
+                val allowed = ALLOWED_URL_PREFIXES.any { url.startsWith(it) }
+                if (!allowed && BuildConfig.DEBUG) Log.d("DEBUG_WEBVIEW", "Navigation blocked: $url")
+                return !allowed
             }
-
-
         }
 
-        val settings = webView.settings
-        settings.javaScriptEnabled = true
-        settings.domStorageEnabled = true
-        settings.mediaPlaybackRequiresUserGesture = false
-        settings.setSupportMultipleWindows(false)
-        settings.userAgentString = WebSettings.getDefaultUserAgent(this)
-        webView.settings.mediaPlaybackRequiresUserGesture = false //This allows videos to play automatically once loaded
+        // Apply all settings once — no duplicate assignments
+        wv.settings.apply {
+            javaScriptEnabled                     = true
+            domStorageEnabled                     = true
+            mediaPlaybackRequiresUserGesture      = false
+            setSupportMultipleWindows(false)
+            javaScriptCanOpenWindowsAutomatically = false
+            userAgentString                       = WebSettings.getDefaultUserAgent(this@Play)
+        }
 
-        //This prevents most scripts from opening new tabs or windows automatically.
-        webView.settings.javaScriptCanOpenWindowsAutomatically = false
-        webView.settings.setSupportMultipleWindows(false)
+        val url = StreamingLinks.getServerUrl(this, showType, showId.trim(), showSNo.trim(), showENo.trim())
+        if (BuildConfig.DEBUG) Log.d("DEBUG_WEBVIEW", "Loading: $url")
+        wv.loadUrl(url)
 
-
-
-
-        // Get complete URL based on server selection and content type
-        val url = GlobalUtils.getServerUrl(this, showType, showId.trim(), showSNo.trim(), showENo.trim())
-
-        // Load the URL
-        webView.loadUrl(url)
-        Log.d("DEBUG_WEBVIEW", "imdbCode: $showType - type: $showType -seasonNo:  $showSNo - episodeNo: $showENo ")
-        Log.d("DEBUG_WEBVIEW", "url: $url ")
-
+        setupMouseOverlay()
+        startTimeout()
         setupBackPressedCallback()
-
     }
 
+    // ── Virtual Mouse Cursor ──────────────────────────────────────────────────
 
+    /**
+     * Adds a cursor dot on top of the WebView. Always visible — D-pad keys
+     * move it and DPAD_CENTER / ENTER dispatches a click at its position.
+     */
+    private fun setupMouseOverlay() {
+        val root = window.decorView.findViewById<ViewGroup>(android.R.id.content)
 
-    fun WebView.performCenterClick(
-        repeat: Int = 50,
-        interval: Long = 5000
-    ) {
-
-        var count = 0
-
-        fun click() {
-            if (count >= repeat) return
-            val x = width / 2f
-            val y = height / 2f
-            val downTime = SystemClock.uptimeMillis()
-
-            val downEvent = MotionEvent.obtain(
-                downTime,
-                downTime,
-                MotionEvent.ACTION_DOWN,
-                x,
-                y,
-                0
-            )
-
-            val upEvent = MotionEvent.obtain(
-                downTime,
-                downTime + 50,
-                MotionEvent.ACTION_UP,
-                x,
-                y,
-                0
-            )
-
-            dispatchTouchEvent(downEvent)
-            dispatchTouchEvent(upEvent)
-
-            downEvent.recycle()
-            upEvent.recycle()
-
-            count++
-            postDelayed({ click() }, interval)
+        val cSize = dp(30)
+        val cursor = FrameLayout(this).apply {
+            layoutParams = FrameLayout.LayoutParams(cSize, cSize)
+            elevation = 300f
         }
-        click()
+        // Outer ring
+        cursor.addView(View(this).apply {
+            layoutParams = FrameLayout.LayoutParams(MATCH, MATCH)
+            background = GradientDrawable().apply {
+                shape = GradientDrawable.OVAL
+                setColor(Color.argb(170, 60, 140, 255))
+                setStroke(dp(2), Color.WHITE)
+            }
+        })
+        // Inner precision dot
+        cursor.addView(View(this).apply {
+            val s = dp(8)
+            layoutParams = FrameLayout.LayoutParams(s, s).apply {
+                gravity = android.view.Gravity.CENTER
+            }
+            background = GradientDrawable().apply {
+                shape = GradientDrawable.OVAL
+                setColor(Color.WHITE)
+            }
+        })
+        cursorView = cursor
+        root.addView(cursor)
+
+        // Initialise cursor to screen centre after layout is measured
+        root.post {
+            cursorX = root.width / 2f
+            cursorY = root.height / 2f
+            updateCursorPos()
+        }
     }
 
 
+    /**
+     * Move the cursor by (dx, dy) direction units.
+     * Speed is controlled by [currentStep] which accelerates while a button is held.
+     */
+    private fun moveCursor(dx: Float, dy: Float) {
+        val root = window.decorView.findViewById<ViewGroup>(android.R.id.content)
+        cursorX = (cursorX + dx * currentStep).coerceIn(0f, root.width.toFloat())
+        cursorY = (cursorY + dy * currentStep).coerceIn(0f, root.height.toFloat())
+        updateCursorPos()
+    }
+
+    private fun updateCursorPos() {
+        val half = (cursorView?.width ?: dp(30)) / 2f
+        cursorView?.x = cursorX - half
+        cursorView?.y = cursorY - half
+    }
+
+    /**
+     * Begin a repeating movement action with progressive acceleration.
+     * Speed starts at [BASE_STEP] and ramps up to [MAX_STEP] the longer a button is held.
+     */
+    private fun startRepeating(action: () -> Unit) {
+        stopRepeating()
+        currentStep = BASE_STEP
+        moveRunnable = object : Runnable {
+            override fun run() {
+                action()
+                currentStep = (currentStep * 1.12f).coerceAtMost(MAX_STEP)
+                moveHandler.postDelayed(this, 60L)
+            }
+        }
+        moveHandler.post(moveRunnable!!)
+    }
+
+    private fun stopRepeating() {
+        moveRunnable?.let { moveHandler.removeCallbacks(it) }
+        moveRunnable = null
+        currentStep = BASE_STEP
+    }
+
+    /**
+     * Dispatch a real [MotionEvent] touch at the cursor's current screen position
+     * into the underlying WebView, then play a pulse animation on the cursor.
+     */
+    private fun dispatchCursorClick() {
+        val wv = webView ?: return
+
+        // Convert screen-space cursor coords → WebView-local coords
+        val loc = IntArray(2)
+        wv.getLocationOnScreen(loc)
+        val wx = cursorX - loc[0]
+        val wy = cursorY - loc[1]
+
+        // Ignore if cursor is outside WebView bounds
+        if (wx < 0 || wy < 0 || wx > wv.width || wy > wv.height) return
+
+        val t    = SystemClock.uptimeMillis()
+        val down = MotionEvent.obtain(t, t,       MotionEvent.ACTION_DOWN, wx, wy, 0)
+        val up   = MotionEvent.obtain(t, t + 100L, MotionEvent.ACTION_UP, wx, wy, 0)
+        wv.dispatchTouchEvent(down)
+        wv.dispatchTouchEvent(up)
+        down.recycle()
+        up.recycle()
+
+        // Pulse animation to confirm the click visually
+        cursorView?.animate()
+            ?.scaleX(1.8f)?.scaleY(1.8f)?.setDuration(80)
+            ?.withEndAction {
+                cursorView?.animate()?.scaleX(1f)?.scaleY(1f)?.setDuration(100)?.start()
+            }?.start()
+    }
+
+
+    /**
+     * D-pad always drives the cursor — no toggle needed.
+     * Intercepts at the Activity level so the WebView never steals these keys.
+     */
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        when (event.action) {
+            KeyEvent.ACTION_DOWN -> when (event.keyCode) {
+                KeyEvent.KEYCODE_DPAD_UP    -> { startRepeating { moveCursor(0f,  -1f) }; return true }
+                KeyEvent.KEYCODE_DPAD_DOWN  -> { startRepeating { moveCursor(0f,  +1f) }; return true }
+                KeyEvent.KEYCODE_DPAD_LEFT  -> { startRepeating { moveCursor(-1f,  0f) }; return true }
+                KeyEvent.KEYCODE_DPAD_RIGHT -> { startRepeating { moveCursor(+1f,  0f) }; return true }
+                KeyEvent.KEYCODE_DPAD_CENTER,
+                KeyEvent.KEYCODE_ENTER      -> { dispatchCursorClick();                   return true }
+            }
+            KeyEvent.ACTION_UP -> when (event.keyCode) {
+                KeyEvent.KEYCODE_DPAD_UP,
+                KeyEvent.KEYCODE_DPAD_DOWN,
+                KeyEvent.KEYCODE_DPAD_LEFT,
+                KeyEvent.KEYCODE_DPAD_RIGHT -> { stopRepeating(); return true }
+            }
+        }
+        return super.dispatchKeyEvent(event)
+    }
+
+    private fun dp(value: Int) = (value * resources.displayMetrics.density + 0.5f).toInt()
+
+    // ── Constants ─────────────────────────────────────────────────────────────
+
+    companion object {
+        private const val MATCH = ViewGroup.LayoutParams.MATCH_PARENT
+        private const val BASE_STEP = 10f
+        private const val MAX_STEP  = 55f
+
+        /**
+         * Extensions checked against the **path component only** (no query string).
+         * Using a Set gives O(1) lookup instead of linear scan.
+         */
+        private val VIDEO_EXTENSIONS = setOf(
+            ".m3u8", ".mp4", ".webm", ".mov", ".mkv",
+            ".ts",   ".m4v", ".f4v", ".flv", ".wmv",
+            ".avi",  ".3gp", ".ogv", ".mpeg", ".mpg"
+        )
+        private val AD_DOMAINS = listOf(
+            "doubleclick.net", "googlesyndication.com", "adservice.google.com",
+            "popads.net", "adexchangeclear.com", "propellerads", "adsterra"
+        )
+        private val ALLOWED_URL_PREFIXES = listOf(
+            "https://vidsrc.to/",
+            "https://player.embed-api.stream/",
+            "https://2embed",
+            "https://embedmaster",
+            "https://embdmstrplayer",
+            "https://embed.su/",
+            "https://primewire.si/",
+            "https://vidking.net/"
+        )
+
+        /**
+         * Minified JS injected 3 s after page load to strip ad elements
+         * before the automatic centre-click fires at 7 s.
+         */
+        private val AD_CLEANUP_JS = """
+            (function(){
+                ['iframe[src*="doubleclick"]','iframe[src*="adservice"]','iframe[src*="/ads"]',
+                 'div[id^="ad_"]','div[id*="_ad_"]','.adsbox','#ads','.ad-banner',
+                 '.advertisement','.sponsor','div[class="ad-container"]'].forEach(sel=>{
+                    document.querySelectorAll(sel).forEach(el=>el.remove());
+                });
+                const cx=window.innerWidth/2,cy=window.innerHeight/2;
+                document.querySelectorAll('*').forEach(el=>{
+                    const s=window.getComputedStyle(el);
+                    if(s.position==='fixed'){
+                        const r=el.getBoundingClientRect();
+                        if(r.left<=cx&&r.right>=cx&&r.top<=cy&&r.bottom>=cy&&(r.height>80||r.width>80))
+                            el.remove();
+                    }
+                });
+                if(!window.__adObs){
+                    new MutationObserver(ms=>ms.forEach(m=>m.addedNodes.forEach(n=>{
+                        if(n.nodeType===1&&n.matches&&n.matches(
+                            '.adsbox,.ad-banner,iframe[src*="doubleclick"],iframe[src*="adservice"]'))
+                            n.remove();
+                    }))).observe(document.body,{childList:true,subtree:true});
+                    window.__adObs=true;
+                }
+            })();
+        """.trimIndent()
+    }
+
+    // ── Timeout ───────────────────────────────────────────────────────────────
+
+    private fun startTimeout() {
+        timeoutRunnable = Runnable {
+            if (!isVideoLaunching.get()) {
+                android.widget.Toast.makeText(
+                    this,
+                    "Stream not detected — use the D-pad to navigate and press OK to click play.",
+                    android.widget.Toast.LENGTH_LONG
+                ).show()
+            }
+        }
+        timeoutHandler.postDelayed(timeoutRunnable!!, 45_000L)
+    }
+
+    private fun cancelTimeout() {
+        timeoutRunnable?.let { timeoutHandler.removeCallbacks(it) }
+        timeoutRunnable = null
+    }
+
+    // ── WebView cleanup ───────────────────────────────────────────────────────
 
     private fun clearWebViewData() {
         try {
-            // Clear WebView cache, cookies, and data
-            val webView = findViewById<WebView>(R.id.webView)
             webView?.let { wv ->
-                // Stop loading
+                // Cancel ALL pending postDelayed callbacks before destroy
+                // (centre-click loop, JS injection, etc.) — prevents use-after-destroy crashes.
+                wv.handler?.removeCallbacksAndMessages(null)
                 wv.stopLoading()
-
-                // Clear cache
                 wv.clearCache(true)
-
-                // Clear history
                 wv.clearHistory()
-
-                // Clear form data
                 wv.clearFormData()
-
-                // Clear cookies
-                val cookieManager = CookieManager.getInstance()
-                cookieManager.removeAllCookies(null)
-                cookieManager.flush()
-
-                // Clear WebView storage
-                wv.clearMatches()
-
-                // Load blank page
+                CookieManager.getInstance().apply {
+                    removeAllCookies(null)
+                    flush()
+                }
+                WebStorage.getInstance().deleteAllData()
                 wv.loadUrl("about:blank")
-
                 wv.destroy()
-
-
-                Log.d("DEBUG_TAG_PlayActivity", "WebView data cleared successfully")
+                webView = null
+                if (BuildConfig.DEBUG) Log.d("DEBUG_TAG_PlayActivity", "WebView cleared")
             }
-
         } catch (e: Exception) {
-            Log.e("DEBUG_TAG_PlayActivity", "Failed to clear WebView data", e)
+            Log.e("DEBUG_TAG_PlayActivity", "Failed to clear WebView", e)
         }
     }
 
-
-    private fun simulateRepeatedCenterClicks(
-        webView: WebView,
-        repeatCount: Int,
-        intervalMs: Long = 500L
-    ) {
-        lifecycleScope.launch {
-            var centerX = webView.width / 2
-            var centerY = webView.height / 2
-
-
-            repeat(repeatCount) { index ->
-                val downTime = System.currentTimeMillis()
-                val eventTime = downTime + 100
-
-                val downEvent = MotionEvent.obtain(
-                    downTime, eventTime,
-                    MotionEvent.ACTION_DOWN, centerX.toFloat(), centerY.toFloat(), 0
-                )
-                val upEvent = MotionEvent.obtain(
-                    downTime, eventTime + 50,
-                    MotionEvent.ACTION_UP, centerX.toFloat(), centerY.toFloat(), 0
-                )
-
-                webView.dispatchTouchEvent(downEvent)
-                webView.dispatchTouchEvent(upEvent)
-
-                downEvent.recycle()
-                upEvent.recycle()
-
-
-                delay(intervalMs)
-            }
-        }
-    }
-
-
-
+    // ── Back press & lifecycle ────────────────────────────────────────────────
 
     private fun setupBackPressedCallback() {
-        onBackPressedDispatcher.addCallback(
-            this,
-            object : OnBackPressedCallback(true) {
-                override fun handleOnBackPressed() {
-                    clearWebViewData()
-                    finish()
-                }
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                cancelTimeout()
+                stopRepeating()
+                clearWebViewData()
+                finish()
             }
-        )
+        })
     }
 
     override fun onStop() {
         super.onStop()
-
     }
 
     override fun onDestroy() {
-
-        isVideoLaunching = false
-
-        // Cancel any running coroutines
-        lifecycleScope.coroutineContext.cancelChildren()
-
-
-
-        // Finish activity
-        finish()
-
+        cancelTimeout()
+        stopRepeating()
+        isVideoLaunching.set(false)
+        // Note: do NOT call finish() here — activity is already being destroyed.
         super.onDestroy()
     }
-
-
-
-
 }

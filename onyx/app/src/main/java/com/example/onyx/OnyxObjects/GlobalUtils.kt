@@ -417,42 +417,6 @@ object GlobalUtils {
         update()
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-    fun getServerUrl(context: Context, urlType: String?, showId: String?, seasonNo: String?, episodeNo: String?): String {
-        val serverIndex = getSavedServerIndex(context)
-
-        return if (urlType == "movie") {
-            when (serverIndex) {
-                0 -> "https://vidsrc.to/embed/movie/$showId"
-                1 -> "https://player.embed-api.stream/?id=$showId&type=movie"
-                2 -> "https://embedmaster.link/movie/$showId"
-                3 -> "https://www.primewire.si/embed/movie?tmdb=$showId"
-                4 -> "https://www.vidking.net/embed/movie/$showId"
-                else -> "https://vidsrc.to/embed/movie/$showId"
-            }
-        } else {
-            when (serverIndex) {
-                0 -> "https://vidsrc.to/embed/tv/$showId/$seasonNo/$episodeNo"
-                1 -> "https://player.embed-api.stream/?id=$showId&s=$seasonNo&e=$episodeNo"
-                2 -> "https://embedmaster.link/tv/$showId/$seasonNo/$episodeNo"
-                3 -> "https://www.primewire.si/embed/tv?tmdb=$showId&season=$seasonNo&episode=$episodeNo"
-                4 -> "https://www.vidking.net/embed/tv/$showId/$seasonNo/$episodeNo"
-                else -> "https://vidsrc.to/embed/tv/$showId/$seasonNo/$episodeNo"
-            }
-        }
-    }
-
-    fun saveServerIndex(context: Context, index: Int) {
-        val prefs = context.getSharedPreferences("server_prefs", Context.MODE_PRIVATE)
-        prefs.edit().putInt("selected_server_index", index).apply()
-    }
-
-    fun getSavedServerIndex(context: Context): Int {
-        val prefs = context.getSharedPreferences("server_prefs", Context.MODE_PRIVATE)
-        Log.e("DEBUG_SERVER", prefs.getInt("selected_server_index", 0).toString())
-        return prefs.getInt("selected_server_index", 0)
-    }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1040,41 +1004,41 @@ object GlobalUtils {
         showType: String,
         webView: WebView,
         muted: Int = 1
-    ) {
+    ): Boolean {
 
         val fetch = TMDBapi(context)
 
         val jsonObject = withContext(Dispatchers.IO) {
             fetch.fetchVideoData(idPlay, showType)
-        }
+        } ?: return false
 
-        var videoId = ""
+        val results = jsonObject.optJSONArray("results") ?: return false
+        if (results.length() == 0) return false
 
-        if (jsonObject != null) {
-            val results = jsonObject.optJSONArray("results") ?: return
+        // Build a list of all YouTube entries for priority fallback
+        val youtubeVideos = (0 until results.length())
+            .mapNotNull { results.optJSONObject(it) }
+            .filter { it.optString("site") == "YouTube" && it.optString("key").isNotEmpty() }
 
-            if (results.length() == 0) return
+        if (youtubeVideos.isEmpty()) return false
 
-            for (i in 0 until results.length()) {
-                val obj = results.getJSONObject(i)
+        // Priority: official Trailer → any Trailer → Teaser → first available
+        val video = youtubeVideos.firstOrNull { it.optString("type") == "Trailer" && it.optBoolean("official") }
+            ?: youtubeVideos.firstOrNull { it.optString("type") == "Trailer" }
+            ?: youtubeVideos.firstOrNull { it.optString("type") == "Teaser" }
+            ?: youtubeVideos.first()
 
-                if (obj.getString("site") == "YouTube" &&
-                    obj.getString("type") == "Trailer" &&
-                    obj.getBoolean("official")
-                ) {
+        val videoId = video.optString("key")
 
-                    videoId = obj.getString("key")
-
-                    if (videoId.isNotEmpty()) {
-                        withContext(Dispatchers.Main) {
-                            setupWebView(context, webView, videoId, muted)
-                        }
-                    }
-
-                    break
-                }
+        withContext(Dispatchers.Main) {
+            try {
+                setupWebView(context, webView, videoId, muted)
+            } catch (e: Exception) {
+                Log.e("playTrailer", "Failed to setup webview", e)
             }
         }
+
+        return true
     }
 
 
@@ -1088,8 +1052,9 @@ object GlobalUtils {
             settings.javaScriptEnabled = true
             settings.domStorageEnabled = true
             settings.mediaPlaybackRequiresUserGesture = false
-            settings.userAgentString =
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"
+            // We DO NOT set a desktop User-Agent here.
+            // Using a desktop User-Agent forces YouTube to load its heavy desktop player,
+            // which causes speed changes, audio drops, and OOM crashes on TVs under network stress.
             settings.allowFileAccess = false
             settings.allowContentAccess = false
             settings.loadsImagesAutomatically = false
@@ -1154,19 +1119,13 @@ object GlobalUtils {
 
 
     fun StopTrailer(webView: WebView) {
-
         webView.apply {
-            onPause() // pause video/audio
-            // stop video playback
-            loadUrl("about:blank")
+            onPause()           // pause video/audio
             stopLoading()
-            onPause() // pause video/audio
-            // clear temporary data
+            loadUrl("about:blank")
             clearHistory()
             clearFormData()
             clearCache(false)
-
-            // hide player
             visibility = View.GONE
         }
     }

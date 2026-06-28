@@ -10,21 +10,24 @@ import androidx.fragment.app.Fragment
 import com.example.onyx.OnyxObjects.GlobalUtils
 import com.example.onyx.OnyxObjects.NavAction
 import android.widget.ImageView
+import androidx.activity.OnBackPressedCallback
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.example.onyx.OnyxObjects.LoadingAnimation
+import kotlinx.coroutines.cancelChildren
 
 class HomeActivity : AppCompatActivity() {
 
-     var showsFragment: ShowsFragment? = null
-     var animeFragment: AnimeFragment? = null
+    var showsFragment: ShowsFragment? = null
+    var animeFragment: AnimeFragment? = null
     private var profileFragment: ProfileFragment? = null
     private var watchingFragment: WatchingFragment? = null
 
     private var notificationFragment: notificationFragment? = null
 
     private var searchFragment: SearchFragment? = null
-    
+
     private var activeFragment: Fragment? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -47,7 +50,7 @@ class HomeActivity : AppCompatActivity() {
 
         // Set up the sidebar (using existing logic, but we need to override the click behavior)
         NavAction.setupSidebar(this)
-        
+
         setupSidebarForFragments()
 
         // Load default fragment
@@ -91,7 +94,7 @@ class HomeActivity : AppCompatActivity() {
             updateSelection(buttons, btnProfile)
             switchFragment("profile")
         }
-        
+
         btnWatching.setOnClickListener {
             updateSelection(buttons, btnWatching)
             switchFragment("watching")
@@ -99,7 +102,7 @@ class HomeActivity : AppCompatActivity() {
 
 
     }
-    
+
     private fun updateSelection(buttons: List<View>, selected: View) {
         buttons.forEach { it.isSelected = (it == selected) }
     }
@@ -137,7 +140,7 @@ class HomeActivity : AppCompatActivity() {
                 else -> ShowsFragment()
             }
             transaction.add(R.id.fragmentContainer, targetFragment, tag)
-            
+
             // Assign our references for clarity, though findFragmentByTag works too
             when (tag) {
                 "shows" -> showsFragment = targetFragment as ShowsFragment
@@ -171,7 +174,7 @@ class HomeActivity : AppCompatActivity() {
             transaction.setMaxLifecycle(it, Lifecycle.State.STARTED)
         }
 
-        // Add the new fragment, but DO NOT call addToBackStack()
+        // Add the new fragment
         transaction.add(R.id.fragmentContainer, fragment)
         transaction.commit()
     }
@@ -213,21 +216,4 @@ class HomeActivity : AppCompatActivity() {
 
         transaction.commit()
     }
-
-    
-    override fun onWindowFocusChanged(hasFocus: Boolean) {
-        super.onWindowFocusChanged(hasFocus)
-        if (hasFocus) {
-            GlobalUtils.hideSystemUI(this)
-        }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        GlobalUtils.hideSystemUI(this)
-    }
-
-
-
-
 }

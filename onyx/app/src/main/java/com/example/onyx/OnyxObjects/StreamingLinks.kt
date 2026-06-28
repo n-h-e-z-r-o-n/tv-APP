@@ -51,20 +51,6 @@ object StreamingLinks {
 
             val webView = WebView(context)
 
-            /*
-            val root = (context as Activity).findViewById<ViewGroup>(android.R.id.content)
-            val params = FrameLayout.LayoutParams(1, 1)
-            webView.visibility = View.INVISIBLE
-            root.addView(webView, params)
-
-
-            val container = FrameLayout(context)
-            container.addView(webView)
-            (context as Activity).setContentView(container)
-
-
-            */
-
             fun webviewCleanUp() {
                 if (isWebviewDestroyed) return
                 isWebviewDestroyed = true
@@ -288,17 +274,11 @@ object StreamingLinks {
             webView.settings.loadsImagesAutomatically = false //stops automatic image rendering
             webView.settings.blockNetworkImage = true //prevents images from even being downloaded
 
-
             webView.loadUrl(Weburl)
-
-            // Wait until stream found
-            //result.await()
-
-
 
             try {
                 // ⬇️ Prevent infinite suspension
-                val streamUrl = withTimeoutOrNull(35000) {
+                val streamUrl = withTimeoutOrNull(20000) {
                     result.await()
                 }
                 return@withContext streamUrl
@@ -306,8 +286,6 @@ object StreamingLinks {
 
                 webviewCleanUp()
             }
-
-
         }
 
 
@@ -444,21 +422,123 @@ object StreamingLinks {
 
         if (type == "movie") {
             servers["vidsrc"] = "https://vidsrc.to/embed/movie/$showId"
-            servers["primewire"] = "https://primewire.si/embed/movie?tmdb=$showId"
             servers["vidking"] = "https://www.vidking.net/embed/movie/$showId"
-            servers["player"] = "https://player.embed-api.stream/?id=$showId&type=movie"
+            servers["xpass"] = "https://play.xpass.top/e/movie/$showId"
+            servers["vidzen"] = "https://vidzen.fun/movie/$showId"
+            servers["vidnest"] ="https://vidnest.fun/movie/$showId"
+            servers["peachify"] ="https://peachify.top/embed/movie/$showId?autoPlay=true&sub=English&cast=hide&pip=hide&accent=e50914"
+            servers["vidrock"] ="https://vidrock.ru/movie/$showId"
+            servers["airflix1"] ="https://airflix1.com/embed/movie/$showId"
+            servers["vidsync"] = "https://vidsync.xyz/embed/movie/$showId?autoPlay=true&autoNext=true&nextButton=true&theme=e50914"
+            servers["zxcstream"] = "https://www.zxcstream.xyz/player/movie/$showId"
+            servers["vsembed"] = "https://vsembed.ru/embed/tv/movie/$showId"
+            servers["vaplayer"] = "https://vaplayer.ru/embed/movie/$showId"
+            servers["vidfast"] = "https://vidfast.pro/movie/$showId"
+            servers["moviesapi"] ="https://moviesapi.to/movie/$showId"
+
 
 
         } else {
             servers["vidsrc"] =  "https://vidsrc.to/embed/tv/$showId/$seasonNo/$episodeNo"
-            servers["primewire"] = "https://www.primewire.si/embed/tv?tmdb=$showId&season=$seasonNo&episode=$episodeNo"
             servers["vidking"] = "https://www.vidking.net/embed/tv/$showId/$seasonNo/$episodeNo"
-            servers["player"] = "https://player.embed-api.stream/?id=$showId&s=$seasonNo&e=$episodeNo"
-
+            servers["xpass"] = "https://play.xpass.top/e/tv/$showId/$seasonNo/$episodeNo"
+            servers["vidzen"] = "https://vidzen.fun/tv/$showId/$seasonNo/$episodeNo"
+            servers["vidnest"] = "https://vidnest.fun/tv/$showId/$seasonNo/$episodeNo"
+            servers["peachify"] = "https://peachify.top/embed/tv/$showId/$seasonNo/$episodeNo?autoPlay=true&autoNext=30&showNextBtn=true&sub=English&cast=hide&pip=hide&accent=e50914"
+            servers["vidrock"] = "https://vidrock.ru/tv/$showId/$seasonNo/$episodeNo"
+            servers["airflix1"] ="https://airflix1.com/embed/tv/$showId/$seasonNo/$episodeNo"
+            servers["vidsync"] = "https://vidsync.xyz/embed/tv/$showId/$seasonNo/$episodeNo?autoPlay=true&autoNext=true&nextButton=true&theme=e50914"
+            servers["zxcstream"] = "https://www.zxcstream.xyz/player/tv/$showId/$seasonNo/$episodeNo"
+            servers["vsembed"] = "https://vsembed.ru/embed/tv/$showId/$seasonNo/$episodeNo"
+            servers["vaplayer"] = "https://vaplayer.ru/embed/tv/$showId/$seasonNo/$episodeNo"
+            servers["vidfast"] = "https://vidfast.pro/tv/$showId/$seasonNo/$episodeNo"
+            servers["moviesapi"] ="https://moviesapi.to/tv/$showId/$seasonNo/$episodeNo"
         }
+
 
         return servers
     }
+
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+    val serversList = listOf(
+        "VidSrc",
+        "VidKing",
+        "XPass",
+        "VidZen",
+        "VidNest",
+        "Peachify",
+        "VidRock",
+        "AirFlix1",
+        "VidSync",
+        "ZXCStream",
+        "VSEmbed",
+        "VAPlayer",
+        "VidFast",
+        "MoviesAPI"
+    )
+
+    fun getServerUrl(
+        context: Context,
+        urlType: String?,
+        showId: String?,
+        seasonNo: String?,
+        episodeNo: String?
+    ): String {
+        val serverIndex = getSavedServerIndex(context)
+
+        return if (urlType == "movie") {
+            when (serverIndex) {
+                0 -> "https://vidsrc.to/embed/movie/$showId"
+                1 -> "https://www.vidking.net/embed/movie/$showId"
+                2 -> "https://play.xpass.top/e/movie/$showId"
+                3 -> "https://vidzen.fun/movie/$showId"
+                4 -> "https://vidnest.fun/movie/$showId"
+                5 -> "https://peachify.top/embed/movie/$showId?autoPlay=true&sub=English&cast=hide&pip=hide&accent=e50914"
+                6 -> "https://vidrock.ru/movie/$showId"
+                7 -> "https://airflix1.com/embed/movie/$showId"
+                8 -> "https://vidsync.xyz/embed/movie/$showId?autoPlay=true&autoNext=true&nextButton=true&theme=e50914"
+                9 -> "https://www.zxcstream.xyz/player/movie/$showId"
+                10 -> "https://vsembed.ru/embed/tv/movie/$showId"
+                11 -> "https://vaplayer.ru/embed/movie/$showId"
+                12 -> "https://vidfast.pro/movie/$showId"
+                13 -> "https://moviesapi.to/movie/$showId"
+                else -> "https://vidsrc.to/embed/movie/$showId"
+            }
+        } else {
+            when (serverIndex) {
+                0 -> "https://vidsrc.to/embed/tv/$showId/$seasonNo/$episodeNo"
+                1 -> "https://www.vidking.net/embed/tv/$showId/$seasonNo/$episodeNo"
+                2 -> "https://play.xpass.top/e/tv/$showId/$seasonNo/$episodeNo"
+                3 -> "https://vidzen.fun/tv/$showId/$seasonNo/$episodeNo"
+                4 -> "https://vidnest.fun/tv/$showId/$seasonNo/$episodeNo"
+                5 -> "https://peachify.top/embed/tv/$showId/$seasonNo/$episodeNo?autoPlay=true&autoNext=30&showNextBtn=true&sub=English&cast=hide&pip=hide&accent=e50914"
+                6 -> "https://vidrock.ru/tv/$showId/$seasonNo/$episodeNo"
+                7 -> "https://airflix1.com/embed/tv/$showId/$seasonNo/$episodeNo"
+                8 -> "https://vidsync.xyz/embed/tv/$showId/$seasonNo/$episodeNo?autoPlay=true&autoNext=true&nextButton=true&theme=e50914"
+                9 -> "https://www.zxcstream.xyz/player/tv/$showId/$seasonNo/$episodeNo"
+                10 -> "https://vsembed.ru/embed/tv/$showId/$seasonNo/$episodeNo"
+                11 -> "https://vaplayer.ru/embed/tv/$showId/$seasonNo/$episodeNo"
+                12 -> "https://vidfast.pro/tv/$showId/$seasonNo/$episodeNo"
+                13 -> "https://moviesapi.to/tv/$showId/$seasonNo/$episodeNo"
+                else -> "https://vidsrc.to/embed/tv/$showId/$seasonNo/$episodeNo"
+            }
+        }
+    }
+
+    fun saveServerIndex(context: Context, index: Int) {
+        val prefs = context.getSharedPreferences("server_prefs", Context.MODE_PRIVATE)
+        prefs.edit().putInt("selected_server_index", index).apply()
+    }
+
+    fun getSavedServerIndex(context: Context): Int {
+        val prefs = context.getSharedPreferences("server_prefs", Context.MODE_PRIVATE)
+        Log.e("DEBUG_SERVER", prefs.getInt("selected_server_index", 0).toString())
+        return prefs.getInt("selected_server_index", 0)
+    }
+
 
 
 }

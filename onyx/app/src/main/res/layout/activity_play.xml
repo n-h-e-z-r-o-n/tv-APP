@@ -24,14 +24,6 @@
                 android:overScrollMode="never"
                 android:background="?attr/BG_color"/>
 
-            <ImageView
-                android:id="@+id/customCursor"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-
-                android:src="@drawable/cursor"
-            android:visibility="gone"
-            android:scaleType="centerInside" />
 
         </LinearLayout>
 
