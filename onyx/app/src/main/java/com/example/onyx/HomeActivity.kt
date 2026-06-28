@@ -170,29 +170,17 @@ class HomeActivity : AppCompatActivity() {
         // Hide all currently visible fragments (keeps them alive in the background)
         fm.fragments.filter { it.isVisible }.forEach {
             transaction.hide(it)
-            // Optional: Cap the lifecycle just like you do in switchFragment
             transaction.setMaxLifecycle(it, Lifecycle.State.STARTED)
         }
 
-        // Add the new fragment
-        transaction.add(R.id.fragmentContainer, fragment)
-        transaction.commit()
-    }
-
-    fun navigateAndDestroyCurrent(newFragment: Fragment, args: Bundle? = null) {
-        if (args != null) {
-            newFragment.arguments = args
-        }
-        val fm = supportFragmentManager
-        val transaction = fm.beginTransaction()
-
-        // Find the currently visible fragment(s) and destroy them completely
-        fm.fragments.filter { it.isVisible }.forEach { visibleFragment ->
-            transaction.remove(visibleFragment)
+        // Prevent duplicates: Check if an instance of this fragment class already exists and remove it
+        val fragmentClass = fragment::class.java
+        fm.fragments.filter { it::class.java == fragmentClass }.forEach {
+            transaction.remove(it)
         }
 
         // Add the new fragment
-        transaction.add(R.id.fragmentContainer, newFragment)
+        transaction.add(R.id.fragmentContainer, fragment, fragmentClass.simpleName)
         transaction.commit()
     }
 
