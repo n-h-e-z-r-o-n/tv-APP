@@ -47,6 +47,7 @@ import com.example.onyx.Database.AppDatabase
 import com.example.onyx.Database.SessionManger
 import com.example.onyx.FetchData.AnimeApi
 import com.example.onyx.OnyxObjects.GlobalUtils
+import com.example.onyx.OnyxObjects.MiruroScraper
 import com.google.android.material.card.MaterialCardView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -389,7 +390,7 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
 
     }
 
-    private fun fetchStreamingLinks(episodeId: String) {
+    private fun fetchStreamingLinks_API(episodeId: String) {
         lifecycleScope.launch(Dispatchers.Main) {
             isEpisodeLoading = true
             val maxAttempts = 3
@@ -425,7 +426,6 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
                             }
                             //result.put(obj)
                         }
-
                         return result
                     }
 
@@ -443,7 +443,6 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
                                 referer = server.optJSONObject("headers")?.optString("Referer"),
                                 origin = server.optJSONObject("headers")?.optString("Origin"),
                                 userAgent = server.optJSONObject("headers")?.optString("User-Agent")
-
                             )
                         }
 
@@ -458,7 +457,6 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
                                 userAgent = server.optJSONObject("headers")?.optString("User-Agent")
                             )
                         }
-
                         else -> return@launch
                     }
 
@@ -537,6 +535,179 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
 
                                         if (vlink.isNotBlank()) {
                                             fetchServerSources(episodeId, serverName, title, vlink, referer,  orign, userAgent)
+                                        }
+                                    }
+                                }
+                                container.addView(serverBtn)
+                            }
+                        }
+
+                        // Add sections
+                        addServerSection("sub", subServers)
+                        addServerSection("dub", dubServers)
+
+                        builder.setView(scrollView)
+                        builder.setNegativeButton("Cancel", null)
+
+                        dialog = builder.create()
+                        dialog.show()
+                    }
+                    isEpisodeLoading = false
+
+                    break
+                }
+
+                Log.e("ANIME_PLAYER", "StreamingLinks=$episodeId FAILED")
+
+                if (attempt < maxAttempts) {
+                    delay(3000) // Non-blocking wait (standard for Coroutines)
+                }
+
+            }
+            isEpisodeLoading = false
+
+        }
+    }
+
+
+    private fun fetchStreamingLinks(episodeId: String) {
+        lifecycleScope.launch(Dispatchers.Main) {
+            isEpisodeLoading = true
+            val maxAttempts = 3
+            var attempt = 0
+
+            while (attempt < maxAttempts) {
+                attempt++
+
+                // CALL THE LOCAL SCRAPER DIRECTLY INSTEAD OF THE NODE.JS API
+                val streamData = withContext(Dispatchers.IO) {
+                    MiruroScraper.fetchMiruroStreamingLinks(episodeId)
+                }
+
+                // Check if we got valid data back
+                if (streamData.isNotEmpty() && (streamData["sub"]?.isNotEmpty() == true || streamData["dub"]?.isNotEmpty() == true)) {
+
+                    Log.d("ANIME_PLAYER", "StreamingLinks=$episodeId FETCHED")
+
+                    val subServersRaw = streamData["sub"] ?: emptyList()
+                    val dubServersRaw = streamData["dub"] ?: emptyList()
+
+                    // Replaced cleanArray with a clean native Kotlin list filter
+                    fun cleanList(input: List<Map<String, Any>>): List<Map<String, Any>> {
+                        return input.filter { (it["type"] as? String) != "embed" }
+                    }
+
+                    val subServers = cleanList(subServersRaw)
+                    val dubServers = cleanList(dubServersRaw)
+
+                    // Determine initial default
+                    val defaultSource = when {
+                        dubServers.isNotEmpty() -> {
+                            val server = dubServers[0]
+                            val headers = server["headers"] as? Map<*, *>
+                            StreamSource(
+                                serverName = server["server"] as? String ?: "",
+                                category = "dub",
+                                videoLink = server["link"] as? String ?: "",
+                                referer = headers?.get("Referer") as? String ?: "",
+                                origin = headers?.get("Origin") as? String ?: "",
+                                userAgent = headers?.get("User-Agent") as? String ?: ""
+                            )
+                        }
+
+                        subServers.isNotEmpty() -> {
+                            val server = subServers[0]
+                            val headers = server["headers"] as? Map<*, *>
+                            StreamSource(
+                                serverName = server["server"] as? String ?: "",
+                                category = "sub",
+                                videoLink = server["link"] as? String ?: "",
+                                referer = headers?.get("Referer") as? String ?: "",
+                                origin = headers?.get("Origin") as? String ?: "",
+                                userAgent = headers?.get("User-Agent") as? String ?: ""
+                            )
+                        }
+
+                        else -> return@launch
+                    }
+
+                    fetchServerSources(
+                        episodeId,
+                        defaultSource.serverName,
+                        defaultSource.category,
+                        defaultSource.videoLink,
+                        referer = defaultSource.referer,
+                        origin = defaultSource.origin,
+                        userAgent = defaultSource.userAgent
+                    )
+
+                    val btnServer = findViewById<TextView>(R.id.btn_server)
+
+                    btnServer.setOnClickListener {
+                        val builder = android.app.AlertDialog.Builder(
+                            this@Anime_Video_Player,
+                            R.style.CustomDialogTheme
+                        )
+                        builder.setTitle("Select Server")
+
+                        val container = LinearLayout(this@Anime_Video_Player).apply {
+                            orientation = LinearLayout.VERTICAL
+                            setPadding(40, 24, 40, 24)
+                            setBackgroundColor(Color.TRANSPARENT)
+                        }
+
+                        val scrollView = ScrollView(this@Anime_Video_Player).apply {
+                            addView(container)
+                        }
+
+                        var dialog: android.app.AlertDialog? = null
+
+                        // Replaced JSONArray with List<Map<String, Any>>
+                        fun addServerSection(title: String, servers: List<Map<String, Any>>) {
+                            if (servers.isEmpty()) return
+
+                            val label = TextView(this@Anime_Video_Player).apply {
+                                text = "$title:"
+                                setTextColor(ContextCompat.getColor(context, android.R.color.white))
+                                textSize = 18f
+                                setTypeface(typeface, Typeface.BOLD)
+                                setPadding(0, 20, 0, 10)
+                            }
+                            container.addView(label)
+
+                            for (server in servers) {
+                                val serverName = server["server"] as? String ?: ""
+                                val vlink = server["link"] as? String ?: ""
+                                val headers = server["headers"] as? Map<*, *>
+
+                                val referer = headers?.get("Referer") as? String ?: ""
+                                val origin = headers?.get("Origin") as? String ?: ""
+                                val userAgent = headers?.get("User-Agent") as? String ?: ""
+
+                                val serverBtn = Button(this@Anime_Video_Player).apply {
+                                    text = serverName
+                                    setAllCaps(false)
+                                    textSize = 14f
+                                    background = ContextCompat.getDrawable(
+                                        context,
+                                        R.drawable.item_anime_episode_focus
+                                    )
+                                    setTextColor(
+                                        ContextCompat.getColor(
+                                            context,
+                                            android.R.color.white
+                                        )
+                                    )
+                                    setOnClickListener {
+                                        Toast.makeText(
+                                            context,
+                                            "Switching to $title → $serverName",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                        dialog?.dismiss()
+
+                                        if (vlink.isNotBlank()) {
+                                            fetchServerSources(episodeId, serverName, title, vlink, referer, origin, userAgent)
                                         }
                                     }
                                 }
