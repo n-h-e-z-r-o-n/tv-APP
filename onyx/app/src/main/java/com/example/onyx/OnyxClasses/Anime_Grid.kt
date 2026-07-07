@@ -1,4 +1,4 @@
-package com.example.onyx.OnyxClasses
+﻿package com.example.onyx.OnyxClasses
 
 import android.content.Intent
 import android.view.KeyEvent
@@ -22,8 +22,8 @@ import com.bumptech.glide.request.target.Target
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class AnimeTrendingAdapter(
-    private val  items: MutableList<TrendingAnimeItem>,   // ✅ mutable now,
-    private val layoutResId: Int   // 👈 pass in the layout resource
+    private val  items: MutableList<TrendingAnimeItem>,   // âœ… mutable now,
+    private val layoutResId: Int   // ðŸ‘ˆ pass in the layout resource
 ) :  RecyclerView.Adapter<AnimeTrendingAdapter.ViewHolder>() {
 
     companion object {
@@ -63,6 +63,7 @@ class AnimeTrendingAdapter(
 
         Glide.with(holder.itemView.context)
             .load(imageUrl)
+            .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.ALL)
             .centerInside()
             .into(holder.Movie_image)
 
@@ -99,7 +100,7 @@ class AnimeTrendingAdapter(
 
     override fun getItemCount() = items.size
 
-    // 👇 helper to add items one by one
+    // ðŸ‘‡ helper to add items one by one
     fun addItem(item: TrendingAnimeItem) {
         items.add(item)
         notifyItemInserted(items.size - 1)
@@ -118,8 +119,8 @@ data class TrendingAnimeItem(
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class AnimeAiringAdapter(
-    private val  items: MutableList<AiringAnimeItem>,   // ✅ mutable now,
-    private val layoutResId: Int   // 👈 pass in the layout resource
+    private val  items: MutableList<AiringAnimeItem>,   // âœ… mutable now,
+    private val layoutResId: Int   // ðŸ‘ˆ pass in the layout resource
 ) :  RecyclerView.Adapter<AnimeAiringAdapter.ViewHolder>() {
 
     companion object {
@@ -163,6 +164,7 @@ class AnimeAiringAdapter(
 
         Glide.with(holder.itemView.context)
             .load(imageUrl)
+            .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.ALL)
             .override(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL)
 
             .centerInside()
@@ -225,8 +227,8 @@ data class AiringAnimeItem(
 
 
 class AnimeSearchAdapter(
-    private val  items: MutableList<AnimeSearchItem>,   // ✅ mutable now,
-    private val layoutResId: Int   // 👈 pass in the layout resource
+    private val  items: MutableList<AnimeSearchItem>,   // âœ… mutable now,
+    private val layoutResId: Int   // ðŸ‘ˆ pass in the layout resource
 ) :  RecyclerView.Adapter<AnimeSearchAdapter.ViewHolder>() {
 
     inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -265,6 +267,7 @@ class AnimeSearchAdapter(
 
         Glide.with(holder.itemView.context)
             .load(imageUrl)
+            //.diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.ALL)
             .centerInside()
             .into(holder.Movie_image)
 
@@ -430,6 +433,7 @@ class AnimeGridAdapter(
         holder.Movie_image?.let {
             Glide.with(holder.itemView.context)
                 .load(imageUrl)
+                .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.ALL)
                 .override(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL)
                 .centerInside()
                 .into(it)
@@ -452,7 +456,7 @@ class AnimeGridAdapter(
             if (hasFocus) {
                 onItemFocused?.invoke(v, currentItem) // show popup
 
-                // ✅ Trigger load when focused on the last 6 items
+                // âœ… Trigger load when focused on the last 6 items
                 val prefetchThreshold = 6
                 val currentPos = holder.bindingAdapterPosition
 
@@ -588,6 +592,7 @@ class animeFavAdapter(
 
         Glide.with(holder.itemView.context)
             .load(posterUrl)
+            .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.ALL)
             .centerInside()
             .into(holder.Movie_image)
 
@@ -613,7 +618,7 @@ class animeFavAdapter(
 
     override fun getItemCount() = items.size
 
-    // 👇 helper to add items one by one
+    // ðŸ‘‡ helper to add items one by one
     fun addItem(item: animeFavItem) {
         items.add(item)
         notifyItemInserted(items.size - 1)
@@ -643,6 +648,7 @@ data class animeFavItem(
 )
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 
 

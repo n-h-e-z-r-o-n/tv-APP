@@ -12,7 +12,7 @@
 
 
     <ScrollView
-        android:id="@+id/mainr"
+        android:id="@+id/mainBox"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:fillViewport="true"
@@ -75,7 +75,7 @@
 
 
                     <LinearLayout
-                        android:id="@+id/blurContainer"
+                        android:id="@+id/blurContainer_left"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:layout_gravity="center"
@@ -84,10 +84,12 @@
                         android:gravity="center"/>
 
                     <LinearLayout
+                        android:id="@+id/blurContainer_bottom"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:background="@drawable/overlay_bottom_gradient_bg"
-                        android:layout_gravity="bottom"/>
+                        android:layout_gravity="bottom"
+                        android:orientation="horizontal" />
 
 
 

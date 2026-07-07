@@ -1,4 +1,4 @@
-package com.example.onyx.OnyxClasses
+﻿package com.example.onyx.OnyxClasses
 
 import android.annotation.SuppressLint
 import android.content.Intent
@@ -168,6 +168,7 @@ class GridAdapter(
         holder.Movie_image?.let {
             Glide.with(holder.itemView.context)
                 .load(imageUrl)
+                .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.ALL)
                 .centerInside()
                 .into(it)
         }
@@ -188,7 +189,7 @@ class GridAdapter(
             if (hasFocus) {
                 onItemFocused?.invoke(v, currentItem) // show popup
 
-                // ✅ Trigger load when focused on the last 6 items
+                // âœ… Trigger load when focused on the last 6 items
                 val prefetchThreshold = 6
                 val currentPos = holder.bindingAdapterPosition
 
@@ -404,6 +405,7 @@ class FilterAdapter(
             holder.Movie_image?.let {
                 Glide.with(holder.itemView.context)
                     .load(currentItem.posterUlr)
+                    .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.ALL)
                     .override(sizeW, sizeH)
                     //.override(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL)
                     .thumbnail(
@@ -432,7 +434,7 @@ class FilterAdapter(
                 // Trigger standard UI updates
                 onItemFocused?.invoke(v, currentItem)
 
-                // ✅ TV PREFETCH LOGIC: Load more if we are in the last 6 items
+                // âœ… TV PREFETCH LOGIC: Load more if we are in the last 6 items
                 val prefetchThreshold = 8
                 val currentPos = holder.bindingAdapterPosition
 
@@ -497,8 +499,8 @@ data class filterItemOne(
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class OtherAdapter(
-    private val  items: MutableList<MovieItem>,   // ✅ mutable now,
-    private val layoutResId: Int   // 👈 pass in the layout resource
+    private val  items: MutableList<MovieItem>,   // âœ… mutable now,
+    private val layoutResId: Int   // ðŸ‘ˆ pass in the layout resource
 ) :  RecyclerView.Adapter<OtherAdapter.ViewHolder>() {
 
     inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -539,6 +541,7 @@ class OtherAdapter(
 
         Glide.with(holder.itemView.context)
             .load(imageUrl)
+            .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.ALL)
             .centerCrop()
             .into(holder.Movie_image)
 
@@ -569,8 +572,8 @@ class OtherAdapter(
 
 
 class CategoryAdapter(
-    private val  items: MutableList<categoryItem>,   // ✅ mutable now,
-    private val layoutResId: Int   // 👈 pass in the layout resource
+    private val  items: MutableList<categoryItem>,   // âœ… mutable now,
+    private val layoutResId: Int   // ðŸ‘ˆ pass in the layout resource
 
 ) :  RecyclerView.Adapter<CategoryAdapter.ViewHolder>() {
 
@@ -614,7 +617,7 @@ class CategoryAdapter(
         val imdbCode = currentItem.cCode
         val companyName = currentItem.cName
 
-        // ✅ wait until ImageView is measured
+        // âœ… wait until ImageView is measured
         holder.category_image.post {
             val ctx = holder.itemView.context
             if (ctx is android.app.Activity && (ctx.isDestroyed || ctx.isFinishing)) return@post
@@ -623,6 +626,7 @@ class CategoryAdapter(
 
             Glide.with(holder.itemView.context)
                 .load(imageUrl)
+            .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.ALL)
                 .override(Target.SIZE_ORIGINAL, size)
                 .thumbnail(
                     Glide.with(holder.itemView.context)
@@ -709,8 +713,8 @@ data class categoryItem(
 
 
 class GridAdapter2(
-    private val  items: MutableList<MovieItem>,   // ✅ mutable now,
-    private val layoutResId: Int   // 👈 pass in the layout resource
+    private val  items: MutableList<MovieItem>,   // âœ… mutable now,
+    private val layoutResId: Int   // ðŸ‘ˆ pass in the layout resource
 ) :  RecyclerView.Adapter<GridAdapter2.ViewHolder>() {
 
     var onAddMoreClicked: (() -> Unit)? = null
@@ -793,6 +797,7 @@ class GridAdapter2(
 
         Glide.with(holder.itemView.context)
             .load(imageUrl)
+            .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.ALL)
             .centerInside()
             .into(holder.Movie_image)
 
@@ -809,7 +814,7 @@ class GridAdapter2(
 
     override fun getItemCount() = items.size
 
-    // 👇 helper to add items one by one
+    // ðŸ‘‡ helper to add items one by one
     fun addItem(item: MovieItem) {
         items.add(item)
         notifyItemInserted(items.size - 1)
@@ -828,8 +833,8 @@ class GridAdapter2(
 
 
 class RecommendAdapter(
-    private val  items: MutableList<MovieItem>,   // ✅ mutable now,
-    private val layoutResId: Int   // 👈 pass in the layout resource
+    private val  items: MutableList<MovieItem>,   // âœ… mutable now,
+    private val layoutResId: Int   // ðŸ‘ˆ pass in the layout resource
 ) :  RecyclerView.Adapter<RecommendAdapter.ViewHolder>() {
 
     inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -874,6 +879,7 @@ class RecommendAdapter(
 
         Glide.with(holder.itemView.context)
             .load(imageUrl)
+            .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.ALL)
             .centerCrop()
             .into(holder.Movie_image)
 
@@ -904,8 +910,8 @@ class RecommendAdapter(
 
 
 class CastAdapter(
-    private val  items: MutableList<CastItem>,   // ✅ mutable now,
-    private val layoutResId: Int   // 👈 pass in the layout resource
+    private val  items: MutableList<CastItem>,   // âœ… mutable now,
+    private val layoutResId: Int   // ðŸ‘ˆ pass in the layout resource
 ) :  RecyclerView.Adapter<CastAdapter.ViewHolder>() {
 
     inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -954,6 +960,7 @@ class CastAdapter(
 
         Glide.with(holder.itemView.context)
             .load(imageUrl)
+            .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.ALL)
             //.override(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL)
             .override(sizeInPx, sizeInPx)
             .thumbnail(
@@ -999,7 +1006,7 @@ class CastAdapter(
 
     override fun getItemCount() = items.size
 
-    // 👇 helper to add items one by one
+    // ðŸ‘‡ helper to add items one by one
     fun addItem(item: CastItem) {
         items.add(item)
         notifyItemInserted(items.size - 1)
@@ -1020,8 +1027,8 @@ data class CastItem(
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class ProfileAdapter (
-    private val  items: MutableList<profileItem>,   // ✅ mutable now,
-    private val layoutResId: Int   // 👈 pass in the layout resource
+    private val  items: MutableList<profileItem>,   // âœ… mutable now,
+    private val layoutResId: Int   // ðŸ‘ˆ pass in the layout resource
 ) :  RecyclerView.Adapter<ProfileAdapter .ViewHolder>() {
 
     var onProfileSelected: ((profileItem) -> Unit)? = null
@@ -1079,6 +1086,7 @@ class ProfileAdapter (
                 val assetPath = "file:///android_asset/$avatarImg"
                 Glide.with(holder.itemView.context)
                     .load(assetPath)
+                    .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.ALL)
                     .centerCrop()
                     .placeholder(android.R.drawable.ic_menu_gallery)
                     .into(holder.profileImageWidget)
@@ -1181,6 +1189,7 @@ class AvatarAdapter(
             val assetPath = "file:///android_asset/$avatarPath"
             Glide.with(context)
                 .load(assetPath)
+                .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.ALL)
                 .centerCrop()
                 .placeholder(android.R.drawable.ic_menu_gallery)
                 .into(holder.avatarImage)
@@ -1238,7 +1247,7 @@ class FavAdapter(
     private val RemoveFaveItemBtn: LinearLayout? = null
 ) : RecyclerView.Adapter<FavAdapter.ViewHolder>() {
 
-    // ✅ ADDED: Companion object to hold the debounce variables
+    // âœ… ADDED: Companion object to hold the debounce variables
     companion object {
         private var lastKeyTime = 0L
         private const val KEY_DEBOUNCE_DELAY = 300L // ms - Tweak this number to feel faster or slower
@@ -1266,6 +1275,7 @@ class FavAdapter(
                         backdropView?.let {
                             Glide.with(it.context)
                                 .load(item.backdropUrl)
+                                .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.ALL)
                                 .into(it)
                         }
 
@@ -1296,7 +1306,7 @@ class FavAdapter(
             itemView.setOnKeyListener { _, keyCode, event ->
                 if (event.action != KeyEvent.ACTION_DOWN) return@setOnKeyListener false
 
-                // ✅ ADDED: D-Pad Debounce Logic
+                // âœ… ADDED: D-Pad Debounce Logic
                 val now = System.currentTimeMillis()
                 if (now - lastKeyTime < KEY_DEBOUNCE_DELAY) return@setOnKeyListener true
                 lastKeyTime = now
@@ -1339,6 +1349,7 @@ class FavAdapter(
 
         Glide.with(holder.itemView.context)
             .load(backdropUrl)
+            .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.ALL)
             .centerInside()
             .into(holder.Movie_image)
 
@@ -1396,7 +1407,7 @@ class FavAdapter(
             items.addAll(chunk)
             notifyItemRangeInserted(currentStart, chunk.size)
 
-            // ✅ The Magic: Yield back to the Main Thread for 16ms (1 frame at 60fps)
+            // âœ… The Magic: Yield back to the Main Thread for 16ms (1 frame at 60fps)
             // This gives the TV time to draw the items before processing the next batch.
             delay(16)
         }
@@ -1610,8 +1621,8 @@ class EpisodesAdapter(
 
         holder.epNoView.text = "S${ep.seasonNumber}-E${ep.episodesNumber}"
         holder.titleView.text = ep.episodesName
-        holder.durationView.text = "⏱ ${ep.episodesRuntime} min"
-        holder.ratingView.text = "★ ${ep.episodesRating}"
+        holder.durationView.text = "â± ${ep.episodesRuntime} min"
+        holder.ratingView.text = "â˜… ${ep.episodesRating}"
         holder.descView.text = ep.episodesDescription
 
         GlobalUtils.enableFullViewOnDescendantFocus(ep.parentView, holder.itemView)
@@ -1624,6 +1635,7 @@ class EpisodesAdapter(
         val sizeW = (currentWidth  * 2f).toInt()
         Glide.with(holder.itemView.context)
             .load(url)
+            .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.ALL)
             //.override(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL)
             .override(sizeW, sizeH)
             .into(holder.epsImg)
@@ -1656,7 +1668,7 @@ class EpisodesAdapter(
 
 
 
-        // ✅ Attach the KeyListener here
+        // âœ… Attach the KeyListener here
         holder.itemView.setOnKeyListener { v, keyCode, event ->
             if (event.action != KeyEvent.ACTION_DOWN) return@setOnKeyListener false
 
@@ -1735,14 +1747,10 @@ data class MovieItem(
 
 
 class NotificationAdapter(
-    private val  items: MutableList<NotificationItem>,   // ✅ mutable now,
-    private val layoutResId: Int,  // 👈 pass in the layout resource
-    private val db: AppDatabase,
-    private val userId: Int
-) :  RecyclerView.Adapter<NotificationAdapter.ViewHolder>() {
-
-
-    private val adapterScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
+    private val items: MutableList<NotificationItem>,
+    private val layoutResId: Int,
+    private val onNotificationClicked: (NotificationItem) -> Unit
+) : RecyclerView.Adapter<NotificationAdapter.ViewHolder>() {
 
     inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         //val image: ImageView = view.findViewById(R.id.notification_title)
@@ -1799,59 +1807,33 @@ class NotificationAdapter(
         // 2. Load the image with Glide
         Glide.with(holder.itemView.context)
             .load(imageUrl)
-            .centerInside()
+            .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.ALL)
             .into(holder.backdrop)
+            //.diskCacheStrategy(DiskCacheStrategy.ALL)
 
 
         holder.itemView.setOnClickListener {
-            val context = holder.itemView.context
-
             val adapterPos = holder.bindingAdapterPosition
             if (adapterPos == RecyclerView.NO_POSITION) return@setOnClickListener
+            
+            val clickedItem = items[adapterPos]
             items.removeAt(adapterPos)
             notifyItemRemoved(adapterPos)
 
-
-                if(type == "anime"){
-
-                    adapterScope.launch(Dispatchers.IO) {
-                        db.deleteAnimeNotificationById(
-                            userId = userId,
-                            animeId = imdbCode,
-                            notificationId = currentItem.notificationId
-                        )
-                    }
-
-
-                    val args = android.os.Bundle().apply {
-    putString("anime_code", imdbCode)
-    putString("anime_poster", imageUrl)
-}
-(context as com.example.onyx.HomeActivity).navigateToFragment(com.example.onyx.WatchAnimeFragment(), args)
-
-                }else {
-                    val intent = Intent(context, Watch_Page::class.java)
-                    adapterScope.launch(Dispatchers.IO) { db.deleteTvNotifications(userId, imdbCode)}
-                    intent.putExtra("imdb_code", imdbCode)
-                    intent.putExtra("type", type)
-                    context.startActivity(intent)
-                }
-
-            //NotificationHelper.updateNotification(context, imdbCode, updateSeason, updateEpisode)
-            //call updateNotification
+            onNotificationClicked(clickedItem)
         }
 
     }
 
     override fun getItemCount() = items.size
 
-    // 👇 helper to add items one by one
+    // ðŸ‘‡ helper to add items one by one
     fun addItem(item: NotificationItem) {
         items.add(item)
         notifyItemInserted(items.size - 1)
     }
     
-    // 👇 helper to refresh all items
+    // ðŸ‘‡ helper to refresh all items
     fun clearItems() {
         items.clear()
         notifyDataSetChanged()
@@ -1863,7 +1845,7 @@ class NotificationAdapter(
         notifyDataSetChanged()
     }
     
-    // 👇 helper to remove specific item by imdbCode
+    // ðŸ‘‡ helper to remove specific item by imdbCode
     fun removeItem(imdbCode: String) {
         val index = items.indexOfFirst { it.imdbCode == imdbCode }
         if (index != -1) {
@@ -1955,10 +1937,11 @@ class cWatchingAdapter(
 
         Glide.with(holder.itemView.context)
             .load(posterUrl)
+            .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.ALL)
             .centerCrop()
             .into(holder.poster)
 
-        // ---------- CLICK → RESUME ----------
+        // ---------- CLICK â†’ RESUME ----------
         val context = holder.itemView.context
         if(type=="anime"){
             holder.episode.text = "E$episodeNumber"
@@ -2035,7 +2018,7 @@ class cWatchingAdapter(
             items.addAll(chunk)
             notifyItemRangeInserted(currentStart, chunk.size)
 
-            // ✅ The Magic: Yield back to the Main Thread for 16ms (1 frame at 60fps)
+            // âœ… The Magic: Yield back to the Main Thread for 16ms (1 frame at 60fps)
             // This gives the TV time to draw the items before processing the next batch.
             delay(16)
         }
@@ -2059,4 +2042,5 @@ class cWatchingAdapter(
             String.format("%02d:%02d", minutes, seconds)
     }
 }
+
 

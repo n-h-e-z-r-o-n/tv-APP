@@ -55,8 +55,29 @@ class HomeActivity : AppCompatActivity() {
 
         // Load default fragment
         if (savedInstanceState == null) {
-            switchFragment("shows")
-            findViewById<ImageButton>(R.id.sidebarBtnShows).isSelected = true
+            val prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE)
+            val lastFragment = prefs.getString("last_fragment", "shows") ?: "shows"
+            
+            val btnShows = findViewById<ImageButton>(R.id.sidebarBtnShows)
+            val btnAnime = findViewById<ImageButton>(R.id.sidebarBtnAnime)
+            val btnProfile = findViewById<CardView>(R.id.sidebarBtnProfile)
+            val btnWatching = findViewById<ImageButton>(R.id.sidebarWatchListBtn)
+            val searchBtn = findViewById<ImageView>(R.id.sidebarSearchBtn)
+            val notificationBtn = findViewById<ImageButton>(R.id.sidebarNotificationBtn)
+            
+            val buttons = listOf<View>(btnShows, btnAnime, btnProfile, btnWatching, searchBtn, notificationBtn)
+            val selectedBtn = when(lastFragment) {
+                "shows" -> btnShows
+                "anime" -> btnAnime
+                "profile" -> btnProfile
+                "watching" -> btnWatching
+                "search" -> searchBtn
+                "notifications" -> notificationBtn
+                else -> btnShows
+            }
+            
+            updateSelection(buttons, selectedBtn)
+            switchFragment(lastFragment)
         }
     }
 
@@ -108,6 +129,9 @@ class HomeActivity : AppCompatActivity() {
     }
 
     private fun switchFragment(tag: String) {
+        val prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE)
+        prefs.edit().putString("last_fragment", tag).apply()
+
         val fm = supportFragmentManager
         val transaction = fm.beginTransaction()
 
@@ -203,5 +227,24 @@ class HomeActivity : AppCompatActivity() {
         }
 
         transaction.commit()
+    }
+
+    fun returnToCoreNavigation(fragmentToDestroy: Fragment) {
+        val prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE)
+        val lastTag = prefs.getString("last_fragment", "shows") ?: "shows"
+        
+        // Remove the sub-screen
+        supportFragmentManager.beginTransaction().remove(fragmentToDestroy).commit()
+        
+        // Simulate a click on the sidebar to restore styling and show the correct fragment
+        when (lastTag) {
+            "shows" -> findViewById<View>(R.id.sidebarBtnShows)?.performClick()
+            "anime" -> findViewById<View>(R.id.sidebarBtnAnime)?.performClick()
+            "profile" -> findViewById<View>(R.id.sidebarBtnProfile)?.performClick()
+            "watching" -> findViewById<View>(R.id.sidebarWatchListBtn)?.performClick()
+            "notifications" -> findViewById<View>(R.id.sidebarNotificationBtn)?.performClick()
+            "search" -> findViewById<View>(R.id.sidebarSearchBtn)?.performClick()
+            else -> findViewById<View>(R.id.sidebarBtnShows)?.performClick()
+        }
     }
 }

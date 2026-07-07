@@ -800,11 +800,6 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
                         .override(sizeW, sizeH)
                         .diskCacheStrategy(DiskCacheStrategy.ALL)
                         .centerInside()
-                        .thumbnail(
-                            Glide.with(card.context)
-                                .load(itemMap["backdrop_path"])
-                                .sizeMultiplier(0.3f)
-                        )
                         .into(SliderBackdrop)
 
                     card.setOnClickListener {
@@ -819,7 +814,8 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
                 }
 
                 if (moviesArray3.length() > 0){
-                    GlobalUtils.setupCardStackFromContainer(container)
+                    //GlobalUtils.setupCardStackFromContainer(container)
+                    com.example.onyx.OnyxClasses.CardStack().setupCardStackFromContainer(container)
                     requireView().findViewById<FrameLayout>(R.id.SpotlightSection).visibility = View.VISIBLE
                     //LoadingAnimation.hide(requireActivity())
                     LoadingAnimation.hide(requireView())

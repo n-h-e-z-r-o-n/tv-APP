@@ -89,6 +89,7 @@ dependencies {
     implementation("com.intuit.sdp:sdp-android:1.1.0")
     implementation("com.intuit.ssp:ssp-android:1.1.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.9.2")
+    implementation("androidx.palette:palette-ktx:1.0.0")
 
     implementation("com.pierfrancescosoffritti.androidyoutubeplayer:core:12.1.0") //youtube
     implementation("androidx.webkit:webkit:1.8.0")

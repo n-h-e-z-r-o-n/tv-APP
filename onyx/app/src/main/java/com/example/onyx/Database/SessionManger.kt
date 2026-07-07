@@ -26,6 +26,15 @@ class SessionManger(context: Context) {
         pref.edit().clear().apply()
     }
 
+    /* ---------- DYNAMIC COLOR ---------- */
+    fun isDynamicColorEnabled(): Boolean {
+        return pref.getBoolean("DYNAMIC_COLOR", true) // Default is true
+    }
+
+    fun setDynamicColorEnabled(enabled: Boolean) {
+        pref.edit().putBoolean("DYNAMIC_COLOR", enabled).apply()
+    }
+
     /* ---------- CONTINUE WATCHING (SESSION) ---------- */
 
     // ✅ Save last playback position

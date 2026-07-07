@@ -303,8 +303,8 @@ class AnimeFragment : Fragment() {
             showTrending(trendingList)
             showAiring(airingList)
 
-            GlobalUtils.setupCardStackFromContainer(binding.spotlightAnimes)
-
+            //GlobalUtils.setupCardStackFromContainer(binding.spotlightAnimes)
+            com.example.onyx.OnyxClasses.CardStack().setupCardStackFromContainer(binding.spotlightAnimes)
             LoadingAnimation.hide(requireView())
 
         }

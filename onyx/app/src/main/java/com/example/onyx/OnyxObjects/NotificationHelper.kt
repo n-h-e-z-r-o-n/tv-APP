@@ -57,24 +57,6 @@ object NotificationHelper {
                     Log.d("Fav_tv", "fetched lastEpisode: ${newLastEpisode}")
                     Log.d("Fav_tv", "fetched noOfSeason: ${newNoOfSeason}\n\n\n")
 
-                    /*
-                    var info = ""
-                    var episodeDiff = 0
-
-                    if (newLastSeason > storedLastSeason) {
-                        // New season released
-                        episodeDiff = newLastEpisode
-                        info = "New Season ($newLastSeason) with $episodeDiff Episode${if (episodeDiff > 1) "s" else ""}"
-
-                    } else if (newLastSeason == storedLastSeason && newLastEpisode > storedLastEpisode) {
-                        // New episodes in the same season
-                        episodeDiff = newLastEpisode - storedLastEpisode
-                        info = "$episodeDiff New Episode${if (episodeDiff > 1) "s" else ""}"
-                    }
-
-                    Log.e("Fav_tv", "info isNotEmpty: ${info.isNotEmpty()}, title: $name , episodeDiff $episodeDiff \n\n")
-
-                     */
 
                     if (newLastEpisode > storedLastEpisode || newLastSeason > storedLastSeason) {
 
@@ -195,7 +177,6 @@ object NotificationHelper {
                         db.updateAnimeProgress(userId, animeId.toString(), subFetched, dubFetched)
 
                         Log.d("Not_anime", "anime_Notification added,  animeId: $animeId\n")
-
 
                         results = true
                     }

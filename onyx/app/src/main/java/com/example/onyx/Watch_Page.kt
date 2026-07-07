@@ -54,6 +54,7 @@ import java.time.format.DateTimeFormatter
 import android.graphics.Color
 import android.view.LayoutInflater
 import android.webkit.WebView
+import android.widget.ScrollView
 import androidx.activity.OnBackPressedCallback
 import androidx.annotation.OptIn
 import androidx.media3.common.util.UnstableApi
@@ -313,16 +314,39 @@ class Watch_Page : AppCompatActivity() {
             val poster_widget = findViewById<ImageView>(R.id.posterImageView)
             val backdrop_Widget = findViewById<ImageView>(R.id.backdropImageView)
 
+            extractAndApplyDynamicColor(posterUrl)
 
             Glide.with(this@Watch_Page)
                 .load(backdropUrl)
+                .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.ALL)
                 .override(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL)
-                .centerInside()
+                .centerCrop()
                 .into(backdrop_Widget)
 
+            // Start Ken Burns Effect (Slow Zoom & Pan)
+            backdrop_Widget.post {
+                // Ensure it's slightly zoomed in from the start so edges don't show when panning
+                backdrop_Widget.scaleX = 1.05f
+                backdrop_Widget.scaleY = 1.05f
+                
+                val scaleX = android.animation.PropertyValuesHolder.ofFloat(View.SCALE_X, 1.05f, 1.12f)
+                val scaleY = android.animation.PropertyValuesHolder.ofFloat(View.SCALE_Y, 1.05f, 1.12f)
+                val panX = android.animation.PropertyValuesHolder.ofFloat(View.TRANSLATION_X, 0f, -30f)
+                val panY = android.animation.PropertyValuesHolder.ofFloat(View.TRANSLATION_Y, 0f, -10f)
+
+                val animator = android.animation.ObjectAnimator.ofPropertyValuesHolder(backdrop_Widget, scaleX, scaleY, panX, panY)
+                animator.duration = 25000 // 25 seconds for a very slow, cinematic movement
+                animator.repeatCount = android.animation.ValueAnimator.INFINITE
+                animator.repeatMode = android.animation.ValueAnimator.REVERSE
+                animator.interpolator = android.view.animation.LinearInterpolator()
+                animator.start()
+            }
+            
+            extractAndApplyDynamicColor(posterUrl)
 
             Glide.with(this@Watch_Page)
                 .load(posterUrl)
+                .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.ALL)
                 .centerInside()
                 .into(poster_widget)
 
@@ -463,6 +487,65 @@ class Watch_Page : AppCompatActivity() {
 
     }
 
+    private fun extractAndApplyDynamicColor(imageUrl: String) {
+        // If the user disabled Dynamic Color in Profile Settings, skip extraction
+        if (!sm.isDynamicColorEnabled()) return
+
+        Glide.with(this@Watch_Page)
+            .asBitmap()
+            .load(imageUrl)
+            .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.ALL)
+            .into(object : com.bumptech.glide.request.target.CustomTarget<android.graphics.Bitmap>() {
+                override fun onResourceReady(
+                    resource: android.graphics.Bitmap,
+                    transition: com.bumptech.glide.request.transition.Transition<in android.graphics.Bitmap>?
+                ) {
+                    androidx.palette.graphics.Palette.from(resource).generate { palette ->
+                        val color = palette?.darkVibrantSwatch?.rgb
+                            ?: palette?.darkMutedSwatch?.rgb
+                            ?: palette?.dominantSwatch?.rgb
+                            ?: android.graphics.Color.parseColor("#121212")
+
+
+                        val mainBox = findViewById<ScrollView>(R.id.mainBox)
+                        val blurContainerLeft = findViewById<LinearLayout>(R.id.blurContainer_left)
+                        val blurContainerBottom = findViewById<LinearLayout>(R.id.blurContainer_bottom)
+
+                        mainBox.setBackgroundColor(color)
+                        //blurContainerLeft.setBackgroundColor(color)
+                        //blurContainerBottom.setBackgroundColor(color)
+
+
+                        // Create a smooth gradient fading left to right
+                        val baseColor = (color and 0x00FFFFFF) or -0x1000000
+                        val gradientDrawableLeft = android.graphics.drawable.GradientDrawable(
+                            android.graphics.drawable.GradientDrawable.Orientation.LEFT_RIGHT,
+                            intArrayOf(
+                                baseColor,
+                                Color.TRANSPARENT,
+                                Color.TRANSPARENT
+                            )
+                        )
+
+                        val gradientDrawableBottom = android.graphics.drawable.GradientDrawable(
+                            android.graphics.drawable.GradientDrawable.Orientation.BOTTOM_TOP,
+                            intArrayOf(
+                                baseColor,
+                                Color.TRANSPARENT,
+                                Color.TRANSPARENT
+                            )
+                        )
+
+                        blurContainerLeft.background = gradientDrawableLeft
+                        blurContainerBottom.background = gradientDrawableBottom
+                    }
+                }
+                override fun onLoadCleared(placeholder: android.graphics.drawable.Drawable?) {}
+            })
+    }
+
+
+
     override fun onDestroy() {
         // Stop and destroy trailer WebView to prevent memory leaks and Chromium crashes
         val webView = findViewById<WebView>(R.id.trailerWebView)
@@ -477,9 +560,6 @@ class Watch_Page : AppCompatActivity() {
         lifecycleScope.coroutineContext.cancelChildren()
 
         episodesAdapter.clear()
-
-        // Finish activity
-        finish()
 
         super.onDestroy()
     }
@@ -501,7 +581,6 @@ class Watch_Page : AppCompatActivity() {
 
         var track = 0
         var firstButton: Button? = null  // 👈 Keep a reference to the first
-        var isSeasonLoading = false
 
         while (track < noOfSeasons) {
             val selectedSeason = seasonData[track]
@@ -539,8 +618,7 @@ class Watch_Page : AppCompatActivity() {
 
             seasonButton.setOnClickListener {
 
-                if (isSeasonLoading) return@setOnClickListener
-                isSeasonLoading = true
+                if (selectedSeasonButton == seasonButton) return@setOnClickListener
 
                 selectedSeasonButton?.isSelected = false
                 seasonButton.isSelected = true
@@ -548,7 +626,6 @@ class Watch_Page : AppCompatActivity() {
 
                 selectedSeasonButton = seasonButton
                 ShowSeasonEpisodes(season_no, seasonData, seasonID)
-                seasonButton.postDelayed({isSeasonLoading = false }, 3000)
             }
 
             // DPAD navigation
@@ -635,6 +712,7 @@ class Watch_Page : AppCompatActivity() {
             val posterWidget = findViewById<ImageView>(R.id.posterImageView)
             Glide.with(posterWidget)
                 .load(selectedSeasonPoster)
+                .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.ALL)
                 .centerCrop()
                 .into(posterWidget)
         }
@@ -964,46 +1042,49 @@ class Watch_Page : AppCompatActivity() {
 
         @RequiresApi(Build.VERSION_CODES.O)
         fun applyIcon() {
-            val isFav = db.isFavoriteShow(userId, showId, type)
-            if (isFav) {
-                faveButtonImg.setImageResource(R.drawable.ic_tickfave)
-                faveButtonImg.imageTintList =
-                    ColorStateList.valueOf(ContextCompat.getColor(this, R.color.fav))
-            } else {
-                faveButtonImg.setImageResource(R.drawable.ic_addfave)
-                faveButtonImg.imageTintList =
-                    ColorStateList.valueOf(ContextCompat.getColor(this, R.color.white))
+            lifecycleScope.launch(Dispatchers.Main) {
+                val isFav = withContext(Dispatchers.IO) { db.isFavoriteShow(userId, showId, type) }
+                if (isFav) {
+                    faveButtonImg.setImageResource(R.drawable.ic_tickfave)
+                    faveButtonImg.imageTintList =
+                        ColorStateList.valueOf(ContextCompat.getColor(this@Watch_Page, R.color.fav))
+                } else {
+                    faveButtonImg.setImageResource(R.drawable.ic_addfave)
+                    faveButtonImg.imageTintList =
+                        ColorStateList.valueOf(ContextCompat.getColor(this@Watch_Page, R.color.white))
+                }
             }
         }
 
         applyIcon()
 
         faveButton.setOnClickListener {
-            val isFav = db.isFavoriteShow(userId, showId, type)
-            if (isFav) {
-
-                db.removeFavoriteShow(userId, showId, type)
-                applyIcon()
-
-            } else {
-                db.addFavoriteShow(
-                    userId = userId,
-                    showId = showId,
-                    type = type,
-                    title = title,
-                    rating = voteAverage,
-                    genres = genres,
-                    overview = overview,
-                    runtime = runtime,
-                    year = year,
-                    voteCount = voteCount,
-                    pg = pg,
-                    poster = poster,
-                    backdrop = backdrop ,
-                    noOfSeason = noOfSeason,
-                    lastSeason =lastSeason,
-                    lastEpisode =lastEpisode
-                )
+            lifecycleScope.launch(Dispatchers.Main) {
+                withContext(Dispatchers.IO) {
+                    val isFav = db.isFavoriteShow(userId, showId, type)
+                    if (isFav) {
+                        db.removeFavoriteShow(userId, showId, type)
+                    } else {
+                        db.addFavoriteShow(
+                            userId = userId,
+                            showId = showId,
+                            type = type,
+                            title = title,
+                            rating = voteAverage,
+                            genres = genres,
+                            overview = overview,
+                            runtime = runtime,
+                            year = year,
+                            voteCount = voteCount,
+                            pg = pg,
+                            poster = poster,
+                            backdrop = backdrop ,
+                            noOfSeason = noOfSeason,
+                            lastSeason =lastSeason,
+                            lastEpisode =lastEpisode
+                        )
+                    }
+                }
                 applyIcon()
             }
         }

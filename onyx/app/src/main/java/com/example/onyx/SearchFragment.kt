@@ -44,6 +44,17 @@ class SearchFragment :  Fragment(R.layout.fragment_search) {
     private lateinit var showSearchRecyclerView: RecyclerView
 
     private var urlHome = BuildConfig.A_K
+    private var speechRecognizer: android.speech.SpeechRecognizer? = null
+
+    private val requestPermissionLauncher = registerForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            startListening()
+        } else {
+            Log.e("VoiceSearch", "Permission denied")
+        }
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -128,6 +139,7 @@ class SearchFragment :  Fragment(R.layout.fragment_search) {
         showSearchRecyclerView.addItemDecoration(EqualSpaceItemDecoration(Spacing))
 
         setupSearchUi()
+        loadRecentSearches()
 
     }
 
@@ -135,14 +147,23 @@ class SearchFragment :  Fragment(R.layout.fragment_search) {
 
     private  fun searchAnimeFetch(searchTerm:String){
         val searchTextDisplay = requireView().findViewById<TextView>(R.id.searchTextDisplay)
+        val progressBar = requireView().findViewById<android.widget.ProgressBar>(R.id.searchProgressBar)
+        
+        saveRecentSearch(searchTerm)
+        requireView().findViewById<LinearLayout>(R.id.recentSearchesLayout).visibility = View.GONE
+        searchTextDisplay.visibility = View.VISIBLE
 
         animeSearchAdapter.clearItems()
+        showSearchAdapter.clearItems()
+        searchTextDisplay.text = "Searching..."
+        progressBar.visibility = View.VISIBLE
+
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             repeat(1) { attempt ->
+                var connection: HttpURLConnection? = null
                 try {
-
                     val url = "$urlHome/api/v2/anime/search?q=$searchTerm&page=1"
-                    val connection = URL(url).openConnection() as HttpURLConnection
+                    connection = URL(url).openConnection() as HttpURLConnection
                     connection.requestMethod = "GET"
                     connection.setRequestProperty("accept", "application/json")
 
@@ -154,20 +175,18 @@ class SearchFragment :  Fragment(R.layout.fragment_search) {
                     val dataFetch = jsonObject.getJSONObject("data")
                     val  searchData = dataFetch.getJSONArray("animes")
                     Log.e("ANIME_STATUS SEARCH-R", dataFetch.toString())
-                    var searchDataItmes = mutableListOf<AnimeSearchItem>()
-
 
                     withContext(Dispatchers.Main) {
                         if (!isAdded || view == null) return@withContext
+                        progressBar.visibility = View.GONE
                         if(searchData.length() == 0) {
-                            searchTextDisplay.text = "No Results Found"
+                            searchTextDisplay.text = "No Results Found for: $searchTerm"
                         }else{
                             searchTextDisplay.text = "Search results for: $searchTerm"
                         }
                     }
 
-
-
+                    val searchDataItems = mutableListOf<AnimeSearchItem>()
                     for (i in 0 until searchData.length()) {
                         val item = searchData.getJSONObject(i)
                         val title = item.getString("name")
@@ -177,49 +196,63 @@ class SearchFragment :  Fragment(R.layout.fragment_search) {
                         val sub = item.getJSONObject("episodes").optString("sub", "")
                         val dub = item.getJSONObject("episodes").optString("dub", "")
 
-
-
-                        val searchItem = AnimeSearchItem(
+                        searchDataItems.add(AnimeSearchItem(
                             id,
                             title,
                             imageUrl,
                             type,
                             sub,
-                            dub,
-                        )
-
-                        withContext(Dispatchers.Main) {
-                            if (!isAdded || view == null) return@withContext
-                            animeSearchAdapter.addItem(searchItem)
-                        }
-
+                            dub
+                        ))
                     }
 
+                    withContext(Dispatchers.Main) {
+                        if (!isAdded || view == null) return@withContext
+                        searchDataItems.forEach { animeSearchAdapter.addItem(it) }
+                        runLayoutAnimation(animeSearchRecyclerView)
+                    }
 
                     return@launch
                 } catch (e: Exception) {
-                    delay(20_000)
+                    withContext(Dispatchers.Main) {
+                        if (isAdded && view != null) {
+                            progressBar.visibility = View.GONE
+                            searchTextDisplay.text = "Error occurred during search"
+                        }
+                    }
                     Log.e("ANIME_STATUS S-Error", "Error fetching data", e)
                     return@launch
+                } finally {
+                    connection?.disconnect()
                 }
             }
         }
     }
 
 
-    private fun searchShowsFetch(searchTerm:String) {
+    private fun searchShowsFetch(searchTerm: String){
         val searchTextDisplay = requireView().findViewById<TextView>(R.id.searchTextDisplay)
+        val progressBar = requireView().findViewById<android.widget.ProgressBar>(R.id.searchProgressBar)
+        
+        saveRecentSearch(searchTerm)
+        requireView().findViewById<LinearLayout>(R.id.recentSearchesLayout).visibility = View.GONE
+        searchTextDisplay.visibility = View.VISIBLE
+
+        animeSearchAdapter.clearItems()
+        showSearchAdapter.clearItems()
+        searchTextDisplay.text = "Searching..."
+        progressBar.visibility = View.VISIBLE
 
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             repeat(3) { attempt ->
+                var connection: HttpURLConnection? = null
                 try {
-
                     Log.e("SEARCH RESULTS", searchTerm)
 
                     // --- Background work (network request) ---
                     val url =
                         "https://api.themoviedb.org/3/search/multi?include_adult=false&query=$searchTerm"
-                    val connection = URL(url).openConnection() as HttpURLConnection
+                    connection = URL(url).openConnection() as HttpURLConnection
                     connection.requestMethod = "GET"
                     connection.setRequestProperty("accept", "application/json")
                     connection.setRequestProperty(
@@ -233,14 +266,17 @@ class SearchFragment :  Fragment(R.layout.fragment_search) {
                     Log.e("SEARCH RESULTS", jsonObject.toString())
                     val moviesArray = jsonObject.getJSONArray("results")
 
-                    //Log.e("SEARCH RESULTS", moviesArray.toString())
-
-
                     withContext(Dispatchers.Main)  {
-                        searchTextDisplay.text = "Search Results for: $searchTerm (${moviesArray.length()})"
-                        showSearchAdapter.clearItems()
+                        if (!isAdded || view == null) return@withContext
+                        progressBar.visibility = View.GONE
+                        if (moviesArray.length() == 0) {
+                            searchTextDisplay.text = "No Results Found for: $searchTerm"
+                        } else {
+                            searchTextDisplay.text = "Search Results for: $searchTerm (${moviesArray.length()})"
+                        }
                     }
 
+                    val showDataItems = mutableListOf<MovieItem>()
                     for (i in 0 until moviesArray.length()) {
                         val current = moviesArray.getJSONObject(i)
                         current.remove("overview")
@@ -313,10 +349,7 @@ class SearchFragment :  Fragment(R.layout.fragment_search) {
 
                         val id = current.getString("id")
 
-
-                        //movies.add(MovieItem(title, imgUrl, id, type))
-
-                        val movieItem = MovieItem(
+                        showDataItems.add(MovieItem(
                             title = title,
                             imageUrl = imgUrl,
                             imdbCode = id,
@@ -324,25 +357,36 @@ class SearchFragment :  Fragment(R.layout.fragment_search) {
                             year = date,
                             rating = voteAverage,
                             runtime = info
-                        )
-
-                        withContext(Dispatchers.Main) {
-                            showSearchAdapter.addItem(movieItem)
-                        }
-
+                        ))
                     }
 
+                    withContext(Dispatchers.Main) {
+                        if (!isAdded || view == null) return@withContext
+                        showDataItems.forEach { showSearchAdapter.addItem(it) }
+                        runLayoutAnimation(showSearchRecyclerView)
+                    }
 
                     return@launch
                 } catch (e: Exception) {
                     Log.e("SEARCH RESULTS ERROR", "S ERROR", e)
-                    delay(10_000)
+                    if (attempt == 2) { // Last attempt
+                        withContext(Dispatchers.Main) {
+                            if (isAdded && view != null) {
+                                progressBar.visibility = View.GONE
+                                searchTextDisplay.text = "Error occurred during search"
+                            }
+                        }
+                    }
+                    delay(3000)
+                } finally {
+                    connection?.disconnect()
                 }
             }
         }
     }
 
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////
 
     private fun setupSearchUi() {
 
@@ -350,15 +394,25 @@ class SearchFragment :  Fragment(R.layout.fragment_search) {
         val keyboardLayout = requireView().findViewById<LinearLayout>(R.id.keyboard_layout)
         val toggleGroup = requireView().findViewById<MaterialButtonToggleGroup>(R.id.searchCategoryToggle)
 
+        val prefs = requireActivity().getSharedPreferences("SearchPrefs", android.content.Context.MODE_PRIVATE)
+        val savedCategoryId = prefs.getInt("category", R.id.btnAnime)
+        toggleGroup.check(savedCategoryId)
+        
+        if (savedCategoryId == R.id.btnAnime) searchInput.hint = "Search for anime..."
+        else searchInput.hint = "Search for shows..."
+
         toggleGroup.addOnButtonCheckedListener { _, checkedId, isChecked ->
             if (isChecked) {
+                prefs.edit().putInt("category", checkedId).apply()
                 when (checkedId) {
                     R.id.btnAnime -> searchInput.hint = "Search for anime..."
                     R.id.btnNormalShows -> searchInput.hint = "Search for shows..."
-
                 }
             }
         }
+
+        // You can comment out this function call to disable voice search
+        setupVoiceSearch()
 
         val keyboardManager = CustomKeyboardManager(
             requireActivity(),
@@ -386,6 +440,168 @@ class SearchFragment :  Fragment(R.layout.fragment_search) {
         keyboardManager.showKeyboard()
         //keyboardManager.hideKeyboard()
         keyboardManager.isKeyboardVisible()
+    }
+
+    private fun runLayoutAnimation(recyclerView: RecyclerView) {
+        val context = recyclerView.context
+        val controller = android.view.animation.AnimationUtils.loadLayoutAnimation(context, R.anim.layout_animation_slide_up)
+        recyclerView.layoutAnimation = controller
+        recyclerView.adapter?.notifyDataSetChanged()
+        recyclerView.scheduleLayoutAnimation()
+    }
+
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+    private fun setupVoiceSearch() {
+        val voiceSearchBtn = requireView().findViewById<android.widget.ImageButton>(R.id.btnVoiceSearch)
+        voiceSearchBtn.setOnClickListener {
+            if (androidx.core.content.ContextCompat.checkSelfPermission(requireContext(), android.Manifest.permission.RECORD_AUDIO) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                startListening()
+            } else {
+                requestPermissionLauncher.launch(android.Manifest.permission.RECORD_AUDIO)
+            }
+        }
+    }
+
+
+    private fun startListening() {
+        if (!android.speech.SpeechRecognizer.isRecognitionAvailable(requireContext())) {
+            Log.e("VoiceSearch", "Speech recognition not available")
+            return
+        }
+
+        speechRecognizer?.destroy()
+        speechRecognizer = android.speech.SpeechRecognizer.createSpeechRecognizer(requireContext())
+        val intent = android.content.Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+        intent.putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL, android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+        intent.putExtra(android.speech.RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
+
+        speechRecognizer?.setRecognitionListener(object : android.speech.RecognitionListener {
+            override fun onReadyForSpeech(params: Bundle?) {
+                val searchInput = requireView().findViewById<EditText>(R.id.searchView)
+                searchInput.hint = "Listening..."
+                requireView().findViewById<android.widget.ImageButton>(R.id.btnVoiceSearch).setColorFilter(android.graphics.Color.RED)
+            }
+            override fun onBeginningOfSpeech() {}
+            override fun onRmsChanged(rmsdB: Float) {}
+            override fun onBufferReceived(buffer: ByteArray?) {}
+            override fun onEndOfSpeech() {
+                val searchInput = requireView().findViewById<EditText>(R.id.searchView)
+                searchInput.hint = "Search for anime..."
+                requireView().findViewById<android.widget.ImageButton>(R.id.btnVoiceSearch).clearColorFilter()
+            }
+            override fun onError(error: Int) {
+                val searchInput = requireView().findViewById<EditText>(R.id.searchView)
+                searchInput.hint = "Search for anime..."
+                requireView().findViewById<android.widget.ImageButton>(R.id.btnVoiceSearch).clearColorFilter()
+                Log.e("VoiceSearch", "Error code: $error")
+                speechRecognizer?.destroy()
+            }
+            override fun onResults(results: Bundle?) {
+                val data = results?.getStringArrayList(android.speech.SpeechRecognizer.RESULTS_RECOGNITION)
+                if (!data.isNullOrEmpty()) {
+                    val spokenText = data[0]
+                    val searchInput = requireView().findViewById<EditText>(R.id.searchView)
+                    searchInput.setText(spokenText)
+                    
+                    val toggleGroup = requireView().findViewById<MaterialButtonToggleGroup>(R.id.searchCategoryToggle)
+                    when (toggleGroup.checkedButtonId) {
+                        R.id.btnAnime -> searchAnimeFetch(spokenText)
+                        R.id.btnNormalShows -> searchShowsFetch(spokenText)
+                        else -> {}
+                    }
+                }
+                speechRecognizer?.destroy()
+            }
+            override fun onPartialResults(partialResults: Bundle?) {
+                val data = partialResults?.getStringArrayList(android.speech.SpeechRecognizer.RESULTS_RECOGNITION)
+                if (!data.isNullOrEmpty()) {
+                    val searchInput = requireView().findViewById<EditText>(R.id.searchView)
+                    searchInput.setText(data[0])
+                }
+            }
+            override fun onEvent(eventType: Int, params: Bundle?) {}
+        })
+
+        speechRecognizer?.startListening(intent)
+    }
+
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    private fun saveRecentSearch(query: String) {
+        val prefs = requireActivity().getSharedPreferences("SearchPrefs", android.content.Context.MODE_PRIVATE)
+        val historyString = prefs.getString("history", "") ?: ""
+        val historyList = historyString.split(",").filter { it.isNotBlank() }.toMutableList()
+
+        historyList.remove(query)
+        historyList.add(0, query)
+
+        if (historyList.size > 10) {
+            historyList.removeAt(historyList.size - 1)
+        }
+
+        prefs.edit().putString("history", historyList.joinToString(",")).apply()
+    }
+
+    private fun loadRecentSearches() {
+        val prefs = requireActivity().getSharedPreferences("SearchPrefs", android.content.Context.MODE_PRIVATE)
+        val historyString = prefs.getString("history", "") ?: ""
+        val historyList = historyString.split(",").filter { it.isNotBlank() }
+        
+        val recentLayout = requireView().findViewById<LinearLayout>(R.id.recentSearchesLayout)
+        val container = requireView().findViewById<LinearLayout>(R.id.recentSearchesContainer)
+        val searchTextDisplay = requireView().findViewById<TextView>(R.id.searchTextDisplay)
+        
+        if (historyList.isEmpty()) {
+            recentLayout.visibility = View.GONE
+            searchTextDisplay.visibility = View.GONE
+            return
+        }
+
+        recentLayout.visibility = View.VISIBLE
+        searchTextDisplay.visibility = View.GONE
+        container.removeAllViews()
+        
+        for (term in historyList) {
+            val btn = com.google.android.material.button.MaterialButton(requireContext(), null, com.google.android.material.R.attr.materialButtonOutlinedStyle)
+            btn.text = term
+            btn.setTextColor(android.graphics.Color.WHITE)
+            btn.backgroundTintList = android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#333333"))
+            
+            val params = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT)
+            params.setMargins(0, 0, (10 * resources.displayMetrics.density).toInt(), 0)
+            btn.layoutParams = params
+            
+            btn.setOnClickListener {
+                val searchInput = requireView().findViewById<EditText>(R.id.searchView)
+                searchInput.setText(term)
+                
+                val toggleGroup = requireView().findViewById<MaterialButtonToggleGroup>(R.id.searchCategoryToggle)
+                when (toggleGroup.checkedButtonId) {
+                    R.id.btnAnime -> searchAnimeFetch(term)
+                    R.id.btnNormalShows -> searchShowsFetch(term)
+                    else -> {}
+                }
+            }
+            container.addView(btn)
+        }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        // Prevent memory leaks by clearing view references
+        if (::animeSearchRecyclerView.isInitialized) {
+            animeSearchRecyclerView.adapter = null
+        }
+        if (::showSearchRecyclerView.isInitialized) {
+            showSearchRecyclerView.adapter = null
+        }
+        speechRecognizer?.destroy()
+        speechRecognizer = null
     }
 
 }

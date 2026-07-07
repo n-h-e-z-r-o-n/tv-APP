@@ -8,6 +8,7 @@
     android:orientation="vertical"
     android:gravity="center"
     android:padding="4dp"
+    android:layout_gravity="center"
     android:background="@android:color/transparent"
     android:id="@+id/keyboard_layout">
 

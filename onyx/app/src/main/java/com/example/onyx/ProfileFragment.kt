@@ -52,12 +52,13 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
     private lateinit var seriesWatchedText: TextView
     private lateinit var qualityValueText: TextView
     private lateinit var themeValueText: TextView
+    private lateinit var dynamicColorValueText: TextView
     private lateinit var appVersionText: TextView
     
-    // APK Update related properties
-    // APK Update related properties
+    // Dialog related properties
     private var updateDialog: androidx.appcompat.app.AlertDialog? = null
-    // installPermissionLauncher removed as it's not applicable for REQUEST_INSTALL_PACKAGES (requires Intent)
+    private var themeDialog: androidx.appcompat.app.AlertDialog? = null
+    private var restartDialog: androidx.appcompat.app.AlertDialog? = null
     
     private val versionJsonUrl = BuildConfig.APPV_J //"https://github.com/n-h-e-z-r-o-n/tv-APP/raw/refs/heads/main/App/version.json"
     
@@ -136,6 +137,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
         seriesWatchedText = requireView().findViewById(R.id.seriesWatched)
         themeValueText = requireView().findViewById(R.id.themeValue)
         appVersionText = requireView().findViewById(R.id.appVersion)
+        dynamicColorValueText = requireView().findViewById(R.id.dynamicColorValue)
         
         // Set app version using GlobalUtils
         appVersionText.text = GlobalUtils.getAppVersion(requireActivity())
@@ -145,6 +147,10 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
         // Load requireActivity().theme setting using GlobalUtils
         val currentTheme = GlobalUtils.getAppTheme(requireActivity())
         themeValueText.text = currentTheme.replaceFirstChar { it.uppercase() }
+
+        // Load dynamic color setting
+        val isDynamicColor = sm.isDynamicColorEnabled()
+        dynamicColorValueText.text = if (isDynamicColor) "On" else "Off"
     }
     
     private fun setupClickListeners() {
@@ -154,6 +160,16 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
             showThemeDialog()
         }
         themeSetting.requestFocus()
+
+        // Dynamic color setting click
+        val dynamicColorSetting = requireView().findViewById<LinearLayout>(R.id.dynamicColorSetting)
+        dynamicColorSetting.setOnClickListener {
+            val currentState = sm.isDynamicColorEnabled()
+            val newState = !currentState
+            sm.setDynamicColorEnabled(newState)
+            dynamicColorValueText.text = if (newState) "On" else "Off"
+            Toast.makeText(requireActivity(), "Dynamic Color ${if (newState) "Enabled" else "Disabled"}", Toast.LENGTH_SHORT).show()
+        }
         
         // Clear cache click
         val clearCache = requireView().findViewById<LinearLayout>(R.id.clearCache)
@@ -216,20 +232,15 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                 themeValueText.text = selectedTheme.replaceFirstChar { it.uppercase() }
                 dialog.dismiss()
 
-                val intent = Intent(requireActivity(), this::class.java)
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-                startActivity(intent)
-
-                // Optional: finish current activity manually to be safe
-                //// requireActivity().finish()
+                GlobalUtils.restartApp(requireActivity())
             }
             .setNegativeButton("Cancel") { dialog, _ ->
                 dialog.dismiss()
             }
 
-        val dialog = builder.create()
+        themeDialog = builder.create()
 
-        dialog.setOnShowListener {
+        themeDialog?.setOnShowListener {
             val alertDialog = it as AlertDialog
             val listView = alertDialog.listView ?: return@setOnShowListener
 
@@ -254,11 +265,10 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                     child.setTextColor(fgColor)
                 }
             }
-            // Style negative button
             alertDialog.getButton(AlertDialog.BUTTON_NEGATIVE)?.setTextColor(fgColor)
         }
 
-        dialog.show()
+        themeDialog?.show()
     }
 
 
@@ -279,6 +289,8 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                 val url = URL(versionJsonUrl)
                 val connection = url.openConnection() as HttpURLConnection
                 connection.requestMethod = "GET"
+                connection.connectTimeout = 5000
+                connection.readTimeout = 5000
                 connection.connect()
 
                 if (connection.responseCode == HttpURLConnection.HTTP_OK) {
@@ -360,6 +372,8 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                 val url = URL(downloadUrlString)
                 val connection = url.openConnection() as HttpURLConnection
                 connection.requestMethod = "GET"
+                connection.connectTimeout = 5000
+                connection.readTimeout = 5000
                 connection.connect()
                 
                 if (connection.responseCode != HttpURLConnection.HTTP_OK) {
@@ -386,6 +400,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                 val data = ByteArray(4096) // Increased buffer size
                 var total: Long = 0
                 var count: Int
+                var lastProgress = 0
                 
                 while (input.read(data).also { count = it } != -1) {
                     total += count.toLong()
@@ -396,15 +411,19 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                         // Calculate percentage
                         val progress = (total * 100 / fileLength).toInt()
                         
-                        withContext(Dispatchers.Main) {
-                    if (!isAdded || view == null) return@withContext
-                            progressBar.progress = progress
-                            progressText.text = "$progress%"
-                            
-                            // Format bytes to MB
-                            val totalMb = String.format("%.1f", total / (1024f * 1024f))
-                            val maxMb = String.format("%.1f", fileLength / (1024f * 1024f))
-                            sizeText.text = "$totalMb MB / $maxMb MB"
+                        // Throttle UI updates to only trigger when percentage changes
+                        if (progress > lastProgress) {
+                            lastProgress = progress
+                            withContext(Dispatchers.Main) {
+                                if (!isAdded || view == null) return@withContext
+                                progressBar.progress = progress
+                                progressText.text = "$progress%"
+                                
+                                // Format bytes to MB
+                                val totalMb = String.format("%.1f", total / (1024f * 1024f))
+                                val maxMb = String.format("%.1f", fileLength / (1024f * 1024f))
+                                sizeText.text = "$totalMb MB / $maxMb MB"
+                            }
                         }
                     }
                 }
@@ -491,7 +510,9 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                 GlobalUtils.restartApp(requireActivity())
             }
             .setNegativeButton("Cancel", null)
-            .show()
+            
+        restartDialog = builder.create()
+        restartDialog?.show()
     }
     
     
@@ -510,7 +531,7 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
             view.setOnFocusChangeListener { v, hasFocus ->
                 if (hasFocus) {
                     v.background = requireActivity().getDrawable(R.drawable.setting_item_background)
-                    v.scaleX = 1.0f
+                    v.scaleX = 1.05f
                     v.scaleY = 1.05f
                 } else {
                     v.background = requireActivity().getDrawable(R.drawable.setting_item_background)
@@ -539,6 +560,8 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
     override fun onDestroy() {
         super.onDestroy()
         updateDialog?.dismiss()
+        themeDialog?.dismiss()
+        restartDialog?.dismiss()
     }
 
 

@@ -78,22 +78,14 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
     private var holdSeasonId  = ""
 
     private var holdEpisodeNo  = ""
-
-
     private val episodeButtons = mutableListOf<FrameLayout>()
-
     private lateinit var EpisodeContiner: LinearLayout
     private lateinit var SeasonsContainer: LinearLayout
     private lateinit var seasonTitleWidget: TextView
-
     private var selectedEpisodeView: FrameLayout? = null
-
     private var isEpisodeLoading = false
     private var isSeasonLoading = false
-
     private var firstEpisodeLoaded = false
-
-
     private lateinit var playerView: PlayerView
     private lateinit var progressBar: ProgressBar
     private lateinit var overlayContainer: View
@@ -232,7 +224,7 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
 
     private fun showData(SeasonId: String){
         lifecycleScope.launch(Dispatchers.Main) {
-
+            try {
                 val jsonObject = withContext(Dispatchers.IO) { fetchAnime.animeInfo(SeasonId)}
 
                 if (jsonObject==null) return@launch
@@ -278,22 +270,27 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
                             isSeasonLoading = true
 
                             lifecycleScope.launch(Dispatchers.Main) {
-                                val jsonObject = withContext(Dispatchers.IO) { fetchAnime.animeInfo(season_id) }
-                                if (jsonObject!=null){
-                                    val data =  jsonObject.getJSONObject("data")
-                                    val name = data.getString("name")
-                                    val poster = data.getString("poster")
-                                    val id = data.getString("id")
+                                try {
+                                    val jsonObject = withContext(Dispatchers.IO) { fetchAnime.animeInfo(season_id) }
+                                    if (jsonObject!=null){
+                                        val data =  jsonObject.getJSONObject("data")
+                                        val name = data.getString("name")
+                                        val poster = data.getString("poster")
+                                        val id = data.getString("id")
 
-                                    seasonTitleWidget.text  = name
+                                        seasonTitleWidget.text  = name
 
-                                    holdSeasonTitle = name
-                                    holdPoster = poster
-                                    holdSeasonId = id
+                                        holdSeasonTitle = name
+                                        holdPoster = poster
+                                        holdSeasonId = id
+                                    }
+
+                                    getEpisodes(season_id)
+                                } catch (e: Exception) {
+                                    Log.e("ANIME_PLAYER", "Error in season click", e)
+                                } finally {
+                                    isSeasonLoading = false
                                 }
-
-                                getEpisodes(season_id)
-                                isSeasonLoading = false
                             }
                         }
 
@@ -312,6 +309,9 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
 
                     getEpisodes(SeasonId)
                 }
+            } catch (e: Exception) {
+                Log.e("ANIME_PLAYER", "Error showing data", e)
+            }
         }
     }
 
@@ -320,77 +320,102 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
         EpisodeContiner.removeAllViews()
 
         val inflater = LayoutInflater.from(this)
-        val EpisodesjsonObject = withContext(Dispatchers.IO) { fetchAnime.animeEpisodes(season_id) }
+        try {
+            val EpisodesjsonObject = withContext(Dispatchers.IO) { fetchAnime.animeEpisodes(season_id) }
 
-        if (EpisodesjsonObject != null){
-            val data = EpisodesjsonObject.getJSONObject("data")
-            val  episodes = data.getJSONArray("episodes")
-            for (i in 0 until episodes.length()) {
+            if (EpisodesjsonObject != null){
+                val data = EpisodesjsonObject.getJSONObject("data")
+                val  episodes = data.getJSONArray("episodes")
+                for (i in 0 until episodes.length()) {
 
-                val episode = episodes.getJSONObject(i)
-                val eTitle = episode.optString("title", "${i + 1}")
-                val eNumber = episode.optString("number", "")
-                val episodeId = episode.optString("episodeId", "")
+                    val episode = episodes.getJSONObject(i)
+                    val eTitle = episode.optString("title", "${i + 1}")
+                    val eNumber = episode.optString("number", "")
+                    val episodeId = episode.optString("episodeId", "")
+                    val eImageUrl = episode.optString("image", "")
 
-                val episodeBtn = inflater.inflate(R.layout.anime_item_episode2, EpisodeContiner, false) as FrameLayout
-                val epTitleWidget = episodeBtn.findViewById<TextView>(R.id.episode_name)
-                val epNumberWidget = episodeBtn.findViewById<TextView>(R.id.episode_Number)
+                    val episodeBtn = inflater.inflate(R.layout.anime_item_episode2, EpisodeContiner, false) as FrameLayout
+                    val epTitleWidget = episodeBtn.findViewById<TextView>(R.id.episode_name)
+                    val epNumberWidget = episodeBtn.findViewById<TextView>(R.id.episode_Number)
+                    val epImg = episodeBtn.findViewById<ImageView>(R.id.episode_image)
+                    val cWatchSeek_bar = episodeBtn.findViewById<SeekBar>(R.id.cWatchSeek_bar)
 
-                epTitleWidget.text = eTitle
-                epNumberWidget.text = "$eNumber: "
+                    epTitleWidget.text = eTitle
+                    epNumberWidget.text = "$eNumber: "
 
-                episodeBtn.setOnClickListener {
+                    try{
+                        Glide.with(this)
+                            .load(eImageUrl)
+                            .centerCrop()
+                            .into(epImg)
+                    }catch (e:Exception){}
 
-                    if (currentEpisodeId == episodeId) return@setOnClickListener
-                    if (isEpisodeLoading) return@setOnClickListener
+                    withContext(Dispatchers.IO) {
+                        try {
+                            val lastPos = db.getResumePosition(userId, episodeId, "anime").toLong()
+                            val durationPos = db.getDurationPosition(userId, episodeId, "anime").toLong()
+                            withContext(Dispatchers.Main) {
+                                val progress = if (durationPos > 0) ((lastPos.toDouble() / durationPos.toDouble()) * 1000).toInt() else 0
+                                cWatchSeek_bar.progress = progress.coerceIn(0, 1000)
+                            }
+                        }catch(e:Exception){}
+                    }
 
-                    Log.e("ANIME_PLAYER", "EPISODE: $eNumber  , ID: $episodeId, CLICKED")
+                    episodeBtn.setOnClickListener {
 
-                    saveContinueWatching()
+                        if (currentEpisodeId == episodeId) return@setOnClickListener
+                        if (isEpisodeLoading) return@setOnClickListener
 
+                        Log.e("ANIME_PLAYER", "EPISODE: $eNumber  , ID: $episodeId, CLICKED")
 
-                        holdEpisodeNo = eNumber
-                        fetchStreamingLinks(episodeId)
-
-                        selectedEpisodeView?.isSelected = false
-                        episodeBtn.isSelected = true
-                        selectedEpisodeView = episodeBtn
-
-                }
-
-                EpisodeContiner.addView(episodeBtn)
-
-                if(currentEpisodeNumber == eNumber && currentEpisodeId == episodeId){
-                    episodeBtn.isSelected = true
-                    selectedEpisodeView = episodeBtn
-
-                    if(!firstEpisodeLoaded){
-                        Log.e("ANIME_PLAYER", "DEFAULT EPISODE: $eNumber  , ID: $episodeId, CLICKED")
-
-                        //episodeBtn.performClick()
-
-                        selectedEpisodeView?.isSelected = false
-                        episodeBtn.isSelected = true
-                        selectedEpisodeView = episodeBtn
-                        holdEpisodeNo = eNumber
                         saveContinueWatching()
 
 
-                        fetchStreamingLinks(episodeId)
+                            holdEpisodeNo = eNumber
+                            fetchStreamingLinks(episodeId)
 
-                        firstEpisodeLoaded = true
+                            selectedEpisodeView?.isSelected = false
+                            episodeBtn.isSelected = true
+                            selectedEpisodeView = episodeBtn
+
+                    }
+
+                    EpisodeContiner.addView(episodeBtn)
+
+                    if(currentEpisodeNumber == eNumber && currentEpisodeId == episodeId){
+                        episodeBtn.isSelected = true
+                        selectedEpisodeView = episodeBtn
+
+                        if(!firstEpisodeLoaded){
+                            Log.e("ANIME_PLAYER", "DEFAULT EPISODE: $eNumber  , ID: $episodeId, CLICKED")
+
+                            //episodeBtn.performClick()
+
+                            selectedEpisodeView?.isSelected = false
+                            episodeBtn.isSelected = true
+                            selectedEpisodeView = episodeBtn
+                            holdEpisodeNo = eNumber
+                            saveContinueWatching()
+
+
+                            fetchStreamingLinks(episodeId)
+
+                            firstEpisodeLoaded = true
+                        }
+                    }
+
+                    if (currentSeasonId == season_id){
+                        episodeButtons.add(episodeBtn)
                     }
                 }
-
-                if (currentSeasonId == season_id){
-                    episodeButtons.add(episodeBtn)
-                }
             }
+        } catch (e: Exception) {
+            Log.e("ANIME_PLAYER", "Error getting episodes", e)
         }
 
     }
 
-    private fun fetchStreamingLinks_API(episodeId: String) {
+    private fun fetchStreamingLinks_api(episodeId: String) {
         lifecycleScope.launch(Dispatchers.Main) {
             isEpisodeLoading = true
             val maxAttempts = 3
@@ -398,7 +423,13 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
 
             while (attempt < maxAttempts) {
                 attempt++
-                val jsonObjectServerInfo = withContext(Dispatchers.IO) { fetchAnime.animeEpisodeServers(episodeId) }
+                var jsonObjectServerInfo: org.json.JSONObject? = null
+                try {
+                    jsonObjectServerInfo = withContext(Dispatchers.IO) { fetchAnime.animeEpisodeServers(episodeId) }
+                } catch (e: Exception) {
+                    Log.e("ANIME_PLAYER", "Error fetching episode servers", e)
+                }
+                
                 if (jsonObjectServerInfo != null) {
 
                     Log.d("ANIME_PLAYER", "StreamingLinks=$jsonObjectServerInfo FETCHED")
@@ -413,18 +444,14 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
 
                         for (i in 0 until input.length()) {
                             val obj = input.optJSONObject(i) ?: continue
-                            val link = obj.optString("link")
+                            val link = obj.optString("link").lowercase()
                             val type = obj.optString("type")
+                            
+                            val isSupported = link.contains(".m3u8") || link.contains(".mp4") || link.contains(".mkv") || link.contains(".mpd")
 
-                            /*
-                            if (link.contains(".m3u8")) {
-                                result.put(obj)
-                            }*/
-
-                            if (type != "embed") {
+                            if (type != "embed" && isSupported) {
                                 result.put(obj)
                             }
-                            //result.put(obj)
                         }
                         return result
                     }
@@ -432,8 +459,47 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
                     val subServers = cleanArray(subServersRaw)
                     val dubServers = cleanArray(dubServersRaw)
 
+                    val prefs = getSharedPreferences("AnimePrefs", Context.MODE_PRIVATE)
+                    val prefCategory = prefs.getString("pref_server_category", null)
+                    val prefServerName = prefs.getString("pref_server_name", null)
+
+                    var preferredSource: StreamSource? = null
+
+                    if (prefCategory != null) {
+                        val targetServers = if (prefCategory == "sub") subServers else dubServers
+                        if (targetServers.length() > 0) {
+                            if (prefServerName != null) {
+                                for (i in 0 until targetServers.length()) {
+                                    val server = targetServers.getJSONObject(i)
+                                    if (server.getString("server") == prefServerName) {
+                                        preferredSource = StreamSource(
+                                            serverName = server.getString("server"),
+                                            category = prefCategory,
+                                            videoLink = server.getString("link"),
+                                            referer = server.optJSONObject("headers")?.optString("Referer"),
+                                            origin = server.optJSONObject("headers")?.optString("Origin"),
+                                            userAgent = server.optJSONObject("headers")?.optString("User-Agent")
+                                        )
+                                        break
+                                    }
+                                }
+                            }
+                            if (preferredSource == null) {
+                                val server = targetServers.getJSONObject(0)
+                                preferredSource = StreamSource(
+                                    serverName = server.getString("server"),
+                                    category = prefCategory,
+                                    videoLink = server.getString("link"),
+                                    referer = server.optJSONObject("headers")?.optString("Referer"),
+                                    origin = server.optJSONObject("headers")?.optString("Origin"),
+                                    userAgent = server.optJSONObject("headers")?.optString("User-Agent")
+                                )
+                            }
+                        }
+                    }
+
                     // Determine initial default
-                    val defaultSource = when {
+                    val defaultSource = preferredSource ?: when {
                         dubServers.length() > 0 -> {
                             val server = dubServers.getJSONObject(0)
                             StreamSource(
@@ -534,6 +600,11 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
                                         dialog?.dismiss()
 
                                         if (vlink.isNotBlank()) {
+                                            val prefs = getSharedPreferences("AnimePrefs", Context.MODE_PRIVATE)
+                                            prefs.edit()
+                                                .putString("pref_server_category", title)
+                                                .putString("pref_server_name", serverName)
+                                                .apply()
                                             fetchServerSources(episodeId, serverName, title, vlink, referer,  orign, userAgent)
                                         }
                                     }
@@ -579,13 +650,18 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
             while (attempt < maxAttempts) {
                 attempt++
 
-                // CALL THE LOCAL SCRAPER DIRECTLY INSTEAD OF THE NODE.JS API
-                val streamData = withContext(Dispatchers.IO) {
-                    MiruroScraper.fetchMiruroStreamingLinks(episodeId)
+                var streamData: Map<String, List<Map<String, Any>>>? = null
+                try {
+                    // CALL THE LOCAL SCRAPER DIRECTLY INSTEAD OF THE NODE.JS API
+                    streamData = withContext(Dispatchers.IO) {
+                        MiruroScraper.fetchMiruroStreamingLinks(episodeId)
+                    }
+                } catch (e: Exception) {
+                    Log.e("ANIME_PLAYER", "Error fetching streaming links", e)
                 }
 
                 // Check if we got valid data back
-                if (streamData.isNotEmpty() && (streamData["sub"]?.isNotEmpty() == true || streamData["dub"]?.isNotEmpty() == true)) {
+                if (streamData != null && streamData.isNotEmpty() && (streamData["sub"]?.isNotEmpty() == true || streamData["dub"]?.isNotEmpty() == true)) {
 
                     Log.d("ANIME_PLAYER", "StreamingLinks=$episodeId FETCHED")
 
@@ -594,14 +670,59 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
 
                     // Replaced cleanArray with a clean native Kotlin list filter
                     fun cleanList(input: List<Map<String, Any>>): List<Map<String, Any>> {
-                        return input.filter { (it["type"] as? String) != "embed" }
+                        return input.filter { 
+                            val type = it["type"] as? String
+                            val link = (it["link"] as? String)?.lowercase() ?: ""
+                            val isSupported = link.contains(".m3u8") || link.contains(".mp4") || link.contains(".mkv") || link.contains(".mpd")
+                            type != "embed" && isSupported
+                        }
                     }
 
                     val subServers = cleanList(subServersRaw)
                     val dubServers = cleanList(dubServersRaw)
 
+                    val prefs = getSharedPreferences("AnimePrefs", Context.MODE_PRIVATE)
+                    val prefCategory = prefs.getString("pref_server_category", null)
+                    val prefServerName = prefs.getString("pref_server_name", null)
+
+                    var preferredSource: StreamSource? = null
+
+                    if (prefCategory != null) {
+                        val targetServers = if (prefCategory == "sub") subServers else dubServers
+                        if (targetServers.isNotEmpty()) {
+                            if (prefServerName != null) {
+                                for (server in targetServers) {
+                                    if (server["server"] as? String == prefServerName) {
+                                        val headers = server["headers"] as? Map<*, *>
+                                        preferredSource = StreamSource(
+                                            serverName = server["server"] as? String ?: "",
+                                            category = prefCategory,
+                                            videoLink = server["link"] as? String ?: "",
+                                            referer = headers?.get("Referer") as? String ?: "",
+                                            origin = headers?.get("Origin") as? String ?: "",
+                                            userAgent = headers?.get("User-Agent") as? String ?: ""
+                                        )
+                                        break
+                                    }
+                                }
+                            }
+                            if (preferredSource == null) {
+                                val server = targetServers[0]
+                                val headers = server["headers"] as? Map<*, *>
+                                preferredSource = StreamSource(
+                                    serverName = server["server"] as? String ?: "",
+                                    category = prefCategory,
+                                    videoLink = server["link"] as? String ?: "",
+                                    referer = headers?.get("Referer") as? String ?: "",
+                                    origin = headers?.get("Origin") as? String ?: "",
+                                    userAgent = headers?.get("User-Agent") as? String ?: ""
+                                )
+                            }
+                        }
+                    }
+
                     // Determine initial default
-                    val defaultSource = when {
+                    val defaultSource = preferredSource ?: when {
                         dubServers.isNotEmpty() -> {
                             val server = dubServers[0]
                             val headers = server["headers"] as? Map<*, *>
@@ -707,6 +828,11 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
                                         dialog?.dismiss()
 
                                         if (vlink.isNotBlank()) {
+                                            val prefs = getSharedPreferences("AnimePrefs", Context.MODE_PRIVATE)
+                                            prefs.edit()
+                                                .putString("pref_server_category", title)
+                                                .putString("pref_server_name", serverName)
+                                                .apply()
                                             fetchServerSources(episodeId, serverName, title, vlink, referer, origin, userAgent)
                                         }
                                     }
@@ -1287,20 +1413,24 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
             val savedEpisodeNumber = currentEpisodeNumber
 
             if (duration > 0 && lastPosition >= 5000 && savedUserId != 0 && savedEpisodeId.isNotBlank()) {
-                // Run in background thread
-                lifecycleScope.launch(Dispatchers.IO) {
-                    db.addOrUpdateContinueWatching(
-                        userId = savedUserId,
-                        itemId = savedEpisodeId,
-                        type = "anime",
-                        title = savedSeasonTitle,
-                        poster = savedPoster ,
-                        backdrop = savedPoster,
-                        seasonNumber = savedSeasonId,
-                        episodeNumber = savedEpisodeNumber,
-                        lastPosition = lastPosition,
-                        duration = duration
-                    )
+                // Run in background thread using independent scope to prevent cancellation when activity dies
+                CoroutineScope(Dispatchers.IO).launch {
+                    try {
+                        db.addOrUpdateContinueWatching(
+                            userId = savedUserId,
+                            itemId = savedEpisodeId,
+                            type = "anime",
+                            title = savedSeasonTitle,
+                            poster = savedPoster,
+                            backdrop = savedPoster,
+                            seasonNumber = savedSeasonId,
+                            episodeNumber = savedEpisodeNumber,
+                            lastPosition = lastPosition,
+                            duration = duration
+                        )
+                    } catch (e: Exception) {
+                        Log.e("ANIME_PLAYER", "Error saving progress", e)
+                    }
                 }
             }
         }

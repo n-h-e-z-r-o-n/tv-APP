@@ -9,6 +9,7 @@
     tools:context=".WatchAnimeFragment">
 
     <androidx.core.widget.NestedScrollView
+        android:id="@+id/mainBox"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:fillViewport="true"
@@ -19,13 +20,11 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="?attr/transparentEffect"
         android:orientation="vertical">
 
         <FrameLayout
             android:layout_width="match_parent"
             android:id="@+id/mainSection"
-            android:background="?attr/transparentEffect"
             android:layout_height="500dp">
 
 
@@ -45,7 +44,7 @@
                     tools:ignore="ContentDescription,ImageContrastCheck" />
 
                 <LinearLayout
-                    android:id="@+id/blurContainer"
+                    android:id="@+id/blurContainerLeft"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:layout_gravity="center"
@@ -54,10 +53,13 @@
                     android:gravity="center"/>
 
                 <LinearLayout
+                    android:id="@+id/blurContainerBottom"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:background="@drawable/overlay_bottom_gradient_bg"
-                    android:layout_gravity="bottom"/>
+                    android:layout_gravity="bottom"
+                    android:orientation="horizontal" />
+
             </FrameLayout>
 
 
@@ -76,416 +78,389 @@
                         android:orientation="horizontal">
 
 
+                        <LinearLayout
+                            android:layout_width="500dp"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            tools:ignore="TextSizeCheck">
+
+
                             <LinearLayout
-                                android:layout_width="500dp"
+                                android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
+                                android:orientation="horizontal">
+
+                                <ImageView
+                                    android:id="@+id/cShowLogo"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="150dp"
+                                    android:adjustViewBounds="true"
+                                    android:maxWidth="400dp"
+                                    android:maxHeight="170dp"
+                                    android:scaleType="fitXY"
+                                    tools:ignore="ContentDescription" />
+
+                            </LinearLayout>
+
+
+                            <TextView
+                                android:id="@+id/watchTitle"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center"
+                                android:fontFamily="@font/p"
+                                android:maxLines="2"
+                                android:shadowColor="#000000"
+                                android:shadowDx="2"
+                                android:shadowDy="2"
+                                android:shadowRadius="3"
+                                android:textColor="#FFFFFF"
+                                android:textSize="40sp"
+                                android:textStyle="bold"
+                                tools:ignore="HardcodedText"
+                                tools:text="Campfire Cooking in Another World with My Absurd Skill Season 2" />
+
+                            <TextView
+                                android:id="@+id/watchGenres"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:fontFamily="serif"
+                                android:shadowColor="#000000"
+                                android:shadowDx="5"
+                                android:shadowDy="6"
+                                android:textColor="#FFFFFF"
+                                android:textSize="13sp"
+                                tools:ignore="HardcodedText,SmallSp"
+                                tools:text="Adventure ~ Drama ~ Fantasy" />
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
                                 android:orientation="vertical">
 
 
                                 <LinearLayout
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:orientation="horizontal">
+                                    android:layout_width="match_parent"
+                                    android:layout_height="25dp"
+                                    android:layout_marginTop="5dp"
+                                    android:orientation="horizontal"
+                                    android:padding="3dp"
+                                    tools:ignore="TextSizeCheck">
 
-                                    <ImageView
-                                        android:id="@+id/cShowLogo"
+                                    <androidx.cardview.widget.CardView
                                         android:layout_width="wrap_content"
-                                        android:layout_height="150dp"
-                                        android:adjustViewBounds="true"
-                                        android:maxHeight="170dp"
-                                        android:maxWidth="400dp"
-                                        android:scaleType="fitXY"
-                                        tools:ignore="ContentDescription"/>
+                                        android:layout_height="match_parent"
+                                        android:layout_gravity="center_horizontal"
+                                        android:clipToPadding="true"
+                                        app:cardCornerRadius="3dp"
+                                        app:cardElevation="0dp"
+                                        app:cardUseCompatPadding="false"
+                                        tools:ignore="TooDeepLayout">
 
-                                </LinearLayout>
-
-
-
-                                <TextView
-                                    android:id="@+id/watchTitle"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:textStyle="bold"
-                                    android:textSize="40sp"
-                                    android:fontFamily="@font/p"
-                                    tools:text="Campfire Cooking in Another World with My Absurd Skill Season 2"
-                                    android:textColor="#FFFFFF"
-                                    tools:ignore="HardcodedText"
-                                    android:layout_gravity="center"
-                                    android:maxLines="2"
-                                    android:shadowColor="#000000"
-                                    android:shadowDx="2"
-                                    android:shadowDy="2"
-                                    android:shadowRadius="3"/>
-
-                                <TextView
-                                    android:id="@+id/watchGenres"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:textSize="13sp"
-                                    android:fontFamily="serif"
-                                    tools:text="Adventure ~ Drama ~ Fantasy"
-                                    android:textColor="#FFFFFF"
-                                    tools:ignore="HardcodedText,SmallSp"
-                                    android:shadowColor="#000000"
-                                    android:shadowDx="5"
-                                    android:shadowDy="6"/>
-
-                                <LinearLayout
-                                    android:layout_width="match_parent"
-                                    android:layout_height="match_parent"
-                                    android:orientation="vertical">
-
-
-                                    <LinearLayout
-                                        android:layout_width="match_parent"
-                                        android:layout_height="25dp"
-                                        android:orientation="horizontal"
-                                        android:padding="3dp"
-                                        android:layout_marginTop="5dp">
-
-                                        <androidx.cardview.widget.CardView
+                                        <TextView
+                                            android:id="@+id/watchRating"
                                             android:layout_width="wrap_content"
                                             android:layout_height="match_parent"
-                                            app:cardCornerRadius="3dp"
-                                            android:layout_gravity="center_horizontal"
-                                            android:clipToPadding="true"
-                                            app:cardElevation="0dp"
-                                            app:cardUseCompatPadding="false"
-                                            >
+                                            android:layout_gravity="center"
+                                            android:layout_marginHorizontal="4dp"
+                                            android:ellipsize="end"
+                                            android:fontFamily="@font/p"
+                                            android:gravity="center"
+                                            android:maxLines="1"
+                                            android:paddingHorizontal="4dp"
+                                            android:shadowColor="#000000"
+                                            android:shadowDx="2"
+                                            android:shadowDy="2"
+                                            android:shadowRadius="3"
+                                            android:singleLine="true"
+                                            android:textColor="@android:color/white"
+                                            android:textSize="15sp"
+                                            android:textStyle="bold"
+                                            tools:ignore="HardcodedText,SmallSp,Suspicious0dp,TooDeepLayout,TextContrastCheck"
+                                            tools:text="PG-13" />
 
-                                              <TextView
-                                                    android:id="@+id/watchRating"
-                                                    android:layout_width="wrap_content"
-                                                    android:layout_height="match_parent"
-                                                    android:layout_gravity="center"
-                                                    android:ellipsize="end"
-                                                    android:gravity="center"
-                                                    android:maxLines="1"
-                                                    android:singleLine="true"
-                                                  tools:text="PG-13"
-                                                    android:fontFamily="@font/p"
-                                                    android:shadowColor="#000000"
-                                                    android:shadowDx="2"
-                                                    android:shadowDy="2"
-                                                    android:shadowRadius="3"
-                                                    android:paddingHorizontal="4dp"
-                                                    android:layout_marginHorizontal="4dp"
-                                                    android:textColor="@android:color/white"
-                                                    android:textSize="15sp"
-                                                    android:textStyle="bold"
-                                                    tools:ignore="HardcodedText,SmallSp,Suspicious0dp,TooDeepLayout"  />
-
-                                        </androidx.cardview.widget.CardView>
+                                    </androidx.cardview.widget.CardView>
 
 
-                                        <androidx.cardview.widget.CardView
+                                    <androidx.cardview.widget.CardView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="match_parent"
+                                        android:layout_gravity="center_horizontal"
+                                        android:layout_marginStart="5dp"
+                                        app:cardCornerRadius="3dp"
+                                        app:cardElevation="0dp"
+                                        app:cardUseCompatPadding="false">
+
+                                        <TextView
+                                            android:id="@+id/watchQuality"
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:layout_gravity="center"
+                                            android:layout_marginHorizontal="4dp"
+                                            android:ellipsize="end"
+                                            android:fontFamily="@font/p"
+                                            android:gravity="center"
+                                            android:maxLines="1"
+                                            android:paddingHorizontal="4dp"
+                                            android:shadowColor="#000000"
+                                            android:shadowDx="2"
+                                            android:shadowDy="2"
+                                            android:shadowRadius="3"
+                                            android:singleLine="true"
+                                            android:textColor="#FFFFFF"
+                                            android:textSize="15sp"
+                                            tools:ignore="HardcodedText,Suspicious0dp,TextContrastCheck"
+                                            tools:text="HD" />
+
+                                    </androidx.cardview.widget.CardView>
+
+
+                                    <androidx.cardview.widget.CardView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="match_parent"
+                                        android:layout_gravity="center_horizontal"
+                                        android:layout_marginStart="5dp"
+                                        android:clipToPadding="true"
+                                        app:cardCornerRadius="3dp"
+                                        app:cardElevation="0dp"
+                                        app:cardUseCompatPadding="false">
+
+                                        <TextView
+                                            android:id="@+id/watchRuntime"
                                             android:layout_width="wrap_content"
                                             android:layout_height="match_parent"
-                                            app:cardCornerRadius="3dp"
-                                            android:layout_gravity="center_horizontal"
-                                            app:cardElevation="0dp"
-                                            app:cardUseCompatPadding="false"
-                                            android:layout_marginStart="5dp">
+                                            android:layout_gravity="bottom"
+                                            android:ellipsize="end"
+                                            android:fontFamily="@font/n"
+                                            android:gravity="center"
+                                            android:maxLines="1"
+                                            android:paddingHorizontal="10dp"
+                                            android:shadowColor="#000000"
+                                            android:shadowDx="2"
+                                            android:shadowDy="2"
+                                            android:shadowRadius="3"
+                                            android:singleLine="false"
+                                            android:textColor="#FFFFFF"
+                                            android:textSize="15sp"
+                                            tools:ignore="HardcodedText,SmallSp,Suspicious0dp,TextContrastCheck"
+                                            tools:text="24m" />
+                                    </androidx.cardview.widget.CardView>
+
+
+                                    <androidx.cardview.widget.CardView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="match_parent"
+                                        android:layout_gravity="center_horizontal"
+                                        android:layout_marginStart="5dp"
+                                        android:clipToPadding="true"
+                                        app:cardCornerRadius="3dp"
+                                        app:cardElevation="0dp"
+                                        app:cardUseCompatPadding="false">
+
+                                        <LinearLayout
+                                            android:layout_width="match_parent"
+                                            android:layout_height="match_parent"
+                                            android:layout_gravity="center"
+                                            android:gravity="center"
+                                            android:orientation="horizontal"
+                                            android:paddingHorizontal="2dp"
+                                            tools:ignore="UseCompoundDrawables">
+
+
+                                            <ImageView
+                                                android:layout_width="20dp"
+                                                android:layout_height="match_parent"
+                                                android:scaleType="centerCrop"
+                                                android:src="@drawable/ic_sub"
+                                                app:tint="?attr/AccentColor"
+                                                tools:ignore="ContentDescription,TooDeepLayout,ImageContrastCheck" />
+
                                             <TextView
-                                                android:id="@+id/watchQuality"
+                                                android:id="@+id/watchSub"
                                                 android:layout_width="wrap_content"
                                                 android:layout_height="wrap_content"
                                                 android:layout_gravity="center"
                                                 android:ellipsize="end"
+                                                android:fontFamily="@font/p"
                                                 android:gravity="center"
                                                 android:maxLines="1"
-                                                android:singleLine="true"
-                                                tools:text="HD"
-                                                android:fontFamily="@font/p"
-                                                android:textColor="#FFFFFF"
+                                                android:paddingHorizontal="2dp"
                                                 android:shadowColor="#000000"
                                                 android:shadowDx="2"
                                                 android:shadowDy="2"
                                                 android:shadowRadius="3"
-                                                android:paddingHorizontal="4dp"
+                                                android:singleLine="true"
+                                                android:textColor="#FFFFFF"
                                                 android:textSize="15sp"
-                                                android:layout_marginHorizontal="4dp"
-                                                tools:ignore="HardcodedText,Suspicious0dp" />
+                                                tools:ignore="HardcodedText,SmallSp,Suspicious0dp,TextContrastCheck"
+                                                tools:text="23" />
+                                        </LinearLayout>
+                                    </androidx.cardview.widget.CardView>
 
-                                        </androidx.cardview.widget.CardView>
 
+                                    <androidx.cardview.widget.CardView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="match_parent"
+                                        android:layout_gravity="center_horizontal"
+                                        android:layout_marginStart="5dp"
+                                        android:clipToPadding="true"
+                                        app:cardCornerRadius="3dp"
+                                        app:cardElevation="0dp"
+                                        app:cardUseCompatPadding="false">
 
-                                        <androidx.cardview.widget.CardView
-                                            android:layout_width="wrap_content"
+                                        <LinearLayout
+                                            android:layout_width="match_parent"
                                             android:layout_height="match_parent"
-                                            app:cardCornerRadius="3dp"
-                                            android:layout_gravity="center_horizontal"
-                                            android:clipToPadding="true"
-                                            app:cardElevation="0dp"
-                                            android:layout_marginStart="5dp"
-                                            app:cardUseCompatPadding="false"
-                                            >
+                                            android:layout_gravity="center"
+                                            android:gravity="center"
+                                            android:orientation="horizontal"
+                                            android:paddingHorizontal="5dp"
+                                            tools:ignore="UseCompoundDrawables">
+
+                                            <ImageView
+                                                android:layout_width="12dp"
+                                                android:layout_height="match_parent"
+                                                android:src="@drawable/ic_dub"
+                                                app:tint="?attr/AccentColor"
+                                                tools:ignore="ContentDescription,ImageContrastCheck" />
 
                                             <TextView
-                                                android:id="@+id/watchRuntime"
+                                                android:id="@+id/watchDub"
                                                 android:layout_width="wrap_content"
-                                                android:layout_height="match_parent"
-                                                android:layout_gravity="bottom"
+                                                android:layout_height="wrap_content"
+                                                android:layout_gravity="center"
                                                 android:ellipsize="end"
-                                                android:maxLines="1"
-                                                tools:text="24m"
-                                                android:singleLine="false"
-                                                android:textColor="#FFFFFF"
-                                                android:textSize="15sp"
-                                                android:fontFamily="@font/n"
-                                                tools:ignore="HardcodedText,SmallSp,Suspicious0dp"
+                                                android:fontFamily="@font/p"
                                                 android:gravity="center"
+                                                android:maxLines="1"
+                                                android:paddingHorizontal="2dp"
                                                 android:shadowColor="#000000"
                                                 android:shadowDx="2"
                                                 android:shadowDy="2"
                                                 android:shadowRadius="3"
-                                                android:paddingHorizontal="10dp"/>
-                                        </androidx.cardview.widget.CardView>
+                                                android:singleLine="true"
+                                                android:textColor="#FFFFFF"
+                                                android:textSize="15sp"
+                                                tools:ignore="HardcodedText,SmallSp,Suspicious0dp,TextContrastCheck"
+                                                tools:text="43" />
 
+                                        </LinearLayout>
+                                    </androidx.cardview.widget.CardView>
 
-
-                                        <androidx.cardview.widget.CardView
-                                            android:layout_width="wrap_content"
-                                            android:layout_height="match_parent"
-                                            app:cardCornerRadius="3dp"
-                                            android:layout_gravity="center_horizontal"
-                                            android:clipToPadding="true"
-                                            app:cardElevation="0dp"
-                                            android:layout_marginStart="5dp"
-                                            app:cardUseCompatPadding="false"
-                                            >
-
-                                            <LinearLayout
-                                                android:layout_width="match_parent"
-                                                android:layout_height="match_parent"
-                                                android:paddingHorizontal="2dp"
-                                                android:gravity="center"
-                                                android:layout_gravity="center"
-                                                android:orientation="horizontal"
-                                                tools:ignore="UseCompoundDrawables">
-
-
-                                                <ImageView
-                                                    android:layout_width="20dp"
-                                                    android:layout_height="match_parent"
-                                                    android:src="@drawable/ic_sub"
-                                                    android:scaleType="centerCrop"
-                                                    app:tint="?attr/AccentColor"
-                                                    tools:ignore="ContentDescription,TooDeepLayout" />
-                                                <TextView
-                                                    android:id="@+id/watchSub"
-                                                    android:layout_width="wrap_content"
-                                                    android:layout_height="wrap_content"
-                                                    android:ellipsize="end"
-                                                    android:maxLines="1"
-                                                    tools:text="23"
-                                                    android:singleLine="true"
-                                                    android:textColor="#FFFFFF"
-                                                    android:shadowColor="#000000"
-                                                    android:shadowDx="2"
-                                                    android:shadowDy="2"
-                                                    android:shadowRadius="3"
-                                                    android:paddingHorizontal="2dp"
-                                                    android:fontFamily="@font/p"
-                                                    android:textSize="15sp"
-                                                    tools:ignore="HardcodedText,SmallSp,Suspicious0dp"
-                                                    android:gravity="center"
-                                                    android:layout_gravity="center"/>
-                                            </LinearLayout>
-                                        </androidx.cardview.widget.CardView>
-
-
-                                        <androidx.cardview.widget.CardView
-                                            android:layout_width="wrap_content"
-                                            android:layout_height="match_parent"
-                                            app:cardCornerRadius="3dp"
-                                            android:layout_gravity="center_horizontal"
-                                            android:clipToPadding="true"
-                                            app:cardElevation="0dp"
-                                            android:layout_marginStart="5dp"
-                                            app:cardUseCompatPadding="false">
-
-                                            <LinearLayout
-                                                android:layout_width="match_parent"
-                                                android:layout_height="match_parent"
-                                                android:paddingHorizontal="5dp"
-                                                android:gravity="center"
-                                                android:layout_gravity="center"
-                                                android:orientation="horizontal"
-                                                tools:ignore="UseCompoundDrawables">
-                                                <ImageView
-                                                    android:layout_width="12dp"
-                                                    android:layout_height="match_parent"
-                                                    android:src="@drawable/ic_dub"
-                                                    app:tint="?attr/AccentColor"
-                                                    tools:ignore="ContentDescription" />
-
-                                                <TextView
-                                                    android:id="@+id/watchDub"
-                                                    android:layout_width="wrap_content"
-                                                    android:layout_height="wrap_content"
-                                                    android:ellipsize="end"
-                                                    android:maxLines="1"
-                                                    tools:text="43"
-                                                    android:singleLine="true"
-                                                    android:textColor="#FFFFFF"
-                                                    android:shadowColor="#000000"
-                                                    android:shadowDx="2"
-                                                    android:shadowDy="2"
-                                                    android:shadowRadius="3"
-                                                    android:paddingHorizontal="2dp"
-                                                    android:fontFamily="@font/p"
-                                                    android:textSize="15sp"
-                                                    tools:ignore="HardcodedText,SmallSp,Suspicious0dp"
-                                                    android:gravity="center"
-                                                    android:layout_gravity="center"
-                                                    />
-
-                                            </LinearLayout>
-                                        </androidx.cardview.widget.CardView>
-
-                                        <View
-                                            android:layout_width="1dp"
-                                            android:layout_height="match_parent"
-                                            android:background="@android:color/darker_gray"
-                                            android:textSize="20sp"
-                                            android:alpha="0.3"
-                                            android:gravity="center"
-                                            android:layout_gravity="center"
-                                            android:layout_marginHorizontal="5dp"/>
-
-                                        <TextView
-                                            android:id="@+id/watchType"
-                                            android:layout_width="wrap_content"
-                                            android:layout_height="wrap_content"
-                                            android:ellipsize="end"
-                                            android:maxLines="1"
-                                            tools:text="Tv"
-                                            android:singleLine="true"
-                                            android:textColor="#FFFFFF"
-                                            android:textSize="15sp"
-                                            android:fontFamily="@font/n"
-                                            tools:ignore="HardcodedText,SmallSp,Suspicious0dp"
-                                            android:gravity="center"
-                                            android:layout_gravity="center"
-                                            android:shadowColor="#000000"
-                                            android:shadowDx="2"
-                                            android:shadowDy="2"
-                                            android:shadowRadius="3"
-                                            android:paddingHorizontal="2dp"/>
-
-                                        <View
-                                            android:layout_width="1dp"
-                                            android:layout_height="match_parent"
-                                            android:background="@android:color/darker_gray"
-                                            android:textSize="20sp"
-                                            android:alpha="0.3"
-                                            android:gravity="center"
-                                            android:layout_gravity="center"
-                                            android:layout_marginHorizontal="5dp"
-                                            />
-
-
-
-
-
-                                        <TextView
-                                            android:id="@+id/watchYear"
-                                            android:layout_width="wrap_content"
-                                            android:layout_height="match_parent"
-                                            android:layout_gravity="bottom"
-                                            android:ellipsize="end"
-                                            android:maxLines="1"
-                                            android:text=""
-                                            android:singleLine="false"
-                                            android:textColor="#FFFFFF"
-                                            android:textSize="18sp"
-                                            android:fontFamily="@font/n"
-                                            tools:ignore="HardcodedText,SmallSp,Suspicious0dp"
-                                            android:gravity="center"
-                                            android:layout_marginStart="9dp"
-                                            android:shadowColor="#000000"
-                                            android:shadowDx="2"
-                                            android:shadowDy="2"
-                                            android:shadowRadius="3"
-                                            android:paddingHorizontal="2dp"/>
-                                    </LinearLayout>
+                                    <View
+                                        android:layout_width="1dp"
+                                        android:layout_height="match_parent"
+                                        android:layout_gravity="center"
+                                        android:layout_marginHorizontal="5dp"
+                                        android:alpha="0.3"
+                                        android:background="@android:color/darker_gray"
+                                        android:gravity="center"
+                                        android:textSize="20sp" />
 
                                     <TextView
-                                        android:id="@+id/watchOverview"
-                                        android:layout_width="match_parent"
-                                        android:layout_height="0dp"
-                                        android:layout_weight="1"
-                                        android:fontFamily="serif"
-                                        tools:text="The fourth season of Tensei Shitara Slime Datta Ken. Demon Lord Rimuru's dream of creating an alliance between humans and monsters takes a step closer to being realized. As Tempest continues to prosper, Granville Rozzo and his granddaughter, Maribel Rozzo, clash with Demon Lord Rimuru over their plan to protect mankind by ruling over them. Meanwhile, in El Dorado, Demon Lord Leon works toward goals of his own. The awakening of a new Hero draws near! "
-                                        android:layout_marginBottom="10dp"
-                                        android:layout_marginTop="10dp"
+                                        android:id="@+id/watchType"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_gravity="center"
                                         android:ellipsize="end"
-                                        android:maxLines="3"
-                                        android:textColor="#FFFFFF"
+                                        android:fontFamily="@font/n"
+                                        android:gravity="center"
+                                        android:maxLines="1"
+                                        android:paddingHorizontal="2dp"
                                         android:shadowColor="#000000"
                                         android:shadowDx="2"
                                         android:shadowDy="2"
                                         android:shadowRadius="3"
-                                        android:textSize="13sp"
-                                        tools:ignore="NestedWeights,SmallSp" />
+                                        android:singleLine="true"
+                                        android:textColor="#FFFFFF"
+                                        android:textSize="15sp"
+                                        tools:ignore="HardcodedText,SmallSp,Suspicious0dp"
+                                        tools:text="Tv" />
 
-                                    <com.google.android.material.card.MaterialCardView
-                                        android:id="@+id/favoriteButton"
+                                    <View
+                                        android:layout_width="1dp"
+                                        android:layout_height="match_parent"
+                                        android:layout_gravity="center"
+                                        android:layout_marginHorizontal="5dp"
+                                        android:alpha="0.3"
+                                        android:background="@android:color/darker_gray"
+                                        android:gravity="center"
+                                        android:textSize="20sp" />
+
+
+                                    <TextView
+                                        android:id="@+id/watchYear"
                                         android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
+                                        android:layout_height="match_parent"
                                         android:layout_gravity="bottom"
-                                        android:focusable="true"
-                                        app:cardCornerRadius="9dp"
-                                        app:strokeWidth="2dp"
-                                        app:cardBackgroundColor="#40FFFFFF"
-                                        app:strokeColor="@color/card_stroke"
-                                        android:clickable="true"
-                                        app:cardElevation="0dp" >
-
-                                        <LinearLayout
-                                            android:layout_width="wrap_content"
-                                            android:layout_height="wrap_content"
-                                            android:gravity="center_vertical"
-                                            android:layout_gravity="bottom"
-                                            android:paddingHorizontal="14dp"
-                                            android:focusable="true"
-                                            android:clickable="true"
-                                            android:elevation="2dp">
-
-                                        <ImageView
-                                            android:id="@+id/favoriteButtonImg"
-                                            android:layout_width="24dp"
-                                            android:layout_height="34dp"
-                                            android:src="@drawable/ic_addfave"
-                                            app:tint="#FFFFFF"
-                                            android:background="@android:color/transparent"
-                                            android:textColor="?attr/FG_color"
-                                            android:textAllCaps="false"
-                                            android:tooltipText="Add to Favorites"
-                                            tools:ignore="ContentDescription,UnusedAttribute" />
-
-                                        <TextView
-                                            android:id="@+id/favoriteButtonText"
-                                            android:layout_width="wrap_content"
-                                            android:layout_height="wrap_content"
-                                            android:text="Add to Fav "
-                                            android:textSize="15sp"
-                                            android:fontFamily="@font/o"
-                                            android:textColor="#FFFFFF"
-                                            android:shadowColor="#000000"
-                                            android:shadowDx="1"
-                                            android:shadowDy="1"
-                                            android:shadowRadius="2"
-                                            android:paddingHorizontal="2dp"
-                                            android:textStyle="bold"
-                                            tools:ignore="HardcodedText" />
-
-                                        </LinearLayout>
-                                    </com.google.android.material.card.MaterialCardView>
+                                        android:layout_marginStart="9dp"
+                                        android:ellipsize="end"
+                                        android:fontFamily="@font/n"
+                                        android:gravity="center"
+                                        android:maxLines="1"
+                                        android:paddingHorizontal="2dp"
+                                        android:shadowColor="#000000"
+                                        android:shadowDx="2"
+                                        android:shadowDy="2"
+                                        android:shadowRadius="3"
+                                        android:singleLine="false"
+                                        android:text=""
+                                        android:textColor="#FFFFFF"
+                                        android:textSize="18sp"
+                                        tools:ignore="HardcodedText,SmallSp,Suspicious0dp" />
                                 </LinearLayout>
+
+                                <TextView
+                                    android:id="@+id/watchOverview"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="0dp"
+                                    android:layout_marginTop="10dp"
+                                    android:layout_marginBottom="10dp"
+                                    android:layout_weight="1"
+                                    android:ellipsize="end"
+                                    android:fontFamily="serif"
+                                    android:maxLines="3"
+                                    android:shadowColor="#000000"
+                                    android:shadowDx="2"
+                                    android:shadowDy="2"
+                                    android:shadowRadius="3"
+                                    android:textColor="#FFFFFF"
+                                    android:textSize="13sp"
+                                    tools:ignore="NestedWeights,SmallSp"
+                                    tools:text="The fourth season of Tensei Shitara Slime Datta Ken. Demon Lord Rimuru's dream of creating an alliance between humans and monsters takes a step closer to being realized. As Tempest continues to prosper, Granville Rozzo and his granddaughter, Maribel Rozzo, clash with Demon Lord Rimuru over their plan to protect mankind by ruling over them. Meanwhile, in El Dorado, Demon Lord Leon works toward goals of his own. The awakening of a new Hero draws near! " />
+
+                                <com.google.android.material.card.MaterialCardView
+                                    android:id="@+id/favoriteButtonAnime"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_gravity="bottom"
+                                    android:clickable="true"
+                                    android:focusable="true"
+                                    app:cardBackgroundColor="#40FFFFFF"
+                                    app:cardCornerRadius="9dp"
+                                    app:cardElevation="0dp"
+                                    app:strokeColor="@color/card_stroke"
+                                    app:strokeWidth="2dp"
+                                    tools:ignore="TouchTargetSizeCheck,SpeakableTextPresentCheck">
+
+
+                                    <ImageView
+                                        android:id="@+id/favoriteButtonImg"
+                                        android:layout_width="24dp"
+                                        android:layout_height="34dp"
+                                        android:layout_marginHorizontal="14dp"
+                                        android:background="@android:color/transparent"
+                                        android:src="@drawable/ic_addfave"
+                                        android:textAllCaps="false"
+                                        android:textColor="?attr/FG_color"
+                                        android:tooltipText="Add to Favorites"
+                                        app:tint="#FFFFFF"
+                                        tools:ignore="ContentDescription,UnusedAttribute" />
+
+
+                                </com.google.android.material.card.MaterialCardView>
                             </LinearLayout>
+                        </LinearLayout>
 
                         <ImageView
                             android:id="@+id/WatchImage"

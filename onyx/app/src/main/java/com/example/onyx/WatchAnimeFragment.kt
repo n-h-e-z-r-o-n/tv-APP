@@ -1,5 +1,7 @@
 package com.example.onyx
 
+import android.content.res.ColorStateList
+import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -12,6 +14,7 @@ import android.widget.FrameLayout
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.ScrollView
 import android.widget.SeekBar
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
@@ -20,6 +23,7 @@ import androidx.annotation.OptIn
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.util.UnstableApi
 import androidx.recyclerview.widget.GridLayoutManager
@@ -227,14 +231,35 @@ class WatchAnimeFragment : Fragment(R.layout.fragment_watch_anime_page) {
             .into(posterWidget)
 
 
-
-
         val backdrop_Widget = requireView().findViewById<ImageView>(R.id.backdropWidget)
         requireView().findViewById<ImageView>(R.id.WatchImage).visibility = View.GONE
+
+        extractAndApplyDynamicColor(backdrop)
+
+
         Glide.with(requireContext())
             .load(backdrop)
             .centerInside()
             .into(backdrop_Widget)
+
+
+        backdrop_Widget.post {
+            backdrop_Widget.scaleX = 1.05f
+            backdrop_Widget.scaleY = 1.05f
+
+            val scaleX = android.animation.PropertyValuesHolder.ofFloat(View.SCALE_X, 1.05f, 1.12f)
+            val scaleY = android.animation.PropertyValuesHolder.ofFloat(View.SCALE_Y, 1.05f, 1.12f)
+            val panX = android.animation.PropertyValuesHolder.ofFloat(View.TRANSLATION_X, 0f, -30f)
+            val panY = android.animation.PropertyValuesHolder.ofFloat(View.TRANSLATION_Y, 0f, -10f)
+
+            val animator = android.animation.ObjectAnimator.ofPropertyValuesHolder(backdrop_Widget, scaleX, scaleY, panX, panY)
+            animator.duration = 25000 // 25 seconds for a very slow, cinematic movement
+            animator.repeatCount = android.animation.ValueAnimator.INFINITE
+            animator.repeatMode = android.animation.ValueAnimator.REVERSE
+            animator.interpolator = android.view.animation.LinearInterpolator()
+            animator.start()
+        }
+
 
 
         LoadingAnimation.hide(requireView())
@@ -479,9 +504,8 @@ class WatchAnimeFragment : Fragment(R.layout.fragment_watch_anime_page) {
 
     ) {
         val userId = sm.getUserId()
-        val favoriteButton =  binding.favoriteButton
+        val favoriteButton =  binding.favoriteButtonAnime
         val favoriteButtonImg =  binding.favoriteButtonImg
-        val favoriteButtonText =  binding.favoriteButtonText
 
 
 
@@ -493,10 +517,12 @@ class WatchAnimeFragment : Fragment(R.layout.fragment_watch_anime_page) {
                 val isFav = withContext(Dispatchers.IO) { db.isFavoriteAnime(userId, animeId) }
                 if (isFav) {
                     favoriteButtonImg.setImageResource(R.drawable.ic_tickfave)
-                    favoriteButtonText.text = "Remove-Fav "
+                    favoriteButtonImg.imageTintList =
+                        ColorStateList.valueOf(ContextCompat.getColor(requireContext(), R.color.fav))
                 } else {
                     favoriteButtonImg.setImageResource(R.drawable.ic_addfave)
-                    favoriteButtonText.text= "Add-to-Fav "
+                    favoriteButtonImg.imageTintList =
+                        ColorStateList.valueOf(ContextCompat.getColor(requireContext(), R.color.white))
                 }
             }
         }
@@ -541,15 +567,9 @@ class WatchAnimeFragment : Fragment(R.layout.fragment_watch_anime_page) {
         fragmentBackCallback = object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
 
-                // Cancel any running coroutines
                 lifecycleScope.coroutineContext.cancelChildren()
-
                 val homeActivity = requireActivity() as HomeActivity
-                homeActivity.animeFragment?.let { existingAnimeTab ->
-                    homeActivity.navigateToExistingAndDestroyCurrent(existingAnimeTab, this@WatchAnimeFragment)
-                } ?: run {
-                    homeActivity.navigateToFragment(AnimeFragment())
-                }
+                homeActivity.returnToCoreNavigation(this@WatchAnimeFragment)
             }
         }
 
@@ -564,4 +584,62 @@ class WatchAnimeFragment : Fragment(R.layout.fragment_watch_anime_page) {
             requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, fragmentBackCallback)
         }
     }
+
+
+    private fun extractAndApplyDynamicColor(imageUrl: String) {
+        // If the user disabled Dynamic Color in Profile Settings, skip extraction
+        if (!sm.isDynamicColorEnabled()) return
+
+
+        Glide.with(requireContext())
+            .asBitmap()
+            .load(backdrop)
+            .centerInside()
+            .into(object : com.bumptech.glide.request.target.CustomTarget<android.graphics.Bitmap>() {
+                override fun onResourceReady(
+                    resource: android.graphics.Bitmap,
+                    transition: com.bumptech.glide.request.transition.Transition<in android.graphics.Bitmap>?
+                ) {
+                    androidx.palette.graphics.Palette.from(resource).generate { palette ->
+                        val color = palette?.darkVibrantSwatch?.rgb
+                            ?: palette?.darkMutedSwatch?.rgb
+                            ?: palette?.dominantSwatch?.rgb
+                            ?: Color.parseColor("#121212")
+
+                        val mainBox = binding.mainBox
+                        val blurContainerLeft = binding.blurContainerLeft
+                        val blurContainerBottom = binding.blurContainerBottom
+
+                        mainBox.setBackgroundColor(color)
+
+                        // Create a smooth gradient fading left to right
+                        val baseColor = (color and 0x00FFFFFF) or -0x1000000
+                        val gradientDrawableLeft = android.graphics.drawable.GradientDrawable(
+                            android.graphics.drawable.GradientDrawable.Orientation.LEFT_RIGHT,
+                            intArrayOf(
+                                baseColor,
+                                Color.TRANSPARENT,
+                                Color.TRANSPARENT
+                            )
+                        )
+
+                        val gradientDrawableBottom = android.graphics.drawable.GradientDrawable(
+                            android.graphics.drawable.GradientDrawable.Orientation.BOTTOM_TOP,
+                            intArrayOf(
+                                baseColor,
+                                Color.TRANSPARENT,
+                                Color.TRANSPARENT
+                            )
+                        )
+
+                        blurContainerLeft.background = gradientDrawableLeft
+                        blurContainerBottom.background = gradientDrawableBottom
+                    }
+                }
+                override fun onLoadCleared(placeholder: android.graphics.drawable.Drawable?) {}
+            })
+    }
+
+
+
 }

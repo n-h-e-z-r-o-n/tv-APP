@@ -17,9 +17,6 @@
 
 
 
-
-
-
     <ImageView
         android:id="@+id/episode_image"
         android:layout_width="match_parent"

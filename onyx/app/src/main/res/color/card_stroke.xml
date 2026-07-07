@@ -6,6 +6,10 @@
         android:color="?attr/AccentColor" />
 
     <item
+        android:state_selected="true"
+        android:color="#FFFFFF" />
+
+    <item
         android:color="@android:color/transparent" />
 
 </selector>

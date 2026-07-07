@@ -16,6 +16,7 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.CircleCrop
 import com.example.onyx.*
 import com.example.onyx.Database.SessionManger
+import com.google.android.material.card.MaterialCardView
 import java.lang.ref.WeakReference
 
 object NavAction {
@@ -33,8 +34,9 @@ object NavAction {
         val btnSearch = activity.findViewById<ImageButton>(R.id.sidebarSearchBtn)
         val btnWatching = activity.findViewById<ImageButton>(R.id.sidebarWatchListBtn)
         val btnNotification = activity.findViewById<ImageButton>(R.id.sidebarNotificationBtn)
-        val btnProfile = activity.findViewById<CardView>(R.id.sidebarBtnProfile)
+        val btnProfile = activity.findViewById<MaterialCardView>(R.id.sidebarBtnProfile)
         val profileImg = activity.findViewById<ImageView>(R.id.sidebarBtnProfileImg)
+        val btnExit = activity.findViewById<ImageButton>(R.id.sidebarExitBtn)
 
         val labelMvTv = activity.findViewById<TextView>(R.id.sidebarLabelShows)
         val labelAnime = activity.findViewById<TextView>(R.id.sidebarLabelAnime)
@@ -42,9 +44,17 @@ object NavAction {
         val labelWatched = activity.findViewById<TextView>(R.id.sidebarLabelWatchList)
         val labelNotification = activity.findViewById<TextView>(R.id.sidebarLabelNotification)
         val labelProfile = activity.findViewById<TextView>(R.id.sidebarLabelProfile)
+        val labelExit = activity.findViewById<TextView>(R.id.sidebarLabelExit)
 
-        val buttons = listOf(btnShows, btnAnime, btnSearch, btnWatching, btnNotification, btnProfile)
-        val labels = listOf(labelMvTv, labelAnime, labelSearch, labelWatched, labelNotification, labelProfile)
+
+
+        val buttons = listOf(btnShows, btnAnime, btnSearch, btnWatching, btnNotification, btnProfile, btnExit)
+        val labels = listOf(labelMvTv, labelAnime, labelSearch, labelWatched, labelNotification, labelProfile, labelExit)
+
+        btnExit.setOnClickListener {
+            GlobalUtils.exitApp(activity)
+        }
+
 
         val validButtons = buttons.filterNotNull()
         val validLabels = labels.filterNotNull()
@@ -181,6 +191,8 @@ object NavAction {
 
         previouslyFocusedView = null
     }
+
+
 
     private fun loadProfileImage(activity: Activity, imageView: ImageView) {
         try {

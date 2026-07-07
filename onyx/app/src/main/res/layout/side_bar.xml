@@ -30,10 +30,11 @@
             android:layout_gravity="center_vertical">
 
             <LinearLayout
+
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="30dp"
-                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                android:layout_marginTop="60dp"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
@@ -41,6 +42,7 @@
                     android:id="@+id/sidebarBtnShows"
                     android:layout_width="40dp"
                     android:layout_height="40dp"
+                    android:layout_margin="5dp"
                     android:layout_gravity="center_horizontal"
                     android:background="@android:color/transparent"
                     android:clickable="true"
@@ -70,7 +72,7 @@
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="30dp"
+                android:layout_marginBottom="10dp"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
@@ -78,6 +80,7 @@
                     android:id="@+id/sidebarBtnAnime"
                     android:layout_width="40dp"
                     android:layout_height="40dp"
+                    android:layout_margin="5dp"
                     android:layout_gravity="center_horizontal"
                     android:background="@android:color/transparent"
                     android:clickable="true"
@@ -107,7 +110,7 @@
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="30dp"
+                android:layout_marginBottom="10dp"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
@@ -115,6 +118,7 @@
                     android:id="@+id/sidebarSearchBtn"
                     android:layout_width="40dp"
                     android:layout_height="40dp"
+                    android:layout_margin="5dp"
                     android:layout_gravity="center_horizontal"
                     android:background="@android:color/transparent"
                     android:clickable="true"
@@ -144,7 +148,7 @@
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="30dp"
+                android:layout_marginBottom="10dp"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
@@ -152,6 +156,7 @@
                     android:id="@+id/sidebarWatchListBtn"
                     android:layout_width="40dp"
                     android:layout_height="40dp"
+                    android:layout_margin="5dp"
                     android:layout_gravity="center_horizontal"
                     android:background="@android:color/transparent"
                     android:clickable="true"
@@ -181,7 +186,7 @@
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="30dp"
+                android:layout_marginBottom="10dp"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
@@ -202,8 +207,9 @@
 
                     <ImageButton
                         android:id="@+id/sidebarNotificationBtn"
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
+                        android:layout_width="35dp"
+                        android:layout_height="35dp"
+                        android:layout_margin="5dp"
                         android:background="@android:color/transparent"
                         android:clickable="true"
                         android:contentDescription="Notifications"
@@ -236,23 +242,25 @@
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="30dp"
+                android:layout_marginBottom="60dp"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
-                <androidx.cardview.widget.CardView
+                <com.google.android.material.card.MaterialCardView
                     android:id="@+id/sidebarBtnProfile"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:layout_margin="3dp"
+                    android:layout_width="38dp"
+                    android:layout_height="38dp"
                     android:layout_gravity="bottom"
                     android:clickable="true"
+                    app:strokeColor="#FFFFFF"
+                    app:strokeWidth="1dp"
+                    android:layout_margin="5dp"
                     android:focusable="true"
                     android:focusableInTouchMode="true"
                     android:foreground="@drawable/cast_focus"
                     android:nextFocusLeft="@id/sidebarBtnProfile"
                     android:nextFocusUp="@id/sidebarNotificationBtn"
-                    android:nextFocusDown="@id/sidebarBtnShows"
+                    android:nextFocusDown="@id/sidebarExitBtn"
                     app:cardBackgroundColor="?attr/transparentEffect"
                     app:cardCornerRadius="100dp"
                     app:cardElevation="0dp">
@@ -261,12 +269,11 @@
                         android:id="@+id/sidebarBtnProfileImg"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:background="?attr/transparentEffect"
                         android:importantForAccessibility="no"
                         tools:ignore="TouchTargetSizeCheck,ImageContrastCheck" />
 
 
-                </androidx.cardview.widget.CardView>
+                </com.google.android.material.card.MaterialCardView>
 
                 <TextView
                     android:id="@+id/sidebarLabelProfile"
@@ -281,6 +288,46 @@
                     android:textSize="14sp"
                     tools:ignore="HardcodedText,InefficientWeight,SmallSp" />
             </LinearLayout>
+
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <ImageButton
+                    android:id="@+id/sidebarExitBtn"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_margin="5dp"
+                    android:layout_gravity="center_horizontal"
+                    android:background="@android:color/transparent"
+                    android:clickable="true"
+                    android:contentDescription="Watchlist"
+                    android:focusable="true"
+                    android:nextFocusLeft="@id/sidebarExitBtn"
+                    android:nextFocusUp="@id/sidebarBtnProfile"
+                    android:nextFocusDown="@id/sidebarBtnShows"
+                    android:src="@drawable/ic_close"
+                    app:tint="@color/nav_icon_color_selector"
+                    tools:ignore="HardcodedText,TouchTargetSizeCheck" />
+
+                <TextView
+                    android:id="@+id/sidebarLabelExit"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:alpha="0.5"
+                    android:ellipsize="end"
+                    android:gravity="center"
+                    android:maxLines="1"
+                    android:text="Close App"
+                    android:textColor="?attr/FG_color"
+                    android:textSize="13sp"
+                    tools:ignore="HardcodedText,InefficientWeight,SmallSp" />
+            </LinearLayout>
+
 
         </LinearLayout>
 
