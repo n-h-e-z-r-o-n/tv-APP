@@ -34,11 +34,22 @@ class AnimeTrendingAdapter(
     }
 
     var onAddMoreClicked: (() -> Unit)? = null
-    var isLoadingMore = false
+    var onItemFocused: ((position: Int) -> Unit)? = null
+    
+    var isLoadingNext = false
         set(value) {
             field = value
             notifyItemChanged(items.size)
         }
+
+    init {
+        setHasStableIds(true)
+    }
+
+    override fun getItemId(position: Int): Long {
+        if (position == items.size) return -1L
+        return items[position].id.hashCode().toLong()
+    }
 
     inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val CardViewcontiner: MaterialCardView? = view.findViewById(R.id.CardViewcontiner)
@@ -64,7 +75,7 @@ class AnimeTrendingAdapter(
             val content = holder.itemView.findViewById<View>(R.id.addMoreContent)
             val loading = holder.itemView.findViewById<View>(R.id.addMoreLoading)
 
-            if (isLoadingMore) {
+            if (isLoadingNext) {
                 content?.visibility = View.GONE
                 loading?.visibility = View.VISIBLE
                 holder.itemView.isClickable = false
@@ -75,13 +86,7 @@ class AnimeTrendingAdapter(
             }
 
             holder.itemView.setOnClickListener {
-                if (!isLoadingMore) {
-                    isLoadingMore = true
-                    val recycler = holder.itemView.parent as RecyclerView
-                    val prevPosition = holder.bindingAdapterPosition - 1
-                    if (prevPosition >= 0) {
-                        recycler.smoothScrollToPosition(prevPosition)
-                    }
+                if (!isLoadingNext) {
                     onAddMoreClicked?.invoke()
                 }
             }
@@ -134,16 +139,9 @@ class AnimeTrendingAdapter(
 
         holder.CardViewcontiner?.setOnFocusChangeListener { v, hasFocus ->
             if (hasFocus) {
-                // Prefetch logic
-                val prefetchThreshold = 6
                 val currentPos = holder.bindingAdapterPosition
-                if (!isLoadingMore && currentPos != RecyclerView.NO_POSITION && currentPos >= items.size - prefetchThreshold) {
-                    v.post {
-                        if (!isLoadingMore) {
-                            isLoadingMore = true
-                            onAddMoreClicked?.invoke()
-                        }
-                    }
+                if (currentPos != RecyclerView.NO_POSITION) {
+                    onItemFocused?.invoke(currentPos)
                 }
             }
         }
@@ -151,10 +149,15 @@ class AnimeTrendingAdapter(
 
     override fun getItemCount() = items.size + 1
 
-    fun addItems(newItems: List<TrendingAnimeItem>) {
+    fun appendItems(newItems: List<TrendingAnimeItem>) {
         val startPosition = items.size
         items.addAll(newItems)
         notifyItemRangeInserted(startPosition, newItems.size)
+    }
+
+    fun prependItems(newItems: List<TrendingAnimeItem>) {
+        items.addAll(0, newItems)
+        notifyItemRangeInserted(0, newItems.size)
     }
 
     fun addItem(item: TrendingAnimeItem) {
@@ -403,14 +406,24 @@ class AnimeGridAdapter(
     }
 
     var onAddMoreClicked: (() -> Unit)? = null
+    var onPositionFocused: ((position: Int) -> Unit)? = null
     override var onItemFocused: ((View, AnimeGridItem) -> Unit)? = null
     override var onItemFocusLost: (() -> Unit)? = null
 
-    var isLoadingMore = false
+    var isLoadingNext = false
         set(value) {
             field = value
             notifyItemChanged(items.size) // refresh the "Add More" item only
         }
+
+    init {
+        setHasStableIds(true)
+    }
+
+    override fun getItemId(position: Int): Long {
+        if (position == items.size) return -1L
+        return items[position].id.hashCode().toLong()
+    }
 
     // Unified ViewHolder (Nullable views to safely handle both standard items and the Add button)
     inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -447,7 +460,7 @@ class AnimeGridAdapter(
             val content = holder.itemView.findViewById<View>(R.id.addMoreContent)
             val loading = holder.itemView.findViewById<View>(R.id.addMoreLoading)
 
-            if (isLoadingMore) {
+            if (isLoadingNext) {
                 content?.visibility = View.GONE
                 loading?.visibility = View.VISIBLE
                 holder.itemView.isClickable = false
@@ -461,18 +474,7 @@ class AnimeGridAdapter(
 
             // Fallback click listener
             holder.itemView.setOnClickListener {
-                if (!isLoadingMore) {
-                    isLoadingMore = true
-                    val recycler = holder.itemView.parent as RecyclerView
-                    val prevPosition = holder.bindingAdapterPosition - 1
-
-                    if (prevPosition >= 0) {
-                        recycler.post {
-                            recycler.findViewHolderForAdapterPosition(prevPosition)
-                                ?.itemView
-                                ?.requestFocus()
-                        }
-                    }
+                if (!isLoadingNext) {
                     onAddMoreClicked?.invoke()
                 }
             }
@@ -518,18 +520,9 @@ class AnimeGridAdapter(
             if (hasFocus) {
                 onItemFocused?.invoke(v, currentItem) // show popup
 
-                // âœ… Trigger load when focused on the last 6 items
-                val prefetchThreshold = 6
                 val currentPos = holder.bindingAdapterPosition
-
-                if (!isLoadingMore && currentPos != RecyclerView.NO_POSITION && currentPos >= items.size - prefetchThreshold) {
-
-                    v.post {
-                        if (!isLoadingMore) {
-                            isLoadingMore = true
-                            onAddMoreClicked?.invoke()
-                        }
-                    }
+                if (currentPos != RecyclerView.NO_POSITION) {
+                    onPositionFocused?.invoke(currentPos)
                 }
             } else {
                 onItemFocusLost?.invoke()   // hide popup
@@ -564,10 +557,15 @@ class AnimeGridAdapter(
         notifyItemInserted(items.size - 1)
     }
 
-    fun addItems(newItems: List<AnimeGridItem>) {
+    fun appendItems(newItems: List<AnimeGridItem>) {
         val startPos = items.size
         items.addAll(newItems)
         notifyItemRangeInserted(startPos, newItems.size)
+    }
+
+    fun prependItems(newItems: List<AnimeGridItem>) {
+        items.addAll(0, newItems)
+        notifyItemRangeInserted(0, newItems.size)
     }
 
     fun clearItems() {

@@ -64,12 +64,18 @@ class AnimeFragment : Fragment() {
     private var urlHome = BuildConfig.A_K
 
     private lateinit var dubbedAdapter: AnimeGridAdapter
-    private var currentDubbedAnimePage = 0
-    private var isLoadingMoreDubbed = false
+    private var lowestLoadedDubbedPage = 0
+    private var highestLoadedDubbedPage = 0
+    private val loadedDubbedPages = mutableSetOf<Int>()
+    private var isLoadingNextDubbed = false
+    private var isLoadingPrevDubbed = false
 
     private lateinit var trendingAdapter: AnimeTrendingAdapter
-    private var currentTrendingAnimePage = 0
-    private var isLoadingMoreTrending = false
+    private var lowestLoadedPage = 0
+    private var highestLoadedPage = 0
+    private val loadedPages = mutableSetOf<Int>()
+    private var isLoadingNextTrending = false
+    private var isLoadingPrevTrending = false
 
     private var isDataLoaded = false
     private var networkCallback: ConnectivityManager.NetworkCallback? = null
@@ -93,8 +99,13 @@ class AnimeFragment : Fragment() {
         }
 
         val prefs = requireActivity().getSharedPreferences("AnimePrefs", Context.MODE_PRIVATE)
-        currentDubbedAnimePage = prefs.getInt("currentDubbedAnimePage", 0)
-        currentTrendingAnimePage = prefs.getInt("currentTrendingAnimePage", 0)
+        val savedDubbedPage = prefs.getInt("currentDubbedAnimePage", 1)
+        highestLoadedDubbedPage = savedDubbedPage
+        lowestLoadedDubbedPage = savedDubbedPage
+        
+        val savedTrendingPage = prefs.getInt("currentTrendingAnimePage", 1)
+        highestLoadedPage = savedTrendingPage
+        lowestLoadedPage = savedTrendingPage
 
         LoadingAnimation.setup(requireContext(), view, R.raw.line_loading)
         LoadingAnimation.show(view)
@@ -130,6 +141,19 @@ class AnimeFragment : Fragment() {
         dubbedAdapter = AnimeGridAdapter(mutableListOf(), R.layout.anime_dubbed_item)
         binding.dubbedRecycler.adapter = dubbedAdapter
 
+        dubbedAdapter.onAddMoreClicked = { loadNextDubbedAnime() }
+        dubbedAdapter.onPositionFocused = { position ->
+            val layoutManager = binding.dubbedRecycler.layoutManager as LinearLayoutManager
+            val visibleItemCount = layoutManager.childCount
+            val threshold = kotlin.math.max(5, visibleItemCount * 2)
+
+            if (position >= dubbedAdapter.itemCount - threshold - 1) { // 1 for Add More
+                loadNextDubbedAnime()
+            } else if (position <= threshold) {
+                loadPrevDubbedAnime()
+            }
+        }
+
         trendingAdapter = AnimeTrendingAdapter(mutableListOf(), R.layout.anime_trending_item)
         binding.AnimeTrendingWidget.layoutManager = LinearLayoutManager(
             requireActivity(),
@@ -137,7 +161,18 @@ class AnimeFragment : Fragment() {
             false
         )
         binding.AnimeTrendingWidget.adapter = trendingAdapter
-        trendingAdapter.onAddMoreClicked = { loadTrendingAnime() }
+        trendingAdapter.onAddMoreClicked = { loadNextTrendingAnime() }
+        trendingAdapter.onItemFocused = { position ->
+            val layoutManager = binding.AnimeTrendingWidget.layoutManager as LinearLayoutManager
+            val visibleItemCount = layoutManager.childCount
+            val threshold = kotlin.math.max(5, visibleItemCount * 2)
+
+            if (position >= trendingAdapter.itemCount - threshold - 1) { // 1 for Add More
+                loadNextTrendingAnime()
+            } else if (position <= threshold) {
+                loadPrevTrendingAnime()
+            }
+        }
 
         FocusOverlay<AnimeGridItem>(
             overlay = binding.dubbFixedFocusOverlay,
@@ -147,13 +182,11 @@ class AnimeFragment : Fragment() {
             projectDubbItemIntoHero(item)
         }
 
-        dubbedAdapter.onAddMoreClicked = { loadDubbedAnime() }
-
-
         animeHomeData()
-        loadDubbedAnime()
-        loadTrendingAnime()
-        
+        fetchDubbedAnime(highestLoadedDubbedPage, isPrepending = true)
+        fetchTrendingAnime(highestLoadedPage, isPrepending = false)
+
+
         setupNetworkListener()
     }
 
@@ -184,10 +217,10 @@ class AnimeFragment : Fragment() {
                         try { LoadingAnimation.show(requireView()) } catch (e: Exception) {}
                         animeHomeData()
                         if (dubbedAdapter.itemCount <= 1) {
-                            loadDubbedAnime()
+                            loadNextDubbedAnime()
                         }
                         if (trendingAdapter.itemCount <= 1) {
-                            loadTrendingAnime()
+                            loadNextTrendingAnime()
                         }
                     }
                 }
@@ -402,23 +435,40 @@ class AnimeFragment : Fragment() {
         binding.AnimeAiringWidget.adapter = AnimeAiringAdapter(airingItems.toMutableList(), R.layout.anime_airing_item)
     }
 
-    private fun loadDubbedAnime() {
-        if (isLoadingMoreDubbed) return
-        isLoadingMoreDubbed = true
-        dubbedAdapter.isLoadingMore = true
-        currentDubbedAnimePage++
-
-        val prefs = requireActivity().getSharedPreferences("AnimePrefs", Context.MODE_PRIVATE)
-        prefs.edit().putInt("currentDubbedAnimePage", currentDubbedAnimePage).apply()
-
-        fetchDubbedAnime()
+    private fun loadNextDubbedAnime() {
+        if (isLoadingNextDubbed) return
+        isLoadingNextDubbed = true
+        dubbedAdapter.isLoadingNext = true
+        
+        val isInitialLoad = dubbedAdapter.itemCount <= 1
+        val nextPage = if (isInitialLoad && highestLoadedDubbedPage > 0) highestLoadedDubbedPage else highestLoadedDubbedPage + 1
+        
+        Log.d("AnimeFragment", "Loading next dubbed anime page: $nextPage")
+        fetchDubbedAnime(nextPage, isPrepending = false)
     }
 
-    private fun fetchDubbedAnime() {
+    private fun loadPrevDubbedAnime() {
+        if (isLoadingPrevDubbed || lowestLoadedDubbedPage <= 1) return
+        isLoadingPrevDubbed = true
+        val prevPage = lowestLoadedDubbedPage - 1
+        Log.d("AnimeFragment", "Loading prev dubbed anime page: $prevPage")
+        fetchDubbedAnime(prevPage, isPrepending = true)
+    }
+
+    private fun fetchDubbedAnime(pageToLoad: Int, isPrepending: Boolean) {
+        if (loadedDubbedPages.contains(pageToLoad)) {
+            if (isPrepending) isLoadingPrevDubbed = false
+            else {
+                isLoadingNextDubbed = false
+                dubbedAdapter.isLoadingNext = false
+            }
+            return
+        }
+
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             repeat(3) { attempt ->
                 try {
-                    val url = "$urlHome/api/v2/anime/dubbed?page=$currentDubbedAnimePage"
+                    val url = "$urlHome/api/v2/anime/dubbed?page=$pageToLoad"
                     val connection = URL(url).openConnection() as HttpURLConnection
                     connection.requestMethod = "GET"
                     connection.connectTimeout = 10_000
@@ -434,15 +484,19 @@ class AnimeFragment : Fragment() {
                     val dubbedAnime = org.json.JSONObject(response).getJSONObject("data").getJSONArray("animes")
                     
                     if (dubbedAnime.length() == 0) {
-                        // End of list reached, cycle back to page 0
-                        currentDubbedAnimePage = 0
-                        val prefs = requireActivity().getSharedPreferences("AnimePrefs", Context.MODE_PRIVATE)
-                        prefs.edit().putInt("currentDubbedAnimePage", currentDubbedAnimePage).apply()
+                        if (!isPrepending && pageToLoad == 1) {
+                            highestLoadedDubbedPage = 0
+                            lowestLoadedDubbedPage = 0
+                            val prefs = requireActivity().getSharedPreferences("AnimePrefs", Context.MODE_PRIVATE)
+                            prefs.edit().putInt("currentDubbedAnimePage", highestLoadedDubbedPage).apply()
+                        }
                         
                         withContext(Dispatchers.Main) {
-                            isLoadingMoreDubbed = false
-                            dubbedAdapter.isLoadingMore = false
-                            loadDubbedAnime() // Fetch page 1
+                            if (isPrepending) isLoadingPrevDubbed = false
+                            else {
+                                isLoadingNextDubbed = false
+                                dubbedAdapter.isLoadingNext = false
+                            }
                         }
                         return@launch
                     }
@@ -476,50 +530,107 @@ class AnimeFragment : Fragment() {
 
                     withContext(Dispatchers.Main) {
                         if (!isAdded || view == null) return@withContext
-                        val isInitialLoad = dubbedAdapter.itemCount <= 1
-                        dubbedAdapter.addItems(animeGridItems.filter { it.id.isNotEmpty() })
+                        
+                        loadedDubbedPages.add(pageToLoad)
+                        
+                        if (isPrepending) {
+                            lowestLoadedDubbedPage = pageToLoad
+                            
+                            val layoutManager = binding.dubbedRecycler.layoutManager as LinearLayoutManager
+                            val firstVisiblePosition = layoutManager.findFirstVisibleItemPosition()
+                            val firstVisibleView = layoutManager.findViewByPosition(firstVisiblePosition)
+                            val offset = firstVisibleView?.left ?: 0
 
-                        if (isInitialLoad) {
-                            binding.dubbSection.visibility = View.VISIBLE
-                            binding.dubbedRecycler.scrollToPosition(0)
+                            val focusedView = requireView().findFocus()
+                            val focusedId = if (focusedView != null) {
+                                val holder = binding.dubbedRecycler.findContainingViewHolder(focusedView)
+                                holder?.itemId
+                            } else null
+
+                            dubbedAdapter.prependItems(animeGridItems.filter { it.id.isNotEmpty() })
+                            
+                            layoutManager.scrollToPositionWithOffset(firstVisiblePosition + animeGridItems.size, offset)
+
+                            if (focusedId != null) {
+                                requireView().post {
+                                    for (i in 0 until binding.dubbedRecycler.childCount) {
+                                        val child = binding.dubbedRecycler.getChildAt(i)
+                                        if (binding.dubbedRecycler.getChildViewHolder(child).itemId == focusedId) {
+                                            child.requestFocus()
+                                            break
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            isLoadingPrevDubbed = false
+                        } else {
+                            highestLoadedDubbedPage = pageToLoad
+                            val prefs = requireActivity().getSharedPreferences("AnimePrefs", Context.MODE_PRIVATE)
+                            prefs.edit().putInt("currentDubbedAnimePage", highestLoadedDubbedPage).apply()
+                            
+                            val isInitialLoad = dubbedAdapter.itemCount <= 1
+                            dubbedAdapter.appendItems(animeGridItems.filter { it.id.isNotEmpty() })
+                            isLoadingNextDubbed = false
+                            dubbedAdapter.isLoadingNext = false
+
+                            if (isInitialLoad) {
+                                binding.dubbSection.visibility = View.VISIBLE
+                                binding.dubbedRecycler.scrollToPosition(0)
+                            }
                         }
-                        delay(3000)
-                        dubbedAdapter.isLoadingMore = false
-                        isLoadingMoreDubbed = false
                     }
                     return@launch
                 } catch (e: Exception) {
-                    if (attempt < 2) delay(2000)
+                    Log.e("AnimeFragment", "Failed to fetch dubbed anime (attempt ${attempt + 1})", e)
+                    if (attempt == 2) {
+                        withContext(Dispatchers.Main) {
+                            if (isPrepending) isLoadingPrevDubbed = false
+                            else {
+                                isLoadingNextDubbed = false
+                                dubbedAdapter.isLoadingNext = false
+                            }
+                        }
+                    }
                 }
-            }
-
-            withContext(Dispatchers.Main) {
-                if (!isAdded || view == null) return@withContext
-                isLoadingMoreDubbed = false
-                dubbedAdapter.isLoadingMore = false
             }
         }
     }
 
-    private fun loadTrendingAnime() {
-        if (isLoadingMoreTrending) return
-        isLoadingMoreTrending = true
-        trendingAdapter.isLoadingMore = true
-        currentTrendingAnimePage++
-
-        val prefs = requireActivity().getSharedPreferences("AnimePrefs", Context.MODE_PRIVATE)
-        prefs.edit().putInt("currentTrendingAnimePage", currentTrendingAnimePage).apply()
-        Log.d("AnimeFragment", "Loading trending anime page: $currentTrendingAnimePage")
-
-        fetchTrendingAnime()
+    private fun loadNextTrendingAnime() {
+        if (isLoadingNextTrending) return
+        isLoadingNextTrending = true
+        trendingAdapter.isLoadingNext = true
+        
+        val isInitialLoad = trendingAdapter.itemCount <= 1
+        val nextPage = if (isInitialLoad && highestLoadedPage > 0) highestLoadedPage else highestLoadedPage + 1
+        
+        Log.d("AnimeFragment", "Loading next trending anime page: $nextPage")
+        fetchTrendingAnime(nextPage, isPrepending = false)
     }
 
-    private fun fetchTrendingAnime() {
+    private fun loadPrevTrendingAnime() {
+        if (isLoadingPrevTrending || lowestLoadedPage <= 1) return
+        isLoadingPrevTrending = true
+        val prevPage = lowestLoadedPage - 1
+        Log.d("AnimeFragment", "Loading prev trending anime page: $prevPage")
+        fetchTrendingAnime(prevPage, isPrepending = true)
+    }
+
+    private fun fetchTrendingAnime(pageToLoad: Int, isPrepending: Boolean) {
+        if (loadedPages.contains(pageToLoad)) {
+            if (isPrepending) isLoadingPrevTrending = false
+            else {
+                isLoadingNextTrending = false
+                trendingAdapter.isLoadingNext = false
+            }
+            return
+        }
+
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             repeat(3) { attempt ->
                 try {
-                    // Fetching from the user-requested URL
-                    val url = "https://echo-anime.vercel.app/api/v2/anime/category/trending?page=$currentTrendingAnimePage"
+                    val url = "https://echo-anime.vercel.app/api/v2/anime/category/trending?page=$pageToLoad"
                     val connection = URL(url).openConnection() as HttpURLConnection
                     connection.requestMethod = "GET"
                     connection.connectTimeout = 10_000
@@ -535,14 +646,19 @@ class AnimeFragment : Fragment() {
                     val trendingAnime = org.json.JSONObject(response).getJSONObject("data").getJSONArray("animes")
                     
                     if (trendingAnime.length() == 0) {
-                        currentTrendingAnimePage = 0
-                        val prefs = requireActivity().getSharedPreferences("AnimePrefs", Context.MODE_PRIVATE)
-                        prefs.edit().putInt("currentTrendingAnimePage", currentTrendingAnimePage).apply()
+                        if (!isPrepending && pageToLoad == 1) {
+                            highestLoadedPage = 0
+                            lowestLoadedPage = 0
+                            val prefs = requireActivity().getSharedPreferences("AnimePrefs", Context.MODE_PRIVATE)
+                            prefs.edit().putInt("currentTrendingAnimePage", highestLoadedPage).apply()
+                        }
                         
                         withContext(Dispatchers.Main) {
-                            isLoadingMoreTrending = false
-                            trendingAdapter.isLoadingMore = false
-                            loadTrendingAnime()
+                            if (isPrepending) isLoadingPrevTrending = false
+                            else {
+                                isLoadingNextTrending = false
+                                trendingAdapter.isLoadingNext = false
+                            }
                         }
                         return@launch
                     }
@@ -552,7 +668,7 @@ class AnimeFragment : Fragment() {
                     for (i in 0 until trendingAnime.length()) {
                         val item = trendingAnime.getJSONObject(i)
                         val itemsPerPage = 20
-                        val rankStr = ((currentTrendingAnimePage - 1) * itemsPerPage + i + 1).toString().padStart(2, '0')
+                        val rankStr = ((pageToLoad - 1) * itemsPerPage + i + 1).toString().padStart(2, '0')
                         
                         trendingGridItems.add(
                             TrendingAnimeItem(
@@ -568,27 +684,69 @@ class AnimeFragment : Fragment() {
 
                     withContext(Dispatchers.Main) {
                         if (!isAdded || view == null) return@withContext
-                        val isInitialLoad = trendingAdapter.itemCount <= 1
-                        trendingAdapter.addItems(trendingGridItems.filter { it.id.isNotEmpty() })
+                        
+                        loadedPages.add(pageToLoad)
+                        
+                        if (isPrepending) {
+                            lowestLoadedPage = pageToLoad
+                            
+                            val layoutManager = binding.AnimeTrendingWidget.layoutManager as LinearLayoutManager
+                            val firstVisiblePosition = layoutManager.findFirstVisibleItemPosition()
+                            val firstVisibleView = layoutManager.findViewByPosition(firstVisiblePosition)
+                            val offset = firstVisibleView?.left ?: 0
 
-                        if (isInitialLoad) {
-                            binding.animeTrendingSection.visibility = View.VISIBLE
-                            binding.AnimeTrendingWidget.scrollToPosition(0)
+                            val focusedView = requireView().findFocus()
+                            val focusedId = if (focusedView != null) {
+                                val holder = binding.AnimeTrendingWidget.findContainingViewHolder(focusedView)
+                                holder?.itemId
+                            } else null
+
+                            trendingAdapter.prependItems(trendingGridItems.filter { it.id.isNotEmpty() })
+                            
+                            layoutManager.scrollToPositionWithOffset(firstVisiblePosition + trendingGridItems.size, offset)
+
+                            if (focusedId != null) {
+                                requireView().post {
+                                    for (i in 0 until binding.AnimeTrendingWidget.childCount) {
+                                        val child = binding.AnimeTrendingWidget.getChildAt(i)
+                                        if (binding.AnimeTrendingWidget.getChildViewHolder(child).itemId == focusedId) {
+                                            child.requestFocus()
+                                            break
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            isLoadingPrevTrending = false
+                        } else {
+                            highestLoadedPage = pageToLoad
+                            val prefs = requireActivity().getSharedPreferences("AnimePrefs", Context.MODE_PRIVATE)
+                            prefs.edit().putInt("currentTrendingAnimePage", highestLoadedPage).apply()
+                            
+                            val isInitialLoad = trendingAdapter.itemCount <= 1
+                            trendingAdapter.appendItems(trendingGridItems.filter { it.id.isNotEmpty() })
+                            isLoadingNextTrending = false
+                            trendingAdapter.isLoadingNext = false
+
+                            if (isInitialLoad) {
+                                binding.animeTrendingSection.visibility = View.VISIBLE
+                                binding.AnimeTrendingWidget.scrollToPosition(0)
+                            }
                         }
-                        delay(3000)
-                        trendingAdapter.isLoadingMore = false
-                        isLoadingMoreTrending = false
                     }
                     return@launch
                 } catch (e: Exception) {
-                    if (attempt < 2) delay(2000)
+                    Log.e("AnimeFragment", "Failed to fetch trending anime (attempt ${attempt + 1})", e)
+                    if (attempt == 2) {
+                        withContext(Dispatchers.Main) {
+                            if (isPrepending) isLoadingPrevTrending = false
+                            else {
+                                isLoadingNextTrending = false
+                                trendingAdapter.isLoadingNext = false
+                            }
+                        }
+                    }
                 }
-            }
-
-            withContext(Dispatchers.Main) {
-                if (!isAdded || view == null) return@withContext
-                isLoadingMoreTrending = false
-                trendingAdapter.isLoadingMore = false
             }
         }
     }
@@ -602,6 +760,13 @@ class AnimeFragment : Fragment() {
             connectivityManager.unregisterNetworkCallback(it)
         }
         networkCallback = null
+        
+        // Remove closures to prevent memory leaks!
+        dubbedAdapter.onPositionFocused = null
+        dubbedAdapter.onAddMoreClicked = null
+        dubbedAdapter.onItemFocused = null
+        trendingAdapter.onItemFocused = null
+        trendingAdapter.onAddMoreClicked = null
         
         dubbedAdapter.clearItems()
         trendingAdapter.clearItems()
