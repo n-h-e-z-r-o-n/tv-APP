@@ -49,7 +49,7 @@ tools:context=".Anime_Video_Player">
     <FrameLayout
         android:id="@+id/MoreSection"
         android:layout_width="300dp"
-        android:visibility="gone"
+        android:visibility="visible"
         android:layout_height="match_parent"
         android:background="?attr/transparentEffect">
 

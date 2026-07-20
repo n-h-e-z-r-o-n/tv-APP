@@ -83,9 +83,17 @@ import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.bumptech.glide.request.RequestListener
 
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
+import android.net.NetworkRequest
+
 class ShowsFragment : Fragment(R.layout.fragment_shows) {
     private var currentMoviePage = 1
     private var isLoadingMoreMovies = false
+
+    private var isDataLoaded = false
+    private var networkCallback: ConnectivityManager.NetworkCallback? = null
 
     private var lastFocusedView: View? = null
     private var currentTvPage = 1
@@ -221,17 +229,40 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
 
         setupRecyclerViews()
 
-        lifecycleScope.launch {
-            HomeData()
-            categoryShow()
-            loadFilterContent(realityAdapter, "&with_genres=10764", false)
-            loadFilterContent(thrillAdapter, "&with_genres=27", true)
-            genreFilter()
-            fetchMovies()
-            fetchTvShows()
-            //filter()
-        }
+        setupNetworkListener()
+    }
 
+    private fun setupNetworkListener() {
+        val connectivityManager = requireContext().getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val networkRequest = NetworkRequest.Builder()
+            .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+            .build()
+
+        networkCallback = object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: Network) {
+                super.onAvailable(network)
+                if (!isDataLoaded) {
+                    // Back online and data isn't loaded! Run it again on the Main thread
+                    viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
+                        try { LoadingAnimation.show(requireView()) } catch (e: Exception) {}
+                        lifecycleScope.launch {
+                            HomeData()
+                            categoryShow()
+                            loadFilterContent(realityAdapter, "&with_genres=10764", false)
+                            loadFilterContent(thrillAdapter, "&with_genres=27", true)
+                            genreFilter()
+                            if (movieAdapter.itemCount <= 1) fetchMovies()
+                            if (tvAdapter.itemCount <= 1) fetchTvShows()
+                        }
+                    }
+                }
+            }
+        }
+        try {
+            connectivityManager.registerNetworkCallback(networkRequest, networkCallback!!)
+        } catch (e: Exception) {
+            Log.e("ShowsFragment", "Failed to register network callback", e)
+        }
     }
 
     override fun onResume() {
@@ -252,6 +283,12 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
 
     override fun onDestroy() {
         super.onDestroy()
+        
+        networkCallback?.let {
+            val connectivityManager = requireContext().getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+            connectivityManager.unregisterNetworkCallback(it)
+        }
+        networkCallback = null
 
         // Clear all adapters
         movieAdapter.clearItems()
@@ -676,7 +713,8 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
                 withContext(Dispatchers.IO) { fetchTMDB.fetchTrendingData(currentYear.toString()) }
             Log.e("DEBUG_Watch", jsonObject.toString())
             if (jsonObject != null) {
-
+                isDataLoaded = true
+                val mvData = jsonObject.getJSONArray("results")
                 val moviesArray3 = jsonObject.getJSONArray("results") ?: return@launch
 
                 Log.e("DEBUG_MAIN_Slider raw", moviesArray3.toString())

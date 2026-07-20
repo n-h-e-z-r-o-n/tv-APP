@@ -1,4 +1,4 @@
-﻿package com.example.onyx.OnyxClasses
+package com.example.onyx.OnyxClasses
 
 import android.content.Intent
 import android.view.KeyEvent
@@ -22,33 +22,71 @@ import com.google.android.material.card.MaterialCardView
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class AnimeTrendingAdapter(
-    private val  items: MutableList<TrendingAnimeItem>,   // âœ… mutable now,
-    private val layoutResId: Int   // ðŸ‘ˆ pass in the layout resource
-) :  RecyclerView.Adapter<AnimeTrendingAdapter.ViewHolder>() {
+    private val items: MutableList<TrendingAnimeItem>,
+    private val layoutResId: Int
+) : RecyclerView.Adapter<AnimeTrendingAdapter.ViewHolder>() {
 
     companion object {
+        private const val VIEW_TYPE_NORMAL = 0
+        private const val VIEW_TYPE_ADD_MORE = 1
         private var lastKeyTime = 0L
         private val KEY_DEBOUNCE_DELAY = 100L // ms
     }
 
+    var onAddMoreClicked: (() -> Unit)? = null
+    var isLoadingMore = false
+        set(value) {
+            field = value
+            notifyItemChanged(items.size)
+        }
+
     inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val CardViewcontiner: MaterialCardView = view.findViewById(R.id.CardViewcontiner)
-        val Movie_image: ImageView = view.findViewById(R.id.itemImage)
-        val rank: TextView = view.findViewById(R.id.rank)
-        val title: TextView = view.findViewById(R.id.title)
+        val CardViewcontiner: MaterialCardView? = view.findViewById(R.id.CardViewcontiner)
+        val Movie_image: ImageView? = view.findViewById(R.id.itemImage)
+        val rank: TextView? = view.findViewById(R.id.rank)
+        val title: TextView? = view.findViewById(R.id.title)
+        val cardSub: TextView? = view.findViewById(R.id.cardSub)
+        val cardDub: TextView? = view.findViewById(R.id.cardDub)
+    }
 
-
-
-
+    override fun getItemViewType(position: Int): Int {
+        return if (position == items.size) VIEW_TYPE_ADD_MORE else VIEW_TYPE_NORMAL
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val view = LayoutInflater.from(parent.context)
-            .inflate(layoutResId, parent, false)
+        val layoutId = if (viewType == VIEW_TYPE_ADD_MORE) R.layout.item_add_more else layoutResId
+        val view = LayoutInflater.from(parent.context).inflate(layoutId, parent, false)
         return ViewHolder(view)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        if (getItemViewType(position) == VIEW_TYPE_ADD_MORE) {
+            val content = holder.itemView.findViewById<View>(R.id.addMoreContent)
+            val loading = holder.itemView.findViewById<View>(R.id.addMoreLoading)
+
+            if (isLoadingMore) {
+                content?.visibility = View.GONE
+                loading?.visibility = View.VISIBLE
+                holder.itemView.isClickable = false
+            } else {
+                content?.visibility = View.VISIBLE
+                loading?.visibility = View.GONE
+                holder.itemView.isClickable = true
+            }
+
+            holder.itemView.setOnClickListener {
+                if (!isLoadingMore) {
+                    isLoadingMore = true
+                    val recycler = holder.itemView.parent as RecyclerView
+                    val prevPosition = holder.bindingAdapterPosition - 1
+                    if (prevPosition >= 0) {
+                        recycler.smoothScrollToPosition(prevPosition)
+                    }
+                    onAddMoreClicked?.invoke()
+                }
+            }
+            return
+        }
 
         val currentItem = items[position]
         val title = currentItem.title
@@ -56,18 +94,21 @@ class AnimeTrendingAdapter(
         val imdbCode = currentItem.id
         val rank = currentItem.rank
 
+        holder.title?.text = title
+        holder.rank?.text = rank
+        
+        holder.cardSub?.text = currentItem.sub
+        holder.cardDub?.text = currentItem.dub
 
-        holder.title.text = title
-        holder.rank.text = rank
-        holder.title.text = title
+        holder.Movie_image?.let {
+            Glide.with(holder.itemView.context)
+                .load(imageUrl)
+                .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.ALL)
+                .centerInside()
+                .into(it)
+        }
 
-        Glide.with(holder.itemView.context)
-            .load(imageUrl)
-            .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.ALL)
-            .centerInside()
-            .into(holder.Movie_image)
-
-        holder.CardViewcontiner.setOnClickListener {
+        holder.CardViewcontiner?.setOnClickListener {
             val context = holder.itemView.context
             val args = android.os.Bundle().apply {
                 putString("anime_code", imdbCode)
@@ -76,44 +117,65 @@ class AnimeTrendingAdapter(
             (context as com.example.onyx.HomeActivity).navigateToFragment(WatchAnimeFragment(), args)
         }
 
-
-        holder.CardViewcontiner.setOnKeyListener { v, keyCode, event ->
+        holder.CardViewcontiner?.setOnKeyListener { v, keyCode, event ->
             if (event.action != KeyEvent.ACTION_DOWN) return@setOnKeyListener false
             val now = System.currentTimeMillis()
             if (now - lastKeyTime < KEY_DEBOUNCE_DELAY) return@setOnKeyListener true
             lastKeyTime = now
 
             when (keyCode) {
-                KeyEvent.KEYCODE_DPAD_LEFT -> {
-                    //if (position == 0) return@setOnKeyListener true
-                }
+                KeyEvent.KEYCODE_DPAD_LEFT -> {}
                 KeyEvent.KEYCODE_DPAD_RIGHT -> {
-                    if (position == items.size-1) return@setOnKeyListener true
+                    if (position == items.size - 1) return@setOnKeyListener true
                 }
             }
-
             false
         }
 
-
+        holder.CardViewcontiner?.setOnFocusChangeListener { v, hasFocus ->
+            if (hasFocus) {
+                // Prefetch logic
+                val prefetchThreshold = 6
+                val currentPos = holder.bindingAdapterPosition
+                if (!isLoadingMore && currentPos != RecyclerView.NO_POSITION && currentPos >= items.size - prefetchThreshold) {
+                    v.post {
+                        if (!isLoadingMore) {
+                            isLoadingMore = true
+                            onAddMoreClicked?.invoke()
+                        }
+                    }
+                }
+            }
+        }
     }
 
-    override fun getItemCount() = items.size
+    override fun getItemCount() = items.size + 1
 
-    // ðŸ‘‡ helper to add items one by one
+    fun addItems(newItems: List<TrendingAnimeItem>) {
+        val startPosition = items.size
+        items.addAll(newItems)
+        notifyItemRangeInserted(startPosition, newItems.size)
+    }
+
     fun addItem(item: TrendingAnimeItem) {
         items.add(item)
         notifyItemInserted(items.size - 1)
-
     }
 
+    //@SuppressLint("NotifyDataSetChanged")
+    fun clearItems() {
+        items.clear()
+        notifyDataSetChanged()
+    }
 }
 
 data class TrendingAnimeItem(
     val id: String,
     val title: String,
     val imageUrl: String,
-    val rank: String
+    val rank: String,
+    val sub: String,
+    val dub: String
 )
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -461,11 +523,7 @@ class AnimeGridAdapter(
                 val currentPos = holder.bindingAdapterPosition
 
                 if (!isLoadingMore && currentPos != RecyclerView.NO_POSITION && currentPos >= items.size - prefetchThreshold) {
-                    // Defer BOTH the flag flip (which triggers notifyItemChanged)
-                    // and the callback until after the current layout/scroll pass
-                    // finishes. Flipping isLoadingMore synchronously here was the
-                    // crash: focus events can land mid-layout on TV D-pad nav,
-                    // and notifyItemChanged() throws if called at that point.
+
                     v.post {
                         if (!isLoadingMore) {
                             isLoadingMore = true

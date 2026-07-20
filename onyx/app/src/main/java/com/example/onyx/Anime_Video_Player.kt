@@ -247,9 +247,9 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
                     SeasonsContainer.removeAllViews()
                     for (i in 0 until seasons.length()) {
 
-                        val seasonBtn = inflater.inflate(R.layout.anime_season_item, SeasonsContainer, false) as FrameLayout
+                        val seasonBtn = inflater.inflate(R.layout.anime_season_item2, SeasonsContainer, false) as FrameLayout
                         val seasonTitle = seasonBtn.findViewById<TextView>(R.id.SeasonTitle)
-                        val seasonImage = seasonBtn.findViewById<ImageView>(R.id.SeasonImage)
+
 
                         val season = seasons.getJSONObject(i)
                         val title = season.optString("title", "Season ${i + 1}")
@@ -258,12 +258,15 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
 
                         seasonTitle.text = title
 
+                        /*
                         if (imageUrl.isNotEmpty()) {
+                            //val seasonImage = seasonBtn.findViewById<ImageView>(R.id.SeasonImage)
                             Glide.with(this@Anime_Video_Player)
                                 .load(imageUrl)
                                 .centerCrop()
                                 .into(seasonImage)
                         }
+                        */
 
                         seasonBtn.setOnClickListener {
                             if (isSeasonLoading) return@setOnClickListener
@@ -952,7 +955,7 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
             toggleMute()
         }
 
-        // Fast forward button (10 seconds)
+        // Fast-forward button (10 seconds)
         btnFastForward.setOnKeyListener { _, keyCode, event ->
             if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER) {
                 if (event.action == KeyEvent.ACTION_DOWN) {

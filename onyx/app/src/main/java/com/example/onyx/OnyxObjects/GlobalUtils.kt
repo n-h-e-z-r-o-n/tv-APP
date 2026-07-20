@@ -1004,18 +1004,23 @@ object GlobalUtils {
         val startY = scrollView.scrollY
         if (startY == targetY) return // Already there
 
-        // ✅ FIX 2: Cancel any currently running scroll animation before starting a new one
+        // cancel any currently running scroll animation before starting a new one
         activeScrollAnimators[scrollView]?.cancel()
 
+        val distance = kotlin.math.abs(targetY - startY)
+        
+        // Dynamic duration: fast for short scrolls, up to 450ms for large jumps
+        val calculatedDuration = (250L + (distance / 5f)).toLong().coerceIn(250L, 450L)
+
         val animator = ValueAnimator.ofInt(startY, targetY).apply {
-            duration = 450L
+            duration = calculatedDuration
 
             interpolator = PathInterpolator(
-                0.22f,
-                1f,
-                0.36f,
-                1f
-            ) // Prime/Netflix style easing
+                0.1f,
+                0.9f,
+                0.2f,
+                1.0f
+            ) // Premium TV-style decelerate curve
 
             addUpdateListener {
                 scrollView.scrollTo(

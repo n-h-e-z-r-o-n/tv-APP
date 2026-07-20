@@ -67,6 +67,9 @@ class AnimeFragment : Fragment() {
     private var currentDubbedAnimePage = 0
     private var isLoadingMoreDubbed = false
 
+    private lateinit var trendingAdapter: AnimeTrendingAdapter
+    private var currentTrendingAnimePage = 0
+    private var isLoadingMoreTrending = false
 
     private var isDataLoaded = false
     private var networkCallback: ConnectivityManager.NetworkCallback? = null
@@ -91,6 +94,7 @@ class AnimeFragment : Fragment() {
 
         val prefs = requireActivity().getSharedPreferences("AnimePrefs", Context.MODE_PRIVATE)
         currentDubbedAnimePage = prefs.getInt("currentDubbedAnimePage", 0)
+        currentTrendingAnimePage = prefs.getInt("currentTrendingAnimePage", 0)
 
         LoadingAnimation.setup(requireContext(), view, R.raw.line_loading)
         LoadingAnimation.show(view)
@@ -126,6 +130,15 @@ class AnimeFragment : Fragment() {
         dubbedAdapter = AnimeGridAdapter(mutableListOf(), R.layout.anime_dubbed_item)
         binding.dubbedRecycler.adapter = dubbedAdapter
 
+        trendingAdapter = AnimeTrendingAdapter(mutableListOf(), R.layout.anime_trending_item)
+        binding.AnimeTrendingWidget.layoutManager = LinearLayoutManager(
+            requireActivity(),
+            LinearLayoutManager.HORIZONTAL,
+            false
+        )
+        binding.AnimeTrendingWidget.adapter = trendingAdapter
+        trendingAdapter.onAddMoreClicked = { loadTrendingAnime() }
+
         FocusOverlay<AnimeGridItem>(
             overlay = binding.dubbFixedFocusOverlay,
             recyclerView = binding.dubbedRecycler,
@@ -139,6 +152,7 @@ class AnimeFragment : Fragment() {
 
         animeHomeData()
         loadDubbedAnime()
+        loadTrendingAnime()
         
         setupNetworkListener()
     }
@@ -171,6 +185,9 @@ class AnimeFragment : Fragment() {
                         animeHomeData()
                         if (dubbedAdapter.itemCount <= 1) {
                             loadDubbedAnime()
+                        }
+                        if (trendingAdapter.itemCount <= 1) {
+                            loadTrendingAnime()
                         }
                     }
                 }
@@ -261,6 +278,9 @@ class AnimeFragment : Fragment() {
                         )
                     )
                 }
+                val tList = mutableListOf<TrendingAnimeItem>()
+
+                /*
 
                 val tList = mutableListOf<TrendingAnimeItem>()
                 for (i in 0 until trendingAnimes.length()) {
@@ -275,6 +295,8 @@ class AnimeFragment : Fragment() {
 
                     )
                 }
+
+                 */
 
 
                 val aList = mutableListOf<AiringAnimeItem>()
@@ -358,14 +380,10 @@ class AnimeFragment : Fragment() {
                 binding.spotlightAnimes.addView(card)
             }
 
-            if (trendingList.isNotEmpty()) {
-                binding.animeTrendingSection.visibility = View.VISIBLE
-            }
             if (airingList.isNotEmpty()) {
                 binding.animeAiringSection.visibility = View.VISIBLE
             }
 
-            showTrending(trendingList)
             showAiring(airingList)
 
             //GlobalUtils.setupCardStackFromContainer(binding.spotlightAnimes)
@@ -373,15 +391,6 @@ class AnimeFragment : Fragment() {
             LoadingAnimation.hide(requireView())
 
         }
-    }
-
-    private fun showTrending(trendingItems: List<TrendingAnimeItem>) {
-        binding.AnimeTrendingWidget.layoutManager = LinearLayoutManager(
-            requireActivity(),
-            LinearLayoutManager.HORIZONTAL,
-            false
-        )
-        binding.AnimeTrendingWidget.adapter = AnimeTrendingAdapter(trendingItems.toMutableList(), R.layout.anime_trending_item)
     }
 
     private fun showAiring(airingItems: List<AiringAnimeItem>) {
@@ -492,6 +501,98 @@ class AnimeFragment : Fragment() {
         }
     }
 
+    private fun loadTrendingAnime() {
+        if (isLoadingMoreTrending) return
+        isLoadingMoreTrending = true
+        trendingAdapter.isLoadingMore = true
+        currentTrendingAnimePage++
+
+        val prefs = requireActivity().getSharedPreferences("AnimePrefs", Context.MODE_PRIVATE)
+        prefs.edit().putInt("currentTrendingAnimePage", currentTrendingAnimePage).apply()
+        Log.d("AnimeFragment", "Loading trending anime page: $currentTrendingAnimePage")
+
+        fetchTrendingAnime()
+    }
+
+    private fun fetchTrendingAnime() {
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+            repeat(3) { attempt ->
+                try {
+                    // Fetching from the user-requested URL
+                    val url = "https://echo-anime.vercel.app/api/v2/anime/category/trending?page=$currentTrendingAnimePage"
+                    val connection = URL(url).openConnection() as HttpURLConnection
+                    connection.requestMethod = "GET"
+                    connection.connectTimeout = 10_000
+                    connection.readTimeout = 10_000
+
+                    if (connection.responseCode !in 200..299) {
+                        throw Exception("HTTP ${connection.responseCode}")
+                    }
+
+                    val response = connection.inputStream.bufferedReader().use { it.readText() }
+                    connection.disconnect()
+
+                    val trendingAnime = org.json.JSONObject(response).getJSONObject("data").getJSONArray("animes")
+                    
+                    if (trendingAnime.length() == 0) {
+                        currentTrendingAnimePage = 0
+                        val prefs = requireActivity().getSharedPreferences("AnimePrefs", Context.MODE_PRIVATE)
+                        prefs.edit().putInt("currentTrendingAnimePage", currentTrendingAnimePage).apply()
+                        
+                        withContext(Dispatchers.Main) {
+                            isLoadingMoreTrending = false
+                            trendingAdapter.isLoadingMore = false
+                            loadTrendingAnime()
+                        }
+                        return@launch
+                    }
+
+                    val trendingGridItems = mutableListOf<TrendingAnimeItem>()
+
+                    for (i in 0 until trendingAnime.length()) {
+                        val item = trendingAnime.getJSONObject(i)
+                        val itemsPerPage = 20
+                        val rankStr = ((currentTrendingAnimePage - 1) * itemsPerPage + i + 1).toString().padStart(2, '0')
+                        
+                        trendingGridItems.add(
+                            TrendingAnimeItem(
+                                id = item.optString("id", ""),
+                                title = item.optString("name"),
+                                imageUrl = item.optString("poster"),
+                                rank = rankStr,
+                                sub = item.optJSONObject("episodes")?.optString("sub", "") ?: "",
+                                dub = item.optJSONObject("episodes")?.optString("dub", "") ?: ""
+                            )
+                        )
+                    }
+
+                    withContext(Dispatchers.Main) {
+                        if (!isAdded || view == null) return@withContext
+                        val isInitialLoad = trendingAdapter.itemCount <= 1
+                        trendingAdapter.addItems(trendingGridItems.filter { it.id.isNotEmpty() })
+
+                        if (isInitialLoad) {
+                            binding.animeTrendingSection.visibility = View.VISIBLE
+                            binding.AnimeTrendingWidget.scrollToPosition(0)
+                        }
+                        delay(3000)
+                        trendingAdapter.isLoadingMore = false
+                        isLoadingMoreTrending = false
+                    }
+                    return@launch
+                } catch (e: Exception) {
+                    if (attempt < 2) delay(2000)
+                }
+            }
+
+            withContext(Dispatchers.Main) {
+                if (!isAdded || view == null) return@withContext
+                isLoadingMoreTrending = false
+                trendingAdapter.isLoadingMore = false
+            }
+        }
+    }
+
 
     override fun onDestroyView() {
         super.onDestroyView()
@@ -503,6 +604,7 @@ class AnimeFragment : Fragment() {
         networkCallback = null
         
         dubbedAdapter.clearItems()
+        trendingAdapter.clearItems()
         
         // Critical: Nullify binding to prevent memory leaks when fragment goes to backstack
         _binding = null
