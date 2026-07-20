@@ -8,6 +8,10 @@ import android.content.pm.ActivityInfo
 import android.graphics.Color
 import android.graphics.Typeface
 import android.media.AudioManager
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
+import android.net.NetworkRequest
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -86,6 +90,8 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
     private var isEpisodeLoading = false
     private var isSeasonLoading = false
     private var firstEpisodeLoaded = false
+    private var isAutoNextEnabled = true
+    private var networkCallback: ConnectivityManager.NetworkCallback? = null
     private lateinit var playerView: PlayerView
     private lateinit var progressBar: ProgressBar
     private lateinit var overlayContainer: View
@@ -156,6 +162,31 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
         setupControls()
         setupGestures()
         setupBackPressedCallback()
+
+        val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val networkRequest = NetworkRequest.Builder()
+            .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+            .build()
+
+        networkCallback = object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: Network) {
+                super.onAvailable(network)
+                lifecycleScope.launch(Dispatchers.Main) {
+                    if (episodeButtons.isEmpty() && holdSeasonId.isNotBlank()) {
+                        getEpisodes(holdSeasonId)
+                    } else if (exoPlayer?.playbackState == Player.STATE_IDLE || exoPlayer?.playerError != null) {
+                        if (currentEpisodeId.isNotBlank()) {
+                            fetchStreamingLinks(currentEpisodeId)
+                        }
+                    }
+                }
+            }
+        }
+        try {
+            connectivityManager.registerNetworkCallback(networkRequest, networkCallback!!)
+        } catch (e: Exception) {
+            Log.e("ANIME_PLAYER", "Failed to register network callback", e)
+        }
     }
 
     private suspend fun fetchResumePosition(): Long = withContext(Dispatchers.IO) {
@@ -197,7 +228,10 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
         SeasonsContainer = findViewById(R.id.SeasonsContainer)
         EpisodeContiner = findViewById(R.id.EpisodeContiner)
 
-
+        val prefs = getSharedPreferences("AnimePrefs", Context.MODE_PRIVATE)
+        isAutoNextEnabled = prefs.getBoolean("isAutoNextEnabled", true)
+        val btnAutoNext = findViewById<TextView>(R.id.btn_autoNext)
+        btnAutoNext.text = if (isAutoNextEnabled) "Auto-next: On" else "Auto-next: Off"
     }
 
 
@@ -253,10 +287,11 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
 
                         val season = seasons.getJSONObject(i)
                         val title = season.optString("title", "Season ${i + 1}")
+                        val seasonsNo = season.optString("season", "Season ${i + 1}")
                         val imageUrl = season.optString("poster", "")
                         val season_id = season.optString("id", "")
 
-                        seasonTitle.text = title
+                        seasonTitle.text = seasonsNo //title
 
                         /*
                         if (imageUrl.isNotEmpty()) {
@@ -934,17 +969,27 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
     }
 
     private fun playNextEpisode(){
-        val playNextTogol = findViewById<TextView>(R.id.btn_autoNext)
-
-        episodeButtons
-
-        playNextTogol. text = "Auto-next: On"
-        playNextTogol. text = "Auto-next: OFF"
+        val currentIndex = episodeButtons.indexOf(selectedEpisodeView)
+        if (currentIndex != -1 && currentIndex < episodeButtons.size - 1) {
+            val nextEpisodeBtn = episodeButtons[currentIndex + 1]
+            nextEpisodeBtn.requestFocus()
+            nextEpisodeBtn.performClick()
+        } else {
+            Toast.makeText(this, "No more episodes.", Toast.LENGTH_SHORT).show()
+        }
     }
 
 
 
     private fun setupControls() {
+        val btnAutoNext = findViewById<TextView>(R.id.btn_autoNext)
+        btnAutoNext.setOnClickListener {
+            isAutoNextEnabled = !isAutoNextEnabled
+            btnAutoNext.text = if (isAutoNextEnabled) "Auto-next: On" else "Auto-next: Off"
+            val prefs = getSharedPreferences("AnimePrefs", Context.MODE_PRIVATE)
+            prefs.edit().putBoolean("isAutoNextEnabled", isAutoNextEnabled).apply()
+        }
+
         // Play/Pause button
         btnPlayPause.setOnClickListener {
             togglePlayPause()
@@ -1337,7 +1382,11 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
                 Player.STATE_ENDED -> {
                     // Video ended, could restart or show next video
                     stopProgressTracking()
-                    Toast.makeText(this, "Video ended", Toast.LENGTH_SHORT).show()
+                    if (isAutoNextEnabled) {
+                        playNextEpisode()
+                    } else {
+                        Toast.makeText(this@Anime_Video_Player, "Video ended", Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
         }
@@ -1441,6 +1490,11 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
 
     override fun onDestroy() {
         super.onDestroy()
+        networkCallback?.let {
+            val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+            connectivityManager.unregisterNetworkCallback(it)
+        }
+        networkCallback = null
         saveContinueWatching()
         stopProgressTracking()
         releasePlayerWithAudioFocus()

@@ -13,13 +13,10 @@ import org.json.JSONArray
 
 object NotificationHelper {
 
-    private lateinit var db: AppDatabase
-    private lateinit var  sm: SessionManger
-
 
     fun getTvNotifications(context: Context) : Boolean{
-        db = AppDatabase(context)         // Initialize database
-        sm = SessionManger(context)
+        val db = AppDatabase(context)         // Initialize database
+        val sm = SessionManger(context)
         val fetch = TMDBapi(context)
 
         val userId = sm.getUserId()
@@ -87,8 +84,8 @@ object NotificationHelper {
 
 
     fun getAnimeNotifications(context: Context) : Boolean{
-        db = AppDatabase(context)         // Initialize database
-        sm = SessionManger(context)
+        val db = AppDatabase(context)         // Initialize database
+        val sm = SessionManger(context)
 
         val userId = sm.getUserId()
         val animeList = db.getFavoriteAnime(userId)

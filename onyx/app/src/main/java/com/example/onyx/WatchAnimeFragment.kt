@@ -347,6 +347,8 @@ class WatchAnimeFragment : Fragment(R.layout.fragment_watch_anime_page) {
 
             seasonBtn.setOnClickListener {
 
+
+
                 selectedSeasonView?.isSelected = false
                 seasonBtn.isSelected = true
 
@@ -356,6 +358,7 @@ class WatchAnimeFragment : Fragment(R.layout.fragment_watch_anime_page) {
 
                 viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
                     getEpisodes(season_id)
+                    updateWatchData("sn-${season_id}")
                 }
             }
 
@@ -425,6 +428,74 @@ class WatchAnimeFragment : Fragment(R.layout.fragment_watch_anime_page) {
             }
             container.addView(cardView)
         }
+
+
+    }
+
+
+    private suspend fun updateWatchData(Id: String){
+
+        val jsonObject = withContext(Dispatchers.IO) { fetchAnime.animeInfo(Id) }
+
+        Log.e("ANIME_Watch Data", jsonObject.toString())
+        if (jsonObject==null){
+            return
+        }
+
+        val data = jsonObject.getJSONObject("data")
+
+        val id = data.getString("id")
+        poster = data.getString("poster")
+        val logo = data.optString("tmdbLogoUrl", "")
+
+        val anilistId = data.getString("anilistId")
+        val malId = data.getString("malId")
+
+        val name = data.getString("name")
+
+        val japaneseName = data.getString("jname")
+        val description = data.getString("description")
+        val rating = data.getJSONObject("stats").getString("rating")
+        val quality = data.getJSONObject("stats").getString("quality")
+        val type = data.getJSONObject("stats").getString("type")
+        val duration = data.getJSONObject("stats").getString("duration")
+        val sub = data.getJSONObject("stats").getJSONObject("episodes").optString("sub", "")
+        val dub = data.getJSONObject("stats").getJSONObject("episodes").optString("dub", "")
+        val aired = data.getString("aired")
+
+        val genresArray = data.getJSONArray("genres")
+        var genre = ""
+        for (i in 0 until genresArray.length()) {
+            genre = genre +" ~ " +genresArray.getString(i)
+        }
+        val studio = data.getString("studios")
+        val  seasons = data.getJSONArray("seasons")?: JSONArray()
+        val  relatedAnimes = data.getJSONArray("relatedAnimes")?: JSONArray()
+        val  recommendedAnime = data.getJSONArray("recommendedAnimes")?: JSONArray()
+
+        val saveData  = jsonObject.getJSONObject("data")
+        saveData.remove("recommendedAnimes")
+        saveData.remove("relatedAnimes")
+        saveData.remove("mostPopularAnimes")
+
+
+        binding.watchTitle.text = name
+        binding.watchRating.text = rating
+        binding.watchRuntime.text = duration
+        binding.watchType.text = type
+        binding.watchQuality.text = quality
+        binding.watchSub.text = sub
+        binding.watchDub.text = dub
+        binding.watchYear.text = GlobalUtils.formatDateString(aired)
+        binding.watchOverview.text = description
+        binding.watchGenres.text = genre
+
+        val posterWidget = requireView().findViewById<ImageView>(R.id.WatchImage)
+        Glide.with(posterWidget.context)
+            .load(poster)
+            .fitCenter()
+            .into(posterWidget)
+
 
 
     }
