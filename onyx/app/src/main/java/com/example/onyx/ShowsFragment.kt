@@ -96,7 +96,6 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
     private lateinit var backgroundContainer: View
     private lateinit var SpotlightSection: FrameLayout
     private lateinit var HomeContentSection: FrameLayout
-    private lateinit var favoriteSection: LinearLayout
     private lateinit var currentContent: CardView
 
 
@@ -141,10 +140,6 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
 
 
 
-    private lateinit var faveRecyclerView: RecyclerView
-    private lateinit var faveAdapter: FavAdapter
-
-    private lateinit var watchAdapter: cWatchingAdapter
 
 
     private lateinit var db: AppDatabase
@@ -158,6 +153,11 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
         GlobalUtils.applyTheme(requireActivity())
         super.onViewCreated(view, savedInstanceState)
 
+        view.viewTreeObserver.addOnGlobalFocusChangeListener { _, newFocus ->
+            if (newFocus != null && view.findViewById<View>(newFocus.id) != null) {
+                lastFocusedView = newFocus
+            }
+        }
 
         requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
@@ -184,15 +184,13 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
         val movieSection = requireView().findViewById<LinearLayout>(R.id.MovieSection)
         val filterSection = requireView().findViewById<LinearLayout>(R.id.filterSection)
         val tvSection = requireView().findViewById<LinearLayout>(R.id.tvSection)
-        favoriteSection =  requireView().findViewById(R.id.favoriteSection)
 
         SpotlightSection.visibility = View.GONE
         HomeContentSection.visibility = View.GONE
         movieSection.visibility = View.GONE
         filterSection.visibility = View.GONE
         tvSection.visibility = View.GONE
-        favoriteSection.visibility = View.GONE
-
+        tvSection.visibility = View.GONE
 
 
         GlobalUtils.setHeightToMatchScreen(SpotlightSection)
@@ -205,8 +203,7 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
         GlobalUtils.centerParentOnFocus(activityScrollVIEW, movieSection)
         GlobalUtils.centerParentOnFocus(activityScrollVIEW, filterSection)
         GlobalUtils.centerParentOnFocus(activityScrollVIEW, tvSection)
-        GlobalUtils.centerParentOnFocus(activityScrollVIEW, favoriteSection)
-
+        GlobalUtils.centerParentOnFocus(activityScrollVIEW, tvSection)
 
         ////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -233,7 +230,6 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
             fetchMovies()
             fetchTvShows()
             //filter()
-            tvFavoritesList()
         }
 
     }
@@ -242,20 +238,13 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
         super.onResume()
 
 
-        if (this::watchAdapter.isInitialized) {
-            watchAdapter.clearItems()
-        }
-
-
 
         // Only request focus if nothing has focus
-        requireActivity().window.decorView.post {
-            if (requireActivity().currentFocus == null) {
-                if (lastFocusedView != null && lastFocusedView!!.isShown && lastFocusedView!!.isFocusable) {
-                    lastFocusedView!!.requestFocus()
-                } else {
-                    requireView().findViewById<LinearLayout>(R.id.HomeBtn).requestFocus()
-                }
+        requireView().post {
+            if (lastFocusedView != null && lastFocusedView!!.isShown && lastFocusedView!!.isFocusable) {
+                lastFocusedView!!.requestFocus()
+            } else {
+                movieRecyclerView.requestFocus()
             }
         }
 
@@ -617,13 +606,6 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
         genreRecyclerView.layoutManager?.scrollToPosition(0)
         //------------------------------------------------------------------------------------------
 
-        faveRecyclerView = requireView().findViewById(R.id.faveRecycler)
-        faveRecyclerView.layoutManager =LinearLayoutManager(
-            requireActivity(),
-            LinearLayoutManager.HORIZONTAL,
-            false
-        )
-        faveRecyclerView.addItemDecoration(EqualSpaceItemDecoration(Spacing))
 
 
 
@@ -1866,87 +1848,6 @@ private fun filter(){
 
 
 
-    private fun tvFavoritesList() {
-        lifecycleScope.launch(Dispatchers.Main) {
-
-            // 1. Fetch AND map the data on the background IO thread
-            val items = withContext(Dispatchers.IO) {
-                val showFavData = db.getFavoriteShows(userId)
-
-                // Map the raw database data directly into FavItem objects
-                showFavData.map { anime ->
-                    FavItem(
-                        title = anime["title"] ?: "",
-                        posterUrl = anime["poster"] ?: "",
-                        backdropUrl = anime["backdrop"] ?: "",
-                        releaseDate = anime["year"] ?: "",
-                        runtime = anime["runtime"] ?: "",
-                        overview = anime["overview"] ?: "",
-                        voteAverage = anime["rating"] ?: "",
-                        genres = anime["genres"] ?: "",
-                        production = "",
-                        parentalGuide = anime["pg"] ?: "",
-                        imdbCode = anime["show_id"] ?: "",
-                        showType = anime["type"] ?: ""
-                    )
-                }
-            }
-
-            // 2. Handle UI Visibility and Adapter Updates
-            if (items.isNotEmpty()) {
-
-                if (!::faveAdapter.isInitialized) {
-
-                    /*
-
-                        faveAdapter = FavAdapter(
-                            items.toMutableList(),
-                            R.layout.square_card,
-
-                            FavBackdrop,
-                            FavTitle,
-                            FavGenre,
-                            FavType,
-                            FavRating,
-                            FavYear,
-                            FavOverview,
-                            RemoveFaveItem
-                        )
-
-                        */
-
-                    faveAdapter = FavAdapter(
-                        items.toMutableList(),
-                        R.layout.square_card,
-                        null, // FavBackdrop
-                        null, // FavTitle
-                        null, // FavGenre
-                        null, // FavType
-                        null, // FavRating
-                        null, // FavYear
-                        null, // FavOverview
-                        null  // RemoveFaveItem
-                    )
-                    faveRecyclerView.adapter = faveAdapter
-                } else {
-                    faveAdapter.updateItems(items)
-                }
-
-                delay(4000)
-
-                favoriteSection.visibility = View.VISIBLE
-
-            } else {
-                // ✅ THE FIX: If the list is empty, hide the section entirely
-                favoriteSection.visibility = View.GONE
-
-                // If the adapter was already running, clear it out
-                if (::faveAdapter.isInitialized) {
-                    faveAdapter.clearItems()
-                }
-            }
-        }
-    }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////

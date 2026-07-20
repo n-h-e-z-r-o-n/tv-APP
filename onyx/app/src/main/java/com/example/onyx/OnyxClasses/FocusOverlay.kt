@@ -19,6 +19,7 @@ class FocusOverlay<T> (
 
         var embeddedFocusedView: View? = null
         private var initialHeroPopulated = false
+        private var selectRetryCount = 0
         init {
 
             recyclerView.layoutManager =  object : LinearLayoutManager(
@@ -78,7 +79,7 @@ class FocusOverlay<T> (
                             previous.requestLayout()
                             previous.animate()
                                 .alpha(1f)
-                                .setDuration(0L)
+                                .setDuration(300L)
                                 .start()
                         }
                     }
@@ -93,7 +94,7 @@ class FocusOverlay<T> (
                     embeddedFocusedView = view
                     view.animate()
                         .alpha(0.03f)
-                        .setDuration(30005L)
+                        .setDuration(300L)
                         .start()
 
                     view.post {
@@ -125,12 +126,14 @@ class FocusOverlay<T> (
             if (initialHeroPopulated || adapter.itemCount == 0) return
 
             recyclerView.post {
+                if (!recyclerView.isAttachedToWindow) return@post
 
                 val firstView = recyclerView.layoutManager?.findViewByPosition(0)
 
                 if (firstView != null) {
                     // Prevent this from running again
                     initialHeroPopulated = true
+                    selectRetryCount = 0
 
                     recyclerView.scrollToPosition(0)
 
@@ -172,8 +175,10 @@ class FocusOverlay<T> (
 
                 } else {
                     // If the view isn't physically laid out on the screen yet, check again in 50ms.
-                    // This completely eliminates the need for your old delay(3000) hack!
-                    recyclerView.postDelayed({ selectFirstItemSilently() }, 500)
+                    if (selectRetryCount < 20) {
+                        selectRetryCount++
+                        recyclerView.postDelayed({ selectFirstItemSilently() }, 50)
+                    }
                 }
             }
         }

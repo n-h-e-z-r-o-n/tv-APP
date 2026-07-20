@@ -74,9 +74,17 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
         val downloadUrl: String
     )
     
+    private var lastFocusedView: View? = null
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         GlobalUtils.applyTheme(requireActivity())
         super.onViewCreated(view, savedInstanceState)
+        
+        view.viewTreeObserver.addOnGlobalFocusChangeListener { _, newFocus ->
+            if (newFocus != null && view.findViewById<View>(newFocus.id) != null) {
+                lastFocusedView = newFocus
+            }
+        }
         
         
         requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -126,9 +134,12 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
 
     override fun onResume() {
         super.onResume()
-        val rootView = requireActivity().window.decorView.rootView
-        if (rootView.findFocus() == null) {
-            requireView().findViewById<LinearLayout>(R.id.themeSetting).requestFocus()
+        requireView().post {
+            if (lastFocusedView != null && lastFocusedView!!.isShown && lastFocusedView!!.isFocusable) {
+                lastFocusedView!!.requestFocus()
+            } else {
+                requireView().findViewById<LinearLayout>(R.id.themeSetting)?.requestFocus()
+            }
         }
     }
     

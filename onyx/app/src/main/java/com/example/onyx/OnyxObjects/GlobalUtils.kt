@@ -165,6 +165,36 @@ object GlobalUtils {
 
     // ==================== UTILITY FUNCTIONS ====================
 
+    fun extractDynamicColor(
+        context: Context,
+        imageUrl: String,
+        onColorExtracted: (Int) -> Unit
+    ) {
+        val sm = com.example.onyx.Database.SessionManger(context)
+        if (!sm.isDynamicColorEnabled()) return
+
+        Glide.with(context)
+            .asBitmap()
+            .load(imageUrl)
+            .diskCacheStrategy(DiskCacheStrategy.ALL)
+            .into(object : com.bumptech.glide.request.target.CustomTarget<android.graphics.Bitmap>() {
+                override fun onResourceReady(
+                    resource: android.graphics.Bitmap,
+                    transition: com.bumptech.glide.request.transition.Transition<in android.graphics.Bitmap>?
+                ) {
+                    androidx.palette.graphics.Palette.from(resource).generate { palette ->
+                        val dominantColor = palette?.darkVibrantSwatch?.rgb
+                            ?: palette?.darkMutedSwatch?.rgb
+                            ?: palette?.dominantSwatch?.rgb
+                            ?: android.graphics.Color.parseColor("#121212")
+
+                        onColorExtracted(dominantColor)
+                    }
+                }
+                override fun onLoadCleared(placeholder: android.graphics.drawable.Drawable?) {}
+            })
+    }
+
     ///  Get app version name
 
     fun getAppVersion(context: Context): String {

@@ -15,6 +15,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.example.onyx.Database.AppDatabase
 import com.example.onyx.Database.SessionManger
 import com.example.onyx.FetchData.AnimeApi
@@ -39,6 +40,15 @@ import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import java.net.HttpURLConnection
 import java.net.URL
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
+import android.net.NetworkRequest
+import android.content.Context
+import android.graphics.Color
+import android.widget.FrameLayout
+import android.widget.Toast
+import com.google.android.material.card.MaterialCardView
 
 class AnimeFragment : Fragment() {
 
@@ -57,7 +67,9 @@ class AnimeFragment : Fragment() {
     private var currentDubbedAnimePage = 0
     private var isLoadingMoreDubbed = false
 
-    private lateinit var faveAdapter: FavAdapter
+
+    private var isDataLoaded = false
+    private var networkCallback: ConnectivityManager.NetworkCallback? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -70,6 +82,15 @@ class AnimeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         GlobalUtils.applyTheme(requireActivity())
+
+        view.viewTreeObserver.addOnGlobalFocusChangeListener { _, newFocus ->
+            if (newFocus != null && view.findViewById<View>(newFocus.id) != null) {
+                lastFocusedView = newFocus
+            }
+        }
+
+        val prefs = requireActivity().getSharedPreferences("AnimePrefs", Context.MODE_PRIVATE)
+        currentDubbedAnimePage = prefs.getInt("currentDubbedAnimePage", 0)
 
         LoadingAnimation.setup(requireContext(), view, R.raw.line_loading)
         LoadingAnimation.show(view)
@@ -85,19 +106,13 @@ class AnimeFragment : Fragment() {
         binding.animeTrendingSection.visibility = View.GONE
         binding.animeAiringSection.visibility = View.GONE
         binding.dubbSection.visibility = View.GONE
-        binding.favoriteSection.visibility = View.GONE
 
         GlobalUtils.centerParentOnFocus(binding.activityScrollVIEW, binding.animeSpotlightSection)
         GlobalUtils.centerParentOnFocus(binding.activityScrollVIEW, binding.animeTrendingSection)
         GlobalUtils.centerParentOnFocus(binding.activityScrollVIEW, binding.animeAiringSection)
         GlobalUtils.centerParentOnFocus(binding.activityScrollVIEW, binding.dubbSection)
-        GlobalUtils.centerParentOnFocus(binding.activityScrollVIEW, binding.favoriteSection)
 
-        // Activity views still require findViewById
-        val homeAnimeBtn = requireActivity().findViewById<ImageView>(R.id.sidebarBtnAnime)
-        val searchAnimeBtn = requireActivity().findViewById<ImageView>(R.id.sidebarSearchBtn)
-        val cWatchAnimeBtn = requireActivity().findViewById<ImageView>(R.id.sidebarWatchListBtn)
-        val cNotificationAnimeBtn = requireActivity().findViewById<ImageView>(R.id.sidebarNotificationBtn)
+
 
         val tvSpacing = (10 * resources.displayMetrics.density).toInt()
 
@@ -121,56 +136,76 @@ class AnimeFragment : Fragment() {
 
         dubbedAdapter.onAddMoreClicked = { loadDubbedAnime() }
 
-        // Fave Recycler Setup
-        binding.faveRecycler.layoutManager = LinearLayoutManager(
-            requireActivity(),
-            LinearLayoutManager.HORIZONTAL,
-            false
-        )
-        binding.faveRecycler.addItemDecoration(EqualSpaceItemDecoration(tvSpacing))
 
         animeHomeData()
         loadDubbedAnime()
+        
+        setupNetworkListener()
     }
 
     override fun onResume() {
         super.onResume()
 
-        if (this::faveAdapter.isInitialized) {
-            faveAdapter.clearItems()
-        }
-
-        animeFavoritesList()
-
-        requireActivity().window.decorView.post {
-            if (requireActivity().currentFocus == null) {
-                if (lastFocusedView != null && lastFocusedView!!.isShown && lastFocusedView!!.isFocusable) {
-                    lastFocusedView!!.requestFocus()
-                } else {
-                    // Assuming HomeBtn is in the parent activity or handled elsewhere
-                    requireActivity().findViewById<LinearLayout>(R.id.HomeBtn)?.requestFocus()
-                }
+        binding.root.post {
+            if (lastFocusedView != null && lastFocusedView!!.isShown && lastFocusedView!!.isFocusable) {
+                lastFocusedView!!.requestFocus()
+            } else {
+                binding.animeSpotlightSection.requestFocus()
             }
         }
     }
 
-    private fun trackFocus() {
-        requireActivity().window.decorView.viewTreeObserver.addOnGlobalFocusChangeListener { _, newFocus ->
-            if (newFocus != null) {
-                lastFocusedView = newFocus
+    private fun setupNetworkListener() {
+        val connectivityManager = requireContext().getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val networkRequest = NetworkRequest.Builder()
+            .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+            .build()
+
+        networkCallback = object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: Network) {
+                super.onAvailable(network)
+                if (!isDataLoaded) {
+                    // Back online and data isn't loaded! Run it again on the Main thread
+                    viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
+                        try { LoadingAnimation.show(requireView()) } catch (e: Exception) {}
+                        animeHomeData()
+                        if (dubbedAdapter.itemCount <= 1) {
+                            loadDubbedAnime()
+                        }
+                    }
+                }
             }
+        }
+        try {
+            connectivityManager.registerNetworkCallback(networkRequest, networkCallback!!)
+        } catch (e: Exception) {
+            Log.e("AnimeFragment", "Failed to register network callback", e)
         }
     }
 
     private fun projectDubbItemIntoHero(item: AnimeGridItem) {
         try {
-            binding.dubbOverlayTitle.text = item.title
-            binding.dubbOverlayYear.text = GlobalUtils.formatDateString(item.releaseDate)
-            binding.dubbOverlayRating.text = item.rating
-            binding.dubbFixedFocusOverlay.alpha = 1f
 
+            // 1. Cross-fade the text content
+            val fadeDuration = 250L
+            binding.dubbOverlayTitle.animate().alpha(0f).setDuration(fadeDuration).withEndAction {
+                binding.dubbOverlayTitle.text = item.title
+                binding.dubbOverlayYear.text = GlobalUtils.formatDateString(item.releaseDate)
+                binding.dubbOverlayRating.text = item.rating
+                binding.dubbFixedFocusOverlay.alpha = 1f
+
+                binding.dubbOverlayTitle.animate().alpha(1f).setDuration(fadeDuration).start()
+                binding.dubbOverlayYear.animate().alpha(1f).setDuration(fadeDuration).start()
+                binding.dubbOverlayRating.animate().alpha(1f).setDuration(fadeDuration).start()
+            }.start()
+            binding.dubbOverlayYear.animate().alpha(0f).setDuration(fadeDuration).start()
+            binding.dubbOverlayRating.animate().alpha(0f).setDuration(fadeDuration).start()
+
+            // 2. Load Image with Cross-fade Factory (avoids recycled bitmap crash)
+            val factory = com.bumptech.glide.request.transition.DrawableCrossFadeFactory.Builder().setCrossFadeEnabled(true).build()
             Glide.with(this)
                 .load(item.backdropUrl)
+                .transition(DrawableTransitionOptions.withCrossFade(factory))
                 .centerCrop()
                 .diskCacheStrategy(DiskCacheStrategy.ALL)
                 .into(binding.dubbOverlayPoster)
@@ -194,7 +229,13 @@ class AnimeFragment : Fragment() {
 
             val jsonObject = withContext(Dispatchers.IO) { fetchAnimeAPI.animeHome() }
 
-            if (jsonObject == null) return@launch
+            if (jsonObject == null) {
+                LoadingAnimation.hide(requireView())
+                Toast.makeText(requireContext(), "No Internet Connection", Toast.LENGTH_LONG).show()
+                return@launch
+            }
+            
+            isDataLoaded = true
 
             val (spotlightList, trendingList, airingList) = withContext(Dispatchers.IO) {
                 val showHomeData = jsonObject.getJSONObject("data")
@@ -263,7 +304,7 @@ class AnimeFragment : Fragment() {
                     R.layout.anime_card_spotlight,
                     binding.spotlightAnimes,
                     false
-                ) as CardView
+                ) as MaterialCardView
 
                 card.findViewById<TextView>(R.id.cardTitle).text = item["title"]
                 card.findViewById<TextView>(R.id.cardPg).text = "PG-13"
@@ -276,9 +317,33 @@ class AnimeFragment : Fragment() {
                 card.findViewById<TextView>(R.id.cardOverview).text = item["overview"]
 
                 val sliderBackdrop = card.findViewById<ImageView>(R.id.SliderBackdrop)
+                val sliderImage = item["imageUrl"].toString()
+
+                GlobalUtils.extractDynamicColor(requireContext(), sliderImage) { color ->
+
+                    val blurContainerLeft = card.findViewById<LinearLayout>(R.id.blurContainerLeft)
+                    val blurContainerBottom = card.findViewById<LinearLayout>(R.id.blurContainerBottom)
+
+                    card.findViewById<FrameLayout>(R.id.CardBackground).setBackgroundColor(color)
+
+                    val baseColor = (color and 0x00FFFFFF) or -0x1000000
+                    val gradientDrawableLeft = android.graphics.drawable.GradientDrawable(
+                        android.graphics.drawable.GradientDrawable.Orientation.LEFT_RIGHT,
+                        intArrayOf(baseColor, Color.TRANSPARENT, Color.TRANSPARENT)
+                    )
+
+                    val gradientDrawableBottom = android.graphics.drawable.GradientDrawable(
+                        android.graphics.drawable.GradientDrawable.Orientation.BOTTOM_TOP,
+                        intArrayOf(baseColor, Color.TRANSPARENT, Color.TRANSPARENT)
+                    )
+
+                    blurContainerLeft.background = gradientDrawableLeft
+                    blurContainerBottom.background = gradientDrawableBottom
+                }
 
                 Glide.with(this@AnimeFragment)
-                    .load(item["imageUrl"])
+                    .load(sliderImage)
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
                     .centerInside()
                     .into(sliderBackdrop)
 
@@ -333,6 +398,10 @@ class AnimeFragment : Fragment() {
         isLoadingMoreDubbed = true
         dubbedAdapter.isLoadingMore = true
         currentDubbedAnimePage++
+
+        val prefs = requireActivity().getSharedPreferences("AnimePrefs", Context.MODE_PRIVATE)
+        prefs.edit().putInt("currentDubbedAnimePage", currentDubbedAnimePage).apply()
+
         fetchDubbedAnime()
     }
 
@@ -354,6 +423,21 @@ class AnimeFragment : Fragment() {
                     connection.disconnect()
 
                     val dubbedAnime = org.json.JSONObject(response).getJSONObject("data").getJSONArray("animes")
+                    
+                    if (dubbedAnime.length() == 0) {
+                        // End of list reached, cycle back to page 0
+                        currentDubbedAnimePage = 0
+                        val prefs = requireActivity().getSharedPreferences("AnimePrefs", Context.MODE_PRIVATE)
+                        prefs.edit().putInt("currentDubbedAnimePage", currentDubbedAnimePage).apply()
+                        
+                        withContext(Dispatchers.Main) {
+                            isLoadingMoreDubbed = false
+                            dubbedAdapter.isLoadingMore = false
+                            loadDubbedAnime() // Fetch page 1
+                        }
+                        return@launch
+                    }
+
                     val animeGridItems = mutableListOf<AnimeGridItem>()
 
                     for (i in 0 until dubbedAnime.length()) {
@@ -408,48 +492,24 @@ class AnimeFragment : Fragment() {
         }
     }
 
-    private fun animeFavoritesList() {
-        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
-            val animeFavData = withContext(Dispatchers.IO) { db.getFavoriteAnime(userId) }
-            val items = animeFavData.map { anime ->
-                FavItem(
-                    title = anime["name"] ?: "",
-                    posterUrl = anime["poster"] ?: "",
-                    backdropUrl = anime["poster"] ?: "",
-                    releaseDate = anime["aired"] ?: "",
-                    runtime = anime["duration"] ?: "",
-                    overview = anime["description"] ?: "",
-                    voteAverage = anime["rating"] ?: "",
-                    genres = anime["genre"] ?: "",
-                    production = "",
-                    parentalGuide = anime["rating"] ?: "",
-                    imdbCode = anime["anime_id"] ?: "",
-                    showType = "anime"
-                )
-            }
-
-            if (items.isNotEmpty()) {
-                binding.favoriteSection.visibility = View.VISIBLE
-                if (!::faveAdapter.isInitialized) {
-                    faveAdapter = FavAdapter(items.toMutableList(), R.layout.square_card)
-                    binding.faveRecycler.adapter = faveAdapter
-                } else {
-                    faveAdapter.updateItems(items)
-                }
-            }
-        }
-    }
 
     override fun onDestroyView() {
         super.onDestroyView()
+        // Unregister network callback to prevent leaks
+        networkCallback?.let {
+            val connectivityManager = requireContext().getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+            connectivityManager.unregisterNetworkCallback(it)
+        }
+        networkCallback = null
+        
+        dubbedAdapter.clearItems()
+        
         // Critical: Nullify binding to prevent memory leaks when fragment goes to backstack
         _binding = null
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        dubbedAdapter.clearItems()
-        if (this::faveAdapter.isInitialized) faveAdapter.clearItems()
         lifecycleScope.coroutineContext.cancelChildren()
     }
 }

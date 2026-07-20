@@ -488,60 +488,28 @@ class Watch_Page : AppCompatActivity() {
     }
 
     private fun extractAndApplyDynamicColor(imageUrl: String) {
-        // If the user disabled Dynamic Color in Profile Settings, skip extraction
-        if (!sm.isDynamicColorEnabled()) return
+        GlobalUtils.extractDynamicColor(this@Watch_Page, imageUrl) { color ->
+            val mainBox = findViewById<ScrollView>(R.id.mainBox)
+            val blurContainerLeft = findViewById<LinearLayout>(R.id.blurContainer_left)
+            val blurContainerBottom = findViewById<LinearLayout>(R.id.blurContainer_bottom)
 
-        Glide.with(this@Watch_Page)
-            .asBitmap()
-            .load(imageUrl)
-            .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.ALL)
-            .into(object : com.bumptech.glide.request.target.CustomTarget<android.graphics.Bitmap>() {
-                override fun onResourceReady(
-                    resource: android.graphics.Bitmap,
-                    transition: com.bumptech.glide.request.transition.Transition<in android.graphics.Bitmap>?
-                ) {
-                    androidx.palette.graphics.Palette.from(resource).generate { palette ->
-                        val color = palette?.darkVibrantSwatch?.rgb
-                            ?: palette?.darkMutedSwatch?.rgb
-                            ?: palette?.dominantSwatch?.rgb
-                            ?: android.graphics.Color.parseColor("#121212")
+            mainBox.setBackgroundColor(color)
 
+            // Create a smooth gradient fading left to right
+            val baseColor = (color and 0x00FFFFFF) or -0x1000000
+            val gradientDrawableLeft = android.graphics.drawable.GradientDrawable(
+                android.graphics.drawable.GradientDrawable.Orientation.LEFT_RIGHT,
+                intArrayOf(baseColor, Color.TRANSPARENT, Color.TRANSPARENT)
+            )
 
-                        val mainBox = findViewById<ScrollView>(R.id.mainBox)
-                        val blurContainerLeft = findViewById<LinearLayout>(R.id.blurContainer_left)
-                        val blurContainerBottom = findViewById<LinearLayout>(R.id.blurContainer_bottom)
+            val gradientDrawableBottom = android.graphics.drawable.GradientDrawable(
+                android.graphics.drawable.GradientDrawable.Orientation.BOTTOM_TOP,
+                intArrayOf(baseColor, Color.TRANSPARENT, Color.TRANSPARENT)
+            )
 
-                        mainBox.setBackgroundColor(color)
-                        //blurContainerLeft.setBackgroundColor(color)
-                        //blurContainerBottom.setBackgroundColor(color)
-
-
-                        // Create a smooth gradient fading left to right
-                        val baseColor = (color and 0x00FFFFFF) or -0x1000000
-                        val gradientDrawableLeft = android.graphics.drawable.GradientDrawable(
-                            android.graphics.drawable.GradientDrawable.Orientation.LEFT_RIGHT,
-                            intArrayOf(
-                                baseColor,
-                                Color.TRANSPARENT,
-                                Color.TRANSPARENT
-                            )
-                        )
-
-                        val gradientDrawableBottom = android.graphics.drawable.GradientDrawable(
-                            android.graphics.drawable.GradientDrawable.Orientation.BOTTOM_TOP,
-                            intArrayOf(
-                                baseColor,
-                                Color.TRANSPARENT,
-                                Color.TRANSPARENT
-                            )
-                        )
-
-                        blurContainerLeft.background = gradientDrawableLeft
-                        blurContainerBottom.background = gradientDrawableBottom
-                    }
-                }
-                override fun onLoadCleared(placeholder: android.graphics.drawable.Drawable?) {}
-            })
+            blurContainerLeft.background = gradientDrawableLeft
+            blurContainerBottom.background = gradientDrawableBottom
+        }
     }
 
 

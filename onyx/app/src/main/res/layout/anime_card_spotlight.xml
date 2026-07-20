@@ -1,5 +1,6 @@
 <!-- res/layout/item_grid.xml -->
-<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/spotlightAnimesCard"
@@ -8,19 +9,24 @@
     android:nextFocusDown="@id/cardButton"
     android:nextFocusUp="@+id/searchBarAnime"
     android:focusable="true"
-
     android:layout_marginVertical="10dp"
     android:layout_marginEnd="90dp"
+    android:clipToOutline="true"
     android:layout_marginStart="15dp"
-
+    app:strokeColor="@color/card_stroke"
+    app:strokeWidth="3dp"
     app:cardCornerRadius="20dp"
+    android:foreground="@android:color/transparent"
     app:cardBackgroundColor="?attr/BG_color_up"
-    android:foreground="@drawable/spotlight_selector"
-    android:descendantFocusability="beforeDescendants">
+    android:descendantFocusability="beforeDescendants"
+    tools:targetApi="31">
+
 
     <FrameLayout
+        android:id="@+id/CardBackground"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:clipToOutline="true"
         android:orientation="horizontal">
 
                 <FrameLayout
@@ -37,6 +43,7 @@
                             tools:ignore="ContentDescription" />
 
                         <LinearLayout
+                            android:id="@+id/blurContainerBottom"
                             android:layout_width="match_parent"
                             android:layout_height="30dp"
                             android:visibility="gone"
@@ -45,7 +52,8 @@
                             android:layout_gravity="bottom" />
 
                         <LinearLayout
-                            android:layout_width="100dp"
+                            android:id="@+id/blurContainerLeft"
+                            android:layout_width="200dp"
                             android:layout_height="match_parent"
                             android:visibility="visible"
                             android:background="@drawable/overlay_left_gradient_bg_up"
@@ -55,7 +63,7 @@
 
 
         <LinearLayout
-            android:layout_width="300dp"
+            android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_gravity="bottom"
             android:orientation="vertical"
@@ -66,7 +74,7 @@
 
             <TextView
                 android:id="@+id/cardTitle"
-                android:layout_width="match_parent"
+                android:layout_width="300dp"
                 android:layout_height="wrap_content"
                 android:layout_gravity="bottom"
                 android:layout_marginBottom="5dp"
@@ -316,7 +324,7 @@
 
             <TextView
                 android:id="@+id/cardOverview"
-                android:layout_width="match_parent"
+                android:layout_width="300dp"
                 android:layout_height="100dp"
                 android:layout_gravity="bottom"
                 android:layout_marginBottom="20dp"
@@ -339,6 +347,6 @@
 
     </FrameLayout>
 
+</com.google.android.material.card.MaterialCardView>
 
 
-</androidx.cardview.widget.CardView>

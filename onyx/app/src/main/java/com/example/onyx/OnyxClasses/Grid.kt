@@ -1277,7 +1277,9 @@ class FavAdapter(
                                 .load(item.backdropUrl)
                                 .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.ALL)
                                 .into(it)
+
                         }
+
 
                         favTitleView?.text = item.title
                         favGenreView?.text = item.genres

@@ -28,10 +28,18 @@ class WatchingFragment : Fragment(R.layout.fragment_watching) {
     private lateinit var animeWatchAdapter: cWatchingAdapter
     private lateinit var db: AppDatabase
     private lateinit var sm: SessionManger
+    private var lastFocusedView: View? = null
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         db = AppDatabase(requireContext())
         sm = SessionManger(requireActivity())
+        
+        view.viewTreeObserver.addOnGlobalFocusChangeListener { _, newFocus ->
+            if (newFocus != null && view.findViewById<View>(newFocus.id) != null) {
+                lastFocusedView = newFocus
+            }
+        }
         val fragmentScrollView = requireView().findViewById<ScrollView>(R.id.fragmentScrollView)
 
         showsWatchingSection = view.findViewById(R.id.showsWatchingSection)
@@ -56,6 +64,18 @@ class WatchingFragment : Fragment(R.layout.fragment_watching) {
         showsWatchedList()
         animeWatchedList()
     }
+
+    override fun onResume() {
+        super.onResume()
+        requireView().post {
+            if (lastFocusedView != null && lastFocusedView!!.isShown && lastFocusedView!!.isFocusable) {
+                lastFocusedView!!.requestFocus()
+            } else {
+                showsWatchingRecycler.requestFocus()
+            }
+        }
+    }
+
     private fun showsWatchedList() {
         viewLifecycleOwner.lifecycleScope.launch {
             val userId = sm.getUserId()

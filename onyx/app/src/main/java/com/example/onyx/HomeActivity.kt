@@ -71,6 +71,7 @@ class HomeActivity : AppCompatActivity() {
                 "anime" -> btnAnime
                 "profile" -> btnProfile
                 "watching" -> btnWatching
+                "favorites" -> findViewById<View>(R.id.sidebarLabelFavorites)
                 "search" -> searchBtn
                 "notifications" -> notificationBtn
                 else -> btnShows
@@ -88,8 +89,9 @@ class HomeActivity : AppCompatActivity() {
         val btnWatching = findViewById<ImageButton>(R.id.sidebarWatchListBtn)
         val searchBtn = findViewById<ImageView>(R.id.sidebarSearchBtn)
         val notificationBtn = findViewById<ImageButton>(R.id.sidebarNotificationBtn)
+        val btnFavorites = findViewById<ImageButton>(R.id.sidebarFavoritesBtn)
 
-        val buttons = listOf(btnShows, btnAnime, btnProfile, btnWatching)
+        val buttons = listOf(btnShows, btnAnime, btnProfile, btnWatching, btnFavorites)
 
         btnShows.setOnClickListener {
             updateSelection(buttons, btnShows)
@@ -121,7 +123,10 @@ class HomeActivity : AppCompatActivity() {
             switchFragment("watching")
         }
 
-
+        btnFavorites?.setOnClickListener {
+            updateSelection(buttons, btnFavorites)
+            switchFragment("favorites")
+        }
     }
 
     private fun updateSelection(buttons: List<View>, selected: View) {
@@ -136,7 +141,7 @@ class HomeActivity : AppCompatActivity() {
         val transaction = fm.beginTransaction()
 
         // Define your VIP list of core sidebar tabs
-        val coreNavigationTags = listOf("shows", "anime", "profile", "watching", "notifications", "search")
+        val coreNavigationTags = listOf("shows", "anime", "profile", "watching", "favorites", "notifications", "search")
 
         // 1. Find ALL currently visible fragments
         fm.fragments.filter { it.isVisible }.forEach { fragment ->
@@ -159,6 +164,7 @@ class HomeActivity : AppCompatActivity() {
                 "anime" -> AnimeFragment()
                 "profile" -> ProfileFragment()
                 "watching" -> WatchingFragment()
+                "favorites" -> FavoritesFragment()
                 "notifications" -> notificationFragment()
                 "search" -> SearchFragment()
                 else -> ShowsFragment()
@@ -242,6 +248,7 @@ class HomeActivity : AppCompatActivity() {
             "anime" -> findViewById<View>(R.id.sidebarBtnAnime)?.performClick()
             "profile" -> findViewById<View>(R.id.sidebarBtnProfile)?.performClick()
             "watching" -> findViewById<View>(R.id.sidebarWatchListBtn)?.performClick()
+            "favorites" -> findViewById<View>(R.id.sidebarLabelFavorites)?.performClick()
             "notifications" -> findViewById<View>(R.id.sidebarNotificationBtn)?.performClick()
             "search" -> findViewById<View>(R.id.sidebarSearchBtn)?.performClick()
             else -> findViewById<View>(R.id.sidebarBtnShows)?.performClick()

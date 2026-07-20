@@ -15,7 +15,7 @@ import com.example.onyx.R
 import com.example.onyx.WatchAnimeFragment
 import com.example.onyx.Watch_Page
 import com.bumptech.glide.request.target.Target
-
+import com.google.android.material.card.MaterialCardView
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -32,7 +32,7 @@ class AnimeTrendingAdapter(
     }
 
     inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val CardViewcontiner: CardView = view.findViewById(R.id.CardViewcontiner)
+        val CardViewcontiner: MaterialCardView = view.findViewById(R.id.CardViewcontiner)
         val Movie_image: ImageView = view.findViewById(R.id.itemImage)
         val rank: TextView = view.findViewById(R.id.rank)
         val title: TextView = view.findViewById(R.id.title)

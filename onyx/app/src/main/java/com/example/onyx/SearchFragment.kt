@@ -56,8 +56,16 @@ class SearchFragment :  Fragment(R.layout.fragment_search) {
         }
     }
 
+    private var lastFocusedView: View? = null
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        view.viewTreeObserver.addOnGlobalFocusChangeListener { _, newFocus ->
+            if (newFocus != null && view.findViewById<View>(newFocus.id) != null) {
+                lastFocusedView = newFocus
+            }
+        }
 
         val tvSpacing = (4 * resources.displayMetrics.density).toInt()
 
@@ -143,6 +151,16 @@ class SearchFragment :  Fragment(R.layout.fragment_search) {
 
     }
 
+    override fun onResume() {
+        super.onResume()
+        requireView().post {
+            if (lastFocusedView != null && lastFocusedView!!.isShown && lastFocusedView!!.isFocusable) {
+                lastFocusedView!!.requestFocus()
+            } else {
+                requireView().findViewById<EditText>(R.id.searchView)?.requestFocus()
+            }
+        }
+    }
 
 
     private  fun searchAnimeFetch(searchTerm:String){

@@ -34,7 +34,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="10dp"
-                android:layout_marginTop="60dp"
+                android:layout_marginTop="0dp"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
@@ -164,7 +164,7 @@
                     android:focusable="true"
                     android:nextFocusLeft="@id/sidebarWatchListBtn"
                     android:nextFocusUp="@id/sidebarSearchBtn"
-                    android:nextFocusDown="@id/sidebarNotificationBtn"
+                    android:nextFocusDown="@id/sidebarFavoritesBtn"
                     android:src="@drawable/clock"
                     app:tint="@color/nav_icon_color_selector"
                     tools:ignore="HardcodedText,TouchTargetSizeCheck" />
@@ -178,6 +178,45 @@
                     android:gravity="center"
                     android:maxLines="1"
                     android:text="Watching"
+                    android:textColor="?attr/FG_color"
+                    android:textSize="14sp"
+                    tools:ignore="HardcodedText,InefficientWeight,SmallSp" />
+            </LinearLayout>
+
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <ImageButton
+                    android:id="@+id/sidebarFavoritesBtn"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_margin="5dp"
+                    android:layout_gravity="center_horizontal"
+                    android:background="@android:color/transparent"
+                    android:clickable="true"
+                    android:contentDescription="Favorites"
+                    android:focusable="true"
+                    android:nextFocusLeft="@id/sidebarFavoritesBtn"
+                    android:nextFocusUp="@id/sidebarWatchListBtn"
+                    android:nextFocusDown="@id/sidebarNotificationBtn"
+                    android:src="@drawable/ic_fave"
+                    app:tint="@color/nav_icon_color_selector"
+                    tools:ignore="HardcodedText,TouchTargetSizeCheck" />
+
+                <TextView
+                    android:id="@+id/sidebarLabelFavorites"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:alpha="0.5"
+                    android:ellipsize="end"
+                    android:gravity="center"
+                    android:maxLines="1"
+                    android:text="Favorites"
                     android:textColor="?attr/FG_color"
                     android:textSize="14sp"
                     tools:ignore="HardcodedText,InefficientWeight,SmallSp" />
@@ -215,12 +254,14 @@
                         android:contentDescription="Notifications"
                         android:focusable="true"
                         android:nextFocusLeft="@id/sidebarNotificationBtn"
-                        android:nextFocusUp="@id/sidebarWatchListBtn"
+                        android:nextFocusUp="@id/sidebarFavoritesBtn"
                         android:nextFocusDown="@id/sidebarBtnProfile"
                         android:src="@drawable/ic_notification"
                         app:tint="@color/nav_icon_color_selector"
                         tools:ignore="HardcodedText,TouchTargetSizeCheck" />
                 </FrameLayout>
+
+
 
                 <TextView
                     android:id="@+id/sidebarLabelNotification"
@@ -235,6 +276,9 @@
                     android:textSize="14sp"
                     tools:ignore="HardcodedText,InefficientWeight,SmallSp" />
             </LinearLayout>
+
+
+
 
 
 
