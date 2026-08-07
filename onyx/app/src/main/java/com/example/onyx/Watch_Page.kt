@@ -157,8 +157,8 @@ class Watch_Page : AppCompatActivity() {
         val continuePlay = intent.getBooleanExtra("continue_play", false)
         if(continuePlay){
 
-            val seasonNumber = intent.getStringExtra("seasonNo") ?: ""
-            val episodeNumber = intent.getStringExtra("EpisodeNo") ?: ""
+            val seasonNumber = intent.getStringExtra("seasonNo") ?: "1"
+            val episodeNumber = intent.getStringExtra("EpisodeNo") ?: "1"
             val type = intent.getStringExtra("type") ?: ""
             val title = intent.getStringExtra("title") ?: ""
             val posterUrl = intent.getStringExtra("poster") ?: ""
@@ -172,7 +172,7 @@ class Watch_Page : AppCompatActivity() {
             intent.putExtra("poster", posterUrl)
             intent.putExtra("backdrop", backdropUrl)
             intent.putExtra("seasonNo", seasonNumber)
-            intent.putExtra("EpisodeNo", episodeNumber)
+            intent.putExtra("episodeNo", episodeNumber)
 
             startActivity(intent)
         }

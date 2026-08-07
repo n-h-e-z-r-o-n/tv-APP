@@ -12,7 +12,11 @@ import android.content.SharedPreferences
 import android.content.res.Configuration
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
+import android.graphics.Color
+import android.graphics.LinearGradient
+import android.graphics.Matrix
 import android.graphics.Rect
+import android.graphics.Shader
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
@@ -1156,5 +1160,56 @@ object GlobalUtils {
 
     fun getSeriesWatched(context: Context): Int {
         return getSharedPreferences(context).getInt(KEY_SERIES_WATCHED, 0)
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+
+    fun animateGradientTextString(
+        textView: TextView,
+        defaultColor: String,
+        highlightColor: String
+    ) {
+
+        textView.post {
+
+            val width = textView.paint.measureText(textView.text.toString())
+
+            val shader = LinearGradient(
+                0f,
+                0f,
+                width,
+                0f,
+                intArrayOf(
+                    Color.parseColor(defaultColor),
+                    Color.parseColor(highlightColor),
+                    Color.parseColor(defaultColor)
+                ),
+                null,
+                Shader.TileMode.CLAMP
+            )
+
+            val matrix = Matrix()
+
+            ValueAnimator.ofFloat(0f, 2f * width).apply {
+
+                duration = 2000
+                repeatCount = ValueAnimator.INFINITE
+
+                addUpdateListener {
+
+                    val dx = animatedValue as Float
+
+                    matrix.setTranslate(dx - width, 0f)
+
+                    shader.setLocalMatrix(matrix)
+
+                    textView.paint.shader = shader
+
+                    textView.invalidate()
+                }
+
+                start()
+            }
+        }
     }
 }

@@ -29,18 +29,22 @@
         tools:ignore="ContentDescription" />
 
     <TextView
-        android:visibility="gone"
+        android:layout_gravity="bottom"
         android:id="@+id/itemText"
+        android:maxWidth="180dp"
+
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:background="@android:color/transparent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/overlay_bottom_gradient_bg"
         android:ellipsize="end"
         android:gravity="center"
+        tools:text="The Boys"
+        android:fontFamily="sans-serif-condensed"
         android:padding="8dp"
         android:rotationX="0"
         android:singleLine="true"
-        android:textColor="#0C0404"
-        android:textSize="14sp" />
+        android:textColor="#FFFFFF"
+        android:textSize="16sp" />
 
 
 </com.google.android.material.card.MaterialCardView>

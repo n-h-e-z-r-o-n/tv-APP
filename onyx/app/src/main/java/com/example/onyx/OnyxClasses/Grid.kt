@@ -1349,6 +1349,8 @@ class FavAdapter(
         val imdbCode = currentItem.imdbCode
         val type = currentItem.showType
 
+        holder.itemText?.text = currentItem.title
+
         Glide.with(holder.itemView.context)
             .load(backdropUrl)
             .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.ALL)
@@ -1359,10 +1361,10 @@ class FavAdapter(
             val context = holder.itemView.context
             if (type == "anime") {
                 val args = android.os.Bundle().apply {
-    putString("anime_code", imdbCode)
-    putString("anime_poster", posterUrl)
-}
-(context as com.example.onyx.HomeActivity).navigateToFragment(com.example.onyx.WatchAnimeFragment(), args)
+                    putString("anime_code", imdbCode)
+                    putString("anime_poster", posterUrl)
+                }
+                (context as com.example.onyx.HomeActivity).navigateToFragment(com.example.onyx.WatchAnimeFragment(), args)
             } else {
                 val intent = Intent(context, Watch_Page::class.java).apply {
                     putExtra("imdb_code", imdbCode)
@@ -1584,29 +1586,7 @@ class EpisodesAdapter(
         holder.job?.cancel()  // cancel previous coroutine if any
         holder.job = holder.scope.launch {
             val itemId = "${ep.seriesId}_S${ep.seasonNumber}_E${ep.episodesNumber}"
-            //val lastPos = db.getResumePosition(userId, itemId, "tv").toLong()
-            //val durationPos = db.getDurationPosition(userId, itemId, "tv").toLong()
 
-            /*
-            val lastPos = withContext(Dispatchers.IO) {
-                db.getResumePosition(userId, itemId, "tv").toLong()
-            }
-            val durationPos = withContext(Dispatchers.IO) {
-                db.getDurationPosition(userId, itemId, "tv").toLong()
-            }
-            */
-
-            /*
-
-            // Run both DB queries concurrently
-            val lastPosDeferred = async(Dispatchers.IO) { db.getResumePosition(userId, itemId, "tv").toLong() }
-            val durationPosDeferred = async(Dispatchers.IO) { db.getDurationPosition(userId, itemId, "tv").toLong() }
-
-
-            // Await both results
-            val lastPos = lastPosDeferred.await()
-            val durationPos = durationPosDeferred.await()
-             */
 
             val (lastPos, durationPos) = withContext(Dispatchers.IO) {
                 val last = db.getResumePosition(userId, itemId, "tv").toLong()
@@ -1947,8 +1927,6 @@ class cWatchingAdapter(
         val context = holder.itemView.context
         if(type=="anime"){
             holder.episode.text = "E$episodeNumber"
-
-
 
             holder.rootCard.setOnClickListener {
                 val context = holder.itemView.context

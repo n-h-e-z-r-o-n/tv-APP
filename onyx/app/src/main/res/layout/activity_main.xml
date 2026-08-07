@@ -38,7 +38,7 @@
     <View
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#70042c40"/>
+        android:background="#50042c40"/>
 
 
     <!-- Loading Animation -->
@@ -61,7 +61,7 @@
             android:shadowDy="6"
             android:shadowRadius="4"
             android:text="ONYX"
-            android:textColor="#000000"
+            android:textColor="#042c40"
             android:textSize="150sp"
             tools:ignore="HardcodedText" />
 
@@ -80,6 +80,7 @@
 
 
             <TextView
+                android:id="@+id/mediaTxt"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="©2026 PULSEFLIX MEDIA GROUP"

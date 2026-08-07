@@ -92,11 +92,12 @@
                     android:focusableInTouchMode="false"
                     android:focusable="false"
                     android:max="1000"
-                    android:progress="0"
+                    android:progress="10"
                     android:layout_weight="1"
-                    android:progressTint="?attr/AccentColor"
-                    android:progressBackgroundTint="@android:color/white"
                     android:thumbTint="?attr/AccentColor"
+                    android:progressTint="?attr/AccentColor"
+                    android:secondaryProgressTint="#0B6623"
+                    android:progressBackgroundTint="#FFFFFF"
                     />
 
                 <TextView

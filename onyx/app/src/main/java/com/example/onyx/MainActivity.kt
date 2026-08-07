@@ -41,8 +41,10 @@ class MainActivity : AppCompatActivity() {
         supportActionBar?.hide()
         setupBackPressedCallback()
 
-        // Hide navigation bar and status bar (Immersive mode)
-        //GlobalUtils.hideSystemUI(this)
+        val logo: TextView = findViewById(R.id.mediaTxt)
+
+        GlobalUtils.animateGradientTextString(logo, "#BEBEBE", "#FFFFFF" )
+        GlobalUtils.hideSystemUI(this)
 
 
         ////////////////////////////////////////////////////////////////////////////////////////////
@@ -72,7 +74,7 @@ class MainActivity : AppCompatActivity() {
 
                 //sm = SessionManger(this@MainActivity)
                 //sm.saveUserId(1453)
-                //sm.saveAvatar("profile_avatars/1.png")
+                    //sm.saveAvatar("profile_avatars/1.png")
                 //startActivity(Intent(this@MainActivity, Instraction::class.java))
 
                 //val r = GlobalUtils.ipCheck(this@MainActivity)
@@ -85,6 +87,7 @@ class MainActivity : AppCompatActivity() {
                 finish()
             }
         }
+
         //startActivity(Intent(this@MainActivity, Watch_Page::class.java))
     }
 

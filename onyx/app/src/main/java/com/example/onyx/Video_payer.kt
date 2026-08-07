@@ -5,10 +5,14 @@ import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.graphics.Color
 import android.media.AudioManager
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import android.util.Log
 import android.view.KeyEvent
 import android.view.MotionEvent
@@ -22,6 +26,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
+import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.Tracks
 import androidx.media3.exoplayer.DefaultLoadControl
@@ -33,6 +38,7 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
+import androidx.media3.exoplayer.upstream.DefaultLoadErrorHandlingPolicy
 import com.example.onyx.Database.AppDatabase
 import com.example.onyx.Database.SessionManger
 import com.example.onyx.OnyxObjects.GlobalUtils
@@ -41,7 +47,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-
+import androidx.media3.datasource.HttpDataSource
 @UnstableApi
 class Video_payer : AppCompatActivity(), Player.Listener {
 
@@ -109,13 +115,37 @@ class Video_payer : AppCompatActivity(), Player.Listener {
     private var progressRunnable: Runnable? = null
     private var saveCounter = 0
 
+    // ── Playback retry / recovery ─────────────────────────────────────────────
+    private val playbackRetryHandler = Handler(Looper.getMainLooper())
+    private var playbackRetryRunnable: Runnable? = null
+    private var playbackRetryCount = 0
+    private val maxPlaybackRetries = 4
+
     // ── Audio focus ────────────────────────────────────────────────────────────
     private lateinit var audioManager: AudioManager
+    private lateinit var connectivityManager: ConnectivityManager
     private val audioFocusChangeListener = AudioManager.OnAudioFocusChangeListener { focusChange ->
         when (focusChange) {
             AudioManager.AUDIOFOCUS_LOSS,
             AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> exoPlayer?.pause()
             AudioManager.AUDIOFOCUS_GAIN           -> exoPlayer?.play()
+        }
+    }
+    private var isNetworkCallbackRegistered = false
+    private var waitingForNetworkRecovery = false
+    private var shouldResumeAfterNetworkRecovery = false
+    private var lastKnownPlaybackPosition = 0L
+    private val networkCallback = object : ConnectivityManager.NetworkCallback() {
+        override fun onAvailable(network: Network) {
+            runOnUiThread { handleNetworkAvailable() }
+        }
+
+        override fun onLost(network: Network) {
+            runOnUiThread {
+                if (!isNetworkAvailable()) {
+                    handleNetworkLost()
+                }
+            }
         }
     }
 
@@ -135,6 +165,7 @@ class Video_payer : AppCompatActivity(), Player.Listener {
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         db = AppDatabase(this)
         sm = SessionManger(this)
         userId = sm.getUserId()
@@ -144,6 +175,7 @@ class Video_payer : AppCompatActivity(), Player.Listener {
         setupControls()
         setupGestures()
         setupBackPressedCallback()
+        registerNetworkCallback()
     }
 
     override fun onPause() {
@@ -155,15 +187,26 @@ class Video_payer : AppCompatActivity(), Player.Listener {
 
     override fun onResume() {
         super.onResume()
-        // Tracking resumes automatically via onIsPlayingChanged
-        exoPlayer?.play()
+        if (waitingForNetworkRecovery && isNetworkAvailable()) {
+            handleNetworkAvailable()
+        } else {
+            // Tracking resumes automatically via onIsPlayingChanged
+            exoPlayer?.play()
+        }
     }
 
     override fun onDestroy() {
         saveContinueWatching()
         stopProgressTracking()
+        stopBufferingWatchdog()
+        bufferingWatchdogHandler.removeCallbacksAndMessages(null)
+        bufferingWatchdogRunnable = null
+
         progressHandler.removeCallbacksAndMessages(null)
+        playbackRetryHandler.removeCallbacksAndMessages(null)
+        playbackRetryRunnable = null
         lifecycleScope.coroutineContext.cancelChildren()
+        unregisterNetworkCallback()
         releasePlayer()
         playerView.player = null
         // Note: do NOT call finish() here — already being destroyed
@@ -208,6 +251,15 @@ class Video_payer : AppCompatActivity(), Player.Listener {
         showBackdrop = intent.getStringExtra("showBackdrop")?: ""
         showSNo      = intent.getStringExtra("showSNo")     ?: ""
         showENo      = intent.getStringExtra("showENo")     ?: ""
+
+        Log.d("Video_payer", "videoUrl=$videoUrl")
+        Log.d("Video_payer", "referer=$referer")
+        Log.d("Video_payer", "userAgent=$userAgent")
+        Log.d("Video_payer", "showId=$showId")
+        Log.d("Video_payer", "showType=$showType")
+        Log.d("Video_payer", "showTitle=$showTitle")
+        Log.d("Video_payer", "showSNo=$showSNo")
+        Log.d("Video_payer", "showENo=$showENo")
 
         if (videoUrl.isEmpty()) {
             Toast.makeText(this, "No video URL provided", Toast.LENGTH_SHORT).show()
@@ -325,11 +377,13 @@ class Video_payer : AppCompatActivity(), Player.Listener {
             .setDefaultRequestProperties(headers)
             .setAllowCrossProtocolRedirects(true)
             .setConnectTimeoutMs(15_000)       // fail fast on bad connections
-            .setReadTimeoutMs(15_000)
+            .setReadTimeoutMs(30_000)
+
+        val loadErrorPolicy = DefaultLoadErrorHandlingPolicy(6)
 
         val mediaSourceFactory = DefaultMediaSourceFactory(
             DefaultDataSource.Factory(this, httpFactory)
-        )
+        ).setLoadErrorHandlingPolicy(loadErrorPolicy)
 
         // Request audio focus with proper listener so we pause on phone calls etc.
         val focusResult = audioManager.requestAudioFocus(
@@ -370,6 +424,8 @@ class Video_payer : AppCompatActivity(), Player.Listener {
             )
             .build()
 
+
+
         val player = ExoPlayer.Builder(this)
             .setRenderersFactory(renderersFactory)
             .setTrackSelector(trackSelector)
@@ -403,21 +459,132 @@ class Video_payer : AppCompatActivity(), Player.Listener {
         updateMuteButton()
     }
 
+
+
     private fun refreshVideo() {
+        val restartPosition = exoPlayer?.currentPosition ?: resumePosition
+        shouldResumeAfterNetworkRecovery = true
         exoPlayer?.let { player ->
             saveContinueWatching()
-            player.stop()
-            player.clearMediaItems()
-            lifecycleScope.launch(Dispatchers.Main) {
-                resumePosition = withContext(Dispatchers.IO) { fetchResumePosition() }
-                player.setMediaItem(MediaItem.fromUri(videoUrl))
-                player.prepare()
-                player.play()
-            }
+            reloadVideo(player, restartPosition, autoPlay = true)
         }
     }
 
-    // ──────────────────────────────────────────────────────────────────────────
+    ///////////////////////////// Auto Buffering Section ///////////////////////////////////////////////////////////////////
+
+    private val bufferingWatchdogHandler = Handler(Looper.getMainLooper())
+    private var bufferingWatchdogRunnable: Runnable? = null
+    private var isAutoRefreshing = false
+    private var autoRefreshCount = 0
+    private val maxAutoRefreshAttempts = 3
+    private val AUTO_REFRESH_BUFFERING_TIMEOUT_MS = 80_000L
+    private val BUFFERING_WATCHDOG_POLL_MS = 5_000L
+
+    private var lastWatchdogBufferedPosition = -1L
+    private var lastBufferProgressTimeMs = 0L
+    private val BUFFER_PROGRESS_THRESHOLD_MS = 500L
+
+    private fun startBufferingWatchdog() {
+        val player = exoPlayer ?: return
+
+        if (!player.playWhenReady) {
+            stopBufferingWatchdog()
+            return
+        }
+
+        if (bufferingWatchdogRunnable != null) {
+            return
+        }
+
+        lastWatchdogBufferedPosition = player.bufferedPosition
+        lastBufferProgressTimeMs = SystemClock.elapsedRealtime()
+
+        bufferingWatchdogRunnable = Runnable {
+            val currentPlayer = exoPlayer ?: return@Runnable
+
+            if (currentPlayer.playbackState != Player.STATE_BUFFERING || !currentPlayer.playWhenReady) {
+                stopBufferingWatchdog()
+                return@Runnable
+            }
+
+            if (waitingForNetworkRecovery) {
+                bufferingWatchdogHandler.postDelayed(bufferingWatchdogRunnable!!, BUFFERING_WATCHDOG_POLL_MS)
+                return@Runnable
+            }
+
+            val currentBufferedPosition = currentPlayer.bufferedPosition
+            val nowMs = SystemClock.elapsedRealtime()
+            val bufferHasAdvanced =
+                currentBufferedPosition > lastWatchdogBufferedPosition + BUFFER_PROGRESS_THRESHOLD_MS
+
+            if (bufferHasAdvanced) {
+                Log.d(
+                    "Auto_refresh",
+                    "Buffer progressing: " +
+                        "${lastWatchdogBufferedPosition / 1000}s -> " +
+                        "${currentBufferedPosition / 1000}s"
+                )
+
+                lastWatchdogBufferedPosition = currentBufferedPosition
+                lastBufferProgressTimeMs = nowMs
+            } else {
+                val stalledForMs = nowMs - lastBufferProgressTimeMs
+
+                if (stalledForMs >= AUTO_REFRESH_BUFFERING_TIMEOUT_MS && !isAutoRefreshing) {
+                    if (autoRefreshCount >= maxAutoRefreshAttempts) {
+                        Log.d("Auto_refresh", "Auto-refresh limit reached")
+                        stopBufferingWatchdog()
+
+                        Toast.makeText(
+                            this,
+                            "Stream is taking too long. Tap refresh to retry.",
+                            Toast.LENGTH_LONG
+                        ).show()
+
+                        return@Runnable
+                    }
+
+                    autoRefreshCount++
+                    isAutoRefreshing = true
+
+                    Log.d(
+                        "Auto_refresh",
+                        "Buffer stalled for ${stalledForMs}ms, auto refresh " +
+                            "$autoRefreshCount/$maxAutoRefreshAttempts"
+                    )
+
+                    refreshVideo()
+
+                    bufferingWatchdogHandler.postDelayed(
+                        {
+                            isAutoRefreshing = false
+                            lastWatchdogBufferedPosition = exoPlayer?.bufferedPosition ?: -1L
+                            lastBufferProgressTimeMs = SystemClock.elapsedRealtime()
+                        },
+                        BUFFERING_WATCHDOG_POLL_MS
+                    )
+                }
+            }
+
+            bufferingWatchdogHandler.postDelayed(bufferingWatchdogRunnable!!, BUFFERING_WATCHDOG_POLL_MS)
+        }
+
+        bufferingWatchdogHandler.postDelayed(bufferingWatchdogRunnable!!, BUFFERING_WATCHDOG_POLL_MS)
+    }
+
+    private fun stopBufferingWatchdog() {
+        autoRefreshCount = 0
+        isAutoRefreshing = false
+        lastWatchdogBufferedPosition = -1L
+        lastBufferProgressTimeMs = 0L
+        bufferingWatchdogRunnable?.let {
+            bufferingWatchdogHandler.removeCallbacks(it)
+        }
+        bufferingWatchdogRunnable = null
+    }
+
+
+
     // Player.Listener callbacks  (always called on the main thread by ExoPlayer)
     // ──────────────────────────────────────────────────────────────────────────
 
@@ -436,8 +603,14 @@ class Video_payer : AppCompatActivity(), Player.Listener {
             Player.STATE_BUFFERING -> {
                 progressBar.visibility = View.VISIBLE
                 stopProgressTracking()
+                startBufferingWatchdog()
             }
             Player.STATE_READY -> {
+                stopBufferingWatchdog()
+                playbackRetryCount = 0
+                playbackRetryRunnable?.let { playbackRetryHandler.removeCallbacks(it) }
+                playbackRetryRunnable = null
+
                 progressBar.visibility = View.GONE
                 cachedDuration = exoPlayer?.duration ?: 0L
                 if (cachedDuration > 0) {
@@ -454,8 +627,76 @@ class Video_payer : AppCompatActivity(), Player.Listener {
                 }
             }
             Player.STATE_ENDED -> {
+                stopBufferingWatchdog()
+                isAutoRefreshing = false
+                autoRefreshCount = 0
+                playbackRetryCount = 0
+
+                waitingForNetworkRecovery = false
+                shouldResumeAfterNetworkRecovery = false
                 stopProgressTracking()
                 Toast.makeText(this, "Video ended", Toast.LENGTH_SHORT).show()
+            }
+            Player.STATE_IDLE -> {
+                stopBufferingWatchdog()
+            }
+        }
+    }
+
+    override fun onPlayerError(error: PlaybackException) {
+        progressBar.visibility = View.VISIBLE
+        stopProgressTracking()
+
+        val httpCode = findHttpResponseCode(error)
+
+        Log.e(
+            "Video_payer",
+            """
+            Playback failed
+            errorCode=${error.errorCode}
+            errorName=${error.errorCodeName}
+            httpCode=$httpCode
+            message=${error.message}
+            cause=${error.cause}
+            url=$videoUrl
+            """.trimIndent(),
+            error
+        )
+
+        if (!isNetworkAvailable()) {
+            handleNetworkLost()
+            return
+        }
+
+        when {
+            isRecoverablePlaybackError(error, httpCode) -> {
+                schedulePlaybackRetry()
+            }
+
+            httpCode == 401 ||
+                    httpCode == 403 ||
+                    httpCode == 410 -> {
+
+                Log.d(
+                    "Video_payer",
+                    "Source probably expired or is no longer authorized: HTTP $httpCode"
+                )
+
+                Toast.makeText(
+                    this,
+                    "Video link expired. Refreshing source...",
+                    Toast.LENGTH_SHORT
+                ).show()
+
+                refreshVideo()
+            }
+
+            else -> {
+                Toast.makeText(
+                    this,
+                    "Playback error: ${error.errorCodeName}. Tap refresh to get a new source.",
+                    Toast.LENGTH_LONG
+                ).show()
             }
         }
     }
@@ -505,14 +746,225 @@ class Video_payer : AppCompatActivity(), Player.Listener {
     private fun updateSeekBar() {
         val player = exoPlayer ?: return
         val duration = cachedDuration.takeIf { it > 0 } ?: return
+
         val position = player.currentPosition
-        seekBar.progress = (position * 1000 / duration).toInt()
+        val bufferedPosition = player.bufferedPosition
+        val bufferedAhead = (bufferedPosition - position).coerceAtLeast(0)
+
+        lastKnownPlaybackPosition = position
+
+        seekBar.progress =
+            (position * 1000 / duration).toInt()
+
+        seekBar.secondaryProgress =
+            (bufferedPosition * 1000 / duration)
+                .coerceIn(0, 1000)
+                .toInt()
+
         txtCurrentTime.text = formatTime(position)
+
+        if (BuildConfig.DEBUG) {
+            Log.d(
+                "VideoBuffer",
+                "position=${position / 1000}s | " +
+                        "buffered=${bufferedPosition / 1000}s | " +
+                        "ahead=${bufferedAhead / 1000}s"
+            )
+        }
     }
 
     // ──────────────────────────────────────────────────────────────────────────
     // Persist progress
     // ──────────────────────────────────────────────────────────────────────────
+
+    private fun findHttpResponseCode(error: Throwable): Int? {
+        var current: Throwable? = error
+
+        while (current != null) {
+            if (current is HttpDataSource.InvalidResponseCodeException) {
+                return current.responseCode
+            }
+            current = current.cause
+        }
+
+        return null
+    }
+
+    private fun isRecoverablePlaybackError(
+        error: PlaybackException,
+        httpCode: Int?
+    ): Boolean {
+        return when (error.errorCode) {
+            PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED,
+            PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT,
+            PlaybackException.ERROR_CODE_IO_UNSPECIFIED -> true
+
+            PlaybackException.ERROR_CODE_IO_BAD_HTTP_STATUS -> {
+                when {
+                    httpCode == 408 -> true
+                    httpCode == 429 -> true
+                    httpCode != null && httpCode in 500..599 -> true
+                    else -> false
+                }
+            }
+
+            else -> false
+        }
+    }
+
+    private fun schedulePlaybackRetry() {
+        val player = exoPlayer ?: return
+
+        if (playbackRetryCount >= maxPlaybackRetries) {
+            Log.w("Video_payer", "Maximum playback retries reached")
+            playbackRetryCount = 0
+
+            Toast.makeText(
+                this,
+                "Stream is not responding. Tap refresh to get a new source.",
+                Toast.LENGTH_LONG
+            ).show()
+            return
+        }
+
+        val restartPosition =
+            player.currentPosition.takeIf { it > 0 } ?: lastKnownPlaybackPosition
+
+        val shouldAutoPlay = player.playWhenReady
+
+        val delayMs = when (playbackRetryCount) {
+            0 -> 1_000L
+            1 -> 2_000L
+            2 -> 4_000L
+            else -> 8_000L
+        }
+
+        playbackRetryCount++
+
+        Log.d(
+            "Video_payer",
+            "Scheduling retry $playbackRetryCount/$maxPlaybackRetries " +
+                    "after ${delayMs}ms at ${restartPosition}ms"
+        )
+
+        playbackRetryRunnable?.let {
+            playbackRetryHandler.removeCallbacks(it)
+        }
+
+        playbackRetryRunnable = Runnable {
+            if (isDestroyed || isFinishing) {
+                return@Runnable
+            }
+
+            if (!isNetworkAvailable()) {
+                handleNetworkLost()
+                return@Runnable
+            }
+
+            val currentPlayer = exoPlayer ?: return@Runnable
+
+            progressBar.visibility = View.VISIBLE
+
+            runCatching {
+                /*
+                 * A fatal playback error puts ExoPlayer in STATE_IDLE.
+                 * prepare() retries the current media item without rebuilding
+                 * the entire player.
+                 */
+                currentPlayer.prepare()
+
+                if (restartPosition > 0) {
+                    currentPlayer.seekTo(restartPosition)
+                }
+
+                currentPlayer.playWhenReady = shouldAutoPlay
+
+                if (shouldAutoPlay) {
+                    currentPlayer.play()
+                }
+            }.onFailure { retryError ->
+                Log.e("Video_payer", "Playback retry failed", retryError)
+            }
+        }
+
+        playbackRetryHandler.postDelayed(
+            playbackRetryRunnable!!,
+            delayMs
+        )
+    }
+
+
+
+    private fun reloadVideo(player: ExoPlayer, startPositionMs: Long, autoPlay: Boolean) {
+        resumePosition = 0
+        player.stop()
+        player.clearMediaItems()
+        player.setMediaItem(MediaItem.fromUri(videoUrl))
+        player.prepare()
+        if (startPositionMs > 0) {
+            player.seekTo(startPositionMs)
+        }
+        player.playWhenReady = autoPlay
+        if (autoPlay) {
+            player.play()
+        }
+    }
+
+    private fun handleNetworkLost() {
+        if (waitingForNetworkRecovery) return
+
+        val player = exoPlayer
+        shouldResumeAfterNetworkRecovery = player?.isPlaying == true || player?.playWhenReady == true
+        lastKnownPlaybackPosition = player?.currentPosition ?: lastKnownPlaybackPosition
+        waitingForNetworkRecovery = true
+
+        progressBar.visibility = View.VISIBLE
+        stopProgressTracking()
+        player?.pause()
+        updatePlayPauseButton()
+        Toast.makeText(this, "Connection lost. Waiting for network...", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun handleNetworkAvailable() {
+        if (!waitingForNetworkRecovery || isDestroyed || isFinishing) return
+        if (!lifecycle.currentState.isAtLeast(androidx.lifecycle.Lifecycle.State.RESUMED)) return
+
+        val player = exoPlayer ?: return
+        waitingForNetworkRecovery = false
+        val restartPosition = player.currentPosition.takeIf { it > 0 } ?: lastKnownPlaybackPosition
+        reloadVideo(player, restartPosition, autoPlay = shouldResumeAfterNetworkRecovery)
+        Toast.makeText(this, "Connection restored. Resuming video...", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun registerNetworkCallback() {
+        if (isNetworkCallbackRegistered) return
+
+        runCatching {
+            connectivityManager.registerDefaultNetworkCallback(networkCallback)
+        }.onSuccess {
+            isNetworkCallbackRegistered = true
+        }.onFailure { error ->
+            Log.w("Video_payer", "Failed to register network callback", error)
+        }
+    }
+
+    private fun unregisterNetworkCallback() {
+        if (!isNetworkCallbackRegistered) return
+
+        runCatching {
+            connectivityManager.unregisterNetworkCallback(networkCallback)
+        }.onFailure { error ->
+            Log.w("Video_payer", "Failed to unregister network callback", error)
+        }
+        isNetworkCallbackRegistered = false
+    }
+
+    private fun isNetworkAvailable(): Boolean {
+        val capabilities = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
+            ?: return false
+        return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
+                capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+    }
 
     private fun fetchResumePosition(): Long {
         return if (showType == "movie") {
@@ -529,7 +981,7 @@ class Video_payer : AppCompatActivity(), Player.Listener {
         if (lastPosition < 5_000 || duration <= 0) return
 
         val itemId = if (showType == "movie") showId
-                     else "${showId}_S${showSNo}_E${showENo}"
+        else "${showId}_S${showSNo}_E${showENo}"
 
         // Fire-and-forget on IO thread — does not hold a reference to the Activity
         lifecycleScope.launch(Dispatchers.IO) {
@@ -562,8 +1014,8 @@ class Video_payer : AppCompatActivity(), Player.Listener {
         if (isFullscreen) {
             window.decorView.systemUiVisibility =
                 View.SYSTEM_UI_FLAG_FULLSCREEN or
-                View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
-                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                        View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
+                        View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
             requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
             btnFullscreen.setImageResource(android.R.drawable.ic_menu_close_clear_cancel)
         } else {
@@ -618,7 +1070,7 @@ class Video_payer : AppCompatActivity(), Player.Listener {
         val m  = (s % 3600) / 60
         val sc = s % 60
         return if (h > 0) "%d:%02d:%02d".format(h, m, sc)
-               else       "%02d:%02d".format(m, sc)
+        else       "%02d:%02d".format(m, sc)
     }
 
     // ──────────────────────────────────────────────────────────────────────────
@@ -775,6 +1227,8 @@ class Video_payer : AppCompatActivity(), Player.Listener {
             player.clearMediaItems()
             player.release()
             exoPlayer = null
+            waitingForNetworkRecovery = false
+            shouldResumeAfterNetworkRecovery = false
             currentVideoUrl = null
             availableQualities = listOf("Auto")
         }
@@ -798,10 +1252,11 @@ class Video_payer : AppCompatActivity(), Player.Listener {
     // ──────────────────────────────────────────────────────────────────────────
 
     companion object {
-        private const val MIN_BUFFER_MS = 30_000
-        private const val MAX_BUFFER_MS = 90_000
-        private const val BUFFER_FOR_PLAYBACK_MS = 10_000
-        private const val BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS = 15_000
+
+        private const val MIN_BUFFER_MS = 60_000          // 1 minute
+        private const val MAX_BUFFER_MS = 180_000         // 3 minutes
+        private const val BUFFER_FOR_PLAYBACK_MS = 15_000 // wait ~15 sec before starting
+        private const val BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS = 30_000 // wait ~30 sec after stall
 
         fun playVideoExternally(
             context: Context,
@@ -835,5 +1290,3 @@ class Video_payer : AppCompatActivity(), Player.Listener {
         }
     }
 }
-
-
