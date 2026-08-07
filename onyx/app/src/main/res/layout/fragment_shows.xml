@@ -154,28 +154,11 @@
                                 </FrameLayout>
 
 
-                               <FrameLayout
-                                   android:id="@+id/HomeContentSection"
-                                   android:layout_width="match_parent"
-                                   android:focusable="true"
-                                   android:layout_height="match_parent">
 
 
 
 
-
-                                            <include
-                                                android:id="@+id/selectedContentConfig"
-                                                android:layout_width="match_parent"
-                                                android:layout_height="match_parent"
-                                                layout="@layout/item_selected_content"/>
-
-
-
-                               </FrameLayout>
-
-
-
+<!-- //////////////////////// Movie PAGE //////////////////////////////////// -->
 
 
 
@@ -470,6 +453,7 @@
                                 </LinearLayout>
 
 
+<!-- //////////////////////// Series PAGE ////////////////////////////////////////////////////// -->
 
 
 
@@ -588,6 +572,22 @@
 
 
 
+                                <FrameLayout
+                                    android:id="@+id/HomeContentSection"
+                                    android:layout_width="match_parent"
+                                    android:focusable="true"
+                                    android:layout_height="wrap_content">
+
+                                    <include
+                                        android:id="@+id/selectedContentConfig"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="match_parent"
+                                        layout="@layout/item_selected_content"/>
+
+                                </FrameLayout>
+
+
+
 
 
                                 
@@ -598,207 +598,11 @@
                             </LinearLayout>
 
 
-                        <!-- //////////////////////// Movie PAGE //////////////////////////////////// -->
-
-                            <LinearLayout
-                                android:id="@+id/MoviePage"
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:visibility="visible"
-                                android:orientation="vertical">
-
-                                <androidx.core.widget.NestedScrollView
-                                    android:layout_width="match_parent"
-                                    android:layout_height="match_parent"
-                                    tools:ignore="ScrollViewCount">
 
 
-
-                                </androidx.core.widget.NestedScrollView>
-                            </LinearLayout>
-
-
-
-                            <!-- //////////////////////// Series PAGE //////////////////////////////////// -->
-
-                            <LinearLayout
-                                android:id="@+id/SeriesPage"
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:visibility="gone"
-                                android:orientation="vertical">
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="Series"
-                                    android:textStyle="bold"
-                                    android:fontFamily="@font/p"
-                                    android:textSize="15sp"
-                                    android:alpha="0.5"
-                                    android:textColor="?attr/FG_color"
-                                    tools:ignore="HardcodedText"
-                                    />
-
-                                <androidx.recyclerview.widget.RecyclerView
-                                    android:layout_width="match_parent"
-                                    android:layout_height="match_parent"
-                                    android:clipToPadding="false"
-                                    android:scrollbars="none"
-                                    tools:ignore="RtlSymmetry"
-                                    />
-                            </LinearLayout>
-
-
-
-                        <!-- //////////////////////// Filter PAGE //////////////////////////////////// -->
-                            <LinearLayout
-                                android:id="@+id/FilterPage"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:orientation="vertical"
-                                android:nextFocusLeft="@+id/FilterContainer"
-                                android:visibility="gone">
-
-
-
-                                <LinearLayout
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_gravity="center_horizontal"
-                                    android:padding="3dp">
-
-
-                                    <TextView
-                                        android:id="@+id/FilterTypeBtn"
-                                        android:background ="@drawable/filter_button"
-                                        android:layout_width="100dp"
-                                        android:layout_height="30dp"
-                                        android:gravity="center"
-                                        android:padding="5dp"
-                                        android:textColor="@color/filter_btn_text_selector"
-                                        android:fontFamily="serif-monospace"
-                                        android:text="Type ¬"
-                                        android:textSize="15sp"
-                                        android:textStyle="bold"
-                                        android:layout_gravity="center"
-                                        tools:ignore="HardcodedText"
-                                        android:nextFocusLeft="@+id/FilterYearBtn"
-                                        android:clickable="true"
-                                        android:focusable="true"
-                                        android:focusableInTouchMode="true"/>
-
-
-                                    <TextView
-                                        android:id="@+id/FilterCountryBtn"
-                                        android:background ="@drawable/filter_button"
-                                        android:layout_marginStart="12dp"
-                                        android:layout_width="100dp"
-                                        android:layout_height="30dp"
-                                        android:gravity="center"
-                                        android:padding="5dp"
-                                        android:text="Country ¬"
-                                        android:fontFamily="serif-monospace"
-                                        android:textSize="15sp"
-                                        android:textColor="@color/filter_btn_text_selector"
-                                        android:textStyle="bold"
-                                        android:layout_gravity="center"
-                                        tools:ignore="HardcodedText"
-                                        android:clickable="true"
-                                        android:focusable="true"
-                                        android:focusableInTouchMode="true"
-                                        />
-
-
-                                    <TextView
-                                        android:id="@+id/FilterSortBtn"
-                                        android:background ="@drawable/filter_button"
-                                        android:layout_marginStart="12dp"
-                                        android:layout_width="100dp"
-                                        android:layout_height="30dp"
-                                        android:gravity="center"
-                                        android:padding="5dp"
-                                        android:text="Sort By ¬"
-                                        android:textSize="15sp"
-                                        android:fontFamily="serif-monospace"
-                                        android:textColor="@color/filter_btn_text_selector"
-                                        android:textStyle="bold"
-                                        android:layout_gravity="center"
-                                        tools:ignore="HardcodedText"
-                                        android:clickable="true"
-                                        android:focusable="true"
-                                        android:focusableInTouchMode="true"/>
-
-
-
-                                    <TextView
-                                        android:id="@+id/FilterGenreBtn"
-                                        android:background ="@drawable/filter_button"
-                                        android:layout_marginStart="12dp"
-                                        android:layout_width="100dp"
-                                        android:layout_height="30dp"
-                                        android:gravity="center"
-                                        android:padding="5dp"
-                                        android:text="Genres ¬"
-                                        android:fontFamily="serif-monospace"
-                                        android:textSize="15sp"
-                                        android:textColor="@color/filter_btn_text_selector"
-                                        android:textStyle="bold"
-                                        android:layout_gravity="center"
-                                        tools:ignore="HardcodedText"
-                                        android:clickable="true"
-                                        android:focusable="true"
-                                        android:focusableInTouchMode="true"
-                                        />
-
-
-
-                                    <TextView
-                                        android:id="@+id/FilterYearBtn"
-                                        android:background ="@drawable/filter_button"
-                                        android:layout_marginStart="12dp"
-                                        android:layout_width="100dp"
-                                        android:layout_height="30dp"
-                                        android:gravity="center"
-                                        android:text="Year ¬"
-                                        android:textSize="15sp"
-                                        android:fontFamily="serif-monospace"
-                                        android:textStyle="bold"
-                                        android:textColor="@color/filter_btn_text_selector"
-                                        android:layout_gravity="center"
-                                        tools:ignore="HardcodedText"
-                                        android:nextFocusRight="@+id/FilterTypeBtn"
-                                        android:clickable="true"
-                                        android:focusable="true"
-                                        android:focusableInTouchMode="true"/>
-
-                                </LinearLayout>
-                                <TextView
-                                    android:id="@+id/FilterDisplay"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:text="Filter Results"
-                                    android:textColor="?attr/FG_color"
-                                    tools:ignore="HardcodedText"
-                                    android:textStyle="bold"
-                                    android:fontFamily="serif-monospace"/>
-
-
-                                <androidx.recyclerview.widget.RecyclerView
-                                    android:id="@+id/filterResults"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:minHeight="6000dp"
-                                    android:clipToPadding="false"
-                                    android:overScrollMode="never"
-                                    android:scrollbars="none"
-                                    tools:ignore="NestedWeights" />
-
-                            </LinearLayout>
 
 
                         </LinearLayout>
-
                     </ScrollView>
 
 

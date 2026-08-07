@@ -33,12 +33,12 @@
     <View
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#40042c40"/>
+        android:background="#90042c40"/>
 
     <View
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#50042c40"/>
+        android:background="#90042c40"/>
 
 
     <!-- Loading Animation -->

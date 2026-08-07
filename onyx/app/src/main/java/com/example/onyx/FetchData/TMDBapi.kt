@@ -310,7 +310,7 @@ class TMDBapi(private val context: Context) {
         return runBlocking {
             async(Dispatchers.IO) {
                 try {
-                   val  Url = "https://api.themoviedb.org/3/discover/movie?$param"
+                   val  Url = "https://api.themoviedb.org/3/discover/movie?$param?include_adult=false"
                     //tvUrl = "https://api.themoviedb.org/3/discover/tv?"
                     //val Url = "https://api.themoviedb.org/3/$type/$showId/recommendations?language=en-US&page=1"
                     val connection = URL(Url).openConnection() as HttpURLConnection
@@ -344,7 +344,7 @@ class TMDBapi(private val context: Context) {
         return runBlocking {
             async(Dispatchers.IO) {
                 try {
-                    val  Url = "https://api.themoviedb.org/3/discover/tv?$param"
+                    val  Url = "https://api.themoviedb.org/3/discover/tv?$param?include_adult=false"
                     val connection = URL(Url).openConnection() as HttpURLConnection
                     connection.requestMethod = "GET"
                     connection.setRequestProperty("accept", "application/json")
@@ -438,22 +438,6 @@ class TMDBapi(private val context: Context) {
     }
 
 
-    /*
-         if (id.startsWith("tt")) {
-
-                        val url = "https://api.themoviedb.org/3/movie/$id/external_ids"
-                        val connection = URL(url).openConnection() as HttpURLConnection
-                        connection.requestMethod = "GET"
-                        connection.setRequestProperty("accept", "application/json")
-                        connection.setRequestProperty(
-                            "Authorization",
-                            "Bearer ${BuildConfig.TM_K}"
-                        )
-                        val response = connection.inputStream.bufferedReader().use { it.readText() }
-                        val jsonObject = JSONObject(response)
-                        tmdbId = jsonObject.getString("id")
-                    }
-     */
 
 
 

@@ -105,6 +105,7 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
     private lateinit var SpotlightSection: FrameLayout
     private lateinit var HomeContentSection: FrameLayout
     private lateinit var currentContent: CardView
+    private lateinit var  currentContentBackground: View
 
 
 
@@ -186,6 +187,7 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
 
         backgroundContainer = requireView().findViewById(R.id.BackgroundContainer)
         currentContent = requireView().findViewById(R.id.currentContent)
+        currentContentBackground =   requireView().findViewById(R.id.currentContentBackground)
 
         SpotlightSection = requireView().findViewById(R.id.SpotlightSection)
         HomeContentSection = requireView().findViewById(R.id.HomeContentSection)
@@ -248,11 +250,12 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
                         lifecycleScope.launch {
                             HomeData()
                             categoryShow()
-                            loadFilterContent(realityAdapter, "&with_genres=10764", false)
-                            loadFilterContent(thrillAdapter, "&with_genres=27", true)
-                            genreFilter()
                             if (movieAdapter.itemCount <= 1) fetchMovies()
                             if (tvAdapter.itemCount <= 1) fetchTvShows()
+                            genreFilter()
+                            delay(2000)
+                            loadFilterContent(realityAdapter, "&with_genres=10764", false)
+                            loadFilterContent(thrillAdapter, "&with_genres=27", true)
                         }
                     }
                 }
@@ -515,16 +518,7 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
         tvAdapter.onAddMoreClicked = { loadMoreTv() }
 
         // Filter  ---------------------------------------------------------------------------------
-        filterAdapter = FilterAdapter(mutableListOf(), R.layout.item_filter)
-        filterAdapter.onItemFocused = { view, item ->
-            //showPopupBeside(view, item.posterUlr, 240)
-        }
-        filterAdapter.onItemFocusLost = {
-        }
-        fliterRecyclerView = requireView().findViewById<RecyclerView>(R.id.filterResults)
-        fliterRecyclerView.layoutManager = GridLayoutManager(requireActivity(), GlobalUtils.calculateSpanCountV2(requireActivity(), 160, gapUsed))
-        fliterRecyclerView.adapter = filterAdapter
-        fliterRecyclerView.addItemDecoration(EqualSpaceItemDecoration(Spacing))
+
 
         //------------------------------------------------------------------------------------------
 
@@ -543,6 +537,7 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
         realityAdapter = FilterAdapter(mutableListOf(), R.layout.item_list2)
         realityAdapter.onItemFocused = { view, item ->
             currentContent.visibility = View.VISIBLE
+            currentContentBackground.visibility = View.VISIBLE
             updateContentJob?.cancel()
             updateContentJob = lifecycleScope.launch {
                 delay(300)
@@ -553,6 +548,7 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
         }
         realityAdapter.onItemFocusLost = {
             currentContent.visibility = View.GONE
+            currentContentBackground.visibility = View.GONE
             realityRecyclerView.post {
                 realitySetFixedFocusOverlayVisible( realityFixedFocusOverlay,realityRecyclerView.hasFocus()                )
             }
@@ -596,6 +592,8 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
         thrillAdapter = FilterAdapter(mutableListOf(), R.layout.item_list2)
         thrillAdapter.onItemFocused = { view, item ->
             currentContent.visibility = View.VISIBLE
+            currentContentBackground.visibility = View.VISIBLE
+
             updateContentJob?.cancel()
             updateContentJob = lifecycleScope.launch {
                 delay(300)
@@ -606,6 +604,8 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
         }
         thrillAdapter.onItemFocusLost = {
             currentContent.visibility = View.GONE
+            currentContentBackground.visibility = View.GONE
+
             realitySetFixedFocusOverlayVisible( thrillFixedFocusOverlay,thrillRecyclerView.hasFocus()                )
 
         }
@@ -1280,7 +1280,7 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             repeat(3) { attempt ->
                 try {
-                    val urlM = "https://api.themoviedb.org/3/discover/movie?include_video=true&language=en-US&page=$currentMoviePage&sort_by=popularity.desc"
+                    val urlM = "https://api.themoviedb.org/3/discover/movie?include_video=true&language=en-US&page=$currentMoviePage&sort_by=popularity.desc&include_adult=false"
 
 
                     val connection2 = URL(urlM).openConnection() as HttpURLConnection
@@ -1391,7 +1391,7 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
 
             repeat(5) { attempt ->
                 try {
-                    val urlM = "https://api.themoviedb.org/3/discover/tv?include_video=true&language=en-US&page=$currentTvPage&sort_by=popularity.desc"
+                    val urlM = "https://api.themoviedb.org/3/discover/tv?include_video=true&language=en-US&page=$currentTvPage&sort_by=popularity.desc&include_adult=false"
 
                     val connection2 = URL(urlM).openConnection() as HttpURLConnection
                     connection2.requestMethod = "GET"
@@ -1512,374 +1512,7 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////
-private fun filter(){
 
-        //filter options buttons
-        val filterTypeBtn = requireView().findViewById<TextView>(R.id.FilterTypeBtn)
-        val filterCountryBtn = requireView().findViewById<TextView>(R.id.FilterCountryBtn)
-        val filterSortBtn = requireView().findViewById<TextView>(R.id.FilterSortBtn)
-        val filterGenreBtn = requireView().findViewById<TextView>(R.id.FilterGenreBtn)
-        val filterYearBtn = requireView().findViewById<TextView>(R.id.FilterYearBtn)
-
-
-        // Filter data
-        val typeOptions = listOf("Movie", "TV", "All")
-        val countryOptions = listOf(
-            FilterChoice("AR", "Argentina"),
-            FilterChoice("AT", "Austria"),
-            FilterChoice("BR", "Brazil"),
-            FilterChoice("FI", "Finland"),
-            FilterChoice("AR", "Argentina"),
-            FilterChoice("AR", "Argentina")
-        )
-
-        val sortOptions = listOf(
-            FilterChoice("original_title.asc", "Original Title ↑ Ascending"),
-            FilterChoice("original_title.desc", "Original Title ↓ Descending"),
-            FilterChoice("popularity.asc", "Popularity ↑ Ascending"),
-            FilterChoice("popularity.desc", "Popularity ↓ Descending"),
-            FilterChoice("revenue.asc", "Revenue ↑ Ascending"),
-            FilterChoice("revenue.desc", "Revenue ↓ Descending")
-        )
-
-        val genreOptions = listOf(
-            FilterChoice("28", "Action"),
-            FilterChoice("12", "Adventure"),
-            FilterChoice("12", "Series Action & Adventure"),
-            FilterChoice("16", "Animation"),
-            FilterChoice("35", "Comedy"),
-            FilterChoice("80", "Crime"),
-            FilterChoice("99", "Documentary"),
-            FilterChoice("18", "Drama"),
-            FilterChoice("10751", "Family"),
-            FilterChoice("9648", "Mystery"),
-            FilterChoice("10749", "Romance"),
-            FilterChoice("878", "Sci-Fi"),
-            FilterChoice("14", "Fantasy"),
-            FilterChoice("10402", "Music"),
-            FilterChoice("10770", "TV Movie"),
-            FilterChoice("53", "Thriller"),
-            FilterChoice("37", "Western"),
-            FilterChoice("10752", "War"),
-            FilterChoice("27", "Horror"),
-            FilterChoice("10764", "Series Reality"),
-            FilterChoice("10766", "Series Soap"),
-            FilterChoice("10767", "Series Talk"),
-            FilterChoice("10762", "Series Kids"),
-        )
-
-        val yearOptions = listOf(
-            FilterChoice("2025", "2026"),
-            FilterChoice("2025", "2025"),
-            FilterChoice("2024", "2024"),
-            FilterChoice("2023", "2023"),
-            FilterChoice("2022", "2022"),
-            FilterChoice("2021", "2021")
-        )
-
-        // Filter state
-        var selectedType: String? = null
-        val selectedGenres = mutableSetOf<String>()
-        val selectedCountries = mutableSetOf<String>()
-        val selectedsortOptions = mutableSetOf<String>()
-        val selectedyearOptions   = mutableSetOf<String>()
-
-        val filterDisplay = requireView().findViewById<TextView>(R.id.FilterDisplay)
-        var movieUrl: String
-        var tvUrl: String
-        var filterPage = 1
-        var isLoadingFliter = false
-
-        fun updateFilterDisplay() {
-            isLoadingFliter = true
-            filterAdapter.isLoadingMore = true
-            //filterAdapter.clearItems()
-
-            // Reset attributes
-            movieUrl = "https://api.themoviedb.org/3/discover/movie?"
-            tvUrl = "https://api.themoviedb.org/3/discover/tv?"
-
-
-            /*
-            val parts = mutableListOf<String>()
-            //selectedType?.let { parts.add("Type: ${it.label}") }
-            if (selectedGenres.isNotEmpty()) parts.add("Genres: ${selectedGenres.joinToString()}")
-            if (selectedCountries.isNotEmpty()) parts.add("Country: ${selectedCountries.joinToString()}")
-            if (selectedsortOptions.isNotEmpty()) parts.add("Sort: ${selectedsortOptions.joinToString()}")
-            if (selectedyearOptions.isNotEmpty()) parts.add("Year: ${selectedyearOptions.joinToString()}")
-
-            filterDisplay.text = if (parts.isEmpty()) "Filter Results ($default)" else parts.joinToString(" | ")
-
-             */
-
-
-            if (selectedGenres.isNotEmpty()) {
-                val genres = selectedGenres.joinToString(",")
-                movieUrl += "&with_genres=$genres"
-                tvUrl += "&with_genres=$genres"
-            }
-
-            if (selectedyearOptions.isNotEmpty()) {
-                val year = selectedyearOptions.first()
-                movieUrl += "&year=$year"
-                tvUrl += "&year=$year"
-            }
-
-            if (selectedCountries.isNotEmpty()) {
-                val country = selectedCountries.first()
-                movieUrl += "&with_origin_country=$country"
-                tvUrl += "&with_origin_country=$country"
-            }
-
-            if (selectedsortOptions.isNotEmpty()) {
-                val sort = selectedsortOptions.first()
-                movieUrl += "&sort_by=$sort"
-                tvUrl += "&sort_by=$sort"
-            }
-
-            if(selectedType == "Movie"){
-                tvUrl = ""
-            } else if(selectedType == "TV"){
-                movieUrl = ""
-            } else {}
-
-            viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-
-                val urlM = "$movieUrl&page=$filterPage"
-                val urlT = "$tvUrl&page=$filterPage"
-
-                val movieList = mutableListOf<JSONObject>()
-                val tvList = mutableListOf<JSONObject>()
-
-                Log.e("Filter Results urlM", urlM.toString())
-                Log.e("Filter Results urlT", urlT.toString())
-
-                // ------------------ MOVIES ------------------
-                try {
-                    val connection2 = URL(urlM).openConnection() as HttpURLConnection
-                    connection2.requestMethod = "GET"
-                    connection2.setRequestProperty("accept", "application/json")
-                    connection2.setRequestProperty(
-                        "Authorization",
-                        "Bearer ${BuildConfig.TM_K}"
-                    )
-
-                    val response2 = connection2.inputStream.bufferedReader().use { it.readText() }
-                    val jsonObject2 = org.json.JSONObject(response2)
-                    val mvData = jsonObject2.getJSONArray("results")
-
-                    for (i in 0 until mvData.length()) {
-                        movieList.add(mvData.getJSONObject(i))
-                    }
-
-                    Log.e("Filter Results mvData", mvData.toString())
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
-
-                // ------------------ TV SHOWS ------------------
-                try {
-                    val connection2 = URL(urlT).openConnection() as HttpURLConnection
-                    connection2.requestMethod = "GET"
-                    connection2.setRequestProperty("accept", "application/json")
-                    connection2.setRequestProperty(
-                        "Authorization",
-                        "Bearer ${BuildConfig.TM_K}"
-                    )
-
-                    val response2 = connection2.inputStream.bufferedReader().use { it.readText() }
-                    val jsonObject2 = org.json.JSONObject(response2)
-                    val tvData = jsonObject2.getJSONArray("results")
-
-                    for (i in 0 until tvData.length()) {
-                        tvList.add(tvData.getJSONObject(i))
-                    }
-
-                    Log.e("Filter Results tvData", tvData.toString())
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
-
-                // Merge movie + tv
-                val combined = (movieList + tvList).shuffled()
-                for (i in 0 until combined.size) {
-                    val current = combined[i]
-
-                    val backdrop_path = current.optString("backdrop_path", "")
-                    val poster_path = current.optString("poster_path", "")
-
-
-
-                    val vote_average = current.optString("vote_average", "")
-                    val title = current.optString("title", "")
-                    //val overview = current.optString("overview", "")
-                    val id = current.optString("id", "")
-                    val original_title = current.optString("original_title", "")
-                    //val original_name = current.optString("original_name", "")
-
-                    val type: String
-                    var date: String
-                    var showD: String = ""
-
-                    val imgPost =  "https://image.tmdb.org/t/p/original$poster_path"
-                    val imgback  = "https://image.tmdb.org/t/p/original$backdrop_path"
-
-                    if (original_title == "") {
-                        type = "tv";
-                        date = if (current.getString("first_air_date").length >= 4) {
-                            current.getString("first_air_date").substring(0, 4)
-                        } else{
-                            current.getString("first_air_date")}
-                    } else {
-                        type = "movie"
-                        date = if (current.getString("release_date").length >= 4) {
-                            current.getString("release_date").substring(0, 4)
-                        } else{
-                            current.getString("release_date")}
-                    }
-
-                    val Item = filterItemOne(
-                        title = title,
-                        backdropUrl = imgPost,
-                        posterUlr = imgback,
-                        imdbCode = id,
-                        type = type,
-                        year = date,
-                        rating = vote_average,
-                        runtime = showD
-                    )
-
-                    withContext(Dispatchers.Main) {
-                    if (!isAdded || view == null) return@withContext
-                        filterAdapter.addItem(Item)
-                        isLoadingFliter = false
-                        filterAdapter.isLoadingMore = false
-
-
-                    }
-                }
-            }
-        }
-        fun loadMoreFilter() {
-            if (isLoadingFliter) return // Prevent multiple rapid clicks
-            filterPage++
-            updateFilterDisplay()
-        }
-
-        filterAdapter.onAddMoreClicked = { loadMoreFilter() }
-        updateFilterDisplay() //Default
-
-        filterTypeBtn.setOnClickListener {
-            showSingleChoiceDialog(
-                title = "Select Type",
-                options = typeOptions,
-                currentSelection = typeOptions.indexOf(selectedType ?: "")
-            ) { selected ->
-                selectedType = selected   // <— this is just a STRING
-                filterPage = 1
-                filterAdapter.clearItems()
-                updateFilterDisplay()
-            }
-        }
-
-        filterGenreBtn.setOnClickListener {
-            showMultiChoiceDialog(
-                title = "Select Genres",
-                options = genreOptions,
-                selectedKeys = selectedGenres
-            ) { selected ->
-                filterPage = 1
-                filterAdapter.clearItems()
-                updateFilterDisplay()
-            }
-        }
-
-        filterCountryBtn.setOnClickListener {
-            showMultiChoiceDialog(
-                title = "Select Genres",
-                options = countryOptions,
-                selectedKeys = selectedCountries
-            ) { selected ->
-                filterPage = 1
-                filterAdapter.clearItems()
-                updateFilterDisplay()
-            }
-        }
-
-        filterSortBtn.setOnClickListener {
-            showMultiChoiceDialog(
-                title = "Select Genres",
-                options = sortOptions,
-                selectedKeys = selectedsortOptions
-            ) { selected ->
-                filterPage = 1
-                filterAdapter.clearItems()
-                updateFilterDisplay()
-            }
-        }
-
-        filterYearBtn.setOnClickListener {
-            showMultiChoiceDialog(
-                title = "Select Genres",
-                options = yearOptions,
-                selectedKeys = selectedyearOptions
-            ) { selected ->
-                filterPage = 1
-                filterAdapter.clearItems()
-                updateFilterDisplay()
-            }
-        }
-
-    }
-    data  class FilterChoice(
-        val value: String,
-        val label: String
-    )
-
-    private fun showSingleChoiceDialog(
-        title: String,
-        options: List<String>,
-        currentSelection: Int,
-        onDone: (String) -> Unit
-    ) {
-        val builder = AlertDialog.Builder(requireActivity(), R.style.CustomDialogTheme)
-        builder.setTitle(title)
-
-        builder.setSingleChoiceItems(options.toTypedArray(), currentSelection) { dialog, which ->
-            onDone(options[which])
-            dialog.dismiss()
-        }
-
-        builder.setNegativeButton("Cancel", null)
-        builder.show()
-    }
-
-    private fun showMultiChoiceDialog(
-        title: String,
-        options: List<FilterChoice>,
-        selectedKeys: MutableSet<String>,
-        onDone: (Set<String>) -> Unit
-    ) {
-        val labels = options.map { it.label }.toTypedArray()
-        val checkedItems = options.map { selectedKeys.contains(it.value) }.toBooleanArray()
-
-        val builder = AlertDialog.Builder(requireActivity(), R.style.CustomDialogTheme)
-        builder.setTitle(title)
-
-        builder.setMultiChoiceItems(labels, checkedItems) { _, index, isChecked ->
-            // Ensure you reference the options list inside the lambda
-            val selectedKey = options[index].value
-            if (isChecked) selectedKeys.add(selectedKey)
-            else selectedKeys.remove(selectedKey)
-        }
-
-        builder.setPositiveButton("Apply") { _, _ ->
-            onDone(selectedKeys)
-        }
-
-        builder.setNegativeButton("Cancel", null)
-        builder.show()
-    }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////
