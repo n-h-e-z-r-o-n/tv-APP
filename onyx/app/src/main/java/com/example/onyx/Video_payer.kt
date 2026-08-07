@@ -24,6 +24,7 @@ import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.common.Tracks
+import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
@@ -43,6 +44,7 @@ import kotlinx.coroutines.withContext
 
 @UnstableApi
 class Video_payer : AppCompatActivity(), Player.Listener {
+
 
     // ── Show metadata ──────────────────────────────────────────────────────────
     private lateinit var db: AppDatabase
@@ -358,21 +360,22 @@ class Video_payer : AppCompatActivity(), Player.Listener {
             // Allow more threads for software decode fallback
             .setEnableDecoderFallback(true)
 
+        val loadControl = DefaultLoadControl.Builder()
+            .setPrioritizeTimeOverSizeThresholds(true)
+            .setBufferDurationsMs(
+                /* minBufferMs */ MIN_BUFFER_MS,
+                /* maxBufferMs */ MAX_BUFFER_MS,
+                /* bufferForPlayback */ BUFFER_FOR_PLAYBACK_MS,
+                /* bufferForPlaybackAfterRebuffer */ BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS
+            )
+            .build()
+
         val player = ExoPlayer.Builder(this)
             .setRenderersFactory(renderersFactory)
             .setTrackSelector(trackSelector)
             .setMediaSourceFactory(mediaSourceFactory)
-            // Tune load controls for streaming: bigger buffer = fewer re-buffers
-            .setLoadControl(
-                androidx.media3.exoplayer.DefaultLoadControl.Builder()
-                    .setBufferDurationsMs(
-                        /* minBufferMs   */ 15_000,
-                        /* maxBufferMs   */ 60_000,
-                        /* bufferForPlayback */ 2_500,
-                        /* bufferForPlaybackAfterRebuffer */ 5_000
-                    )
-                    .build()
-            )
+            // Buffer more aggressively before starting or resuming playback.
+            .setLoadControl(loadControl)
             .build()
 
         player.setMediaItem(MediaItem.fromUri(url))
@@ -795,6 +798,11 @@ class Video_payer : AppCompatActivity(), Player.Listener {
     // ──────────────────────────────────────────────────────────────────────────
 
     companion object {
+        private const val MIN_BUFFER_MS = 30_000
+        private const val MAX_BUFFER_MS = 90_000
+        private const val BUFFER_FOR_PLAYBACK_MS = 10_000
+        private const val BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS = 15_000
+
         fun playVideoExternally(
             context: Context,
             videoUrl: String,
@@ -827,3 +835,5 @@ class Video_payer : AppCompatActivity(), Player.Listener {
         }
     }
 }
+
+
