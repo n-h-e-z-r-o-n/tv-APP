@@ -1,18 +1,20 @@
 package com.example.onyx
 
 import android.os.Bundle
-import android.util.TypedValue
 import android.view.View
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.example.onyx.Database.AppDatabase
 import com.example.onyx.Database.SessionManger
 import com.example.onyx.OnyxClasses.FavAdapter
 import com.example.onyx.OnyxClasses.FavItem
+import com.example.onyx.OnyxObjects.GlobalUtils
 import com.example.onyx.databinding.FragmentFavoritesBinding
+import com.google.android.flexbox.AlignItems
+import com.google.android.flexbox.FlexDirection
+import com.google.android.flexbox.FlexWrap
+import com.google.android.flexbox.FlexboxLayoutManager
+import com.google.android.flexbox.JustifyContent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -28,6 +30,7 @@ class FavoritesFragment : Fragment(R.layout.fragment_favorites) {
     private var userId: Int = -1
 
     private var lastFocusedView: View? = null
+    private var favoritesLoaded = false
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -43,35 +46,25 @@ class FavoritesFragment : Fragment(R.layout.fragment_favorites) {
         sm = SessionManger(requireActivity())
         userId = sm.getUserId()
 
-        //binding.favoritesRecycler.layoutManager = GridLayoutManager(requireContext(), 2)
-
-        val metrics = requireContext().resources.displayMetrics
-        val screenWidthPx = metrics.widthPixels.toFloat()
-        val itemHeightPx = TypedValue.applyDimension(
-                TypedValue.COMPLEX_UNIT_DIP,
-                180f,
-                metrics
-            ) // R.layout.square_card height
-        val itemWidthPx = itemHeightPx * (16f / 9f) // TMDB backdrop ≈ 16:9
-        val spanCount=  maxOf(1, (screenWidthPx / itemWidthPx).toInt())
-
-        binding.favoritesRecycler.layoutManager =
-            StaggeredGridLayoutManager(
-                spanCount,
-                StaggeredGridLayoutManager.VERTICAL
-            )
+        binding.favoritesRecycler.layoutManager = FlexboxLayoutManager(requireContext()).apply {
+            flexDirection = FlexDirection.ROW
+            flexWrap = FlexWrap.WRAP
+            justifyContent = JustifyContent.FLEX_START
+            alignItems = AlignItems.FLEX_START
+        }
+        binding.favoritesRecycler.isNestedScrollingEnabled = false
 
         loadFavorites()
     }
 
     override fun onResume() {
         super.onResume()
-        binding.root.post {
-            if (lastFocusedView != null && lastFocusedView!!.isShown && lastFocusedView!!.isFocusable) {
-                lastFocusedView!!.requestFocus()
-            } else {
-                binding.favoritesRecycler.requestFocus()
-            }
+
+        if (GlobalUtils.favoritesStateHasChanged && favoritesLoaded) {
+            GlobalUtils.favoritesStateHasChanged = false
+            loadFavorites()
+        } else {
+            restoreFavoriteFocus()
         }
     }
 
@@ -83,7 +76,6 @@ class FavoritesFragment : Fragment(R.layout.fragment_favorites) {
 
                 val combinedItems = mutableListOf<FavItem>()
 
-                // Map Anime
                 combinedItems.addAll(animeFavData.map { anime ->
                     FavItem(
                         title = anime["name"] ?: "",
@@ -101,7 +93,6 @@ class FavoritesFragment : Fragment(R.layout.fragment_favorites) {
                     )
                 })
 
-                // Map TV/Movies
                 combinedItems.addAll(showFavData.map { show ->
                     FavItem(
                         title = show["title"] ?: "",
@@ -136,6 +127,30 @@ class FavoritesFragment : Fragment(R.layout.fragment_favorites) {
                     favoritesAdapter.updateItems(items)
                 }
             }
+
+            favoritesLoaded = true
+            restoreFavoriteFocus()
+        }
+    }
+
+    private fun restoreFavoriteFocus() {
+        val previousFocus = lastFocusedView
+
+        if (
+            previousFocus != null &&
+            previousFocus.isAttachedToWindow &&
+            previousFocus.isShown &&
+            previousFocus.isFocusable
+        ) {
+            previousFocus.requestFocus()
+            return
+        }
+
+        val firstChild = binding.favoritesRecycler.layoutManager?.findViewByPosition(0)
+        if (firstChild != null && firstChild.isFocusable) {
+            firstChild.requestFocus()
+        } else {
+            binding.favoritesRecycler.requestFocus()
         }
     }
 

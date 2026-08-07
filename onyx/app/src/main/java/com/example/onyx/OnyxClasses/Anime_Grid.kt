@@ -1,6 +1,8 @@
 package com.example.onyx.OnyxClasses
 
 import android.content.Intent
+import android.os.Bundle
+import android.os.SystemClock
 import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
@@ -11,166 +13,655 @@ import android.widget.TextView
 import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.example.onyx.R
 import com.example.onyx.WatchAnimeFragment
 import com.example.onyx.Watch_Page
 import com.bumptech.glide.request.target.Target
+import com.example.onyx.HomeActivity
 import com.google.android.material.card.MaterialCardView
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-
 class AnimeTrendingAdapter(
-    private val items: MutableList<TrendingAnimeItem>,
+    initialItems: List<TrendingAnimeItem>,
     private val layoutResId: Int
-) : RecyclerView.Adapter<AnimeTrendingAdapter.ViewHolder>() {
+) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     companion object {
         private const val VIEW_TYPE_NORMAL = 0
         private const val VIEW_TYPE_ADD_MORE = 1
-        private var lastKeyTime = 0L
-        private val KEY_DEBOUNCE_DELAY = 100L // ms
+
+        private const val CLICK_DEBOUNCE_MS = 350L
+
+        private const val FOOTER_ID = Long.MIN_VALUE
+
+        private const val PAYLOAD_LOADING = "payload_loading"
     }
 
+
+    private val items = initialItems.toMutableList()
+
+
+    private val stableIds = mutableMapOf<String, Long>()
+    private var nextStableId = 1L
+
+
     var onAddMoreClicked: (() -> Unit)? = null
+
     var onItemFocused: ((position: Int) -> Unit)? = null
-    
+
+
+    var onItemClicked: ((TrendingAnimeItem) -> Unit)? = null
+
+    private var lastClickTime = 0L
+
     var isLoadingNext = false
         set(value) {
+            if (field == value) return
+
             field = value
-            notifyItemChanged(items.size)
+
+            notifyItemChanged(items.size, PAYLOAD_LOADING)
         }
 
     init {
         setHasStableIds(true)
     }
+    private inner class AnimeViewHolder(
+        view: View
+    ) : RecyclerView.ViewHolder(view) {
 
-    override fun getItemId(position: Int): Long {
-        if (position == items.size) return -1L
-        return items[position].id.hashCode().toLong()
+        val cardContainer: MaterialCardView? =
+            view.findViewById(R.id.CardViewcontiner)
+
+        val movieImage: ImageView? =
+            view.findViewById(R.id.itemImage)
+
+        val rank: TextView? =
+            view.findViewById(R.id.rank)
+
+        val title: TextView? =
+            view.findViewById(R.id.title)
+
+        val cardSub: TextView? =
+            view.findViewById(R.id.cardSub)
+
+        val cardDub: TextView? =
+            view.findViewById(R.id.cardDub)
     }
 
-    inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val CardViewcontiner: MaterialCardView? = view.findViewById(R.id.CardViewcontiner)
-        val Movie_image: ImageView? = view.findViewById(R.id.itemImage)
-        val rank: TextView? = view.findViewById(R.id.rank)
-        val title: TextView? = view.findViewById(R.id.title)
-        val cardSub: TextView? = view.findViewById(R.id.cardSub)
-        val cardDub: TextView? = view.findViewById(R.id.cardDub)
+    private inner class AddMoreViewHolder(
+        view: View
+    ) : RecyclerView.ViewHolder(view) {
+
+        val content: View? =
+            view.findViewById(R.id.addMoreContent)
+
+        val loading: View? =
+            view.findViewById(R.id.addMoreLoading)
+    }
+
+
+    override fun getItemCount(): Int {
+        /*
+         * +1 = Add More footer
+         */
+        return items.size + 1
     }
 
     override fun getItemViewType(position: Int): Int {
-        return if (position == items.size) VIEW_TYPE_ADD_MORE else VIEW_TYPE_NORMAL
+        return if (position == items.size) {
+            VIEW_TYPE_ADD_MORE
+        } else {
+            VIEW_TYPE_NORMAL
+        }
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val layoutId = if (viewType == VIEW_TYPE_ADD_MORE) R.layout.item_add_more else layoutResId
-        val view = LayoutInflater.from(parent.context).inflate(layoutId, parent, false)
-        return ViewHolder(view)
+    override fun getItemId(position: Int): Long {
+
+        if (position == items.size) {
+            return FOOTER_ID
+        }
+
+        val item = items.getOrNull(position)
+            ?: return RecyclerView.NO_ID
+
+        return stableIds.getOrPut(item.id) {
+            nextStableId++
+        }
     }
 
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        if (getItemViewType(position) == VIEW_TYPE_ADD_MORE) {
-            val content = holder.itemView.findViewById<View>(R.id.addMoreContent)
-            val loading = holder.itemView.findViewById<View>(R.id.addMoreLoading)
+    override fun onCreateViewHolder(
+        parent: ViewGroup,
+        viewType: Int
+    ): RecyclerView.ViewHolder {
 
-            if (isLoadingNext) {
-                content?.visibility = View.GONE
-                loading?.visibility = View.VISIBLE
-                holder.itemView.isClickable = false
-            } else {
-                content?.visibility = View.VISIBLE
-                loading?.visibility = View.GONE
-                holder.itemView.isClickable = true
+        val inflater = LayoutInflater.from(parent.context)
+
+        return when (viewType) {
+
+            VIEW_TYPE_ADD_MORE -> {
+                val view = inflater.inflate(
+                    R.layout.item_add_more,
+                    parent,
+                    false
+                )
+
+                AddMoreViewHolder(view)
             }
 
-            holder.itemView.setOnClickListener {
-                if (!isLoadingNext) {
-                    onAddMoreClicked?.invoke()
-                }
+            else -> {
+                val view = inflater.inflate(
+                    layoutResId,
+                    parent,
+                    false
+                )
+
+                AnimeViewHolder(view)
             }
+        }
+    }
+
+
+    override fun onBindViewHolder(
+        holder: RecyclerView.ViewHolder,
+        position: Int
+    ) {
+
+        when (holder) {
+
+            is AnimeViewHolder -> {
+                bindAnime(holder)
+            }
+
+            is AddMoreViewHolder -> {
+                bindAddMore(holder)
+            }
+        }
+    }
+
+    /*
+     * Payload version means changing isLoadingNext doesn't unnecessarily
+     * rebind other footer state.
+     */
+    override fun onBindViewHolder(
+        holder: RecyclerView.ViewHolder,
+        position: Int,
+        payloads: MutableList<Any>
+    ) {
+
+        if (
+            holder is AddMoreViewHolder &&
+            payloads.contains(PAYLOAD_LOADING)
+        ) {
+            updateAddMoreLoadingState(holder)
             return
         }
 
-        val currentItem = items[position]
-        val title = currentItem.title
-        val imageUrl = currentItem.imageUrl
-        val imdbCode = currentItem.id
-        val rank = currentItem.rank
+        super.onBindViewHolder(
+            holder,
+            position,
+            payloads
+        )
+    }
 
-        holder.title?.text = title
-        holder.rank?.text = rank
-        
-        holder.cardSub?.text = currentItem.sub
-        holder.cardDub?.text = currentItem.dub
+    // ─────────────────────────────────────────────────────────────────────────
+    // Anime binding
+    // ─────────────────────────────────────────────────────────────────────────
 
-        holder.Movie_image?.let {
-            Glide.with(holder.itemView.context)
-                .load(imageUrl)
-                .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.ALL)
+    private fun bindAnime(
+        holder: AnimeViewHolder
+    ) {
+
+        /*
+         * IMPORTANT:
+         *
+         * Do NOT use the position passed to onBindViewHolder inside listeners.
+         *
+         * RecyclerView positions can change after:
+         *
+         * prependItems()
+         * appendItems()
+         * removal
+         * animation
+         *
+         * Always read bindingAdapterPosition when the event actually occurs.
+         */
+
+        val bindingPosition =
+            holder.bindingAdapterPosition
+
+        if (bindingPosition == RecyclerView.NO_POSITION) {
+            return
+        }
+
+        val item = items.getOrNull(bindingPosition)
+            ?: return
+
+        holder.title?.text = item.title
+        holder.rank?.text = item.rank
+        holder.cardSub?.text = item.sub
+        holder.cardDub?.text = item.dub
+
+        // ── Image ─────────────────────────────────────────────────────────────
+
+        holder.movieImage?.let { imageView ->
+
+            Glide.with(imageView)
+                .load(item.imageUrl)
+                .diskCacheStrategy(DiskCacheStrategy.ALL)
                 .centerInside()
-                .into(it)
+                .into(imageView)
         }
 
-        holder.CardViewcontiner?.setOnClickListener {
-            val context = holder.itemView.context
-            val args = android.os.Bundle().apply {
-                putString("anime_code", imdbCode)
-                putString("anime_poster", imageUrl)
+        // ── Click ─────────────────────────────────────────────────────────────
+
+        holder.cardContainer?.setOnClickListener {
+
+            val now = SystemClock.elapsedRealtime()
+
+            if (now - lastClickTime < CLICK_DEBOUNCE_MS) {
+                return@setOnClickListener
             }
-            (context as com.example.onyx.HomeActivity).navigateToFragment(WatchAnimeFragment(), args)
+
+            lastClickTime = now
+
+            val currentPosition =
+                holder.bindingAdapterPosition
+
+            if (currentPosition == RecyclerView.NO_POSITION) {
+                return@setOnClickListener
+            }
+
+            val currentItem =
+                items.getOrNull(currentPosition)
+                    ?: return@setOnClickListener
+
+            /*
+             * Preferred:
+             * let Fragment/Activity handle navigation.
+             */
+            val clickCallback = onItemClicked
+
+            if (clickCallback != null) {
+
+                clickCallback(currentItem)
+
+            } else {
+
+                /*
+                 * Backward-compatible fallback to your existing behavior.
+                 */
+                val context = holder.itemView.context
+
+                val homeActivity =
+                    context as? HomeActivity
+
+                if (homeActivity != null) {
+
+                    val args = Bundle().apply {
+                        putString(
+                            "anime_code",
+                            currentItem.id
+                        )
+
+                        putString(
+                            "anime_poster",
+                            currentItem.imageUrl
+                        )
+                    }
+
+                    homeActivity.navigateToFragment(
+                        WatchAnimeFragment(),
+                        args
+                    )
+                }
+            }
         }
 
-        holder.CardViewcontiner?.setOnKeyListener { v, keyCode, event ->
-            if (event.action != KeyEvent.ACTION_DOWN) return@setOnKeyListener false
-            val now = System.currentTimeMillis()
-            if (now - lastKeyTime < KEY_DEBOUNCE_DELAY) return@setOnKeyListener true
-            lastKeyTime = now
+        // ── Focus ─────────────────────────────────────────────────────────────
+
+        holder.cardContainer?.setOnFocusChangeListener { _, hasFocus ->
+
+            if (!hasFocus) {
+                return@setOnFocusChangeListener
+            }
+
+            val currentPosition =
+                holder.bindingAdapterPosition
+
+            if (currentPosition == RecyclerView.NO_POSITION) {
+                return@setOnFocusChangeListener
+            }
+
+            onItemFocused?.invoke(currentPosition)
+        }
+
+        // ── TV / DPAD ─────────────────────────────────────────────────────────
+
+        holder.cardContainer?.setOnKeyListener { _, keyCode, event ->
+
+            /*
+             * Do NOT consume LEFT/RIGHT.
+             *
+             * RecyclerView needs those events to move focus naturally,
+             * including moving from the final anime to the Add More card.
+             */
+
+            if (event.action != KeyEvent.ACTION_DOWN) {
+                return@setOnKeyListener false
+            }
 
             when (keyCode) {
-                KeyEvent.KEYCODE_DPAD_LEFT -> {}
-                KeyEvent.KEYCODE_DPAD_RIGHT -> {
-                    if (position == items.size - 1) return@setOnKeyListener true
-                }
-            }
-            false
-        }
 
-        holder.CardViewcontiner?.setOnFocusChangeListener { v, hasFocus ->
-            if (hasFocus) {
-                val currentPos = holder.bindingAdapterPosition
-                if (currentPos != RecyclerView.NO_POSITION) {
-                    onItemFocused?.invoke(currentPos)
+                KeyEvent.KEYCODE_DPAD_LEFT,
+                KeyEvent.KEYCODE_DPAD_RIGHT,
+                KeyEvent.KEYCODE_DPAD_UP,
+                KeyEvent.KEYCODE_DPAD_DOWN -> {
+
+                    false
                 }
+
+                else -> false
             }
         }
     }
 
-    override fun getItemCount() = items.size + 1
+    // ─────────────────────────────────────────────────────────────────────────
+    // Add More footer
+    // ─────────────────────────────────────────────────────────────────────────
 
-    fun appendItems(newItems: List<TrendingAnimeItem>) {
-        val startPosition = items.size
-        items.addAll(newItems)
-        notifyItemRangeInserted(startPosition, newItems.size)
+    private fun bindAddMore(
+        holder: AddMoreViewHolder
+    ) {
+
+        updateAddMoreLoadingState(holder)
+
+        holder.itemView.setOnClickListener {
+
+            if (isLoadingNext) {
+                return@setOnClickListener
+            }
+
+            val now = SystemClock.elapsedRealtime()
+
+            if (now - lastClickTime < CLICK_DEBOUNCE_MS) {
+                return@setOnClickListener
+            }
+
+            lastClickTime = now
+
+            onAddMoreClicked?.invoke()
+        }
+
+        /*
+         * Keep the footer focusable for Android TV / DPAD.
+         */
+        holder.itemView.isFocusable = true
+        holder.itemView.isFocusableInTouchMode = true
     }
 
-    fun prependItems(newItems: List<TrendingAnimeItem>) {
-        items.addAll(0, newItems)
-        notifyItemRangeInserted(0, newItems.size)
+    private fun updateAddMoreLoadingState(
+        holder: AddMoreViewHolder
+    ) {
+
+        if (isLoadingNext) {
+
+            holder.content?.visibility = View.GONE
+            holder.loading?.visibility = View.VISIBLE
+
+            holder.itemView.isClickable = false
+
+        } else {
+
+            holder.content?.visibility = View.VISIBLE
+            holder.loading?.visibility = View.GONE
+
+            holder.itemView.isClickable = true
+        }
     }
 
-    fun addItem(item: TrendingAnimeItem) {
+    // ─────────────────────────────────────────────────────────────────────────
+    // Recycler cleanup
+    // ─────────────────────────────────────────────────────────────────────────
+
+    override fun onViewRecycled(
+        holder: RecyclerView.ViewHolder
+    ) {
+
+        if (holder is AnimeViewHolder) {
+
+            holder.movieImage?.let { imageView ->
+
+                /*
+                 * Prevent an old image request from appearing briefly
+                 * on a recycled card.
+                 */
+                Glide.with(imageView)
+                    .clear(imageView)
+
+                imageView.setImageDrawable(null)
+            }
+
+            holder.cardContainer?.setOnClickListener(null)
+            holder.cardContainer?.onFocusChangeListener = null
+            holder.cardContainer?.setOnKeyListener(null)
+        }
+
+        if (holder is AddMoreViewHolder) {
+            holder.itemView.setOnClickListener(null)
+        }
+
+        super.onViewRecycled(holder)
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Dataset operations
+    // ─────────────────────────────────────────────────────────────────────────
+
+    fun appendItems(
+        newItems: List<TrendingAnimeItem>
+    ) {
+
+        if (newItems.isEmpty()) {
+            return
+        }
+
+        /*
+         * Prevent duplicate anime when pagination APIs return overlapping pages.
+         */
+        val existingIds =
+            items.asSequence()
+                .map { it.id }
+                .toHashSet()
+
+        val uniqueItems =
+            newItems.filter { it.id !in existingIds }
+
+        if (uniqueItems.isEmpty()) {
+            return
+        }
+
+        /*
+         * Footer currently occupies this position.
+         *
+         * notifyItemRangeInserted() inserts the new anime BEFORE that footer,
+         * so RecyclerView automatically shifts the footer to its new position.
+         */
+        val insertPosition = items.size
+
+        items.addAll(uniqueItems)
+
+        notifyItemRangeInserted(
+            insertPosition,
+            uniqueItems.size
+        )
+    }
+
+    fun prependItems(
+        newItems: List<TrendingAnimeItem>
+    ) {
+
+        if (newItems.isEmpty()) {
+            return
+        }
+
+        val existingIds =
+            items.asSequence()
+                .map { it.id }
+                .toHashSet()
+
+        val uniqueItems =
+            newItems.filter { it.id !in existingIds }
+
+        if (uniqueItems.isEmpty()) {
+            return
+        }
+
+        items.addAll(
+            0,
+            uniqueItems
+        )
+
+        notifyItemRangeInserted(
+            0,
+            uniqueItems.size
+        )
+    }
+
+    fun addItem(
+        item: TrendingAnimeItem
+    ) {
+
+        if (items.any { it.id == item.id }) {
+            return
+        }
+
+        val insertPosition = items.size
+
         items.add(item)
-        notifyItemInserted(items.size - 1)
+
+        notifyItemInserted(insertPosition)
     }
 
-    //@SuppressLint("NotifyDataSetChanged")
+    fun removeItemById(
+        id: String
+    ): Boolean {
+
+        val position =
+            items.indexOfFirst { it.id == id }
+
+        if (position == -1) {
+            return false
+        }
+
+        items.removeAt(position)
+
+        notifyItemRemoved(position)
+
+        return true
+    }
+
+    fun updateItem(
+        updatedItem: TrendingAnimeItem
+    ): Boolean {
+
+        val position =
+            items.indexOfFirst {
+                it.id == updatedItem.id
+            }
+
+        if (position == -1) {
+            return false
+        }
+
+        items[position] = updatedItem
+
+        notifyItemChanged(position)
+
+        return true
+    }
+
     fun clearItems() {
+
+        if (items.isEmpty()) {
+            return
+        }
+
+        val oldSize = items.size
+
         items.clear()
-        notifyDataSetChanged()
+
+        /*
+         * Better than notifyDataSetChanged():
+         * RecyclerView keeps animations and knows exactly what disappeared.
+         */
+        notifyItemRangeRemoved(
+            0,
+            oldSize
+        )
+    }
+
+    fun replaceItems(
+        newItems: List<TrendingAnimeItem>
+    ) {
+
+        val oldSize = items.size
+
+        if (oldSize > 0) {
+            items.clear()
+
+            notifyItemRangeRemoved(
+                0,
+                oldSize
+            )
+        }
+
+        if (newItems.isEmpty()) {
+            return
+        }
+
+        /*
+         * Deduplicate replacement dataset too.
+         */
+        val uniqueItems =
+            newItems.distinctBy {
+                it.id
+            }
+
+        items.addAll(uniqueItems)
+
+        notifyItemRangeInserted(
+            0,
+            uniqueItems.size
+        )
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Read access
+    // ─────────────────────────────────────────────────────────────────────────
+
+    fun getItems(): List<TrendingAnimeItem> {
+        return items.toList()
+    }
+
+    fun getItemAt(
+        position: Int
+    ): TrendingAnimeItem? {
+        return items.getOrNull(position)
+    }
+
+    fun getAnimeCount(): Int {
+        return items.size
     }
 }
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Model
+// ─────────────────────────────────────────────────────────────────────────────
 
 data class TrendingAnimeItem(
     val id: String,

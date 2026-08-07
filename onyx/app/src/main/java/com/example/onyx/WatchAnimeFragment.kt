@@ -23,6 +23,7 @@ import androidx.annotation.OptIn
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
+import androidx.compose.ui.graphics.LinearGradientShader
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.util.UnstableApi
@@ -51,6 +52,9 @@ import kotlin.collections.mutableListOf
 
 
 import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.onyx.OnyxClasses.AnimeTrendingAdapter
+import com.example.onyx.OnyxClasses.TrendingAnimeItem
 import com.example.onyx.databinding.FragmentWatchAnimePageBinding
 import com.google.android.material.card.MaterialCardView
 
@@ -80,7 +84,8 @@ class WatchAnimeFragment : Fragment(R.layout.fragment_watch_anime_page) {
 
     private var selectedSeasonView: FrameLayout? = null
 
-
+    private lateinit var favoriteButton : MaterialCardView
+    private lateinit var favoriteButtonImg : ImageView
 
     private var _binding: FragmentWatchAnimePageBinding? = null
     private val binding get() = _binding!!
@@ -122,6 +127,12 @@ class WatchAnimeFragment : Fragment(R.layout.fragment_watch_anime_page) {
         val params = mainSection.layoutParams
         params.height = (screenHeight * 1).toInt()
         mainSection.layoutParams = params
+
+        favoriteButton =  binding.favoriteButtonAnime
+        favoriteButtonImg =  binding.favoriteButtonImg
+
+        GlobalUtils.enableFullViewOnDescendantFocus( mainSection, favoriteButton )
+
 
 
 
@@ -211,6 +222,7 @@ class WatchAnimeFragment : Fragment(R.layout.fragment_watch_anime_page) {
         saveData.remove("recommendedAnimes")
         saveData.remove("relatedAnimes")
         saveData.remove("mostPopularAnimes")
+        saveData.remove("cast")
 
 
         binding.watchTitle.text = name
@@ -296,7 +308,7 @@ class WatchAnimeFragment : Fragment(R.layout.fragment_watch_anime_page) {
 
 
         setupFavoriteButton(
-            animeId = animeId,
+            animeId = "-$id",
             name = name,
             type = type,
             anilistId = anilistId,
@@ -314,7 +326,7 @@ class WatchAnimeFragment : Fragment(R.layout.fragment_watch_anime_page) {
         )
 
 
-        //showRecommendation(relatedAnimes, recommendedAnime)
+        showRecommendation(relatedAnimes, recommendedAnime)
 
 
 
@@ -347,8 +359,6 @@ class WatchAnimeFragment : Fragment(R.layout.fragment_watch_anime_page) {
 
             seasonBtn.setOnClickListener {
 
-
-
                 selectedSeasonView?.isSelected = false
                 seasonBtn.isSelected = true
 
@@ -364,6 +374,9 @@ class WatchAnimeFragment : Fragment(R.layout.fragment_watch_anime_page) {
 
             container.addView(seasonBtn)
             if (i == 0) seasonBtn.performClick()
+
+            GlobalUtils.enableFullViewOnDescendantFocus( mainSection, seasonBtn)
+
         }
     }
     @OptIn(UnstableApi::class)
@@ -427,6 +440,8 @@ class WatchAnimeFragment : Fragment(R.layout.fragment_watch_anime_page) {
                 Anime_Video_Player.playVideoExternally(requireContext(), episodeId, eNumber, seasonId)
             }
             container.addView(cardView)
+            GlobalUtils.enableFullViewOnDescendantFocus( mainSection, cardView)
+
         }
 
 
@@ -497,11 +512,34 @@ class WatchAnimeFragment : Fragment(R.layout.fragment_watch_anime_page) {
             .into(posterWidget)
 
 
+        setupFavoriteButton(
+            animeId = "-$id",
+            name = name,
+            type = type,
+            anilistId = anilistId,
+            malId = malId,
+            description = description,
+            rating = rating,
+            quality = quality,
+            duration = duration,
+            backdrop = backdrop,
+            sub=sub,
+            dub=dub,
+            aired=aired,
+            genre=genre,
+            seasons = seasons.toString()
+        )
+
+
 
     }
 
 
     private fun showRecommendation(data: JSONArray, data2: JSONArray) {
+
+        Log.d("showRecommendation", "showRecommendation: $data")
+
+
 
         // ✅ Merge the two JSONArrays
         val Airing = JSONArray()
@@ -512,7 +550,15 @@ class WatchAnimeFragment : Fragment(R.layout.fragment_watch_anime_page) {
             Airing.put(data2.getJSONObject(i))
         }
 
-        var RecommendationItems = mutableListOf<AiringAnimeItem>()
+        val showMore = requireView().findViewById<LinearLayout>(R.id.showMore)
+
+        if(Airing.length()>0){
+            showMore.visibility = View.VISIBLE
+        }else{
+            showMore.visibility = View.GONE
+            return
+        }
+        var RecommendationItems = mutableListOf<TrendingAnimeItem>()
 
         for (i in 0 until Airing.length()) {
 
@@ -532,7 +578,7 @@ class WatchAnimeFragment : Fragment(R.layout.fragment_watch_anime_page) {
 
 
             RecommendationItems.add(
-                AiringAnimeItem(
+                TrendingAnimeItem(
                     id,
                     title,
                     imageUrl,
@@ -542,15 +588,22 @@ class WatchAnimeFragment : Fragment(R.layout.fragment_watch_anime_page) {
                 )
             )
 
+
         }
-
-
         val recyclerView = requireView().findViewById<RecyclerView>(R.id.animeWatchRecommendation)
-        recyclerView.layoutManager = GridLayoutManager(requireContext(), GlobalUtils.calculateSpanCount(requireContext(), 170))
-        recyclerView.adapter = AnimeAiringAdapter(RecommendationItems, R.layout.anime_airing_item)
 
-        val spacing = (19 * resources.displayMetrics.density).toInt() // 16dp to px
+        recyclerView.layoutManager = LinearLayoutManager(
+            requireActivity(),
+            LinearLayoutManager.HORIZONTAL,
+            false
+        )
+        recyclerView.adapter = AnimeTrendingAdapter(RecommendationItems, R.layout.anime_trending_item)
+
+        val spacing = (5 * resources.displayMetrics.density).toInt() // 16dp to px
         recyclerView.addItemDecoration(EqualSpaceItemDecoration(spacing))
+
+        GlobalUtils.centerParentOnFocus(binding.mainBox, binding.showMore)
+
 
     }
 
@@ -575,12 +628,27 @@ class WatchAnimeFragment : Fragment(R.layout.fragment_watch_anime_page) {
 
     ) {
         val userId = sm.getUserId()
-        val favoriteButton =  binding.favoriteButtonAnime
-        val favoriteButtonImg =  binding.favoriteButtonImg
-
 
 
         favoriteButton.requestFocus()
+
+
+        val seasonsArray = try {
+
+            JSONArray(seasons)
+
+        } catch (e: Exception) {
+
+            Log.e(
+                "AnimeFavorite",
+                "Failed to parse seasons",
+                e
+            )
+            JSONArray()
+        }
+
+        Log.d("AnimeFavorite", "seasonsArray: $seasonsArray")
+
 
         @RequiresApi(Build.VERSION_CODES.O)
         fun applyIcon() {
@@ -601,11 +669,17 @@ class WatchAnimeFragment : Fragment(R.layout.fragment_watch_anime_page) {
         applyIcon()
 
         favoriteButton.setOnClickListener {
+            GlobalUtils.favoritesStateHasChanged  = true
             viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
                 withContext(Dispatchers.IO) {
                     val isFav = db.isFavoriteAnime(userId, animeId)
                     if (isFav) {
                         db.removeFavoriteAnime(userId, animeId)
+                        for (i in 0 until seasonsArray.length()) {
+                            val season = seasonsArray.getJSONObject(i)
+                            val seasonId = season.optString("id", "")
+                            db.removeFavoriteAnime(userId, "-$seasonId")
+                        }
                     } else {
                         db.addFavoriteAnime(
                             userId,
@@ -618,13 +692,48 @@ class WatchAnimeFragment : Fragment(R.layout.fragment_watch_anime_page) {
                             rating,
                             quality,
                             duration,
-                            backdrop?:poster,
+                            poster,
                             sub,
                             dub,
                             aired,
                             genre,
                             seasons
                         )
+
+                        for (i in 0 until seasonsArray.length()) {
+                            val season = seasonsArray.getJSONObject(i)
+                            val seasonId = season.optString("id", "")
+                            val seasonTitle = season.optString("title", "")
+                            val seasonPoster = season.optString("poster", "")
+                            val seasonRating = season.optString("rating", "")
+                            val seasonType = season.optString("type", "")
+                            val seasonYear = season.optString("year", "")
+                            val seasonMalId = season.optString("malId", "")
+                            val seasonAnilistId = season.optString("anilistId", "")
+                            val seasonSub = season.optString("sub", "")
+                            val seasonDub = season.optString("dub", "")
+
+
+                            db.addFavoriteAnime(
+                                userId,
+                                "-$seasonId",
+                                seasonTitle,
+                                seasonType,
+                                seasonAnilistId,
+                                seasonMalId,
+                                description,
+                                seasonRating,
+                                quality,
+                                duration,
+                                seasonPoster,
+                                seasonSub,
+                                seasonDub,
+                                seasonYear,
+                                genre,
+                                seasons
+                            )
+
+                        }
                     }
                 }
                 applyIcon()

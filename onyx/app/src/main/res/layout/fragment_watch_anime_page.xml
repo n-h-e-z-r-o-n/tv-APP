@@ -8,7 +8,7 @@
     android:background="?attr/BG_color"
     tools:context=".WatchAnimeFragment">
 
-    <androidx.core.widget.NestedScrollView
+    <ScrollView
         android:id="@+id/mainBox"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -553,40 +553,46 @@
 
         </FrameLayout>
 
-
-        <TextView
+        <LinearLayout
+            android:id="@+id/showMore"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:text="Recommended  Animes"
-            android:fontFamily="@font/n"
-            android:textSize="25sp"
-            android:textStyle="bold"
-            android:visibility="gone"
-            android:layout_marginTop="20dp"
-            android:textColor="?attr/FG_color"
-            tools:ignore="HardcodedText" />
-
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/animeWatchRecommendation"
             android:layout_height="wrap_content"
-            android:layout_width="match_parent"
-            android:clipToPadding="false"
-            android:overScrollMode="never"
-            android:padding="10dp"
-            android:scrollbars="none"
-            android:focusable="false"
-            android:focusableInTouchMode="false"
-            android:descendantFocusability="afterDescendants"
-            android:nestedScrollingEnabled="false"
-            tools:ignore="RtlSymmetry"
-            android:visibility="gone"/>
+            android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:text="Recommended  Animes"
+                    android:fontFamily="@font/q"
+                    android:layout_marginStart="20dp"
+                    android:textSize="25sp"
+                    android:textStyle="bold"
+                    android:layout_marginTop="20dp"
+                    android:textColor="?attr/FG_color"
+                    tools:ignore="HardcodedText" />
+
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/animeWatchRecommendation"
+                    android:layout_height="wrap_content"
+                    android:layout_width="match_parent"
+                    android:clipToPadding="false"
+                    android:overScrollMode="never"
+                    android:padding="10dp"
+                    android:scrollbars="none"
+                    android:focusable="false"
+                    android:focusableInTouchMode="false"
+                    android:descendantFocusability="afterDescendants"
+                    android:nestedScrollingEnabled="false"
+                    tools:ignore="RtlSymmetry"/>
+
+        </LinearLayout>
 
 
 
     </LinearLayout>
 
-    </androidx.core.widget.NestedScrollView>
+    </ScrollView>
 
     <include layout="@layout/laod_animation"/>
 

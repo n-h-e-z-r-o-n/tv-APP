@@ -127,13 +127,30 @@ class Video_payer : AppCompatActivity(), Player.Listener {
     private val audioFocusChangeListener = AudioManager.OnAudioFocusChangeListener { focusChange ->
         when (focusChange) {
             AudioManager.AUDIOFOCUS_LOSS,
-            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> exoPlayer?.pause()
-            AudioManager.AUDIOFOCUS_GAIN           -> exoPlayer?.play()
+            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
+                val player = exoPlayer
+                shouldResumeAfterAudioFocusGain =
+                    shouldResumePlaybackWhenReady && (player?.playWhenReady == true || player?.isPlaying == true)
+                player?.pause()
+            }
+            AudioManager.AUDIOFOCUS_GAIN -> {
+                val player = exoPlayer
+                if (
+                    shouldResumeAfterAudioFocusGain &&
+                    shouldResumePlaybackWhenReady &&
+                    !waitingForNetworkRecovery
+                ) {
+                    player?.play()
+                }
+                shouldResumeAfterAudioFocusGain = false
+            }
         }
     }
     private var isNetworkCallbackRegistered = false
     private var waitingForNetworkRecovery = false
     private var shouldResumeAfterNetworkRecovery = false
+    private var shouldResumePlaybackWhenReady = true
+    private var shouldResumeAfterAudioFocusGain = false
     private var lastKnownPlaybackPosition = 0L
     private val networkCallback = object : ConnectivityManager.NetworkCallback() {
         override fun onAvailable(network: Network) {
@@ -181,15 +198,22 @@ class Video_payer : AppCompatActivity(), Player.Listener {
     override fun onPause() {
         super.onPause()
         saveContinueWatching()
+        shouldResumePlaybackWhenReady =
+            exoPlayer?.playWhenReady == true ||
+                (waitingForNetworkRecovery && shouldResumeAfterNetworkRecovery)
         exoPlayer?.pause()
         stopProgressTracking()
     }
 
     override fun onResume() {
         super.onResume()
-        if (waitingForNetworkRecovery && isNetworkAvailable()) {
+        if (
+            waitingForNetworkRecovery &&
+            shouldResumePlaybackWhenReady &&
+            isNetworkAvailable()
+        ) {
             handleNetworkAvailable()
-        } else {
+        } else if (shouldResumePlaybackWhenReady) {
             // Tracking resumes automatically via onIsPlayingChanged
             exoPlayer?.play()
         }
@@ -287,7 +311,7 @@ class Video_payer : AppCompatActivity(), Player.Listener {
         btnMute.setOnClickListener      { toggleMute() }
         btnSpeed.setOnClickListener     { showSpeedDialog() }
         btnQuality.setOnClickListener   { showQualityDialog() }
-        btnRefresh.setOnClickListener   { refreshVideo() }
+        btnRefresh.setOnClickListener   { refreshVideo(resetAutoRefreshAttempts = true) }
         btnSettings.setOnClickListener  { showSettingsDialog() }
         btnClose.setOnClickListener     { finish() }
         btnFullscreen.setOnClickListener{ toggleFullscreen() }
@@ -358,6 +382,9 @@ class Video_payer : AppCompatActivity(), Player.Listener {
 
     private fun buildPlayer(url: String): ExoPlayer {
         releasePlayer()
+        autoRefreshCount = 0
+        shouldResumePlaybackWhenReady = true
+        shouldResumeAfterAudioFocusGain = false
 
         val headers = buildMap<String, String> {
             put("User-Agent", userAgent)
@@ -446,7 +473,17 @@ class Video_payer : AppCompatActivity(), Player.Listener {
     // ──────────────────────────────────────────────────────────────────────────
 
     private fun togglePlayPause() {
-        exoPlayer?.let { if (it.isPlaying) it.pause() else it.play() }
+        exoPlayer?.let { player ->
+            if (player.isPlaying || player.playWhenReady) {
+                shouldResumePlaybackWhenReady = false
+                shouldResumeAfterNetworkRecovery = false
+                shouldResumeAfterAudioFocusGain = false
+                player.pause()
+            } else {
+                shouldResumePlaybackWhenReady = true
+                player.play()
+            }
+        }
     }
 
     private fun seekRelative(offsetMs: Long) {
@@ -461,8 +498,12 @@ class Video_payer : AppCompatActivity(), Player.Listener {
 
 
 
-    private fun refreshVideo() {
+    private fun refreshVideo(resetAutoRefreshAttempts: Boolean = false) {
         val restartPosition = exoPlayer?.currentPosition ?: resumePosition
+        if (resetAutoRefreshAttempts) {
+            autoRefreshCount = 0
+        }
+        shouldResumePlaybackWhenReady = true
         shouldResumeAfterNetworkRecovery = true
         exoPlayer?.let { player ->
             saveContinueWatching()
@@ -573,7 +614,6 @@ class Video_payer : AppCompatActivity(), Player.Listener {
     }
 
     private fun stopBufferingWatchdog() {
-        autoRefreshCount = 0
         isAutoRefreshing = false
         lastWatchdogBufferedPosition = -1L
         lastBufferProgressTimeMs = 0L
@@ -678,17 +718,17 @@ class Video_payer : AppCompatActivity(), Player.Listener {
                     httpCode == 410 -> {
 
                 Log.d(
-                    "Video_payer",
+                    "onPlayerError",
                     "Source probably expired or is no longer authorized: HTTP $httpCode"
                 )
 
                 Toast.makeText(
                     this,
-                    "Video link expired. Refreshing source...",
+                    "Video Not Available.",
                     Toast.LENGTH_SHORT
                 ).show()
 
-                refreshVideo()
+                //refreshVideo()
             }
 
             else -> {
@@ -914,7 +954,10 @@ class Video_payer : AppCompatActivity(), Player.Listener {
         if (waitingForNetworkRecovery) return
 
         val player = exoPlayer
-        shouldResumeAfterNetworkRecovery = player?.isPlaying == true || player?.playWhenReady == true
+        shouldResumeAfterNetworkRecovery =
+            shouldResumePlaybackWhenReady &&
+                player != null &&
+                player.playbackState != Player.STATE_ENDED
         lastKnownPlaybackPosition = player?.currentPosition ?: lastKnownPlaybackPosition
         waitingForNetworkRecovery = true
 
@@ -933,6 +976,7 @@ class Video_payer : AppCompatActivity(), Player.Listener {
         waitingForNetworkRecovery = false
         val restartPosition = player.currentPosition.takeIf { it > 0 } ?: lastKnownPlaybackPosition
         reloadVideo(player, restartPosition, autoPlay = shouldResumeAfterNetworkRecovery)
+        shouldResumeAfterAudioFocusGain = false
         Toast.makeText(this, "Connection restored. Resuming video...", Toast.LENGTH_SHORT).show()
     }
 
@@ -1227,6 +1271,8 @@ class Video_payer : AppCompatActivity(), Player.Listener {
             player.clearMediaItems()
             player.release()
             exoPlayer = null
+            shouldResumePlaybackWhenReady = false
+            shouldResumeAfterAudioFocusGain = false
             waitingForNetworkRecovery = false
             shouldResumeAfterNetworkRecovery = false
             currentVideoUrl = null

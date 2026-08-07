@@ -4,18 +4,14 @@ import android.os.Bundle
 import android.util.TypedValue
 import android.view.View
 import android.widget.ImageButton
+import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
+import com.bumptech.glide.Glide
 import com.example.onyx.OnyxObjects.GlobalUtils
 import com.example.onyx.OnyxObjects.NavAction
-import android.widget.ImageView
-import androidx.activity.OnBackPressedCallback
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.lifecycleScope
-import com.bumptech.glide.Glide
-import com.example.onyx.OnyxObjects.LoadingAnimation
-import kotlinx.coroutines.cancelChildren
 
 class HomeActivity : AppCompatActivity() {
 
@@ -23,235 +19,319 @@ class HomeActivity : AppCompatActivity() {
     var animeFragment: AnimeFragment? = null
     private var profileFragment: ProfileFragment? = null
     private var watchingFragment: WatchingFragment? = null
-
     private var notificationFragment: notificationFragment? = null
-
     private var searchFragment: SearchFragment? = null
 
     private var activeFragment: Fragment? = null
+    private var currentCoreTag: String = TAG_SHOWS
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         GlobalUtils.applyTheme(this)
         setContentView(R.layout.activity_home)
 
-
-        ////////////////////////////////////////////////////////////////////////////////////////////
         val loadingImageView = findViewById<ImageView>(R.id.AnimationBG)
-
         val typedValue = TypedValue()
         theme.resolveAttribute(R.attr.themeImage, typedValue, true)
 
         Glide.with(this)
             .asGif()
-            .load( typedValue.resourceId)
+            .load(typedValue.resourceId)
             .into(loadingImageView)
-        ///////////////////////////////////////////////////////////////////////////////////////////
 
-        // Set up the sidebar (using existing logic, but we need to override the click behavior)
         NavAction.setupSidebar(this)
-
         setupSidebarForFragments()
+        restoreFragmentReferences()
 
-        // Load default fragment
         if (savedInstanceState == null) {
-            val prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE)
-            val lastFragment = prefs.getString("last_fragment", "shows") ?: "shows"
-            
-            val btnShows = findViewById<ImageButton>(R.id.sidebarBtnShows)
-            val btnAnime = findViewById<ImageButton>(R.id.sidebarBtnAnime)
-            val btnProfile = findViewById<CardView>(R.id.sidebarBtnProfile)
-            val btnWatching = findViewById<ImageButton>(R.id.sidebarWatchListBtn)
-            val searchBtn = findViewById<ImageView>(R.id.sidebarSearchBtn)
-            val notificationBtn = findViewById<ImageButton>(R.id.sidebarNotificationBtn)
-            
-            val buttons = listOf<View>(btnShows, btnAnime, btnProfile, btnWatching, searchBtn, notificationBtn)
-            val selectedBtn = when(lastFragment) {
-                "shows" -> btnShows
-                "anime" -> btnAnime
-                "profile" -> btnProfile
-                "watching" -> btnWatching
-                "favorites" -> findViewById<View>(R.id.sidebarLabelFavorites)
-                "search" -> searchBtn
-                "notifications" -> notificationBtn
-                else -> btnShows
-            }
-            
-            updateSelection(buttons, selectedBtn)
-            switchFragment(lastFragment)
+            val initialTag = getPersistedCoreTag()
+            selectSidebarTag(initialTag)
+            switchFragment(initialTag)
+        } else {
+            currentCoreTag = findVisibleCoreTag() ?: getPersistedCoreTag()
+            activeFragment = supportFragmentManager.fragments.firstOrNull { it.isVisible }
+            selectSidebarTag(currentCoreTag)
         }
     }
 
     private fun setupSidebarForFragments() {
-        val btnShows = findViewById<ImageButton>(R.id.sidebarBtnShows)
-        val btnAnime = findViewById<ImageButton>(R.id.sidebarBtnAnime)
-        val btnProfile = findViewById<CardView>(R.id.sidebarBtnProfile)
-        val btnWatching = findViewById<ImageButton>(R.id.sidebarWatchListBtn)
-        val searchBtn = findViewById<ImageView>(R.id.sidebarSearchBtn)
-        val notificationBtn = findViewById<ImageButton>(R.id.sidebarNotificationBtn)
-        val btnFavorites = findViewById<ImageButton>(R.id.sidebarFavoritesBtn)
+        requireSidebarView(TAG_SHOWS).setOnClickListener { navigateToCoreTag(TAG_SHOWS) }
+        requireSidebarView(TAG_ANIME).setOnClickListener { navigateToCoreTag(TAG_ANIME) }
+        requireSidebarView(TAG_SEARCH).setOnClickListener { navigateToCoreTag(TAG_SEARCH) }
+        requireSidebarView(TAG_WATCHING).setOnClickListener { navigateToCoreTag(TAG_WATCHING) }
+        requireSidebarView(TAG_FAVORITES).setOnClickListener { navigateToCoreTag(TAG_FAVORITES) }
+        requireSidebarView(TAG_NOTIFICATIONS).setOnClickListener { navigateToCoreTag(TAG_NOTIFICATIONS) }
+        requireSidebarView(TAG_PROFILE).setOnClickListener { navigateToCoreTag(TAG_PROFILE) }
+    }
 
-        val buttons = listOf(btnShows, btnAnime, btnProfile, btnWatching, btnFavorites)
+    private fun navigateToCoreTag(tag: String) {
+        val normalizedTag = normalizeCoreTag(tag)
+        selectSidebarTag(normalizedTag)
+        switchFragment(normalizedTag)
+    }
 
-        btnShows.setOnClickListener {
-            updateSelection(buttons, btnShows)
-            switchFragment("shows")
-        }
-
-        btnAnime.setOnClickListener {
-            updateSelection(buttons, btnAnime)
-            switchFragment("anime")
-        }
-
-        searchBtn.setOnClickListener {
-            updateSelection(buttons, searchBtn)
-            switchFragment("search")
-        }
-
-        notificationBtn.setOnClickListener {
-            updateSelection(buttons, notificationBtn)
-            switchFragment("notifications")
-        }
-
-        btnProfile.setOnClickListener {
-            updateSelection(buttons, btnProfile)
-            switchFragment("profile")
-        }
-
-        btnWatching.setOnClickListener {
-            updateSelection(buttons, btnWatching)
-            switchFragment("watching")
-        }
-
-        btnFavorites?.setOnClickListener {
-            updateSelection(buttons, btnFavorites)
-            switchFragment("favorites")
+    private fun selectSidebarTag(tag: String) {
+        val views = sidebarSelectionViews()
+        val selectedView = views[normalizeCoreTag(tag)] ?: views.getValue(TAG_SHOWS)
+        views.values.forEach { view ->
+            view.isSelected = view === selectedView
         }
     }
 
-    private fun updateSelection(buttons: List<View>, selected: View) {
-        buttons.forEach { it.isSelected = (it == selected) }
+    private fun sidebarSelectionViews(): Map<String, View> {
+        return mapOf(
+            TAG_SHOWS to requireSidebarView(TAG_SHOWS),
+            TAG_ANIME to requireSidebarView(TAG_ANIME),
+            TAG_SEARCH to requireSidebarView(TAG_SEARCH),
+            TAG_WATCHING to requireSidebarView(TAG_WATCHING),
+            TAG_FAVORITES to requireSidebarView(TAG_FAVORITES),
+            TAG_NOTIFICATIONS to requireSidebarView(TAG_NOTIFICATIONS),
+            TAG_PROFILE to requireSidebarView(TAG_PROFILE)
+        )
+    }
+
+    private fun requireSidebarView(tag: String): View {
+        val viewId = when (normalizeCoreTag(tag)) {
+            TAG_SHOWS -> R.id.sidebarBtnShows
+            TAG_ANIME -> R.id.sidebarBtnAnime
+            TAG_SEARCH -> R.id.sidebarSearchBtn
+            TAG_WATCHING -> R.id.sidebarWatchListBtn
+            TAG_FAVORITES -> R.id.sidebarFavoritesBtn
+            TAG_NOTIFICATIONS -> R.id.sidebarNotificationBtn
+            TAG_PROFILE -> R.id.sidebarBtnProfile
+            else -> R.id.sidebarBtnShows
+        }
+        return findViewById(viewId)
     }
 
     private fun switchFragment(tag: String) {
-        val prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE)
-        prefs.edit().putString("last_fragment", tag).apply()
-
+        val normalizedTag = normalizeCoreTag(tag)
         val fm = supportFragmentManager
-        val transaction = fm.beginTransaction()
 
-        // Define your VIP list of core sidebar tabs
-        val coreNavigationTags = listOf("shows", "anime", "profile", "watching", "favorites", "notifications", "search")
+        if (fm.isStateSaved) {
+            return
+        }
 
-        // 1. Find ALL currently visible fragments
-        fm.fragments.filter { it.isVisible }.forEach { fragment ->
+        val visibleOverlay = fm.fragments.firstOrNull {
+            it.isAdded && it.isVisible && !isCoreNavigationTag(it.tag)
+        }
 
-            if (coreNavigationTags.contains(fragment.tag)) {
-                // It IS a main sidebar tab -> Hide and FREEZE it
-                transaction.hide(fragment)
-                transaction.setMaxLifecycle(fragment, Lifecycle.State.STARTED)
-            } else {
-                // It is a sub-screen (like WatchAnimeFragment) -> DESTROY it completely
-                transaction.remove(fragment)
+        if (activeFragment?.tag == normalizedTag && visibleOverlay == null) {
+            currentCoreTag = normalizedTag
+            persistCoreTag(normalizedTag)
+            return
+        }
+
+        val transaction = fm.beginTransaction().setReorderingAllowed(true)
+        var targetFragment = fm.findFragmentByTag(normalizedTag)
+
+        fm.fragments.filter { it.isAdded }.forEach { fragment ->
+            when {
+                fragment === targetFragment -> Unit
+                isCoreNavigationTag(fragment.tag) -> {
+                    transaction.hide(fragment)
+                    transaction.setMaxLifecycle(fragment, Lifecycle.State.STARTED)
+                }
+                else -> transaction.remove(fragment)
             }
         }
 
-        var targetFragment = fm.findFragmentByTag(tag)
         if (targetFragment == null) {
-            // If the fragment doesn't exist, create it
-            targetFragment = when (tag) {
-                "shows" -> ShowsFragment()
-                "anime" -> AnimeFragment()
-                "profile" -> ProfileFragment()
-                "watching" -> WatchingFragment()
-                "favorites" -> FavoritesFragment()
-                "notifications" -> notificationFragment()
-                "search" -> SearchFragment()
-                else -> ShowsFragment()
-            }
-            transaction.add(R.id.fragmentContainer, targetFragment, tag)
-
-            // Assign our references for clarity, though findFragmentByTag works too
-            when (tag) {
-                "shows" -> showsFragment = targetFragment as ShowsFragment
-                "anime" -> animeFragment = targetFragment as AnimeFragment
-                "profile" -> profileFragment = targetFragment as ProfileFragment
-                "watching" -> watchingFragment = targetFragment as WatchingFragment
-                "notifications" -> notificationFragment = targetFragment as notificationFragment
-                "search" -> searchFragment = targetFragment as SearchFragment
-            }
+            targetFragment = createCoreFragment(normalizedTag)
+            transaction.add(R.id.fragmentContainer, targetFragment!!, normalizedTag)
         } else {
-            // 2. Show and WAKE UP the returning fragment
-            transaction.show(targetFragment)
-            transaction.setMaxLifecycle(targetFragment, Lifecycle.State.RESUMED)
+            transaction.show(targetFragment!!)
         }
+
+        transaction.setMaxLifecycle(targetFragment!!, Lifecycle.State.RESUMED)
 
         activeFragment = targetFragment
+        currentCoreTag = normalizedTag
+        persistCoreTag(normalizedTag)
         transaction.commit()
     }
 
     fun navigateToFragment(fragment: Fragment, args: Bundle? = null) {
-        if (args != null) {
-            fragment.arguments = args
+        val coreTag = coreTagForFragment(fragment)
+        if (coreTag != null) {
+            navigateToCoreTag(coreTag)
+            return
         }
+
+        args?.let { fragment.arguments = Bundle(it) }
+
         val fm = supportFragmentManager
-        val transaction = fm.beginTransaction()
-
-        // Hide all currently visible fragments (keeps them alive in the background)
-        fm.fragments.filter { it.isVisible }.forEach {
-            transaction.hide(it)
-            transaction.setMaxLifecycle(it, Lifecycle.State.STARTED)
+        if (fm.isStateSaved) {
+            return
         }
 
-        // Prevent duplicates: Check if an instance of this fragment class already exists and remove it
-        val fragmentClass = fragment::class.java
-        fm.fragments.filter { it::class.java == fragmentClass }.forEach {
-            transaction.remove(it)
+        val transaction = fm.beginTransaction().setReorderingAllowed(true)
+
+        fm.fragments.filter { it.isAdded }.forEach { existingFragment ->
+            when {
+                isCoreNavigationTag(existingFragment.tag) -> {
+                    transaction.hide(existingFragment)
+                    transaction.setMaxLifecycle(existingFragment, Lifecycle.State.STARTED)
+                }
+                else -> transaction.remove(existingFragment)
+            }
         }
 
-        // Add the new fragment
-        transaction.add(R.id.fragmentContainer, fragment, fragmentClass.simpleName)
+        transaction.add(R.id.fragmentContainer, fragment, buildOverlayTag(fragment))
+        activeFragment = fragment
         transaction.commit()
     }
 
     fun navigateToExistingAndDestroyCurrent(existingFragment: Fragment, fragmentToDestroy: Fragment) {
-        val fm = supportFragmentManager
-        val transaction = fm.beginTransaction()
-
-        // 1. Explicitly destroy the target fragment for maximum safety
-        transaction.remove(fragmentToDestroy)
-
-        // 2. Show the returning fragment
-        if (existingFragment.isAdded) {
-            transaction.show(existingFragment)
-
-            // Wake up the returning fragment's lifecycle
-            transaction.setMaxLifecycle(existingFragment, Lifecycle.State.RESUMED)
-        } else {
-            // Fallback: Add it if it somehow hasn't been added yet
-            transaction.add(R.id.fragmentContainer, existingFragment)
+        val coreTag = coreTagForFragment(existingFragment)
+        if (coreTag != null) {
+            val fm = supportFragmentManager
+            if (!fm.isStateSaved) {
+                fm.beginTransaction()
+                    .setReorderingAllowed(true)
+                    .remove(fragmentToDestroy)
+                    .commit()
+            }
+            navigateToCoreTag(coreTag)
+            return
         }
 
+        val fm = supportFragmentManager
+        if (fm.isStateSaved) {
+            return
+        }
+
+        val transaction = fm.beginTransaction().setReorderingAllowed(true)
+        transaction.remove(fragmentToDestroy)
+
+        if (existingFragment.isAdded) {
+            transaction.show(existingFragment)
+            transaction.setMaxLifecycle(existingFragment, Lifecycle.State.RESUMED)
+        } else {
+            transaction.add(
+                R.id.fragmentContainer,
+                existingFragment,
+                existingFragment.tag ?: buildOverlayTag(existingFragment)
+            )
+        }
+
+        activeFragment = existingFragment
         transaction.commit()
     }
 
     fun returnToCoreNavigation(fragmentToDestroy: Fragment) {
-        val prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE)
-        val lastTag = prefs.getString("last_fragment", "shows") ?: "shows"
-        
-        // Remove the sub-screen
-        supportFragmentManager.beginTransaction().remove(fragmentToDestroy).commit()
-        
-        // Simulate a click on the sidebar to restore styling and show the correct fragment
-        when (lastTag) {
-            "shows" -> findViewById<View>(R.id.sidebarBtnShows)?.performClick()
-            "anime" -> findViewById<View>(R.id.sidebarBtnAnime)?.performClick()
-            "profile" -> findViewById<View>(R.id.sidebarBtnProfile)?.performClick()
-            "watching" -> findViewById<View>(R.id.sidebarWatchListBtn)?.performClick()
-            "favorites" -> findViewById<View>(R.id.sidebarLabelFavorites)?.performClick()
-            "notifications" -> findViewById<View>(R.id.sidebarNotificationBtn)?.performClick()
-            "search" -> findViewById<View>(R.id.sidebarSearchBtn)?.performClick()
-            else -> findViewById<View>(R.id.sidebarBtnShows)?.performClick()
+        val fm = supportFragmentManager
+        if (fm.isStateSaved) {
+            return
         }
+
+        if (fragmentToDestroy.isAdded) {
+            fm.beginTransaction()
+                .setReorderingAllowed(true)
+                .remove(fragmentToDestroy)
+                .commit()
+        }
+
+        navigateToCoreTag(currentCoreTag)
+    }
+
+    private fun restoreFragmentReferences() {
+        val fm = supportFragmentManager
+        showsFragment = fm.findFragmentByTag(TAG_SHOWS) as? ShowsFragment
+        animeFragment = fm.findFragmentByTag(TAG_ANIME) as? AnimeFragment
+        profileFragment = fm.findFragmentByTag(TAG_PROFILE) as? ProfileFragment
+        watchingFragment = fm.findFragmentByTag(TAG_WATCHING) as? WatchingFragment
+        notificationFragment = fm.findFragmentByTag(TAG_NOTIFICATIONS) as? notificationFragment
+        searchFragment = fm.findFragmentByTag(TAG_SEARCH) as? SearchFragment
+    }
+
+    private fun createCoreFragment(tag: String): Fragment {
+        val fragment = when (tag) {
+            TAG_SHOWS -> ShowsFragment()
+            TAG_ANIME -> AnimeFragment()
+            TAG_PROFILE -> ProfileFragment()
+            TAG_WATCHING -> WatchingFragment()
+            TAG_FAVORITES -> FavoritesFragment()
+            TAG_NOTIFICATIONS -> notificationFragment()
+            TAG_SEARCH -> SearchFragment()
+            else -> ShowsFragment()
+        }
+
+        when (tag) {
+            TAG_SHOWS -> showsFragment = fragment as ShowsFragment
+            TAG_ANIME -> animeFragment = fragment as AnimeFragment
+            TAG_PROFILE -> profileFragment = fragment as ProfileFragment
+            TAG_WATCHING -> watchingFragment = fragment as WatchingFragment
+            TAG_NOTIFICATIONS -> notificationFragment = fragment as notificationFragment
+            TAG_SEARCH -> searchFragment = fragment as SearchFragment
+        }
+
+        return fragment
+    }
+
+    private fun buildOverlayTag(fragment: Fragment): String {
+        return fragment::class.java.name
+    }
+
+    private fun coreTagForFragment(fragment: Fragment): String? {
+        return when (fragment) {
+            is ShowsFragment -> TAG_SHOWS
+            is AnimeFragment -> TAG_ANIME
+            is ProfileFragment -> TAG_PROFILE
+            is WatchingFragment -> TAG_WATCHING
+            is FavoritesFragment -> TAG_FAVORITES
+            is notificationFragment -> TAG_NOTIFICATIONS
+            is SearchFragment -> TAG_SEARCH
+            else -> null
+        }
+    }
+
+    private fun normalizeCoreTag(tag: String?): String {
+        return if (tag != null && CORE_NAVIGATION_TAGS.contains(tag)) tag else TAG_SHOWS
+    }
+
+    private fun isCoreNavigationTag(tag: String?): Boolean {
+        return tag != null && CORE_NAVIGATION_TAGS.contains(tag)
+    }
+
+    private fun persistCoreTag(tag: String) {
+        getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+            .edit()
+            .putString(PREF_LAST_FRAGMENT, tag)
+            .apply()
+    }
+
+    private fun getPersistedCoreTag(): String {
+        val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+        return normalizeCoreTag(prefs.getString(PREF_LAST_FRAGMENT, TAG_SHOWS))
+    }
+
+    private fun findVisibleCoreTag(): String? {
+        return supportFragmentManager.fragments.firstOrNull {
+            it.isVisible && isCoreNavigationTag(it.tag)
+        }?.tag
+    }
+
+    companion object {
+        private const val PREFS_NAME = "AppPrefs"
+        private const val PREF_LAST_FRAGMENT = "last_fragment"
+
+        private const val TAG_SHOWS = "shows"
+        private const val TAG_ANIME = "anime"
+        private const val TAG_PROFILE = "profile"
+        private const val TAG_WATCHING = "watching"
+        private const val TAG_FAVORITES = "favorites"
+        private const val TAG_NOTIFICATIONS = "notifications"
+        private const val TAG_SEARCH = "search"
+
+        private val CORE_NAVIGATION_TAGS = setOf(
+            TAG_SHOWS,
+            TAG_ANIME,
+            TAG_PROFILE,
+            TAG_WATCHING,
+            TAG_FAVORITES,
+            TAG_NOTIFICATIONS,
+            TAG_SEARCH
+        )
     }
 }

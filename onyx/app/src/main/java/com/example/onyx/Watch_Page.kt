@@ -202,7 +202,6 @@ class Watch_Page : AppCompatActivity() {
                 showData(jsonObject)
 
             } catch (e: Exception) {
-
                 Log.e("Watch_Page", "Failed to fetch data", e)
                // LoadingAnimation.setup(this@Watch_Page, R.raw.error)
             }
@@ -628,10 +627,12 @@ class Watch_Page : AppCompatActivity() {
 
         // Auto-click the first button after layout is done
 
+        /*
         firstButton?.post {
             firstButton?.performClick()
             firstButton?.requestFocus()  // optional: also focus it visually
         }
+         */
 
     }
 
