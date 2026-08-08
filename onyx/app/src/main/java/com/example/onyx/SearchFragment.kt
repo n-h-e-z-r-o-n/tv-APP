@@ -1,18 +1,14 @@
 package com.example.onyx
 
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.WindowManager
-import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
-import androidx.appcompat.app.AppCompatActivity
+import android.widget.Toast
 import com.example.onyx.OnyxClasses.AnimeSearchItem
 import com.example.onyx.OnyxClasses.CustomKeyboardManager
 import com.example.onyx.OnyxClasses.OnSearchListener
@@ -24,15 +20,18 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.onyx.OnyxClasses.AnimeSearchAdapter
 import com.example.onyx.OnyxClasses.EqualSpaceItemDecoration
-import com.example.onyx.databinding.FragmentSearchBinding
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.net.HttpURLConnection
+import java.net.URLEncoder
 import androidx.fragment.app.Fragment
+import com.example.onyx.FetchData.AnimeApi
 import com.example.onyx.OnyxClasses.GridAdapter2
 import com.example.onyx.OnyxClasses.MovieItem
+import com.example.onyx.OnyxObjects.LoadingAnimation
 import com.google.android.material.button.MaterialButtonToggleGroup
 import org.json.JSONObject
+import java.nio.charset.StandardCharsets
 
 
 class SearchFragment :  Fragment(R.layout.fragment_search) {
@@ -45,6 +44,8 @@ class SearchFragment :  Fragment(R.layout.fragment_search) {
 
     private var urlHome = BuildConfig.A_K
     private var speechRecognizer: android.speech.SpeechRecognizer? = null
+
+    private lateinit var fetchAnimeAPI: AnimeApi
 
     private val requestPermissionLauncher = registerForActivityResult(
         androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
@@ -60,6 +61,9 @@ class SearchFragment :  Fragment(R.layout.fragment_search) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        fetchAnimeAPI = AnimeApi(requireActivity())
+
 
         view.viewTreeObserver.addOnGlobalFocusChangeListener { _, newFocus ->
             if (newFocus != null && view.findViewById<View>(newFocus.id) != null) {
@@ -92,7 +96,7 @@ class SearchFragment :  Fragment(R.layout.fragment_search) {
                         // Ensure view exists (scroll if needed)
                         val nextView = findViewByPosition(nextRowFirstPos)
                         return nextView ?: run {
-                            animeSearchRecyclerView.scrollToPosition(nextRowFirstPos)
+                            showSearchRecyclerView.scrollToPosition(nextRowFirstPos)
                             focused
                         }
                     }
@@ -163,9 +167,30 @@ class SearchFragment :  Fragment(R.layout.fragment_search) {
     }
 
 
+    private fun executeSearch(query: String) {
+        val searchTerm = query.trim()
+        if (searchTerm.isEmpty()) return
+
+        val toggleGroup = requireView().findViewById<MaterialButtonToggleGroup>(R.id.searchCategoryToggle)
+        when (toggleGroup.checkedButtonId) {
+            R.id.btnAnime -> searchAnimeFetch(searchTerm)
+            R.id.btnNormalShows -> searchShowsFetch(searchTerm)
+        }
+    }
+
+    private fun updateSearchHint() {
+        val searchInput = requireView().findViewById<EditText>(R.id.searchView)
+        val toggleGroup = requireView().findViewById<MaterialButtonToggleGroup>(R.id.searchCategoryToggle)
+        searchInput.hint = when (toggleGroup.checkedButtonId) {
+            R.id.btnNormalShows -> "Search for shows..."
+            else -> "Search for anime..."
+        }
+    }
+
     private  fun searchAnimeFetch(searchTerm:String){
         val searchTextDisplay = requireView().findViewById<TextView>(R.id.searchTextDisplay)
         val progressBar = requireView().findViewById<android.widget.ProgressBar>(R.id.searchProgressBar)
+        val encodedSearchTerm = URLEncoder.encode(searchTerm.trim(), StandardCharsets.UTF_8.toString())
         
         saveRecentSearch(searchTerm)
         requireView().findViewById<LinearLayout>(R.id.recentSearchesLayout).visibility = View.GONE
@@ -180,7 +205,12 @@ class SearchFragment :  Fragment(R.layout.fragment_search) {
             repeat(1) { attempt ->
                 var connection: HttpURLConnection? = null
                 try {
-                    val url = "$urlHome/api/v2/anime/search?q=$searchTerm&page=1"
+
+                    val jsonObject = fetchAnimeAPI.animeSearch(encodedSearchTerm)
+
+                    /*
+
+                    val url = "$urlHome/api/v2/anime/search?q=$encodedSearchTerm&page=1"
                     connection = URL(url).openConnection() as HttpURLConnection
                     connection.requestMethod = "GET"
                     connection.setRequestProperty("accept", "application/json")
@@ -189,6 +219,13 @@ class SearchFragment :  Fragment(R.layout.fragment_search) {
                     Log.e("ANIME_STATUS search", response.toString())
 
                     val jsonObject = org.json.JSONObject(response)
+
+                     */
+
+                    if (jsonObject == null) {
+                        return@launch
+                    }
+
                     Log.e("ANIME_STATUS search", jsonObject.toString())
                     val dataFetch = jsonObject.getJSONObject("data")
                     val  searchData = dataFetch.getJSONArray("animes")
@@ -251,6 +288,7 @@ class SearchFragment :  Fragment(R.layout.fragment_search) {
     private fun searchShowsFetch(searchTerm: String){
         val searchTextDisplay = requireView().findViewById<TextView>(R.id.searchTextDisplay)
         val progressBar = requireView().findViewById<android.widget.ProgressBar>(R.id.searchProgressBar)
+        val encodedSearchTerm = URLEncoder.encode(searchTerm.trim(), StandardCharsets.UTF_8.toString())
         
         saveRecentSearch(searchTerm)
         requireView().findViewById<LinearLayout>(R.id.recentSearchesLayout).visibility = View.GONE
@@ -269,7 +307,7 @@ class SearchFragment :  Fragment(R.layout.fragment_search) {
 
                     // --- Background work (network request) ---
                     val url =
-                        "https://api.themoviedb.org/3/search/multi?include_adult=false&query=$searchTerm"
+                        "https://api.themoviedb.org/3/search/multi?include_adult=false&query=$encodedSearchTerm"
                     connection = URL(url).openConnection() as HttpURLConnection
                     connection.requestMethod = "GET"
                     connection.setRequestProperty("accept", "application/json")
@@ -415,17 +453,12 @@ class SearchFragment :  Fragment(R.layout.fragment_search) {
         val prefs = requireActivity().getSharedPreferences("SearchPrefs", android.content.Context.MODE_PRIVATE)
         val savedCategoryId = prefs.getInt("category", R.id.btnAnime)
         toggleGroup.check(savedCategoryId)
-        
-        if (savedCategoryId == R.id.btnAnime) searchInput.hint = "Search for anime..."
-        else searchInput.hint = "Search for shows..."
+        updateSearchHint()
 
         toggleGroup.addOnButtonCheckedListener { _, checkedId, isChecked ->
             if (isChecked) {
                 prefs.edit().putInt("category", checkedId).apply()
-                when (checkedId) {
-                    R.id.btnAnime -> searchInput.hint = "Search for anime..."
-                    R.id.btnNormalShows -> searchInput.hint = "Search for shows..."
-                }
+                updateSearchHint()
             }
         }
 
@@ -438,20 +471,7 @@ class SearchFragment :  Fragment(R.layout.fragment_search) {
             keyboardLayout,
             object : OnSearchListener {
                 override fun EnterActionTrigger(query: String) {
-                    val searchTerm = query.trim()
-                    if (searchTerm.isNotEmpty()) {
-                        when (toggleGroup.checkedButtonId) {
-                            R.id.btnAnime -> {
-                                searchAnimeFetch(searchTerm)
-                            }
-                            R.id.btnNormalShows -> {
-                                searchShowsFetch(searchTerm)
-                            }
-                            else -> {
-                                // Fallback just in case (defaults to Anime)
-                            }
-                        }
-                    }
+                    executeSearch(query)
                 }
             }
         )
@@ -506,16 +526,15 @@ class SearchFragment :  Fragment(R.layout.fragment_search) {
             override fun onRmsChanged(rmsdB: Float) {}
             override fun onBufferReceived(buffer: ByteArray?) {}
             override fun onEndOfSpeech() {
-                val searchInput = requireView().findViewById<EditText>(R.id.searchView)
-                searchInput.hint = "Search for anime..."
+                updateSearchHint()
                 requireView().findViewById<android.widget.ImageButton>(R.id.btnVoiceSearch).clearColorFilter()
             }
             override fun onError(error: Int) {
-                val searchInput = requireView().findViewById<EditText>(R.id.searchView)
-                searchInput.hint = "Search for anime..."
+                updateSearchHint()
                 requireView().findViewById<android.widget.ImageButton>(R.id.btnVoiceSearch).clearColorFilter()
                 Log.e("VoiceSearch", "Error code: $error")
                 speechRecognizer?.destroy()
+                speechRecognizer = null
             }
             override fun onResults(results: Bundle?) {
                 val data = results?.getStringArrayList(android.speech.SpeechRecognizer.RESULTS_RECOGNITION)
@@ -523,15 +542,11 @@ class SearchFragment :  Fragment(R.layout.fragment_search) {
                     val spokenText = data[0]
                     val searchInput = requireView().findViewById<EditText>(R.id.searchView)
                     searchInput.setText(spokenText)
-                    
-                    val toggleGroup = requireView().findViewById<MaterialButtonToggleGroup>(R.id.searchCategoryToggle)
-                    when (toggleGroup.checkedButtonId) {
-                        R.id.btnAnime -> searchAnimeFetch(spokenText)
-                        R.id.btnNormalShows -> searchShowsFetch(spokenText)
-                        else -> {}
-                    }
+
+                    executeSearch(spokenText)
                 }
                 speechRecognizer?.destroy()
+                speechRecognizer = null
             }
             override fun onPartialResults(partialResults: Bundle?) {
                 val data = partialResults?.getStringArrayList(android.speech.SpeechRecognizer.RESULTS_RECOGNITION)
@@ -549,12 +564,15 @@ class SearchFragment :  Fragment(R.layout.fragment_search) {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     private fun saveRecentSearch(query: String) {
+        val normalizedQuery = query.trim()
+        if (normalizedQuery.isEmpty()) return
+
         val prefs = requireActivity().getSharedPreferences("SearchPrefs", android.content.Context.MODE_PRIVATE)
         val historyString = prefs.getString("history", "") ?: ""
         val historyList = historyString.split(",").filter { it.isNotBlank() }.toMutableList()
 
-        historyList.remove(query)
-        historyList.add(0, query)
+        historyList.removeAll { it.equals(normalizedQuery, ignoreCase = true) }
+        historyList.add(0, normalizedQuery)
 
         if (historyList.size > 10) {
             historyList.removeAt(historyList.size - 1)

@@ -263,6 +263,49 @@ class AnimeApi(private val context: Context) {
         }
     }
 
+    fun animeSearch(encodedSearchTerm: String): JSONObject? {
+        return runBlocking(Dispatchers.IO) {
+
+            var retryDelay = 2_000L
+
+            while (true) {
+                try {
+                    val url =
+                        "${BuildConfig.A_K}/api/v2/anime/search?q=$encodedSearchTerm&page=1"
+
+                    val result = makeRequest(url)
+
+                    if (result != null) {
+                        return@runBlocking result
+                    }
+
+                    Log.w(
+                        "ANIME_SEARCH",
+                        "Search returned null. Retrying in ${retryDelay}ms"
+                    )
+
+                } catch (e: CancellationException) {
+                    throw e
+
+                } catch (e: Exception) {
+                    Log.e(
+                        "ANIME_SEARCH",
+                        "Search request failed. Retrying in ${retryDelay}ms",
+                        e
+                    )
+                }
+
+                delay(retryDelay)
+
+                retryDelay = (retryDelay * 2)
+                    .coerceAtMost(30_000L)
+            }
+
+            @Suppress("UNREACHABLE_CODE")
+            null
+        }
+    }
+
     //GET Anime Episode Servers
     fun animeEpisodeServers(animeEpisodeId: String): JSONObject? {
         return runBlocking {
