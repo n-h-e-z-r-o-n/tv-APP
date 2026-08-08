@@ -48,9 +48,9 @@ import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import androidx.media3.datasource.HttpDataSource
+
 @UnstableApi
 class Video_payer : AppCompatActivity(), Player.Listener {
-
 
     // ── Show metadata ──────────────────────────────────────────────────────────
     private lateinit var db: AppDatabase
@@ -107,6 +107,9 @@ class Video_payer : AppCompatActivity(), Player.Listener {
     // ── Gesture detection ──────────────────────────────────────────────────────
     private var lastTapTime = 0L
     private var tapCount = 0
+
+    // ── Seek-feedback animation (guarded against overlap) ──────────────────────
+    private var seekFeedbackAnimation: Animation? = null
 
     // ── Progress tracking ──────────────────────────────────────────────────────
     /** Cached duration to avoid repeated player calls inside the 1-s tick */
@@ -200,7 +203,7 @@ class Video_payer : AppCompatActivity(), Player.Listener {
         saveContinueWatching()
         shouldResumePlaybackWhenReady =
             exoPlayer?.playWhenReady == true ||
-                (waitingForNetworkRecovery && shouldResumeAfterNetworkRecovery)
+                    (waitingForNetworkRecovery && shouldResumeAfterNetworkRecovery)
         exoPlayer?.pause()
         stopProgressTracking()
     }
@@ -225,6 +228,13 @@ class Video_payer : AppCompatActivity(), Player.Listener {
         stopBufferingWatchdog()
         bufferingWatchdogHandler.removeCallbacksAndMessages(null)
         bufferingWatchdogRunnable = null
+
+        // Cancel any in-flight seek-feedback animation so its listener can't
+        // touch views after the Activity starts tearing down.
+        seekFeedbackAnimation?.setAnimationListener(null)
+        seekFeedbackAnimation = null
+
+        playerView.setOnTouchListener(null)
 
         progressHandler.removeCallbacksAndMessages(null)
         playbackRetryHandler.removeCallbacksAndMessages(null)
@@ -276,14 +286,16 @@ class Video_payer : AppCompatActivity(), Player.Listener {
         showSNo      = intent.getStringExtra("showSNo")     ?: ""
         showENo      = intent.getStringExtra("showENo")     ?: ""
 
-        Log.d("Video_payer", "videoUrl=$videoUrl")
-        Log.d("Video_payer", "referer=$referer")
-        Log.d("Video_payer", "userAgent=$userAgent")
-        Log.d("Video_payer", "showId=$showId")
-        Log.d("Video_payer", "showType=$showType")
-        Log.d("Video_payer", "showTitle=$showTitle")
-        Log.d("Video_payer", "showSNo=$showSNo")
-        Log.d("Video_payer", "showENo=$showENo")
+        if (BuildConfig.DEBUG) {
+            Log.d("Video_payer", "videoUrl=$videoUrl")
+            Log.d("Video_payer", "referer=$referer")
+            Log.d("Video_payer", "userAgent=$userAgent")
+            Log.d("Video_payer", "showId=$showId")
+            Log.d("Video_payer", "showType=$showType")
+            Log.d("Video_payer", "showTitle=$showTitle")
+            Log.d("Video_payer", "showSNo=$showSNo")
+            Log.d("Video_payer", "showENo=$showENo")
+        }
 
         if (videoUrl.isEmpty()) {
             Toast.makeText(this, "No video URL provided", Toast.LENGTH_SHORT).show()
@@ -293,6 +305,11 @@ class Video_payer : AppCompatActivity(), Player.Listener {
 
         lifecycleScope.launch(Dispatchers.Main) {
             resumePosition = withContext(Dispatchers.IO) { fetchResumePosition() }
+
+            // Guard against the Activity being torn down while the DB lookup
+            // was in flight (e.g. rapid back-press).
+            if (isDestroyed || isFinishing) return@launch
+
             exoPlayer = buildPlayer(videoUrl)
             exoPlayer?.let { player ->
                 playerView.player = player
@@ -315,6 +332,11 @@ class Video_payer : AppCompatActivity(), Player.Listener {
         btnSettings.setOnClickListener  { showSettingsDialog() }
         btnClose.setOnClickListener     { finish() }
         btnFullscreen.setOnClickListener{ toggleFullscreen() }
+
+        // Touch taps for FF/rewind, in addition to the existing D-pad support below,
+        // so this also works on non-remote (phone/tablet) layouts.
+        btnFastForward.setOnClickListener { seekRelative(10_000); showSeekFeedback("+10s") }
+        btnRewind.setOnClickListener      { seekRelative(-10_000); showSeekFeedback("-10s") }
 
         btnFastForward.setOnKeyListener { _, keyCode, event ->
             if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER && event.action == KeyEvent.ACTION_DOWN) {
@@ -451,8 +473,6 @@ class Video_payer : AppCompatActivity(), Player.Listener {
             )
             .build()
 
-
-
         val player = ExoPlayer.Builder(this)
             .setRenderersFactory(renderersFactory)
             .setTrackSelector(trackSelector)
@@ -487,7 +507,10 @@ class Video_payer : AppCompatActivity(), Player.Listener {
     }
 
     private fun seekRelative(offsetMs: Long) {
-        exoPlayer?.let { it.seekTo((it.currentPosition + offsetMs).coerceAtLeast(0)) }
+        val player = exoPlayer ?: return
+        val duration = cachedDuration.takeIf { it > 0 } ?: player.duration.takeIf { it > 0 && it != C.TIME_UNSET }
+        val target = (player.currentPosition + offsetMs).coerceAtLeast(0)
+        player.seekTo(if (duration != null) target.coerceAtMost(duration) else target)
     }
 
     private fun toggleMute() {
@@ -495,8 +518,6 @@ class Video_payer : AppCompatActivity(), Player.Listener {
         exoPlayer?.volume = if (isMuted) 0f else 1f
         updateMuteButton()
     }
-
-
 
     private fun refreshVideo(resetAutoRefreshAttempts: Boolean = false) {
         val restartPosition = exoPlayer?.currentPosition ?: resumePosition
@@ -562,8 +583,8 @@ class Video_payer : AppCompatActivity(), Player.Listener {
                 Log.d(
                     "Auto_refresh",
                     "Buffer progressing: " +
-                        "${lastWatchdogBufferedPosition / 1000}s -> " +
-                        "${currentBufferedPosition / 1000}s"
+                            "${lastWatchdogBufferedPosition / 1000}s -> " +
+                            "${currentBufferedPosition / 1000}s"
                 )
 
                 lastWatchdogBufferedPosition = currentBufferedPosition
@@ -591,7 +612,7 @@ class Video_payer : AppCompatActivity(), Player.Listener {
                     Log.d(
                         "Auto_refresh",
                         "Buffer stalled for ${stalledForMs}ms, auto refresh " +
-                            "$autoRefreshCount/$maxAutoRefreshAttempts"
+                                "$autoRefreshCount/$maxAutoRefreshAttempts"
                     )
 
                     refreshVideo()
@@ -622,8 +643,6 @@ class Video_payer : AppCompatActivity(), Player.Listener {
         }
         bufferingWatchdogRunnable = null
     }
-
-
 
     // Player.Listener callbacks  (always called on the main thread by ExoPlayer)
     // ──────────────────────────────────────────────────────────────────────────
@@ -713,22 +732,18 @@ class Video_payer : AppCompatActivity(), Player.Listener {
                 schedulePlaybackRetry()
             }
 
-            httpCode == 401 ||
-                    httpCode == 403 ||
-                    httpCode == 410 -> {
-
+            httpCode == 401 || httpCode == 403 || httpCode == 410 -> {
+                // Source token/link has expired or is unauthorized. Retrying the
+                // *same* URL would just fail again, so we deliberately stop here
+                // instead of calling refreshVideo() — the caller needs to supply
+                // a freshly-signed URL (e.g. via a new Intent) rather than us
+                // looping on a dead link.
                 Log.d(
                     "onPlayerError",
                     "Source probably expired or is no longer authorized: HTTP $httpCode"
                 )
 
-                Toast.makeText(
-                    this,
-                    "Video Not Available.",
-                    Toast.LENGTH_SHORT
-                ).show()
-
-                //refreshVideo()
+                Toast.makeText(this, "Video Not Available.", Toast.LENGTH_SHORT).show()
             }
 
             else -> {
@@ -793,8 +808,7 @@ class Video_payer : AppCompatActivity(), Player.Listener {
 
         lastKnownPlaybackPosition = position
 
-        seekBar.progress =
-            (position * 1000 / duration).toInt()
+        seekBar.progress = (position * 1000 / duration).toInt()
 
         seekBar.secondaryProgress =
             (bufferedPosition * 1000 / duration)
@@ -933,8 +947,6 @@ class Video_payer : AppCompatActivity(), Player.Listener {
         )
     }
 
-
-
     private fun reloadVideo(player: ExoPlayer, startPositionMs: Long, autoPlay: Boolean) {
         resumePosition = 0
         player.stop()
@@ -956,8 +968,8 @@ class Video_payer : AppCompatActivity(), Player.Listener {
         val player = exoPlayer
         shouldResumeAfterNetworkRecovery =
             shouldResumePlaybackWhenReady &&
-                player != null &&
-                player.playbackState != Player.STATE_ENDED
+                    player != null &&
+                    player.playbackState != Player.STATE_ENDED
         lastKnownPlaybackPosition = player?.currentPosition ?: lastKnownPlaybackPosition
         waitingForNetworkRecovery = true
 
@@ -1069,7 +1081,16 @@ class Video_payer : AppCompatActivity(), Player.Listener {
         }
     }
 
+    /**
+     * Shows a brief "+10s"/"-10s" style overlay. Guarded so rapid double-taps
+     * don't stack multiple TextViews/animations with dangling listeners.
+     */
     private fun showSeekFeedback(text: String) {
+        // Cancel any animation still in flight so its onAnimationEnd callback
+        // can't fire after we've already swapped in a new view.
+        seekFeedbackAnimation?.setAnimationListener(null)
+        seekFeedbackAnimation = null
+
         centerOverlay.removeAllViews()
         val tv = TextView(this).apply {
             this.text = text
@@ -1080,16 +1101,22 @@ class Video_payer : AppCompatActivity(), Player.Listener {
         }
         centerOverlay.addView(tv)
         centerOverlay.visibility = View.VISIBLE
-        tv.startAnimation(AlphaAnimation(1f, 0f).apply {
+
+        val animation = AlphaAnimation(1f, 0f).apply {
             duration = 1000
             setAnimationListener(object : Animation.AnimationListener {
                 override fun onAnimationStart(a: Animation?) = Unit
                 override fun onAnimationRepeat(a: Animation?) = Unit
                 override fun onAnimationEnd(a: Animation?) {
-                    centerOverlay.visibility = View.GONE
+                    if (!isDestroyed && !isFinishing) {
+                        centerOverlay.visibility = View.GONE
+                    }
+                    seekFeedbackAnimation = null
                 }
             })
-        })
+        }
+        seekFeedbackAnimation = animation
+        tv.startAnimation(animation)
     }
 
     private fun updatePlayPauseButton() {
@@ -1184,6 +1211,20 @@ class Video_payer : AppCompatActivity(), Player.Listener {
     // ──────────────────────────────────────────────────────────────────────────
     // Quality management
     // ──────────────────────────────────────────────────────────────────────────
+    //
+    // labelForResolution() is the single source of truth for width/height ->
+    // "NNNp" bucketing, used both when enumerating available tracks and when
+    // reporting the currently-playing format. Previously this logic was
+    // duplicated (and could silently drift) across two functions.
+
+    private fun labelForResolution(width: Int, height: Int): String = when {
+        width >= 1920 && height >= 1080 -> "1080p"
+        width >= 1280 && height >= 720  -> "720p"
+        width >= 854  && height >= 480  -> "480p"
+        width >= 640  && height >= 360  -> "360p"
+        width >= 426  && height >= 240  -> "240p"
+        else -> "${height}p"
+    }
 
     private fun setVideoQuality(index: Int) {
         val player = exoPlayer ?: return
@@ -1224,14 +1265,8 @@ class Video_payer : AppCompatActivity(), Player.Listener {
 
     private fun getCurrentVideoQuality(): String {
         val fmt = exoPlayer?.videoFormat ?: return "Auto"
-        return when {
-            fmt.width >= 1920 && fmt.height >= 1080 -> "1080p"
-            fmt.width >= 1280 && fmt.height >= 720  -> "720p"
-            fmt.width >= 854  && fmt.height >= 480  -> "480p"
-            fmt.width >= 640  && fmt.height >= 360  -> "360p"
-            fmt.width >= 426  && fmt.height >= 240  -> "240p"
-            else                                    -> "Auto"
-        }
+        if (fmt.width <= 0 || fmt.height <= 0) return "Auto"
+        return labelForResolution(fmt.width, fmt.height)
     }
 
     private fun updateAvailableQualities(tracks: Tracks) {
@@ -1243,16 +1278,7 @@ class Video_payer : AppCompatActivity(), Player.Listener {
         val labels = (0 until videoGroup.length)
             .map { videoGroup.getTrackFormat(it) }
             .filter { it.width > 0 && it.height > 0 }
-            .map { fmt ->
-                when {
-                    fmt.width >= 1920 && fmt.height >= 1080 -> "1080p"
-                    fmt.width >= 1280 && fmt.height >= 720  -> "720p"
-                    fmt.width >= 854  && fmt.height >= 480  -> "480p"
-                    fmt.width >= 640  && fmt.height >= 360  -> "360p"
-                    fmt.width >= 426  && fmt.height >= 240  -> "240p"
-                    else -> "${fmt.height}p"
-                }
-            }
+            .map { fmt -> labelForResolution(fmt.width, fmt.height) }
             .distinct()
             .sortedByDescending { it.removeSuffix("p").toIntOrNull() ?: 0 }
 

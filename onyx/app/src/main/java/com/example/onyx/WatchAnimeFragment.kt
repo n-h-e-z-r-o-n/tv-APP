@@ -164,11 +164,8 @@ class WatchAnimeFragment : Fragment(R.layout.fragment_watch_anime_page) {
 
     override fun onDestroy() {
         super.onDestroy()
-
-        // Cancel any running coroutines
         lifecycleScope.coroutineContext.cancelChildren()
 
-        // Remove all handler callbacks
     }
 
 
@@ -308,7 +305,7 @@ class WatchAnimeFragment : Fragment(R.layout.fragment_watch_anime_page) {
 
 
         setupFavoriteButton(
-            animeId = "-$id",
+            Id = "-$id",
             name = name,
             type = type,
             anilistId = anilistId,
@@ -327,8 +324,6 @@ class WatchAnimeFragment : Fragment(R.layout.fragment_watch_anime_page) {
 
 
         showRecommendation(relatedAnimes, recommendedAnime)
-
-
 
     }
 
@@ -512,26 +507,6 @@ class WatchAnimeFragment : Fragment(R.layout.fragment_watch_anime_page) {
             .into(posterWidget)
 
 
-        setupFavoriteButton(
-            animeId = "-$id",
-            name = name,
-            type = type,
-            anilistId = anilistId,
-            malId = malId,
-            description = description,
-            rating = rating,
-            quality = quality,
-            duration = duration,
-            backdrop = backdrop,
-            sub=sub,
-            dub=dub,
-            aired=aired,
-            genre=genre,
-            seasons = seasons.toString()
-        )
-
-
-
     }
 
 
@@ -609,7 +584,7 @@ class WatchAnimeFragment : Fragment(R.layout.fragment_watch_anime_page) {
 
 
     private fun setupFavoriteButton(
-        animeId :String,
+        Id :String,
         name:String,
         type :String,
         anilistId :String,
@@ -628,17 +603,10 @@ class WatchAnimeFragment : Fragment(R.layout.fragment_watch_anime_page) {
 
     ) {
         val userId = sm.getUserId()
-
-
         favoriteButton.requestFocus()
-
-
         val seasonsArray = try {
-
             JSONArray(seasons)
-
         } catch (e: Exception) {
-
             Log.e(
                 "AnimeFavorite",
                 "Failed to parse seasons",
@@ -653,7 +621,7 @@ class WatchAnimeFragment : Fragment(R.layout.fragment_watch_anime_page) {
         @RequiresApi(Build.VERSION_CODES.O)
         fun applyIcon() {
             viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
-                val isFav = withContext(Dispatchers.IO) { db.isFavoriteAnime(userId, animeId) }
+                val isFav = withContext(Dispatchers.IO) { db.isFavoriteAnime(userId, Id) }
                 if (isFav) {
                     favoriteButtonImg.setImageResource(R.drawable.ic_tickfave)
                     favoriteButtonImg.imageTintList =
@@ -681,24 +649,6 @@ class WatchAnimeFragment : Fragment(R.layout.fragment_watch_anime_page) {
                             db.removeFavoriteAnime(userId, "-$seasonId")
                         }
                     } else {
-                        db.addFavoriteAnime(
-                            userId,
-                            animeId,
-                            name,
-                            type,
-                            anilistId,
-                            malId,
-                            description,
-                            rating,
-                            quality,
-                            duration,
-                            poster,
-                            sub,
-                            dub,
-                            aired,
-                            genre,
-                            seasons
-                        )
 
                         for (i in 0 until seasonsArray.length()) {
                             val season = seasonsArray.getJSONObject(i)
@@ -732,7 +682,6 @@ class WatchAnimeFragment : Fragment(R.layout.fragment_watch_anime_page) {
                                 genre,
                                 seasons
                             )
-
                         }
                     }
                 }

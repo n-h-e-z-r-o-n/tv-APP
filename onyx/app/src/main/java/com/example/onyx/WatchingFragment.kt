@@ -76,6 +76,29 @@ class WatchingFragment : Fragment(R.layout.fragment_watching) {
         }
     }
 
+    private fun filterLatestPerSeries(items: List<HashMap<String, String>>): List<HashMap<String, String>> {
+        val seenKeys = mutableSetOf<String>()
+
+        return items
+            .sortedByDescending { it["updated_at"]?.toLongOrNull() ?: 0L }
+            .filter { item ->
+                seenKeys.add(getSeriesKey(item))
+            }
+    }
+
+    private fun getSeriesKey(item: HashMap<String, String>): String {
+        val type = item["type"].orEmpty()
+        val itemId = item["item_id"].orEmpty()
+        val title = item["title"].orEmpty().trim()
+        val seasonId = item["season_number"].orEmpty()
+
+        return when (type) {
+            "tv" -> itemId.substringBefore("_S").ifBlank { title.ifBlank { itemId } }
+            "anime" -> title.ifBlank { seasonId.ifBlank { itemId } }
+            else -> itemId.ifBlank { title }
+        }
+    }
+
     private fun showsWatchedList() {
         viewLifecycleOwner.lifecycleScope.launch {
             val userId = sm.getUserId()
@@ -87,9 +110,7 @@ class WatchingFragment : Fragment(R.layout.fragment_watching) {
                     mv.await() to tv.await()
                 }
             }
-            // Combine + sort
-            val combinedList = (movies + tvShows)
-                .sortedByDescending { it["updated_at"]?.toLongOrNull() ?: 0L }
+            val combinedList = filterLatestPerSeries(movies + tvShows)
             withContext(Dispatchers.Main) {
                 if (!isAdded || view == null) return@withContext
                 if (combinedList.isNotEmpty()) {
@@ -135,7 +156,7 @@ class WatchingFragment : Fragment(R.layout.fragment_watching) {
             val userId = sm.getUserId()
             val cWatching = withContext(Dispatchers.IO) {
                 val mv = async { db.getContinueWatchingAll(userId, "anime") }
-                mv.await()
+                filterLatestPerSeries(mv.await())
             }
             withContext(Dispatchers.Main) {
                 if (!isAdded || view == null) return@withContext
@@ -143,7 +164,7 @@ class WatchingFragment : Fragment(R.layout.fragment_watching) {
                     animeWatchingSection.visibility = View.VISIBLE
                     if (!::animeWatchAdapter.isInitialized) {
                         animeWatchAdapter = cWatchingAdapter(
-                            cWatching,
+                            cWatching.toMutableList(),
                             R.layout.item_watched
                         )
                         animeWatchingRecycler.adapter = animeWatchAdapter

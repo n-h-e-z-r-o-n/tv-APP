@@ -119,6 +119,7 @@ class FavoritesFragment : Fragment(R.layout.fragment_favorites) {
             } else {
                 binding.emptyStateText.visibility = View.GONE
                 binding.favoritesSection.visibility = View.VISIBLE
+                binding.favoritesCount.text = items.size.toString()
 
                 if (!::favoritesAdapter.isInitialized) {
                     favoritesAdapter = FavAdapter(items.toMutableList(), R.layout.square_card)

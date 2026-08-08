@@ -581,29 +581,29 @@ class SearchFragment :  Fragment(R.layout.fragment_search) {
         recentLayout.visibility = View.VISIBLE
         searchTextDisplay.visibility = View.GONE
         container.removeAllViews()
-        
+
+        val inflater = LayoutInflater.from(requireContext())
+        val rootView = requireView()
+
         for (term in historyList) {
-            val btn = com.google.android.material.button.MaterialButton(requireContext(), null, com.google.android.material.R.attr.materialButtonOutlinedStyle)
-            btn.text = term
-            btn.setTextColor(android.graphics.Color.WHITE)
-            btn.backgroundTintList = android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#333333"))
+            val recentSearchView = inflater.inflate(R.layout.item_recent_search, container, false)
+            val titleView = recentSearchView.findViewById<TextView>(R.id.searchTitle)
+
+            titleView.text = term
+
             
-            val params = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT)
-            params.setMargins(0, 0, (10 * resources.displayMetrics.density).toInt(), 0)
-            btn.layoutParams = params
-            
-            btn.setOnClickListener {
-                val searchInput = requireView().findViewById<EditText>(R.id.searchView)
+            recentSearchView.setOnClickListener {
+                val searchInput = rootView.findViewById<EditText>(R.id.searchView)
                 searchInput.setText(term)
-                
-                val toggleGroup = requireView().findViewById<MaterialButtonToggleGroup>(R.id.searchCategoryToggle)
+
+                val toggleGroup = rootView.findViewById<MaterialButtonToggleGroup>(R.id.searchCategoryToggle)
                 when (toggleGroup.checkedButtonId) {
                     R.id.btnAnime -> searchAnimeFetch(term)
                     R.id.btnNormalShows -> searchShowsFetch(term)
                     else -> {}
                 }
             }
-            container.addView(btn)
+            container.addView(recentSearchView)
         }
     }
 

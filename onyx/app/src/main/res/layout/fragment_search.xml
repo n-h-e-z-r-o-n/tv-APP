@@ -157,33 +157,38 @@
 
             <LinearLayout
                 android:id="@+id/recentSearchesLayout"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:layout_marginTop="10dp"
-                android:visibility="gone">
+                android:layout_gravity="center_horizontal"
+                android:visibility="visible">
+
 
                 <TextView
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="7dp"
+                    android:fontFamily="serif"
+                    android:shadowColor="#000000"
+                    android:shadowDx="1"
+                    android:shadowDy="1"
+                    android:shadowRadius="2"
+                    android:layout_gravity="center_horizontal"
                     android:text="Recent Searches"
                     android:textColor="#FFFFFF"
                     android:textSize="20sp"
                     android:textStyle="bold"
-                    android:fontFamily="serif" />
+                    tools:ignore="HardcodedText,RtlSymmetry,TextContrastCheck" />
 
-                <HorizontalScrollView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:scrollbars="none">
 
                     <LinearLayout
+                        android:layout_marginTop="10dp"
                         android:id="@+id/recentSearchesContainer"
-                        android:layout_width="wrap_content"
+                        android:layout_width="match_parent"
+                        android:gravity="center"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal" />
-                </HorizontalScrollView>
+                        android:orientation="vertical" />
             </LinearLayout>
 
             <TextView

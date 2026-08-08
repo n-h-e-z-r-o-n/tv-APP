@@ -477,6 +477,10 @@ class AnimeFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             repeat(3) { attempt ->
                 try {
+
+                    val jsonObject = withContext(Dispatchers.IO) { fetchAnimeAPI.animeDubbed(pageToLoad) }
+
+                   /*
                     val url = "$urlHome/api/v2/anime/dubbed?page=$pageToLoad"
                     val connection = URL(url).openConnection() as HttpURLConnection
                     connection.requestMethod = "GET"
@@ -491,6 +495,14 @@ class AnimeFragment : Fragment() {
                     connection.disconnect()
 
                     val dubbedAnime = org.json.JSONObject(response).getJSONObject("data").getJSONArray("animes")
+
+                    */
+
+                    if (jsonObject == null) {
+                        return@launch
+                    }
+
+                    val dubbedAnime = jsonObject.getJSONObject("data").getJSONArray("animes")
                     
                     if (dubbedAnime.length() == 0) {
                         val isInitialLoad = dubbedAdapter.itemCount <= 1

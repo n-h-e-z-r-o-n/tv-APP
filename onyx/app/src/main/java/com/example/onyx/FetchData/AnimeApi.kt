@@ -5,7 +5,9 @@ import android.util.Log
 import com.example.onyx.BuildConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import org.json.JSONException
 import org.json.JSONObject
 import java.io.IOException
@@ -13,6 +15,7 @@ import java.net.HttpURLConnection
 import java.net.SocketTimeoutException
 import java.net.URL
 import java.net.UnknownHostException
+import kotlin.coroutines.cancellation.CancellationException
 
 class AnimeApi(private val context: Context) {
 
@@ -58,7 +61,7 @@ class AnimeApi(private val context: Context) {
     }
 
     //Anime Home
-    fun animeHome(): JSONObject? {
+    fun animeHome_old(): JSONObject? {
         return runBlocking {
             async(Dispatchers.IO) {
                 val url = "${BuildConfig.A_K}/api/v2/anime/home"
@@ -67,8 +70,49 @@ class AnimeApi(private val context: Context) {
         }
     }
 
+
+    fun animeHome(): JSONObject? {
+        return runBlocking(Dispatchers.IO) {
+
+            var retryDelay = 2_000L
+
+            while (true) {
+                try {
+                    val url = "${BuildConfig.A_K}/api/v2/anime/home"
+
+                    val result = makeRequest(url)
+
+                    if (result != null) {
+                        return@runBlocking result
+                    }
+
+                    Log.w(
+                        "ANIME_HOME_API",
+                        "Request returned null. Retrying in ${retryDelay}ms"
+                    )
+
+                } catch (e: CancellationException) {
+                    throw e
+
+                } catch (e: Exception) {
+                    Log.e(
+                        "ANIME_HOME_API",
+                        "Request failed. Retrying in ${retryDelay}ms",
+                        e
+                    )
+                }
+                delay(retryDelay)
+                retryDelay = (retryDelay * 2)
+                    .coerceAtMost(30_000L)
+            }
+
+            @Suppress("UNREACHABLE_CODE")
+            null
+        }
+    }
+
     //Anime About Info
-    fun animeInfo(animeId: String): JSONObject? {
+    fun animeInfo_old(animeId: String): JSONObject? {
         return runBlocking {
             async(Dispatchers.IO) {
                 val url = "${BuildConfig.A_K}/api/v2/anime/anime/$animeId"
@@ -77,13 +121,145 @@ class AnimeApi(private val context: Context) {
         }
     }
 
+    fun animeInfo(animeId: String): JSONObject? {
+        return runBlocking(Dispatchers.IO) {
+            var retryDelay = 2_000L
+            while (true) {
+                try {
+                    val url = "${BuildConfig.A_K}/api/v2/anime/anime/$animeId"
+                    val result = makeRequest(url)
+                    if (result != null) {
+                        Log.w(
+                            "ANIME_INFO_API",
+                            "Request success $animeId. data ${result}ms"
+                        )
+                        return@runBlocking result
+                    }
+
+                    Log.w(
+                        "ANIME_INFO_API",
+                        "Request returned null for $animeId. Retrying in ${retryDelay}ms"
+                    )
+
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    Log.e(
+                        "ANIME_INFO_API",
+                        "Request failed for $animeId. Retrying in ${retryDelay}ms",
+                        e
+                    )
+                }
+
+                delay(retryDelay)
+
+                retryDelay = (retryDelay * 2)
+                    .coerceAtMost(30_000L)
+            }
+
+            @Suppress("UNREACHABLE_CODE")
+            null
+        }
+    }
+
+
+
     //Anime Episodes
-    fun animeEpisodes(season_id: String): JSONObject? {
+    fun animeEpisodes_old(season_id: String): JSONObject? {
         return runBlocking {
             async(Dispatchers.IO) {
                 val url = "${BuildConfig.A_K}/api/v2/anime/anime/$season_id/episodes"
                 makeRequest(url)
             }.await()
+        }
+    }
+
+    fun animeEpisodes(seasonId: String): JSONObject? {
+        return runBlocking(Dispatchers.IO) {
+
+            var retryDelay = 2_000L
+
+            while (true) {
+                try {
+                    val url =
+                        "${BuildConfig.A_K}/api/v2/anime/anime/$seasonId/episodes"
+
+                    val result = makeRequest(url)
+
+                    if (result != null) {
+                        return@runBlocking result
+                    }
+
+                    Log.w(
+                        "ANIME_EPISODES_API",
+                        "Request returned null for $seasonId. Retrying in ${retryDelay}ms"
+                    )
+
+                } catch (e: CancellationException) {
+                    throw e
+
+                } catch (e: Exception) {
+                    Log.e(
+                        "ANIME_EPISODES_API",
+                        "Request failed for $seasonId. Retrying in ${retryDelay}ms",
+                        e
+                    )
+                }
+
+                delay(retryDelay)
+                retryDelay = (retryDelay * 2)
+                    .coerceAtMost(30_000L)
+            }
+
+            @Suppress("UNREACHABLE_CODE")
+            null
+        }
+    }
+
+
+
+
+    //
+
+    fun animeDubbed(pageToLoad: Int): JSONObject? {
+        return runBlocking(Dispatchers.IO) {
+
+            var retryDelay = 2_000L
+
+            while (true) {
+                try {
+                    val url = "${BuildConfig.A_K}/api/v2/anime/dubbed?page=$pageToLoad"
+
+                    val result = makeRequest(url)
+
+                    if (result != null) {
+                        return@runBlocking result
+                    }
+
+                    Log.w(
+                        "ANIME_DUBBED",
+                        "Request returned null for page $pageToLoad. Retrying in ${retryDelay}ms"
+                    )
+
+                } catch (e: CancellationException) {
+                    throw e
+
+                } catch (e: Exception) {
+                    Log.e(
+                        "ANIME_DUBBED",
+                        "Request failed for page $pageToLoad. Retrying in ${retryDelay}ms",
+                        e
+                    )
+                }
+
+                delay(retryDelay)
+
+                retryDelay = (retryDelay * 2)
+                    .coerceAtMost(30_000L)
+            }
+
+            @Suppress("UNREACHABLE_CODE")
+            null
         }
     }
 

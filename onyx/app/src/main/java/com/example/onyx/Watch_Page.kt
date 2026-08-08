@@ -984,8 +984,6 @@ class Watch_Page : AppCompatActivity() {
     }
 
 
-
-
     private fun setupFavoriteButton(
         showId :String,
         type :String,
@@ -1005,9 +1003,7 @@ class Watch_Page : AppCompatActivity() {
     ) {
 
         val faveButtonImg = findViewById<ImageView>(R.id.favoriteButtonImg)
-
         val userId = sm.getUserId()
-
 
         @RequiresApi(Build.VERSION_CODES.O)
         fun applyIcon() {
@@ -1028,6 +1024,7 @@ class Watch_Page : AppCompatActivity() {
         applyIcon()
 
         faveButton.setOnClickListener {
+            GlobalUtils.favoritesStateHasChanged  = true
             lifecycleScope.launch(Dispatchers.Main) {
                 withContext(Dispatchers.IO) {
                     val isFav = db.isFavoriteShow(userId, showId, type)
@@ -1068,9 +1065,7 @@ class Watch_Page : AppCompatActivity() {
 
         val builder = android.app.AlertDialog.Builder(this, R.style.CustomDialogTheme)
         builder.setTitle("Select a Streaming Server (Powered by Third Parties)")
-
             .setSingleChoiceItems(servers.toTypedArray(), StreamingLinks.getSavedServerIndex(this)) { dialog, which ->
-
                 // Save selection immediately
                 StreamingLinks.saveServerIndex(this, which)
                 currentServerIndex = which
@@ -1086,14 +1081,8 @@ class Watch_Page : AppCompatActivity() {
     private fun setupBackPressedCallback() {
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-
-
                      // Cancel any running coroutines
                      lifecycleScope.coroutineContext.cancelChildren()
-
-                     // Remove all handler callbacks
-
-
                     // If controls are hidden, exit the video player
                     finish()
 

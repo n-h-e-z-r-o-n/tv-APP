@@ -51,13 +51,12 @@ tools:context=".Anime_Video_Player">
         android:layout_width="300dp"
         android:visibility="gone"
         android:layout_height="match_parent"
-        android:background="?attr/transparentEffect">
+        android:background="@drawable/overlay_left_gradient_bg">
 
         <View
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@drawable/overlay_left_gradient_bg"
-          />
+            android:background="@drawable/overlay_left_gradient_bg"/>
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -87,7 +86,7 @@ tools:context=".Anime_Video_Player">
                 android:fontFamily="@font/q"
                 android:layout_marginTop="10dp"
                 android:textColor="@android:color/white"
-                android:textSize="22sp"
+                android:textSize="20sp"
                 android:gravity="left"
                 android:shadowColor="#000000"
                 android:shadowDx="1"

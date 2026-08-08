@@ -1,16 +1,7 @@
 package com.example.onyx
 
-import android.animation.ValueAnimator
 import android.content.Intent
-import android.graphics.Color
-import android.graphics.LinearGradient
-import android.graphics.Matrix
-import android.graphics.Shader
 import android.os.Bundle
-import android.util.Log
-import android.view.View
-import android.view.animation.OvershootInterpolator
-import android.webkit.WebView
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.enableEdgeToEdge
@@ -20,79 +11,96 @@ import androidx.lifecycle.lifecycleScope
 import com.example.onyx.Database.SessionManger
 import com.example.onyx.OnyxObjects.GlobalUtils
 import com.example.onyx.OnyxObjects.NotificationHelper
-import com.example.onyx.OnyxObjects.StreamingLinks
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-
-
+import java.time.LocalDate
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var  sm: SessionManger
+    private var keepSplashVisible = true
+    private var hasNavigated = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        installSplashScreen()
+        val splashScreen = installSplashScreen()
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        splashScreen.setKeepOnScreenCondition { keepSplashVisible }
+
         GlobalUtils.applyTheme(this)
         setContentView(R.layout.activity_main)
         supportActionBar?.hide()
         setupBackPressedCallback()
 
         val logo: TextView = findViewById(R.id.mediaTxt)
-
-        GlobalUtils.animateGradientTextString(logo, "#BEBEBE", "#FFFFFF" )
+        GlobalUtils.animateGradientTextString(logo, "#000000", "#FFFFFF")
         GlobalUtils.hideSystemUI(this)
 
-
-        ////////////////////////////////////////////////////////////////////////////////////////////
-
-
-        ////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-
-
-        /**/
-        lifecycleScope.launch {
-
-            // 1️⃣ Wait until restore finishes (runs on IO thread)
-            withContext(Dispatchers.IO) {
-
-                NotificationHelper.getTvNotifications(this@MainActivity)
-                NotificationHelper.getAnimeNotifications(this@MainActivity)
-
-                GlobalUtils.autoRestoreDatabaseIfNeeded(this@MainActivity)
-            }
-
-            delay(1000)
-
-            if (!GlobalUtils.isTv(this@MainActivity)) {
-
-                //sm = SessionManger(this@MainActivity)
-                //sm.saveUserId(1453)
-                    //sm.saveAvatar("profile_avatars/1.png")
-                //startActivity(Intent(this@MainActivity, Instraction::class.java))
-
-                //val r = GlobalUtils.ipCheck(this@MainActivity)
-                //startActivity(Intent(this@MainActivity, Login_Page::class.java))
-                //finish()
-
-            } else {
-                val r = GlobalUtils.ipCheck(this@MainActivity)
-                startActivity(Intent(this@MainActivity, Login_Page::class.java))
-                finish()
-            }
-        }
-
-        //startActivity(Intent(this@MainActivity, Watch_Page::class.java))
+        startStartupFlow()
     }
 
+    private fun startStartupFlow() {
+        lifecycleScope.launch {
+            withContext(Dispatchers.IO) {
+                GlobalUtils.autoRestoreDatabaseIfNeeded(applicationContext)
+            }
 
-    // This ensures the UI stays hidden when the activity regains focus
+            val hasSession = SessionManger(this@MainActivity).getUserId() != -1
+
+            keepSplashVisible = false
+            warmStartupData(hasSession)
+            delay(5000)
+            navigateToNextScreen(hasSession)
+
+        }
+    }
+
+    private fun navigateToNextScreen(hasSession: Boolean) {
+        if (hasNavigated || isFinishing || isDestroyed) return
+        hasNavigated = true
+
+        val destination = if (hasSession) {
+            HomeActivity::class.java
+        } else {
+            Login_Page::class.java
+        }
+
+        startActivity(Intent(this, destination))
+        finish()
+    }
+
+    private fun warmStartupData(hasSession: Boolean) {
+        CoroutineScope(Dispatchers.IO).launch {
+
+            if (GlobalUtils.getSavedCountryCode(applicationContext).isBlank()) {
+                runCatching { GlobalUtils.ipCheck(applicationContext) }
+            }
+
+            if (hasSession && shouldRunDailyNotificationCheck()) {
+                runCatching { NotificationHelper.getTvNotifications(applicationContext) }
+                runCatching { NotificationHelper.getAnimeNotifications(applicationContext) }
+                markDailyNotificationCheckRan()
+            }
+        }
+    }
+
+    private fun shouldRunDailyNotificationCheck(): Boolean {
+        val prefs = getSharedPreferences(STARTUP_PREFS, MODE_PRIVATE)
+        val lastRunDate = prefs.getString(KEY_LAST_NOTIFICATION_CHECK_DATE, "") ?: ""
+        val today = LocalDate.now().toString()
+        return lastRunDate != today
+    }
+
+    private fun markDailyNotificationCheckRan() {
+        val today = LocalDate.now().toString()
+        getSharedPreferences(STARTUP_PREFS, MODE_PRIVATE)
+            .edit()
+            .putString(KEY_LAST_NOTIFICATION_CHECK_DATE, today)
+            .apply()
+    }
+
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus) {
@@ -100,9 +108,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-
-
-    // This handles when the immersive mode is interrupted
     override fun onResume() {
         super.onResume()
         GlobalUtils.hideSystemUI(this)
@@ -113,5 +118,10 @@ class MainActivity : AppCompatActivity() {
             override fun handleOnBackPressed() {
             }
         })
+    }
+
+    companion object {
+        private const val STARTUP_PREFS = "MAIN_ACTIVITY_STARTUP"
+        private const val KEY_LAST_NOTIFICATION_CHECK_DATE = "LAST_NOTIFICATION_CHECK_DATE"
     }
 }

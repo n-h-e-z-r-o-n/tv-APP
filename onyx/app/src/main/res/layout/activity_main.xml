@@ -6,47 +6,26 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-
-
-        <!-- Logo -->
-        <ImageView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:contentDescription="@string/app_name"
-            android:src="@drawable/splash_img"
-            app:layout_constraintDimensionRatio="1.5"
-            tools:ignore="ContentDescription"
-            android:adjustViewBounds="true"
-            android:scaleType="fitXY"
-            />
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:adjustViewBounds="true"
+        android:contentDescription="@string/app_name"
+        android:scaleType="fitXY"
+        android:src="@drawable/splash_img"
+        app:layout_constraintDimensionRatio="1.5"
+        tools:ignore="ContentDescription" />
 
     <View
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#40042c40"/>
+        android:background="#E9042C40" />
 
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="#40042c40"/>
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="#90042c40"/>
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="#90042c40"/>
-
-
-    <!-- Loading Animation -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_gravity="center"
-        android:gravity="center" >
+        android:gravity="center">
 
         <TextView
             android:id="@+id/onyxTitle"
@@ -68,58 +47,53 @@
     </LinearLayout>
 
     <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="10dp"
+        android:gravity="center"
+        android:orientation="vertical"
+        tools:ignore="UseCompoundDrawables">
+
+        <TextView
+            android:id="@+id/mediaTxt"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="bottom|center_horizontal"
-            android:orientation="vertical"
-            android:layout_marginBottom="10dp"
-            android:gravity="center"
-            android:alpha="0.7"
-            tools:ignore="UseCompoundDrawables">
+            android:layout_marginBottom="15dp"
+            android:fontFamily="@font/p"
+            android:text="&#169;2026 PULSEFLIX MEDIA GROUP"
+            android:textColor="#000000"
+            android:textSize="13sp"
+            tools:ignore="HardcodedText" />
 
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
 
+            <ImageView
+                android:layout_width="15dp"
+                android:layout_height="15dp"
+                android:layout_marginHorizontal="15dp"
+                android:src="@drawable/ic_movie"
+                app:tint="@android:color/white"
+                tools:ignore="ContentDescription" />
 
-            <TextView
-                android:id="@+id/mediaTxt"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="©2026 PULSEFLIX MEDIA GROUP"
-                android:textColor="#FFFFFF"
-                android:textSize="13sp"
-                android:fontFamily="@font/p"
-                tools:ignore="HardcodedText"
-                android:layout_marginBottom="15dp"/>
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                >
-                <ImageView
-                    android:layout_width="15dp"
-                    android:layout_height="15dp"
-                    android:src="@drawable/ic_movie"
-                    tools:ignore="ContentDescription"
-                    app:tint="@android:color/white"
-                    android:layout_marginHorizontal="15dp"/>
-                <ImageView
-                    android:layout_width="15dp"
-                    android:layout_height="15dp"
-                    android:src="@drawable/ic_laptop"
-                    tools:ignore="ContentDescription"
-                    app:tint="@android:color/white"
-                    android:layout_marginHorizontal="15dp"/>
-                <ImageView
-                    android:layout_width="15dp"
-                    android:layout_height="15dp"
-                    android:src="@drawable/ic_tv"
-                    tools:ignore="ContentDescription"
-                    app:tint="@android:color/white"
-                    android:layout_marginHorizontal="15dp"/>
-            </LinearLayout>
+            <ImageView
+                android:layout_width="15dp"
+                android:layout_height="15dp"
+                android:layout_marginHorizontal="15dp"
+                android:src="@drawable/ic_laptop"
+                app:tint="@android:color/white"
+                tools:ignore="ContentDescription" />
+
+            <ImageView
+                android:layout_width="15dp"
+                android:layout_height="15dp"
+                android:layout_marginHorizontal="15dp"
+                android:src="@drawable/ic_tv"
+                app:tint="@android:color/white"
+                tools:ignore="ContentDescription" />
         </LinearLayout>
-
-
-
-
-
+    </LinearLayout>
 
 </FrameLayout>
