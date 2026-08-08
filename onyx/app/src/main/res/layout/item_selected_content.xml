@@ -36,8 +36,7 @@
         android:focusableInTouchMode="false"
         app:cardElevation="0dp"
         android:id="@+id/currentContent"
-        app:cardBackgroundColor="?attr/BG_color"
-        >
+        app:cardBackgroundColor="?attr/BG_color">
 
         <FrameLayout
             android:layout_width="wrap_content"
@@ -63,6 +62,7 @@
                 tools:ignore="ContentDescription" />
 
             <LinearLayout
+                android:id="@+id/blurContainerLeft"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_gravity="center"
@@ -71,10 +71,12 @@
                 android:gravity="center"/>
 
             <LinearLayout
+                android:id="@+id/blurContainerBottom"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:background="@drawable/overlay_bottom_gradient_bg"
-                android:layout_gravity="bottom"/>
+                android:layout_gravity="bottom"
+                android:orientation="horizontal" />
 
         </FrameLayout>
 

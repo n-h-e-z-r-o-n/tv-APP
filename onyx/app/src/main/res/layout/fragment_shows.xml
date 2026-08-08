@@ -443,12 +443,38 @@
                                         </LinearLayout>
                                     </LinearLayout>
 
-                                    <androidx.recyclerview.widget.RecyclerView
-                                        android:id="@+id/genresRecyclerView"
+
+
+                                    <FrameLayout
                                         android:layout_width="match_parent"
                                         android:layout_height="wrap_content"
-                                        android:scrollbars="none"
-                                        tools:ignore="RtlSymmetry" />
+                                        android:layout_gravity="bottom"
+                                        android:clipChildren="false"
+                                        android:clipToPadding="false">
+
+                                        <androidx.recyclerview.widget.RecyclerView
+                                            android:id="@+id/genresRecyclerView"
+                                            android:layout_width="match_parent"
+                                            android:layout_height="wrap_content"
+                                            android:clipToPadding="false"
+                                            android:paddingStart="195dp"
+                                            android:paddingEnd="500dp"
+                                            android:scrollbars="none"
+                                            tools:ignore="RtlSymmetry" />
+
+                                        <View
+                                            android:id="@+id/genresFixedFocusOverlay"
+                                            android:layout_width="128dp"
+                                            android:layout_height="190dp"
+                                            android:layout_gravity="start|center_vertical"
+                                            android:layout_marginStart="190dp"
+                                            android:alpha="0"
+                                            android:background="@drawable/background_focus"
+                                            android:clickable="false"
+                                            android:focusable="false"
+                                            android:importantForAccessibility="no" />
+
+                                    </FrameLayout>
 
                                 </LinearLayout>
 

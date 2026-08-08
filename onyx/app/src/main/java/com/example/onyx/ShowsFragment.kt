@@ -3,6 +3,7 @@ package com.example.onyx
 import android.content.Context
 import android.content.Intent
 import android.content.res.Resources
+import android.graphics.Color
 import android.graphics.Rect
 import android.os.Bundle
 import android.os.Handler
@@ -627,11 +628,26 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
 
         //------------------------------------------------------------------------------------------
 
+        fun genreSetFixedFocusOverlayVisible(overlay: View, visible: Boolean) {
+            val targetAlpha = if (visible) 1f else 0f
+            if (overlay.alpha == targetAlpha) return
+
+            overlay.animate()
+                .alpha(targetAlpha)
+                .setDuration(if (visible) 90L else 130L)
+                .start()
+        }
+
+        val genresFixedFocusOverlay = requireView().findViewById<View>(R.id.genresFixedFocusOverlay)
         genreAdapter = FilterAdapter(mutableListOf(), R.layout.item_list)
         genreAdapter.onItemFocused = { view, item ->
-            //backgroundContainer.visibility = View.VISIBLE
+            genreSetFixedFocusOverlayVisible(genresFixedFocusOverlay, true)
+            centerChildUnderFixedFocus(genreRecyclerView, genresFixedFocusOverlay, view)
         }
         genreAdapter.onItemFocusLost = {
+            genreRecyclerView.post {
+                genreSetFixedFocusOverlayVisible(genresFixedFocusOverlay, genreRecyclerView.hasFocus())
+            }
         }
         genreRecyclerView = requireView().findViewById(R.id.genresRecyclerView)
         genreRecyclerView.layoutManager = LinearLayoutManager(
@@ -641,6 +657,15 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
         )
         genreRecyclerView.adapter = genreAdapter
         genreRecyclerView.layoutManager?.scrollToPosition(0)
+
+        genreRecyclerView.addOnChildAttachStateChangeListener(object : RecyclerView.OnChildAttachStateChangeListener {
+            override fun onChildViewAttachedToWindow(view: View) {
+                view.foreground = null
+            }
+
+            override fun onChildViewDetachedFromWindow(view: View) {
+            }
+        })
         //------------------------------------------------------------------------------------------
 
 
@@ -671,6 +696,12 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
         val pg = currentContent.findViewById<TextView>(R.id.cardPg)
         val overview = currentContent.findViewById<TextView>(R.id.cardOverview)
 
+
+
+
+
+
+
         Log.d("updateCurrentContent", item.toString())
 
         genre.visibility = if (item.genres.isNotEmpty()) View.VISIBLE else View.GONE
@@ -693,6 +724,37 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
         } else {
             item.posterUlr
         }
+
+
+
+        val fragmentRoot = view
+        GlobalUtils.extractDynamicColor(requireContext(), imageUrl) { color ->
+            if (!isAdded || view == null || fragmentRoot !== view) return@extractDynamicColor
+
+            val blurContainerLeft = fragmentRoot?.findViewById<LinearLayout>(R.id.blurContainerLeft)
+            val blurContainerBottom = fragmentRoot?.findViewById<LinearLayout>(R.id.blurContainerBottom)
+
+            currentContentBackground.setBackgroundColor(color)
+            currentContent.setCardBackgroundColor(color)
+
+            // Create a smooth gradient fading left to right
+            val baseColor = (color and 0x00FFFFFF) or -0x1000000
+            val gradientDrawableLeft = android.graphics.drawable.GradientDrawable(
+                android.graphics.drawable.GradientDrawable.Orientation.LEFT_RIGHT,
+                intArrayOf(baseColor, Color.TRANSPARENT, Color.TRANSPARENT)
+            )
+
+            val gradientDrawableBottom = android.graphics.drawable.GradientDrawable(
+                android.graphics.drawable.GradientDrawable.Orientation.BOTTOM_TOP,
+                intArrayOf(baseColor, Color.TRANSPARENT, Color.TRANSPARENT)
+            )
+
+            blurContainerLeft?.background = gradientDrawableLeft
+            blurContainerBottom?.background = gradientDrawableBottom
+        }
+
+
+
 
         Glide.with(currentContent)
             .load(imageUrl)
