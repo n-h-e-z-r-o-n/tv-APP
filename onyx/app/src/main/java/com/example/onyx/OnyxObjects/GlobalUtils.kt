@@ -100,34 +100,63 @@ object GlobalUtils {
 
     // List of your theme keys
     private val availableThemes = listOf(
-        "Default",
-        "Brown",
+        "default",
+        "brown",
         "dark",
-        "Yellow",
+        "yellow",
         "ghost",
         "green",
         "red",
         "purple"
     )
+
     fun getAvailableThemes(): List<String> = availableThemes
+
+    fun getThemeDisplayName(theme: String): String {
+        return when (normalizeThemeKey(theme)) {
+            "default" -> "Default"
+            "brown" -> "Brown"
+            "dark" -> "Dark"
+            "yellow" -> "Yellow"
+            "ghost" -> "Ghost"
+            "green" -> "Green"
+            "red" -> "Red"
+            "purple" -> "Purple"
+            else -> "Default"
+        }
+    }
+
+    private fun normalizeThemeKey(theme: String?): String {
+        return when (theme?.trim()?.lowercase(Locale.US)) {
+            "default" -> "default"
+            "brown" -> "brown"
+            "dark" -> "dark"
+            "yellow" -> "yellow"
+            "ghost" -> "ghost"
+            "green" -> "green"
+            "red" -> "red"
+            "purple" -> "purple"
+            else -> "default"
+        }
+    }
 
     fun getAppTheme(context: Context): String {
         val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
-        return prefs.getString(KEY_APP_THEME, "Default") ?: "Default"
+        return normalizeThemeKey(prefs.getString(KEY_APP_THEME, DEFAULT_THEME))
     }
 
     fun setAppTheme(context: Context, theme: String) {
         val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
-        prefs.edit().putString(KEY_APP_THEME, theme).apply()
+        prefs.edit().putString(KEY_APP_THEME, normalizeThemeKey(theme)).apply()
     }
 
 
     fun applyTheme(activity: Activity) {
         when (getAppTheme(activity)) {
-            "Default"-> activity.setTheme(R.style.Theme_Onyx_Default)
-            "Brown"  -> activity.setTheme(R.style.Theme_Onyx_Brown)
+            "default"-> activity.setTheme(R.style.Theme_Onyx_Default)
+            "brown"  -> activity.setTheme(R.style.Theme_Onyx_Brown)
             "dark" -> activity.setTheme(R.style.Theme_Onyx_Dark)
-            "Yellow" -> activity.setTheme(R.style.Theme_Onyx_Yellow)
+            "yellow" -> activity.setTheme(R.style.Theme_Onyx_Yellow)
             "ghost" -> activity.setTheme(R.style.Theme_Onyx_Ghost)
             "green" -> activity.setTheme(R.style.Theme_Onyx_Green)
             "red" -> activity.setTheme(R.style.Theme_Onyx_Red)

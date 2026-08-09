@@ -1,7 +1,5 @@
 package com.example.onyx
 
-import android.Manifest
-import android.view.LayoutInflater
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.drawable.ColorDrawable
@@ -11,22 +9,23 @@ import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
 import android.util.TypedValue
+import android.view.LayoutInflater
 import android.view.View
 import android.view.WindowManager
-import android.widget.ImageView
-import android.widget.LinearLayout
 import android.widget.ListView
 import android.widget.TextView
 import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
-import kotlinx.coroutines.CoroutineScope
+import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.example.onyx.Database.AppDatabase
+import com.example.onyx.Database.SessionManger
+import com.example.onyx.OnyxObjects.GlobalUtils
+import com.example.onyx.databinding.FragmentProfileBinding
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -36,33 +35,23 @@ import java.io.InputStream
 import java.net.HttpURLConnection
 import java.net.URL
 
-import com.example.onyx.Database.AppDatabase
-import com.example.onyx.Database.SessionManger
-import com.example.onyx.OnyxObjects.GlobalUtils
-import com.example.onyx.OnyxObjects.NavAction
-
-
-import androidx.fragment.app.Fragment
 class ProfileFragment : Fragment(R.layout.fragment_profile) {
 
-    private lateinit var db: AppDatabase
-    private lateinit var  sm: SessionManger
+    private var _binding: FragmentProfileBinding? = null
+    private val binding get() = _binding!!
 
-    private lateinit var moviesWatchedText: TextView
-    private lateinit var seriesWatchedText: TextView
-    private lateinit var qualityValueText: TextView
-    private lateinit var themeValueText: TextView
-    private lateinit var dynamicColorValueText: TextView
-    private lateinit var appVersionText: TextView
-    
-    // Dialog related properties
-    private var updateDialog: androidx.appcompat.app.AlertDialog? = null
-    private var themeDialog: androidx.appcompat.app.AlertDialog? = null
-    private var restartDialog: androidx.appcompat.app.AlertDialog? = null
-    
-    private val versionJsonUrl = BuildConfig.APPV_J //"https://github.com/n-h-e-z-r-o-n/tv-APP/raw/refs/heads/main/App/version.json"
-    
-    // Data class for update info
+    private lateinit var db: AppDatabase
+    private lateinit var sm: SessionManger
+
+    private var updateDialog: AlertDialog? = null
+    private var themeDialog: AlertDialog? = null
+    private var restartDialog: AlertDialog? = null
+    private var logoutDialog: AlertDialog? = null
+
+    private val versionJsonUrl = BuildConfig.APPV_J
+    private var lastFocusedViewId: Int = R.id.themeSetting
+    private var currentUserId: Int = -1
+
     data class UpdateInfo(
         @com.google.gson.annotations.SerializedName("versionCode")
         val versionCode: Int,
@@ -73,261 +62,319 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
         @com.google.gson.annotations.SerializedName("downloadUrl")
         val downloadUrl: String
     )
-    
-    private var lastFocusedView: View? = null
+
+    private data class ProfileUiState(
+        val username: String,
+        val memberLabel: String,
+        val moviesWatched: Int,
+        val episodesWatched: Int,
+        val animeFavorites: Int,
+        val subscriptionDaysLeft: Long,
+        val subscriptionType: String,
+        val subscriptionActive: Boolean
+    )
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        GlobalUtils.applyTheme(requireActivity())
         super.onViewCreated(view, savedInstanceState)
-        
-        view.viewTreeObserver.addOnGlobalFocusChangeListener { _, newFocus ->
-            if (newFocus != null && view.findViewById<View>(newFocus.id) != null) {
-                lastFocusedView = newFocus
-            }
-        }
-        
-        
+        _binding = FragmentProfileBinding.bind(view)
+
         requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
-        db = AppDatabase(requireActivity())         // Initialize database
-        sm = SessionManger(requireActivity())         // Initialize session manager
+        db = AppDatabase(requireActivity())
+        sm = SessionManger(requireActivity())
+        currentUserId = sm.getUserId()
 
-
-        val profileImage = requireView().findViewById<ImageView>(R.id.ProfileImg)
-        val assetPath = "file:///android_asset/${sm.getUserAvatar()}"
-        Glide.with(requireActivity())
-            .load(assetPath)
-            .placeholder(R.drawable.ic_person)
-            .into(profileImage)
-
-        val logoutBtn = requireView().findViewById<LinearLayout>(R.id.logoutBtn)
-        logoutBtn.setOnClickListener {
-            sm.clearSession()
-            val intent = Intent(requireActivity(), Login_Page::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or
-                    Intent.FLAG_ACTIVITY_CLEAR_TASK or
-                    Intent.FLAG_ACTIVITY_CLEAR_TOP
-            startActivity(intent)
-            // requireActivity().finish()
-        }
-        ////////////////////////////////////////////////////////////////////////////////////////////
-
-        // Initialize views
-        initializeViews()
-        
-        // Load saved settings
+        initializeStaticUi()
+        loadProfileImage()
         loadSettings()
-        
-        // Setup click listeners
         setupClickListeners()
-        
-        // Load statistics
-        loadStatistics()
-        
-        // Setup focus handling for TV remote
         setupFocusHandling()
-
-        getRemainingDays()
-
-
+        loadProfileData()
     }
 
     override fun onResume() {
         super.onResume()
-        requireView().post {
-            if (lastFocusedView != null && lastFocusedView!!.isShown && lastFocusedView!!.isFocusable) {
-                lastFocusedView!!.requestFocus()
+        binding.root.post {
+            val target = binding.root.findViewById<View>(lastFocusedViewId) ?: binding.themeSetting
+            if (target.isShown && target.isFocusable) {
+                target.requestFocus()
             } else {
-                requireView().findViewById<LinearLayout>(R.id.themeSetting)?.requestFocus()
+                binding.themeSetting.requestFocus()
             }
         }
     }
-    
-    private fun initializeViews() {
-        moviesWatchedText = requireView().findViewById(R.id.moviesWatched)
-        seriesWatchedText = requireView().findViewById(R.id.seriesWatched)
-        themeValueText = requireView().findViewById(R.id.themeValue)
-        appVersionText = requireView().findViewById(R.id.appVersion)
-        dynamicColorValueText = requireView().findViewById(R.id.dynamicColorValue)
-        
-        // Set app version using GlobalUtils
-        appVersionText.text = GlobalUtils.getAppVersion(requireActivity())
-    }
-    
-    private fun loadSettings() {
-        // Load requireActivity().theme setting using GlobalUtils
-        val currentTheme = GlobalUtils.getAppTheme(requireActivity())
-        themeValueText.text = currentTheme.replaceFirstChar { it.uppercase() }
 
-        // Load dynamic color setting
-        val isDynamicColor = sm.isDynamicColorEnabled()
-        dynamicColorValueText.text = if (isDynamicColor) "On" else "Off"
+    private fun initializeStaticUi() {
+        binding.appVersion.text = GlobalUtils.getAppVersion(requireActivity())
     }
-    
+
+    private fun loadProfileImage() {
+        val assetPath = "file:///android_asset/${sm.getUserAvatar()}"
+        Glide.with(this)
+            .load(assetPath)
+            .placeholder(R.drawable.ic_person)
+            .diskCacheStrategy(DiskCacheStrategy.ALL)
+            .into(binding.profileImage)
+    }
+
+    private fun loadSettings() {
+        val currentTheme = GlobalUtils.getAppTheme(requireActivity())
+        binding.themeValue.text = GlobalUtils.getThemeDisplayName(currentTheme)
+
+        val isDynamicColor = sm.isDynamicColorEnabled()
+        binding.dynamicColorValue.text = if (isDynamicColor) "On" else "Off"
+    }
+
     private fun setupClickListeners() {
-        // Theme setting click
-        val themeSetting = requireView().findViewById<LinearLayout>(R.id.themeSetting)
-        themeSetting.setOnClickListener {
+        binding.logoutBtn.setOnClickListener {
+            showLogoutDialog()
+        }
+
+        binding.themeSetting.setOnClickListener {
             showThemeDialog()
         }
-        themeSetting.requestFocus()
 
-        // Dynamic color setting click
-        val dynamicColorSetting = requireView().findViewById<LinearLayout>(R.id.dynamicColorSetting)
-        dynamicColorSetting.setOnClickListener {
-            val currentState = sm.isDynamicColorEnabled()
-            val newState = !currentState
+        binding.dynamicColorSetting.setOnClickListener {
+            val newState = !sm.isDynamicColorEnabled()
             sm.setDynamicColorEnabled(newState)
-            dynamicColorValueText.text = if (newState) "On" else "Off"
-            Toast.makeText(requireActivity(), "Dynamic Color ${if (newState) "Enabled" else "Disabled"}", Toast.LENGTH_SHORT).show()
+            binding.dynamicColorValue.text = if (newState) "On" else "Off"
+            Toast.makeText(
+                requireActivity(),
+                "Dynamic Color ${if (newState) "Enabled" else "Disabled"}",
+                Toast.LENGTH_SHORT
+            ).show()
         }
-        
-        // Clear cache click
-        val clearCache = requireView().findViewById<LinearLayout>(R.id.clearCache)
-        clearCache.setOnClickListener {
-            if (GlobalUtils.clearAppCache(requireActivity())) {
-                Toast.makeText(requireActivity(), "Cache cleared successfully", Toast.LENGTH_SHORT).show()
-            } else {
-                Toast.makeText(requireActivity(), "Failed to clear cache", Toast.LENGTH_SHORT).show()
-            }
+
+        binding.clearCache.setOnClickListener {
+            val cleared = GlobalUtils.clearAppCache(requireActivity())
+            Toast.makeText(
+                requireActivity(),
+                if (cleared) "Cache cleared successfully" else "Failed to clear cache",
+                Toast.LENGTH_SHORT
+            ).show()
         }
-        
-        // Version info click
-        val versionInfo = requireView().findViewById<LinearLayout>(R.id.versionInfo)
-        versionInfo.setOnClickListener {
-            Toast.makeText(requireActivity(), "Onyx TV App v${appVersionText.text}", Toast.LENGTH_LONG).show()
+
+        binding.versionInfo.setOnClickListener {
+            Toast.makeText(
+                requireActivity(),
+                "Installed version ${binding.appVersion.text}",
+                Toast.LENGTH_LONG
+            ).show()
         }
-        
-        // Check for updates click
-        val checkUpdates = requireView().findViewById<LinearLayout>(R.id.checkUpdates)
-        checkUpdates.setOnClickListener {
+
+        binding.checkUpdates.setOnClickListener {
             checkForUpdates()
         }
-        
-        // Restart app click
-        val restartApp = requireView().findViewById<LinearLayout>(R.id.restartApp)
-        restartApp.setOnClickListener {
+
+        binding.restartApp.setOnClickListener {
             showRestartDialog()
         }
-        
-        // Terms and Conditions click
-        val termsAndConditions = requireView().findViewById<LinearLayout>(R.id.termsAndConditions)
-        termsAndConditions.setOnClickListener {
-            startActivity(android.content.Intent(requireActivity(), TermsAndConditionsActivity::class.java))
+
+        binding.termsAndConditions.setOnClickListener {
+            startActivity(Intent(requireActivity(), TermsAndConditionsActivity::class.java))
         }
     }
-    
-    private fun loadStatistics() {
-        // Load watched movies count using GlobalUtils
-        moviesWatchedText.text = GlobalUtils.getMoviesWatched(requireActivity()).toString()
-        
-        // Load watched series count using GlobalUtils
-        seriesWatchedText.text = GlobalUtils.getSeriesWatched(requireActivity()).toString()
+
+    private fun setupFocusHandling() {
+        val focusableViews = listOf(
+            binding.logoutBtn,
+            binding.themeSetting,
+            binding.dynamicColorSetting,
+            binding.versionInfo,
+            binding.clearCache,
+            binding.checkUpdates,
+            binding.restartApp,
+            binding.termsAndConditions
+        )
+
+        focusableViews.forEach { itemView ->
+            itemView.setOnFocusChangeListener { view, hasFocus ->
+                if (hasFocus) {
+                    lastFocusedViewId = view.id
+                }
+                view.animate()
+                    .scaleX(if (hasFocus) 1.03f else 1f)
+                    .scaleY(if (hasFocus) 1.03f else 1f)
+                    .setDuration(140)
+                    .start()
+            }
+        }
     }
 
+    private fun loadProfileData() {
+        lifecycleScope.launch(Dispatchers.Main) {
+            val uiState = withContext(Dispatchers.IO) {
+                db.resetExpiredSubscription()
+
+                val username = db.getUsernameById(currentUserId)
+                    ?.takeIf { it.isNotBlank() }
+                    ?: "Profile $currentUserId"
+                val subscriptionType = db.getSubscriptionType()
+                val subscriptionActive = db.isSubscriptionActive()
+                val subscriptionDaysLeft = db.getSubscriptionDaysLeft()
+
+                ProfileUiState(
+                    username = username,
+                    memberLabel = buildMemberLabel(currentUserId, subscriptionType, subscriptionActive),
+                    moviesWatched = GlobalUtils.getMoviesWatched(requireActivity()),
+                    episodesWatched = GlobalUtils.getSeriesWatched(requireActivity()),
+                    animeFavorites = db.getFavoriteAnimeCount(currentUserId),
+                    subscriptionDaysLeft = subscriptionDaysLeft,
+                    subscriptionType = subscriptionType,
+                    subscriptionActive = subscriptionActive
+                )
+            }
+
+            if (!isAdded || _binding == null) return@launch
+            renderProfileData(uiState)
+        }
+    }
+
+    private fun renderProfileData(uiState: ProfileUiState) {
+        binding.profileName.text = uiState.username
+        binding.profileMeta.text = uiState.memberLabel
+        binding.moviesWatched.text = uiState.moviesWatched.toString()
+        binding.seriesWatched.text = uiState.episodesWatched.toString()
+        binding.animeWatched.text = uiState.animeFavorites.toString()
+
+        if (uiState.subscriptionActive) {
+            binding.subscriptionLeft.text = uiState.subscriptionDaysLeft.toString()
+            binding.subscriptionLeft.setTextColor(
+                ContextCompat.getColor(requireContext(), android.R.color.holo_green_light)
+            )
+            binding.subscriptionStatus.text = "${formatSubscriptionType(uiState.subscriptionType)} active"
+        } else {
+            binding.subscriptionLeft.text = "0"
+            binding.subscriptionLeft.setTextColor(
+                ContextCompat.getColor(requireContext(), android.R.color.holo_red_light)
+            )
+            binding.subscriptionStatus.text = "Inactive"
+        }
+    }
+
+    private fun buildMemberLabel(userId: Int, subscriptionType: String, subscriptionActive: Boolean): String {
+        val planLabel = if (subscriptionActive) {
+            formatSubscriptionType(subscriptionType)
+        } else {
+            "Free plan"
+        }
+        return "Member #$userId • $planLabel"
+    }
+
+    private fun formatSubscriptionType(subscriptionType: String): String {
+        return when (subscriptionType.uppercase()) {
+            "MONTHLY" -> "Monthly plan"
+            "3MONTH" -> "3-month plan"
+            "YEARLY" -> "Yearly plan"
+            else -> "Free plan"
+        }
+    }
+
+    private fun showLogoutDialog() {
+        logoutDialog = AlertDialog.Builder(requireActivity(), R.style.CustomDialogTheme)
+            .setTitle("Logout")
+            .setMessage("Sign out of this profile and return to profile selection?")
+            .setPositiveButton("Logout") { _, _ ->
+                sm.clearSession()
+                val intent = Intent(requireActivity(), Login_Page::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or
+                        Intent.FLAG_ACTIVITY_CLEAR_TASK or
+                        Intent.FLAG_ACTIVITY_CLEAR_TOP
+                }
+                startActivity(intent)
+            }
+            .setNegativeButton("Cancel", null)
+            .create()
+
+        logoutDialog?.show()
+    }
 
     private fun showThemeDialog() {
         val themes = GlobalUtils.getAvailableThemes()
         val currentTheme = GlobalUtils.getAppTheme(requireActivity())
         val currentIndex = themes.indexOf(currentTheme)
+        val themeNames = themes.map { GlobalUtils.getThemeDisplayName(it) }.toTypedArray()
 
-        val themeNames = themes
-            .map { it.replaceFirstChar { c -> c.uppercase() } }
-            .toTypedArray()
-
-        val builder = androidx.appcompat.app.AlertDialog.Builder(requireActivity(), R.style.CustomDialogTheme)
+        themeDialog = AlertDialog.Builder(requireActivity(), R.style.CustomDialogTheme)
             .setTitle("Select App Theme")
             .setSingleChoiceItems(themeNames, currentIndex) { dialog, which ->
                 val selectedTheme = themes[which]
-                GlobalUtils.setAppTheme(requireActivity(), selectedTheme)
-                themeValueText.text = selectedTheme.replaceFirstChar { it.uppercase() }
-                dialog.dismiss()
+                val previousTheme = GlobalUtils.getAppTheme(requireActivity())
 
-                GlobalUtils.restartApp(requireActivity())
+                if (selectedTheme == previousTheme) {
+                    dialog.dismiss()
+                    return@setSingleChoiceItems
+                }
+
+                GlobalUtils.setAppTheme(requireActivity(), selectedTheme)
+                binding.themeValue.text = GlobalUtils.getThemeDisplayName(selectedTheme)
+                dialog.dismiss()
+                requireActivity().recreate()
             }
             .setNegativeButton("Cancel") { dialog, _ ->
                 dialog.dismiss()
             }
-
-        themeDialog = builder.create()
+            .create()
 
         themeDialog?.setOnShowListener {
             val alertDialog = it as AlertDialog
             val listView = alertDialog.listView ?: return@setOnShowListener
 
-            // Resolve FG color
             val fgValue = TypedValue()
             requireActivity().theme.resolveAttribute(R.attr.FG_color, fgValue, true)
             val fgColor = fgValue.data
 
-            // Resolve Accent color (focus / selection)
             val accentValue = TypedValue()
             requireActivity().theme.resolveAttribute(R.attr.AccentColor, accentValue, true)
             val accentColor = accentValue.data
 
-            // Set focus/selection color
             listView.selector = ColorDrawable(accentColor)
             listView.choiceMode = ListView.CHOICE_MODE_SINGLE
 
-            // Ensure text color stays correct
-            for (i in 0 until listView.childCount) {
-                val child = listView.getChildAt(i)
+            for (index in 0 until listView.childCount) {
+                val child = listView.getChildAt(index)
                 if (child is TextView) {
                     child.setTextColor(fgColor)
                 }
             }
+
             alertDialog.getButton(AlertDialog.BUTTON_NEGATIVE)?.setTextColor(fgColor)
         }
 
         themeDialog?.show()
     }
 
-
     private fun checkForUpdates() {
         Toast.makeText(requireActivity(), "Checking for updates...", Toast.LENGTH_SHORT).show()
 
-        // Check if install permission is granted (Android 8.0+)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            if (!requireActivity().packageManager.canRequestPackageInstalls()) {
-                // Request install permission
-                showInstallPermissionDialog()
-                return
-            }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+            !requireActivity().packageManager.canRequestPackageInstalls()
+        ) {
+            showInstallPermissionDialog()
+            return
         }
 
-        lifecycleScope.launch(Dispatchers.IO){
+        lifecycleScope.launch(Dispatchers.IO) {
             try {
-                val url = URL(versionJsonUrl)
-                val connection = url.openConnection() as HttpURLConnection
-                connection.requestMethod = "GET"
-                connection.connectTimeout = 5000
-                connection.readTimeout = 5000
-                connection.connect()
+                val connection = (URL(versionJsonUrl).openConnection() as HttpURLConnection).apply {
+                    requestMethod = "GET"
+                    connectTimeout = 5000
+                    readTimeout = 5000
+                    connect()
+                }
 
                 if (connection.responseCode == HttpURLConnection.HTTP_OK) {
-                    val inputStream = connection.inputStream
-                    val reader = java.io.InputStreamReader(inputStream)
+                    val reader = connection.inputStream.reader()
                     val updateInfo = com.google.gson.Gson().fromJson(reader, UpdateInfo::class.java)
-                    
+
                     withContext(Dispatchers.Main) {
-                    if (!isAdded || view == null) return@withContext
-                        // Get the ACTUAL installed version code from PackageManager
-                        // This is more reliable than BuildConfig.VERSION_CODE which is compiled at build time
-                        val installedVersionCode = try {
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                requireActivity().packageManager.getPackageInfo(requireActivity().packageName, PackageManager.PackageInfoFlags.of(0)).longVersionCode.toInt()
-                            } else {
-                                @Suppress("DEPRECATION")
-                                requireActivity().packageManager.getPackageInfo(requireActivity().packageName, 0).versionCode
-                            }
-                        } catch (e: Exception) {
-                            // Fallback to BuildConfig if PackageManager fails
-                            BuildConfig.VERSION_CODE
-                        }
-                        
-                        // Debug logging to help diagnose issues
-                        android.util.Log.d("UpdateCheck", "Installed versionCode: $installedVersionCode, Remote versionCode: ${updateInfo.versionCode}")
-                        
+                        if (!isAdded || _binding == null) return@withContext
+                        val installedVersionCode = getInstalledVersionCode()
+                        Log.d(
+                            "UpdateCheck",
+                            "Installed versionCode: $installedVersionCode, Remote versionCode: ${updateInfo.versionCode}"
+                        )
+
                         if (updateInfo.versionCode > installedVersionCode) {
                             showUpdateConfirmation(updateInfo)
                         } else {
@@ -336,22 +383,50 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                     }
                 } else {
                     withContext(Dispatchers.Main) {
-                    if (!isAdded || view == null) return@withContext
-                         Toast.makeText(requireActivity(), "Failed to check for updates: Server Error", Toast.LENGTH_SHORT).show()
+                        if (!isAdded || _binding == null) return@withContext
+                        Toast.makeText(
+                            requireActivity(),
+                            "Failed to check for updates: Server Error",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 }
-            } catch (e: Exception) {
+            } catch (error: Exception) {
                 withContext(Dispatchers.Main) {
-                    if (!isAdded || view == null) return@withContext
-                    e.printStackTrace()
-                    Toast.makeText(requireActivity(), "Failed to check for updates: ${e.message}", Toast.LENGTH_SHORT).show()
+                    if (!isAdded || _binding == null) return@withContext
+                    error.printStackTrace()
+                    Toast.makeText(
+                        requireActivity(),
+                        "Failed to check for updates: ${error.message}",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             }
         }
     }
 
+    private fun getInstalledVersionCode(): Int {
+        return try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                requireActivity()
+                    .packageManager
+                    .getPackageInfo(
+                        requireActivity().packageName,
+                        PackageManager.PackageInfoFlags.of(0)
+                    )
+                    .longVersionCode
+                    .toInt()
+            } else {
+                @Suppress("DEPRECATION")
+                requireActivity().packageManager.getPackageInfo(requireActivity().packageName, 0).versionCode
+            }
+        } catch (error: Exception) {
+            BuildConfig.VERSION_CODE
+        }
+    }
+
     private fun showUpdateConfirmation(updateInfo: UpdateInfo) {
-        androidx.appcompat.app.AlertDialog.Builder(requireActivity(), R.style.CustomDialogTheme)
+        AlertDialog.Builder(requireActivity(), R.style.CustomDialogTheme)
             .setTitle("Update Available: v${updateInfo.versionName}")
             .setMessage("Changelog:\n${updateInfo.changelog}\n\nWould you like to update now?")
             .setPositiveButton("Update Now") { _, _ ->
@@ -360,77 +435,65 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
             .setNegativeButton("Later", null)
             .show()
     }
-    
+
     private fun downloadAndInstallApk(downloadUrlString: String) {
-        // Setup custom progress dialog
         val dialogView = LayoutInflater.from(requireActivity()).inflate(R.layout.dialog_update_progress, null)
         val progressBar = dialogView.findViewById<android.widget.ProgressBar>(R.id.updateProgressBar)
         val progressText = dialogView.findViewById<TextView>(R.id.updateProgressText)
         val sizeText = dialogView.findViewById<TextView>(R.id.updateSizeText)
-        
-        updateDialog = androidx.appcompat.app.AlertDialog.Builder(requireActivity(), R.style.CustomDialogTheme)
+
+        updateDialog = AlertDialog.Builder(requireActivity(), R.style.CustomDialogTheme)
             .setView(dialogView)
             .setCancelable(false)
             .create()
-        
+
         updateDialog?.show()
-        
-        // Make the dialog background transparent to show the CardView corners
         updateDialog?.window?.setBackgroundDrawableResource(android.R.color.transparent)
 
         lifecycleScope.launch(Dispatchers.IO) {
             try {
-                val url = URL(downloadUrlString)
-                val connection = url.openConnection() as HttpURLConnection
-                connection.requestMethod = "GET"
-                connection.connectTimeout = 5000
-                connection.readTimeout = 5000
-                connection.connect()
-                
+                val connection = (URL(downloadUrlString).openConnection() as HttpURLConnection).apply {
+                    requestMethod = "GET"
+                    connectTimeout = 5000
+                    readTimeout = 5000
+                    connect()
+                }
+
                 if (connection.responseCode != HttpURLConnection.HTTP_OK) {
                     throw Exception("Server returned HTTP ${connection.responseCode} ${connection.responseMessage}")
                 }
-                
+
                 val fileLength = connection.contentLength
                 val input: InputStream = connection.inputStream
-                
-                // Create downloads directory if it doesn't exist - using app-specific directory which needs no permissions
                 val downloadsDir = File(requireActivity().getExternalFilesDir(null), "OnyxUpdates")
                 if (!downloadsDir.exists()) {
                     downloadsDir.mkdirs()
                 }
 
                 val apkFile = File(downloadsDir, "onyx-update.apk")
-                // Delete old update if exists
                 if (apkFile.exists()) {
                     apkFile.delete()
                 }
-                
+
                 val output = FileOutputStream(apkFile)
-                
-                val data = ByteArray(4096) // Increased buffer size
-                var total: Long = 0
+                val data = ByteArray(4096)
+                var total = 0L
                 var count: Int
                 var lastProgress = 0
-                
+
                 while (input.read(data).also { count = it } != -1) {
                     total += count.toLong()
                     output.write(data, 0, count)
-                    
-                    // Update progress
+
                     if (fileLength > 0) {
-                        // Calculate percentage
                         val progress = (total * 100 / fileLength).toInt()
-                        
-                        // Throttle UI updates to only trigger when percentage changes
                         if (progress > lastProgress) {
                             lastProgress = progress
                             withContext(Dispatchers.Main) {
-                                if (!isAdded || view == null) return@withContext
+                                if (!isAdded || _binding == null) return@withContext
                                 progressBar.progress = progress
                                 progressText.text = "$progress%"
-                                
-                                // Format bytes to MB
+
                                 val totalMb = String.format("%.1f", total / (1024f * 1024f))
                                 val maxMb = String.format("%.1f", fileLength / (1024f * 1024f))
                                 sizeText.text = "$totalMb MB / $maxMb MB"
@@ -438,55 +501,57 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
                         }
                     }
                 }
-                
+
                 output.flush()
                 output.close()
                 input.close()
-                
+
                 withContext(Dispatchers.Main) {
-                    if (!isAdded || view == null) return@withContext
+                    if (!isAdded || _binding == null) return@withContext
                     updateDialog?.dismiss()
                     installApk(apkFile)
                 }
-                
-            } catch (e: Exception) {
+            } catch (error: Exception) {
                 withContext(Dispatchers.Main) {
-                    if (!isAdded || view == null) return@withContext
+                    if (!isAdded || _binding == null) return@withContext
                     updateDialog?.dismiss()
-                    e.printStackTrace()
-                    Toast.makeText(requireActivity(), "Download failed: ${e.message}", Toast.LENGTH_LONG).show()
+                    error.printStackTrace()
+                    Toast.makeText(requireActivity(), "Download failed: ${error.message}", Toast.LENGTH_LONG).show()
                 }
             }
         }
     }
-    
+
     private fun installApk(apkFile: File) {
         try {
-            val intent = Intent(Intent.ACTION_VIEW)
             val apkUri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                FileProvider.getUriForFile(requireActivity(), "${requireActivity().packageName}.fileprovider", apkFile)
+                FileProvider.getUriForFile(
+                    requireActivity(),
+                    "${requireActivity().packageName}.fileprovider",
+                    apkFile
+                )
             } else {
                 Uri.fromFile(apkFile)
             }
-            
-            intent.setDataAndType(apkUri, "application/vnd.android.package-archive")
-            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(apkUri, "application/vnd.android.package-archive")
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
             }
-            
+
             startActivity(intent)
             Toast.makeText(requireActivity(), "Installation started", Toast.LENGTH_SHORT).show()
-            
-        } catch (e: Exception) {
-            Toast.makeText(requireActivity(), "Installation failed: ${e.message}", Toast.LENGTH_LONG).show()
+        } catch (error: Exception) {
+            Toast.makeText(requireActivity(), "Installation failed: ${error.message}", Toast.LENGTH_LONG).show()
         }
     }
-    
+
     private fun showInstallPermissionDialog() {
-        val builder = androidx.appcompat.app.AlertDialog.Builder(requireActivity(), R.style.CustomDialogTheme)
-        builder.setTitle("Install Permission Required")
+        AlertDialog.Builder(requireActivity(), R.style.CustomDialogTheme)
+            .setTitle("Install Permission Required")
             .setMessage("This app needs permission to install APK files. Please enable 'Install unknown apps' permission in settings.")
             .setPositiveButton("Open Settings") { _, _ ->
                 val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
@@ -497,109 +562,27 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
             .setNegativeButton("Cancel", null)
             .show()
     }
-    
-    private fun showThemeChangeDialog(selectedTheme: String) {
-        val builder = androidx.appcompat.app.AlertDialog.Builder(requireActivity(), R.style.CustomDialogTheme)
-        builder.setTitle("Theme Changed")
-            .setMessage("Theme changed to ${selectedTheme.replaceFirstChar { it.uppercase() }}. Would you like to restart the app now to see the full effect?")
-            .setPositiveButton("Restart Now") { _, _ ->
-                Toast.makeText(requireActivity(), "Restarting app...", Toast.LENGTH_SHORT).show()
-                GlobalUtils.restartApp(requireActivity())
-            }
-            .setNegativeButton("Later") { _, _ ->
-                Toast.makeText(requireActivity(), "Theme will be applied after restart", Toast.LENGTH_SHORT).show()
-            }
-            .show()
-    }
-    
+
     private fun showRestartDialog() {
-        val builder = androidx.appcompat.app.AlertDialog.Builder(requireActivity(), R.style.CustomDialogTheme)
-        builder.setTitle("Restart App")
+        restartDialog = AlertDialog.Builder(requireActivity(), R.style.CustomDialogTheme)
+            .setTitle("Restart App")
             .setMessage("Are you sure you want to restart the application? This will close all current activities and restart the app.")
             .setPositiveButton("Restart") { _, _ ->
                 Toast.makeText(requireActivity(), "Restarting app...", Toast.LENGTH_SHORT).show()
                 GlobalUtils.restartApp(requireActivity())
             }
             .setNegativeButton("Cancel", null)
-            
-        restartDialog = builder.create()
+            .create()
+
         restartDialog?.show()
     }
-    
-    
-    private fun setupFocusHandling() {
-        // Setup focus handling for TV remote navigation
-        val focusableViews = listOf(
-            requireView().findViewById<LinearLayout>(R.id.themeSetting),
-            requireView().findViewById<LinearLayout>(R.id.versionInfo),
-            requireView().findViewById<LinearLayout>(R.id.clearCache),
-            requireView().findViewById<LinearLayout>(R.id.checkUpdates),
-            requireView().findViewById<LinearLayout>(R.id.restartApp),
-            requireView().findViewById<LinearLayout>(R.id.termsAndConditions)
-        )
-        
-        focusableViews.forEach { view ->
-            view.setOnFocusChangeListener { v, hasFocus ->
-                if (hasFocus) {
-                    v.background = requireActivity().getDrawable(R.drawable.setting_item_background)
-                    v.scaleX = 1.05f
-                    v.scaleY = 1.05f
-                } else {
-                    v.background = requireActivity().getDrawable(R.drawable.setting_item_background)
-                    v.scaleX = 1.0f
-                    v.scaleY = 1.0f
-                }
-            }
-        }
 
-    }
-    
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        
-        when (requestCode) {
-            1001 -> {
-                // Storage permission request result - No longer needed/used
-            }
-        }
-    }
-    
-    override fun onDestroy() {
-        super.onDestroy()
+    override fun onDestroyView() {
+        super.onDestroyView()
         updateDialog?.dismiss()
         themeDialog?.dismiss()
         restartDialog?.dismiss()
+        logoutDialog?.dismiss()
+        _binding = null
     }
-
-
-    private fun getRemainingDays() {
-        val subscriptionWidget = requireView().findViewById<TextView>(R.id.SubscriptionLeft)
-
-        // Launch coroutine on main thread (since we need to update UI)
-        lifecycleScope.launch(Dispatchers.Main) {
-            try {
-                // Switch to IO thread for database operation
-                val remainingDays = withContext(Dispatchers.IO) {
-                    db.getSubscriptionDaysLeft()
-                }
-
-                // Back on main thread to update UI
-                subscriptionWidget.text = when {
-                    remainingDays <= 0 -> "expired"
-                    else -> remainingDays.toString()
-                }
-            } catch (e: Exception) {
-                subscriptionWidget.text = "N/A"
-                Log.e("Profile_Page", "Error getting subscription days", e)
-            }
-        }
-    }
-
-
-
-
 }

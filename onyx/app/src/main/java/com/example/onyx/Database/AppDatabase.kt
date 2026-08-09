@@ -236,6 +236,22 @@ class AppDatabase(context: Context) :
         return db.rawQuery("SELECT * FROM users", null)
     }
 
+    fun getUsernameById(id: Int): String? {
+        val db = readableDatabase
+        val cursor = db.rawQuery(
+            "SELECT username FROM users WHERE id=? LIMIT 1",
+            arrayOf(id.toString())
+        )
+
+        return cursor.use {
+            if (it.moveToFirst()) {
+                it.getString(it.getColumnIndexOrThrow("username"))
+            } else {
+                null
+            }
+        }
+    }
+
     fun deleteUser(id: Int): Boolean {
         val db = writableDatabase
         return db.delete("users", "id=?", arrayOf(id.toString())) > 0
@@ -399,6 +415,22 @@ class AppDatabase(context: Context) :
 
         cursor.close()
         return list
+    }
+
+    fun getFavoriteAnimeCount(userId: Int): Int {
+        val db = readableDatabase
+        val cursor = db.rawQuery(
+            "SELECT COUNT(*) AS count FROM favorites_anime WHERE user_id=?",
+            arrayOf(userId.toString())
+        )
+
+        return cursor.use {
+            if (it.moveToFirst()) {
+                it.getInt(it.getColumnIndexOrThrow("count"))
+            } else {
+                0
+            }
+        }
     }
 
 
@@ -1188,6 +1220,19 @@ class AppDatabase(context: Context) :
 
         cursor.close()
         return daysLeft
+    }
+
+    fun getSubscriptionType(): String {
+        val db = readableDatabase
+        val cursor = db.rawQuery("SELECT subscription_type FROM app_settings WHERE id = 1", null)
+        var subscriptionType = "NONE"
+
+        if (cursor.moveToFirst()) {
+            subscriptionType = cursor.getString(cursor.getColumnIndexOrThrow("subscription_type")) ?: "NONE"
+        }
+
+        cursor.close()
+        return subscriptionType
     }
 
     fun resetExpiredSubscription() {

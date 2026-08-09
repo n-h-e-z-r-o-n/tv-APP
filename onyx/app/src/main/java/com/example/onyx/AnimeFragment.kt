@@ -668,6 +668,10 @@ class AnimeFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             repeat(3) { attempt ->
                 try {
+                    val jsonObject = withContext(Dispatchers.IO) { fetchAnimeAPI.animeCategory(pageToLoad, "trending") }
+
+                    /*
+
                     val url = "https://echo-anime.vercel.app/api/v2/anime/category/trending?page=$pageToLoad"
                     val connection = URL(url).openConnection() as HttpURLConnection
                     connection.requestMethod = "GET"
@@ -681,7 +685,13 @@ class AnimeFragment : Fragment() {
                     val response = connection.inputStream.bufferedReader().use { it.readText() }
                     connection.disconnect()
 
-                    val trendingAnime = org.json.JSONObject(response).getJSONObject("data").getJSONArray("animes")
+                     */
+
+                    if (jsonObject == null) {
+                        return@launch
+                    }
+
+                    val trendingAnime = jsonObject.getJSONObject("data").getJSONArray("animes")
                     
                     if (trendingAnime.length() == 0) {
                         val isInitialLoad = trendingAdapter.itemCount <= 1
