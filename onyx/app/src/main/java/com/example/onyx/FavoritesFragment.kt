@@ -132,7 +132,11 @@ class FavoritesFragment : Fragment(R.layout.fragment_favorites) {
             cardView.tag = favoriteKey
 
             Glide.with(cardView.context)
-                .load(item.backdropUrl)
+                .load(
+                    GlobalUtils.getOptimizedBackdropUrl(item.backdropUrl).ifBlank {
+                        GlobalUtils.getOptimizedPosterUrl(item.posterUrl)
+                    }
+                )
                 .diskCacheStrategy(DiskCacheStrategy.ALL)
                 .centerInside()
                 .into(imageView)

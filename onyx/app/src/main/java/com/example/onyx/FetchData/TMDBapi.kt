@@ -7,6 +7,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import com.bumptech.glide.Glide
 import com.example.onyx.BuildConfig
+import com.example.onyx.OnyxObjects.GlobalUtils
 import com.example.onyx.R
 import org.json.JSONObject
 import java.io.IOException
@@ -61,7 +62,7 @@ class TMDBapi(private val context: Context) {
                     withContext(Dispatchers.Main) {
 
                         Glide.with(context)
-                            .load(logoUrl)
+                            .load(GlobalUtils.getOptimizedLogoUrl(logoUrl))
                             .centerCrop()
                             .fitCenter()
                             .into(widget)
@@ -76,7 +77,7 @@ class TMDBapi(private val context: Context) {
                        withContext(Dispatchers.Main) {
 
                                 Glide.with(context)
-                                    .load(logoUrl)
+                                    .load(GlobalUtils.getOptimizedLogoUrl(logoUrl))
                                     .centerCrop()
                                     .fitCenter()
                                     .into(widget)

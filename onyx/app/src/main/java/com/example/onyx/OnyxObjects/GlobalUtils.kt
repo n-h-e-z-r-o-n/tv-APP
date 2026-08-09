@@ -75,14 +75,16 @@ import java.time.format.DateTimeParseException
 private val interpolator = AccelerateDecelerateInterpolator()
 
 object GlobalUtils {
+    private const val TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/"
+    private const val TMDB_POSTER_SIZE = "w342"
+    private const val TMDB_BACKDROP_SIZE = "w780"
+    private const val TMDB_LOGO_SIZE = "w300"
 
     // SharedPreferences key constants
     private const val PREF_NAME = "OnyxProfile"
     private const val KEY_MOVIES_WATCHED = "movies_watched"
     private const val KEY_SERIES_WATCHED = "series_watched"
-    private const val KEY_AUTO_PLAY = "auto_play"
-    private const val KEY_NOTIFICATIONS = "notifications"
-    private const val KEY_VIDEO_QUALITY = "video_quality"
+
     private const val KEY_APP_THEME  = "app_theme"
 
     // Default values
@@ -171,6 +173,38 @@ object GlobalUtils {
 
     // ==================== CACHE MANAGEMENT ====================
 
+    fun getOptimizedPosterUrl(imageUrl: String?): String {
+        return optimizeTmdbImageUrl(imageUrl, TMDB_POSTER_SIZE)
+    }
+
+    fun getOptimizedBackdropUrl(imageUrl: String?): String {
+        return optimizeTmdbImageUrl(imageUrl, TMDB_BACKDROP_SIZE)
+    }
+
+    fun getOptimizedLogoUrl(imageUrl: String?): String {
+        return optimizeTmdbImageUrl(imageUrl, TMDB_LOGO_SIZE)
+    }
+
+    private fun optimizeTmdbImageUrl(imageUrl: String?, size: String): String {
+        val normalized = imageUrl?.trim().orEmpty()
+        if (normalized.isEmpty()) return ""
+
+        if (normalized.startsWith("/")) {
+            return "$TMDB_IMAGE_BASE$size$normalized"
+        }
+
+        val marker = "/t/p/"
+        val markerIndex = normalized.indexOf(marker)
+        if (markerIndex == -1) return normalized
+
+        val remainder = normalized.substring(markerIndex + marker.length)
+        val pathStart = remainder.indexOf('/')
+        if (pathStart == -1) return normalized
+
+        val filePath = remainder.substring(pathStart)
+        return normalized.substring(0, markerIndex + marker.length) + size + filePath
+    }
+
     /**
      * Clear app cache
      */
@@ -206,9 +240,14 @@ object GlobalUtils {
         val sm = com.example.onyx.Database.SessionManger(context)
         if (!sm.isDynamicColorEnabled()) return
 
+        val paletteUrl = getOptimizedBackdropUrl(imageUrl).ifBlank {
+            getOptimizedPosterUrl(imageUrl)
+        }
+
         Glide.with(context)
             .asBitmap()
-            .load(imageUrl)
+            .load(paletteUrl)
+            .override(240, 240)
             .diskCacheStrategy(DiskCacheStrategy.ALL)
             .into(object : com.bumptech.glide.request.target.CustomTarget<android.graphics.Bitmap>() {
                 override fun onResourceReady(
@@ -1145,26 +1184,27 @@ object GlobalUtils {
      * Preloads movie images into the Glide disk cache in the background.
      */
      fun preloadMovieImages(context: Context, primaryUrl: String, secondaryUrl: String) {
-
-         return
-        /*
         val appContext = context.applicationContext
+        val optimizedPrimary = getOptimizedBackdropUrl(primaryUrl).ifBlank {
+            getOptimizedPosterUrl(primaryUrl)
+        }
+        val optimizedSecondary = getOptimizedPosterUrl(secondaryUrl).ifBlank {
+            getOptimizedBackdropUrl(secondaryUrl)
+        }
 
-        if (primaryUrl.isNotBlank()) {
+        if (optimizedPrimary.isNotBlank()) {
             Glide.with(appContext)
-                .load(primaryUrl)
+                .load(optimizedPrimary)
                 .diskCacheStrategy(DiskCacheStrategy.ALL)
                 .preload()
         }
 
-        if (secondaryUrl.isNotBlank() && secondaryUrl != primaryUrl) {
+        if (optimizedSecondary.isNotBlank() && optimizedSecondary != optimizedPrimary) {
             Glide.with(appContext)
-                .load(secondaryUrl)
+                .load(optimizedSecondary)
                 .diskCacheStrategy(DiskCacheStrategy.ALL)
                 .preload()
         }
-
-         */
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////

@@ -351,9 +351,9 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
             val overlayCard = view.findViewById<MaterialCardView>(R.id.movieFixedFocusOverlay)
 
             val heroImage = if (item.backdropUrl.isNotBlank() && item.backdropUrl != "null") {
-                item.backdropUrl
+                GlobalUtils.getOptimizedBackdropUrl(item.backdropUrl)
             } else {
-                item.posterUlr
+                GlobalUtils.getOptimizedPosterUrl(item.posterUlr)
             }
 
             // 1. Cross-fade the text content
@@ -431,9 +431,9 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
 
 
             val heroImage = if (item.backdropUrl.isNotBlank() && item.backdropUrl != "null") {
-                item.backdropUrl
+                GlobalUtils.getOptimizedBackdropUrl(item.backdropUrl)
             } else {
-                item.posterUlr
+                GlobalUtils.getOptimizedPosterUrl(item.posterUlr)
             }
 
             Glide.with(requireContext())
@@ -749,9 +749,9 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
         val imageUrl = if (!item.backdropUrl.isNullOrEmpty() &&
             item.backdropUrl != "null"
         ) {
-            item.backdropUrl
+            GlobalUtils.getOptimizedBackdropUrl(item.backdropUrl)
         } else {
-            item.posterUlr
+            GlobalUtils.getOptimizedPosterUrl(item.posterUlr)
         }
 
 
@@ -907,7 +907,7 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
                     val sizeW = (currentWidth  * 2f).toInt()
 
                     Glide.with(card.context)
-                        .load(itemMap["backdrop_path"])
+                        .load(GlobalUtils.getOptimizedBackdropUrl(itemMap["backdrop_path"]))
                         .override(sizeW, sizeH)
                         .diskCacheStrategy(DiskCacheStrategy.ALL)
                         .centerInside()

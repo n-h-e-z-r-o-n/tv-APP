@@ -171,7 +171,7 @@ class GridAdapter(
 
         holder.Movie_image?.let {
             Glide.with(holder.itemView.context)
-                .load(imageUrl)
+                .load(GlobalUtils.getOptimizedPosterUrl(imageUrl))
                 .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.ALL)
                 .centerInside()
                 .into(it)
@@ -407,14 +407,15 @@ class FilterAdapter(
             val sizeW = (currentWidth * 2f).toInt()
 
             holder.Movie_image?.let {
+                val optimizedPosterUrl = GlobalUtils.getOptimizedPosterUrl(currentItem.posterUlr)
                 Glide.with(holder.itemView.context)
-                    .load(currentItem.posterUlr)
+                    .load(optimizedPosterUrl)
                     .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.ALL)
                     .override(sizeW, sizeH)
                     //.override(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL)
                     .thumbnail(
                         Glide.with(holder.itemView.context)
-                            .load(currentItem.posterUlr)
+                            .load(optimizedPosterUrl)
                             .sizeMultiplier(0.5f)
                     )
                     .diskCacheStrategy(DiskCacheStrategy.ALL)
@@ -629,12 +630,12 @@ class CategoryAdapter(
             val size = (currentHeight  * 1.5f).toInt()
 
             Glide.with(holder.itemView.context)
-                .load(imageUrl)
+                .load(GlobalUtils.getOptimizedLogoUrl(imageUrl))
             .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.ALL)
                 .override(Target.SIZE_ORIGINAL, size)
                 .thumbnail(
                     Glide.with(holder.itemView.context)
-                        .load(imageUrl)
+                        .load(GlobalUtils.getOptimizedLogoUrl(imageUrl))
                         .sizeMultiplier(0.1f)
                 )
                 .diskCacheStrategy(DiskCacheStrategy.ALL)

@@ -315,9 +315,8 @@ class Watch_Page : AppCompatActivity() {
             extractAndApplyDynamicColor(posterUrl)
 
             Glide.with(this@Watch_Page)
-                .load(backdropUrl)
+                .load(GlobalUtils.getOptimizedBackdropUrl(backdropUrl))
                 .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.ALL)
-                .override(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL)
                 .centerCrop()
                 .into(backdrop_Widget)
 
@@ -343,7 +342,7 @@ class Watch_Page : AppCompatActivity() {
             extractAndApplyDynamicColor(posterUrl)
 
             Glide.with(this@Watch_Page)
-                .load(posterUrl)
+                .load(GlobalUtils.getOptimizedPosterUrl(posterUrl))
                 .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.ALL)
                 .centerInside()
                 .into(poster_widget)
@@ -708,7 +707,7 @@ class Watch_Page : AppCompatActivity() {
             selectedSeasonPoster = "https://image.tmdb.org/t/p/original/$selectedSeasonPoster"
             val posterWidget = findViewById<ImageView>(R.id.posterImageView)
             Glide.with(posterWidget)
-                .load(selectedSeasonPoster)
+                .load(GlobalUtils.getOptimizedPosterUrl(selectedSeasonPoster))
                 .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.ALL)
                 .centerCrop()
                 .into(posterWidget)
