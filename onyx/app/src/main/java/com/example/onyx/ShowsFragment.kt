@@ -13,6 +13,7 @@ import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewTreeObserver
 import android.view.WindowManager
 import android.widget.EditText
 import android.widget.FrameLayout
@@ -94,9 +95,11 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
     private var isLoadingMoreMovies = false
 
     private var isDataLoaded = false
+    private var isInitialLoadInProgress = false
     private var networkCallback: ConnectivityManager.NetworkCallback? = null
 
     private var lastFocusedView: View? = null
+    private var focusChangeListener: ViewTreeObserver.OnGlobalFocusChangeListener? = null
     private var currentTvPage = 1
     private var isLoadingMoreTv = false
     private var updateContentJob: kotlinx.coroutines.Job? = null
@@ -163,11 +166,12 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
         GlobalUtils.applyTheme(requireActivity())
         super.onViewCreated(view, savedInstanceState)
 
-        view.viewTreeObserver.addOnGlobalFocusChangeListener { _, newFocus ->
+        focusChangeListener = ViewTreeObserver.OnGlobalFocusChangeListener { _, newFocus ->
             if (newFocus != null && view.findViewById<View>(newFocus.id) != null) {
                 lastFocusedView = newFocus
             }
         }
+        view.viewTreeObserver.addOnGlobalFocusChangeListener(focusChangeListener)
 
         requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
@@ -201,7 +205,6 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
         movieSection.visibility = View.GONE
         filterSection.visibility = View.GONE
         tvSection.visibility = View.GONE
-        tvSection.visibility = View.GONE
 
 
         GlobalUtils.setHeightToMatchScreen(SpotlightSection)
@@ -213,7 +216,6 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
         GlobalUtils.centerParentOnFocus(activityScrollVIEW, HomeContentSection)
         GlobalUtils.centerParentOnFocus(activityScrollVIEW, movieSection)
         GlobalUtils.centerParentOnFocus(activityScrollVIEW, filterSection)
-        GlobalUtils.centerParentOnFocus(activityScrollVIEW, tvSection)
         GlobalUtils.centerParentOnFocus(activityScrollVIEW, tvSection)
 
         ////////////////////////////////////////////////////////////////////////////////////////////
@@ -233,6 +235,29 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
         setupRecyclerViews()
 
         setupNetworkListener()
+        triggerInitialLoadIfNeeded()
+    }
+
+    private fun triggerInitialLoadIfNeeded() {
+        if (isDataLoaded || isInitialLoadInProgress || !isAdded || view == null) return
+
+        isInitialLoadInProgress = true
+
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
+            try {
+                try { LoadingAnimation.show(requireView()) } catch (_: Exception) {}
+                HomeData()
+                categoryShow()
+                if (movieAdapter.itemCount <= 1) fetchMovies()
+                if (tvAdapter.itemCount <= 1) fetchTvShows()
+                genreFilter()
+                delay(2000)
+                loadFilterContent(realityAdapter, "&with_genres=10764", false)
+                loadFilterContent(thrillAdapter, "&with_genres=27", true)
+            } finally {
+                isInitialLoadInProgress = false
+            }
+        }
     }
 
     private fun setupNetworkListener() {
@@ -244,22 +269,7 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
         networkCallback = object : ConnectivityManager.NetworkCallback() {
             override fun onAvailable(network: Network) {
                 super.onAvailable(network)
-                if (!isDataLoaded) {
-                    // Back online and data isn't loaded! Run it again on the Main thread
-                    viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
-                        try { LoadingAnimation.show(requireView()) } catch (e: Exception) {}
-                        lifecycleScope.launch {
-                            HomeData()
-                            categoryShow()
-                            if (movieAdapter.itemCount <= 1) fetchMovies()
-                            if (tvAdapter.itemCount <= 1) fetchTvShows()
-                            genreFilter()
-                            delay(2000)
-                            loadFilterContent(realityAdapter, "&with_genres=10764", false)
-                            loadFilterContent(thrillAdapter, "&with_genres=27", true)
-                        }
-                    }
-                }
+                triggerInitialLoadIfNeeded()
             }
         }
         try {
@@ -276,7 +286,12 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
 
         // Only request focus if nothing has focus
         requireView().post {
-            if (lastFocusedView != null && lastFocusedView!!.isShown && lastFocusedView!!.isFocusable) {
+            if (
+                lastFocusedView != null &&
+                lastFocusedView!!.isAttachedToWindow &&
+                lastFocusedView!!.isShown &&
+                lastFocusedView!!.isFocusable
+            ) {
                 lastFocusedView!!.requestFocus()
             } else {
                 movieRecyclerView.requestFocus()
@@ -285,28 +300,42 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
 
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        
+    override fun onDestroyView() {
         networkCallback?.let {
-            val connectivityManager = requireContext().getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-            connectivityManager.unregisterNetworkCallback(it)
+            context?.let { ctx ->
+                val connectivityManager = ctx.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+                runCatching { connectivityManager.unregisterNetworkCallback(it) }
+            }
         }
         networkCallback = null
+
+        focusChangeListener?.let { listener ->
+            view?.viewTreeObserver?.takeIf { it.isAlive }?.removeOnGlobalFocusChangeListener(listener)
+        }
+        focusChangeListener = null
 
         // Clear all adapters
         movieAdapter.clearItems()
         tvAdapter.clearItems()
-        filterAdapter.clearItems()
+        if (::filterAdapter.isInitialized) {
+            filterAdapter.clearItems()
+        }
+        if (::realityAdapter.isInitialized) {
+            realityAdapter.clearItems()
+        }
+        if (::thrillAdapter.isInitialized) {
+            thrillAdapter.clearItems()
+        }
+        if (::genreAdapter.isInitialized) {
+            genreAdapter.clearItems()
+        }
 
         // Cancel any running coroutines
-        lifecycleScope.coroutineContext.cancelChildren()
+        updateContentJob?.cancel()
+        viewLifecycleOwner.lifecycleScope.coroutineContext.cancelChildren()
+        lastFocusedView = null
 
-
-
-        // Remove all handler callbacks
-
-        // requireActivity().finish()
+        super.onDestroyView()
     }
 
 
@@ -498,8 +527,8 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
 
         //  TV Shows -------------------------------------------------------------------------------
 
-        val tvFixedFocusOverlay = requireView().findViewById<MaterialCardView>(R.id.tvFixedFocusOverlay)
-        val tvRecyclerView = requireView().findViewById<RecyclerView>(R.id.TVsRecyclerView)
+        tvFixedFocusOverlay = requireView().findViewById(R.id.tvFixedFocusOverlay)
+        tvRecyclerView = requireView().findViewById(R.id.TVsRecyclerView)
         tvRecyclerView.layoutManager  =  LinearLayoutManager(
             requireActivity(),
             LinearLayoutManager.HORIZONTAL,
@@ -993,124 +1022,104 @@ class ShowsFragment : Fragment(R.layout.fragment_shows) {
             isLoading  = true
             lifecycleScope.launch {
 
-                val jsonObject =
+                val items =
                     withContext(Dispatchers.IO) {
-                        if (isMovie) {
+                        val jsonObject = if (isMovie) {
                             fetchTMDB.fetchDiscoverMovie("$query&page=$page")
                         } else {
                             fetchTMDB.fetchDiscoverTv("$query&page=$page")
                         }
-                    }
-                if (jsonObject == null){
-                    isLoading  = false
-                    return@launch
-                }
+                        val mvData = jsonObject?.optJSONArray("results") ?: return@withContext emptyList()
+                        val parsedItems = mutableListOf<filterItemOne>()
 
+                        for (i in 0 until mvData.length()) {
+                            val current = mvData.getJSONObject(i)
 
-                val mvData = jsonObject.getJSONArray("results")
+                            val backdropPath = current.optString("backdrop_path", "")
+                            val posterPath = current.optString("poster_path", "")
+                            val voteAverage = current.optString("vote_average", "")
+                            val title = current.optString("title").takeIf { it.isNotEmpty() }
+                                ?: current.optString("name", "")
+                            val overview = current.optString("overview", "")
+                            val adult = current.optBoolean("adult", false)
+                            val id = current.optString("id", "")
+                            val originalTitle = current.optString("original_title", "")
 
-                for (i in 0 until mvData.length()) {
-
-                    val current = mvData.getJSONObject(i)
-
-                    Log.d("DEBUG_MAIN_Filter", current.toString())
-
-                    val backdrop_path = current.optString("backdrop_path", "")
-                    val poster_path = current.optString("poster_path", "")
-
-                    val vote_average = current.optString("vote_average", "")
-                    val title = current.optString("title").takeIf { it.isNotEmpty() } ?: current.optString("name", "")
-                    val overview = current.optString("overview", "")
-                    val adult = current.optBoolean("adult", false)
-                    val id = current.optString("id", "")
-                    val original_title = current.optString("original_title", "")
-
-                    val genreIdsArr = current.optJSONArray("genre_ids")
-                    val genresList = mutableListOf<String>()
-                    if (genreIdsArr != null) {
-                        for (j in 0 until genreIdsArr.length()) {
-                            val gName = when(genreIdsArr.optInt(j)) {
-                                28 -> "Action"
-                                12 -> "Adventure"
-                                16 -> "Animation"
-                                35 -> "Comedy"
-                                80 -> "Crime"
-                                99 -> "Documentary"
-                                18 -> "Drama"
-                                10751 -> "Family"
-                                14 -> "Fantasy"
-                                36 -> "History"
-                                27 -> "Horror"
-                                10402 -> "Music"
-                                9648 -> "Mystery"
-                                10749 -> "Romance"
-                                878 -> "Sci-Fi"
-                                10770 -> "TV Movie"
-                                53 -> "Thriller"
-                                10752 -> "War"
-                                37 -> "Western"
-                                10759 -> "Action & Adventure"
-                                10762 -> "Kids"
-                                10763 -> "News"
-                                10764 -> "Reality"
-                                10765 -> "Sci-Fi & Fantasy"
-                                10766 -> "Soap"
-                                10767 -> "Talk"
-                                10768 -> "War & Politics"
-                                else -> ""
+                            val genreIdsArr = current.optJSONArray("genre_ids")
+                            val genresList = mutableListOf<String>()
+                            if (genreIdsArr != null) {
+                                for (j in 0 until genreIdsArr.length()) {
+                                    val gName = when (genreIdsArr.optInt(j)) {
+                                        28 -> "Action"
+                                        12 -> "Adventure"
+                                        16 -> "Animation"
+                                        35 -> "Comedy"
+                                        80 -> "Crime"
+                                        99 -> "Documentary"
+                                        18 -> "Drama"
+                                        10751 -> "Family"
+                                        14 -> "Fantasy"
+                                        36 -> "History"
+                                        27 -> "Horror"
+                                        10402 -> "Music"
+                                        9648 -> "Mystery"
+                                        10749 -> "Romance"
+                                        878 -> "Sci-Fi"
+                                        10770 -> "TV Movie"
+                                        53 -> "Thriller"
+                                        10752 -> "War"
+                                        37 -> "Western"
+                                        10759 -> "Action & Adventure"
+                                        10762 -> "Kids"
+                                        10763 -> "News"
+                                        10764 -> "Reality"
+                                        10765 -> "Sci-Fi & Fantasy"
+                                        10766 -> "Soap"
+                                        10767 -> "Talk"
+                                        10768 -> "War & Politics"
+                                        else -> ""
+                                    }
+                                    if (gName.isNotEmpty()) genresList.add(gName)
+                                }
                             }
-                            if (gName.isNotEmpty()) genresList.add(gName)
+
+                            val type = if (originalTitle.isEmpty()) "tv" else "movie"
+                            val rawDate = if (type == "tv") {
+                                current.optString("first_air_date", "")
+                            } else {
+                                current.optString("release_date", "")
+                            }
+                            val date = if (rawDate.length >= 4) rawDate.substring(0, 4) else rawDate
+
+                            parsedItems.add(
+                                filterItemOne(
+                                    title = title,
+                                    backdropUrl = "https://image.tmdb.org/t/p/original$backdropPath",
+                                    posterUlr = "https://image.tmdb.org/t/p/original$posterPath",
+                                    imdbCode = id,
+                                    type = type,
+                                    year = date,
+                                    rating = voteAverage,
+                                    runtime = "",
+                                    overview = overview,
+                                    isAdult = adult,
+                                    genres = genresList.joinToString(", ")
+                                )
+                            )
                         }
-                    }
-                    val genreString = genresList.joinToString(", ")
 
-                    val type: String
-                    var date: String
-                    var showD: String = ""
-
-                    val imgPost = "https://image.tmdb.org/t/p/original$poster_path"
-                    val imgback = "https://image.tmdb.org/t/p/original$backdrop_path"
-
-                    if (original_title == "") {
-                        type = "tv";
-                        date = if (current.getString("first_air_date").length >= 4) {
-                            current.getString("first_air_date").substring(0, 4)
-                        } else {
-                            current.getString("first_air_date")
-                        }
-                    } else {
-                        type = "movie"
-                        date = if (current.getString("release_date").length >= 4) {
-                            current.getString("release_date").substring(0, 4)
-                        } else {
-                            current.getString("release_date")
-                        }
+                        parsedItems
                     }
 
-                    val Item = filterItemOne(
-                        title = title,
-                        backdropUrl = imgback,
-                        posterUlr = imgPost ,
-                        imdbCode = id,
-                        type = type,
-                        year = date,
-                        rating = vote_average,
-                        runtime = showD,
-                        overview = overview,
-                        isAdult = adult,
-                        genres = genreString
-                    )
-
-                    withContext(Dispatchers.Main) {
-                    if (!isAdded || view == null) return@withContext
-                        adapter.addItem(Item)
-                        isLoading  = false
-
-
-                    }
-                }
                 withContext(Dispatchers.Main) {
                     if (!isAdded || view == null) return@withContext
+                    isLoading = false
+                    if (items.isEmpty()) {
+                        adapter.isLoadingMore = false
+                        return@withContext
+                    }
+
+                    adapter.addItems(items)
                     adapter.isLoadingMore = false
                     if (adapter.itemCount > 0) {
                         requireView().findViewById<FrameLayout>(R.id.HomeContentSection).visibility =
