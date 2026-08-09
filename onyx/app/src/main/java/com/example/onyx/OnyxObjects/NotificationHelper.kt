@@ -87,6 +87,164 @@ object NotificationHelper {
         val db = AppDatabase(context)         // Initialize database
         val sm = SessionManger(context)
 
+        val processedAnimeIds = mutableSetOf<String>()
+
+        val userId = sm.getUserId()
+        val animeList = db.getFavoriteAnime(userId)
+        val animeById = animeList.associateBy {
+            it["anime_id"]?.toString()
+        }
+
+        var results = false
+        val fetch = AnimeApi(context)
+
+        Log.e("anime_Notification Fav", "animeList:  ${animeList.toString()}")
+
+        for (item in animeList) {
+            try{
+
+                /*
+
+                Log.d("Not_anime", "\n\n\n")
+                Log.d("Not_anime", "userId: $userId")
+                Log.d("Not_anime", "anime_id: ${item["anime_id"]}")
+                Log.d("Not_anime", "title: ${item["name"]}")
+                Log.d("Not_anime", "poster: ${item["poster"]}")
+                Log.d("Not_anime", "type: ${item["type"]}")
+                Log.d("Not_anime", "seasons: ${item["seasons"]}")
+                Log.d("Not_anime", "sub: ${item["sub"]}")
+                Log.d("Not_anime", "dub: ${item["dub"]}")
+
+                 */
+
+
+                val animeId = item["anime_id"].toString()?: continue
+
+                if (animeId in processedAnimeIds) {
+
+                    Log.d(
+                        "Not_anime",
+                        "Skipping already processed anime: $animeId"
+                    )
+
+                    continue
+                }
+
+                /////////////////////////////////////////////////////////////////////////////////////
+
+                val jsonObjectF = fetch.animeInfo(item["anime_id"].toString())
+                if(jsonObjectF==null){continue}
+                val dataFetched = jsonObjectF.getJSONObject("data")
+                val seasonsArray = dataFetched.optJSONArray("seasons") ?: JSONArray()
+
+                ////////////////////////////////////////////////////////////////////////////////////
+
+                for (i in 0 until seasonsArray.length()) {
+
+                    val season = seasonsArray.getJSONObject(i)
+                    val seasonId = season.optString("id", "")
+                    val seasonTitle = season.optString("title", "")
+                    val seasonPoster = season.optString("poster", "")
+
+                    val seasonRating = season.optString("rating", "")
+                    val seasonType = season.optString("type", "")
+                    val seasonYear = season.optString("year", "")
+                    val seasonMalId = season.optString("malId", "")
+                    val seasonAnilistId = season.optString("anilistId", "")
+
+
+                    val subFetched = season.optString("sub", "").toIntOrNull()?: 0
+                    val dubFetched = season.optString("dub", "").toIntOrNull()?: 0
+
+                    processedAnimeIds.add("-$seasonId")
+
+
+                    val animeStored = animeById["-$seasonId"]
+                    if (animeStored == null) {
+                        db.addFavoriteAnime(
+                            userId,
+                            "-$seasonId",
+                            seasonTitle,
+                            seasonType,
+                            seasonAnilistId,
+                            seasonMalId,
+                            "",
+                            seasonRating,
+                            "",
+                            "",
+                            seasonPoster,
+                            subFetched.toString(),
+                            dubFetched.toString(),
+                            seasonYear,
+                            "",
+                            seasonsArray.toString()
+                        )
+
+                        db.insertAnimeNotification(
+                            userId = userId,
+                            animeId = "-$seasonId",
+                            title =  seasonTitle.toString(),
+                            poster = seasonPoster.toString(),
+                            subStored = subFetched,
+                            dubStored = dubFetched,
+                            seasonsStored = 0
+                        )
+                        continue
+                    }
+
+
+                    Log.d("storedAnime", "$seasonId \n storedAnime: $animeStored")
+                    val subStored = animeStored?.get("sub")?.toString()?.toIntOrNull() ?: 0
+                    val dubStored = animeStored?.get("dub")?.toString()?.toIntOrNull() ?: 0
+
+                    Log.d("storedAnime", "$seasonId \n subFetched: $subFetched, dubFetched: $dubFetched")
+                    Log.d("storedAnime", "$seasonId \n subStored: $subStored, dubStored: $dubStored")
+
+
+                    var notSub = 0
+                    var notDub = 0
+
+                    if (subFetched > subStored) {
+                        notSub = subFetched
+                    }
+                    if (dubFetched > dubStored) {
+                        notDub = dubFetched
+                    }
+
+                    Log.d("Not_anime", "notSub: ${notSub}")
+                    Log.d("Not_anime", "notDub: ${notDub}")
+
+
+                    if (subFetched > subStored || dubFetched > dubStored) {
+                        db.insertAnimeNotification(
+                            userId = userId,
+                            animeId = "-$seasonId",
+                            title =  seasonTitle.toString(),
+                            poster = seasonPoster.toString(),
+                            subStored = notSub,
+                            dubStored = notDub,
+                            seasonsStored = 0
+                        )
+
+                        db.updateAnimeProgress(userId, "-$seasonId", subFetched, dubFetched)
+                        Log.d("Not_anime", "anime_Notification added,  animeId: $animeId\n")
+
+                        results = true
+                    }
+                }
+            }catch (e: Exception) {
+                Log.e("anime_Notification", "Error ${e.message}")
+            }
+        }
+        return results
+    }
+
+
+
+    fun getAnimeNotifications_old(context: Context) : Boolean{
+        val db = AppDatabase(context)         // Initialize database
+        val sm = SessionManger(context)
+
         val userId = sm.getUserId()
         val animeList = db.getFavoriteAnime(userId)
 

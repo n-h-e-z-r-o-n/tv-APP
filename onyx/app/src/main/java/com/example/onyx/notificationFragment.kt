@@ -55,6 +55,7 @@ class notificationFragment :  Fragment(R.layout.fragment_notification) {
         clearBtn.setOnClickListener {
             lifecycleScope.launch(Dispatchers.IO) {
                 db.clearAllAnimeNotifications(userId)
+                db.clearAllTvNotifications(userId)
             }
             notificationAdapter.clearItems()
         }

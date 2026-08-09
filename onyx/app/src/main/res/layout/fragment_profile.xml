@@ -91,6 +91,17 @@
                         android:fontFamily="sans-serif-condensed"
                         tools:text="Member #3 • Free plan" />
 
+                    <TextClock
+                        android:layout_marginVertical="10dp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/p"
+                        android:format12Hour="EEE, dd MMM yyyy  •  h:mm:ss a"
+                        android:format24Hour="EEE, dd MMM yyyy  •  h:mm:ss a"
+                        android:textColor="?attr/FG_color"
+                        android:textSize="14sp"
+                        tools:text="Sun, 09 Aug 2026  •  1:12:45 PM" />
+
 
                     <LinearLayout
                         android:layout_marginTop="10dp"

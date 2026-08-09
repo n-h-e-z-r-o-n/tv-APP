@@ -35,7 +35,7 @@ class MainActivity : AppCompatActivity() {
         setupBackPressedCallback()
 
         val logo: TextView = findViewById(R.id.mediaTxt)
-        GlobalUtils.animateGradientTextString(logo, "#000000", "#FFFFFF")
+        GlobalUtils.animateGradientTextString(logo, "#042C40", "#FFFFFF")
         GlobalUtils.hideSystemUI(this)
 
         startStartupFlow()

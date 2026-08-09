@@ -670,22 +670,6 @@ class AnimeFragment : Fragment() {
                 try {
                     val jsonObject = withContext(Dispatchers.IO) { fetchAnimeAPI.animeCategory(pageToLoad, "trending") }
 
-                    /*
-
-                    val url = "https://echo-anime.vercel.app/api/v2/anime/category/trending?page=$pageToLoad"
-                    val connection = URL(url).openConnection() as HttpURLConnection
-                    connection.requestMethod = "GET"
-                    connection.connectTimeout = 10_000
-                    connection.readTimeout = 10_000
-
-                    if (connection.responseCode !in 200..299) {
-                        throw Exception("HTTP ${connection.responseCode}")
-                    }
-
-                    val response = connection.inputStream.bufferedReader().use { it.readText() }
-                    connection.disconnect()
-
-                     */
 
                     if (jsonObject == null) {
                         return@launch
