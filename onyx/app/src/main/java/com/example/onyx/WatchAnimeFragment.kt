@@ -1,7 +1,9 @@
 package com.example.onyx
 
+import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Color
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -17,6 +19,7 @@ import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.SeekBar
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.OptIn
@@ -57,6 +60,7 @@ import com.example.onyx.OnyxClasses.AnimeTrendingAdapter
 import com.example.onyx.OnyxClasses.TrendingAnimeItem
 import com.example.onyx.databinding.FragmentWatchAnimePageBinding
 import com.google.android.material.card.MaterialCardView
+import kotlinx.coroutines.Job
 
 class WatchAnimeFragment : Fragment(R.layout.fragment_watch_anime_page) {
 
@@ -89,6 +93,9 @@ class WatchAnimeFragment : Fragment(R.layout.fragment_watch_anime_page) {
 
     private var _binding: FragmentWatchAnimePageBinding? = null
     private val binding get() = _binding!!
+
+    private var trailerJob: Job? = null
+
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -211,6 +218,10 @@ class WatchAnimeFragment : Fragment(R.layout.fragment_watch_anime_page) {
         val studio = data.getString("studios")
 
 
+        val tmdbId = data.getString("tmdbId")
+        val tmdbmediaType = data.getString("tmdbmediaType")
+
+
         val  seasons = data.getJSONArray("seasons")?: JSONArray()
         val  relatedAnimes = data.getJSONArray("relatedAnimes")?: JSONArray()
         val  recommendedAnime = data.getJSONArray("recommendedAnimes")?: JSONArray()
@@ -322,6 +333,25 @@ class WatchAnimeFragment : Fragment(R.layout.fragment_watch_anime_page) {
             seasons = seasons.toString()
         )
 
+        binding.TrailerButton.setOnClickListener {
+            val trailerLabel =binding.TrailerText
+
+            trailerJob?.cancel()
+            binding.TrailerButton.isEnabled = false
+            trailerLabel.text = "Opening..."
+
+            trailerJob = lifecycleScope.launch {
+                val opened = openTrailerInYouTube(tmdbId, tmdbmediaType, name)
+                binding.TrailerButton.isEnabled = true
+
+                if (!opened) {
+                    trailerLabel.text = "No Trailer Found"
+                    kotlinx.coroutines.delay(2500)
+                }
+
+                trailerLabel.text = "Trailer"
+            }
+        }
 
         showRecommendation(relatedAnimes, recommendedAnime)
 
@@ -737,6 +767,67 @@ class WatchAnimeFragment : Fragment(R.layout.fragment_watch_anime_page) {
 
             blurContainerLeft.background = gradientDrawableLeft
             blurContainerBottom.background = gradientDrawableBottom
+        }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+
+    private suspend fun openTrailerInYouTube(showId: String, showType: String, showTitle: String): Boolean {
+        val trailerUrl = withContext(Dispatchers.IO) {
+            val jsonObject = fetchTMDB.fetchVideoData(showId, showType) ?: return@withContext null
+            val results = jsonObject.optJSONArray("results") ?: return@withContext null
+
+            val youtubeVideos = (0 until results.length())
+                .mapNotNull { results.optJSONObject(it) }
+                .filter { it.optString("site").equals("YouTube", ignoreCase = true) }
+
+            val video = youtubeVideos.firstOrNull {
+                it.optString("type").equals("Trailer", ignoreCase = true) && it.optBoolean("official")
+            } ?: youtubeVideos.firstOrNull {
+                it.optString("type").equals("Trailer", ignoreCase = true)
+            } ?: youtubeVideos.firstOrNull {
+                it.optString("type").equals("Teaser", ignoreCase = true)
+            } ?: youtubeVideos.firstOrNull()
+
+            video?.optString("key")
+                ?.takeIf { it.isNotBlank() }
+                ?.let { "https://www.youtube.com/watch?v=$it" }
+                ?: buildYouTubeSearchUrl(showTitle)
+        }
+
+        return withContext(Dispatchers.Main) {
+            openYouTubeIntent(trailerUrl)
+        }
+    }
+
+    private fun buildYouTubeSearchUrl(showTitle: String): String? {
+        val query = showTitle.trim().takeIf { it.isNotBlank() } ?: return null
+        return "https://www.youtube.com/results?search_query=" + Uri.encode("$query trailer")
+    }
+
+    private fun openYouTubeIntent(url: String?): Boolean {
+        if (url.isNullOrBlank()) {
+            return false
+        }
+
+        val appIntent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
+            setPackage("com.google.android.youtube")
+        }
+
+        val webIntent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+
+        return try {
+            startActivity(appIntent)
+            true
+        } catch (_: Exception) {
+            try {
+                startActivity(webIntent)
+                true
+            } catch (error: Exception) {
+                Log.e("Watch_Page", "Unable to open trailer", error)
+                Toast.makeText(requireContext(), "Unable to open trailer", Toast.LENGTH_SHORT).show()
+                false
+            }
         }
     }
 

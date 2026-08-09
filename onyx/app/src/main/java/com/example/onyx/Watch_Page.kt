@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Typeface
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -53,7 +54,6 @@ import kotlinx.coroutines.withContext
 import java.time.format.DateTimeFormatter
 import android.graphics.Color
 import android.view.LayoutInflater
-import android.webkit.WebView
 import android.widget.ScrollView
 import androidx.activity.OnBackPressedCallback
 import androidx.annotation.OptIn
@@ -80,7 +80,6 @@ class Watch_Page : AppCompatActivity() {
     private var showTitle: String = ""
     private var showPoster: String = ""
     private var showBackdrop: String = ""
-    private var trailerOn = false
     private var streamLinksFetched = false
     private var currentServerIndex = 0
     private lateinit var episodes_recycler : RecyclerView
@@ -417,46 +416,23 @@ class Watch_Page : AppCompatActivity() {
             }
 
             trailerButton.setOnClickListener {
-                val webView = findViewById<WebView>(R.id.trailerWebView)
                 val trailerLabel = findViewById<TextView>(R.id.trailer_text)
 
-                if (!trailerOn) {
-                    // --- PLAY ---
-                    // Cancel any in-flight job (handles rapid double-taps safely)
-                    trailerJob?.cancel()
+                trailerJob?.cancel()
+                trailerButton.isEnabled = false
+                trailerLabel.text = "Opening..."
 
-                    // Disable button and show loading state immediately
-                    trailerButton.isEnabled = false
-                    trailerLabel.text = "Loading..."
+                trailerJob = lifecycleScope.launch {
+                        val opened = openTrailerInYouTube(showId, showType, showTitle)
+                     trailerButton.isEnabled = true
 
-                    trailerJob = lifecycleScope.launch {
-                        val found = GlobalUtils.playTrailer(
-                            this@Watch_Page, showId, showType, webView, muted = 0
-                        )
-
-                        // Re-enable button regardless of outcome
-                        trailerButton.isEnabled = true
-
-                        if (found) {
-                            trailerOn = true
-                            trailerLabel.text = "Stop Trailer"
-                        } else {
-                            // Nothing to play — reset state and inform user
-                            trailerOn = false
+                        if (!opened) {
                             trailerLabel.text = "No Trailer Found"
-                            // Revert label back to default after 3 seconds
-                            kotlinx.coroutines.delay(3000)
-                            trailerLabel.text = "Trailer"
+                            kotlinx.coroutines.delay(2500)
                         }
-                    }
 
-                } else {
-                    // --- STOP ---
-                    trailerJob?.cancel()
-                    GlobalUtils.StopTrailer(webView)
-                    trailerLabel.text = "Trailer"
-                    trailerOn = false
-                }
+                        trailerLabel.text = "Trailer"
+                    }
             }
 
 
@@ -511,16 +487,68 @@ class Watch_Page : AppCompatActivity() {
         }
     }
 
+    private suspend fun openTrailerInYouTube(showId: String, showType: String, showTitle: String): Boolean {
+        val trailerUrl = withContext(Dispatchers.IO) {
+            val jsonObject = fetch.fetchVideoData(showId, showType) ?: return@withContext null
+            val results = jsonObject.optJSONArray("results") ?: return@withContext null
+
+            val youtubeVideos = (0 until results.length())
+                .mapNotNull { results.optJSONObject(it) }
+                .filter { it.optString("site").equals("YouTube", ignoreCase = true) }
+
+            val video = youtubeVideos.firstOrNull {
+                it.optString("type").equals("Trailer", ignoreCase = true) && it.optBoolean("official")
+            } ?: youtubeVideos.firstOrNull {
+                it.optString("type").equals("Trailer", ignoreCase = true)
+            } ?: youtubeVideos.firstOrNull {
+                it.optString("type").equals("Teaser", ignoreCase = true)
+            } ?: youtubeVideos.firstOrNull()
+
+            video?.optString("key")
+                ?.takeIf { it.isNotBlank() }
+                ?.let { "https://www.youtube.com/watch?v=$it" }
+                ?: buildYouTubeSearchUrl(showTitle)
+        }
+
+        return withContext(Dispatchers.Main) {
+            openYouTubeIntent(trailerUrl)
+        }
+    }
+
+    private fun buildYouTubeSearchUrl(showTitle: String): String? {
+        val query = showTitle.trim().takeIf { it.isNotBlank() } ?: return null
+        return "https://www.youtube.com/results?search_query=" + Uri.encode("$query trailer")
+    }
+
+    private fun openYouTubeIntent(url: String?): Boolean {
+        if (url.isNullOrBlank()) {
+            return false
+        }
+
+        val appIntent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
+            setPackage("com.google.android.youtube")
+        }
+
+        val webIntent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+
+        return try {
+            startActivity(appIntent)
+            true
+        } catch (_: Exception) {
+            try {
+                startActivity(webIntent)
+                true
+            } catch (error: Exception) {
+                Log.e("Watch_Page", "Unable to open trailer", error)
+                Toast.makeText(this@Watch_Page, "Unable to open trailer", Toast.LENGTH_SHORT).show()
+                false
+            }
+        }
+    }
+
 
 
     override fun onDestroy() {
-        // Stop and destroy trailer WebView to prevent memory leaks and Chromium crashes
-        val webView = findViewById<WebView>(R.id.trailerWebView)
-        if (webView != null) {
-            GlobalUtils.StopTrailer(webView)
-            webView.destroy()
-        }
-
         // Cancel all tracked jobs and coroutines
         trailerJob?.cancel()
         streamingJob?.cancel()

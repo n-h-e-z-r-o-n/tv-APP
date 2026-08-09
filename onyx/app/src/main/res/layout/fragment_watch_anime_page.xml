@@ -429,36 +429,88 @@
                                     tools:ignore="NestedWeights,SmallSp"
                                     tools:text="The fourth season of Tensei Shitara Slime Datta Ken. Demon Lord Rimuru's dream of creating an alliance between humans and monsters takes a step closer to being realized. As Tempest continues to prosper, Granville Rozzo and his granddaughter, Maribel Rozzo, clash with Demon Lord Rimuru over their plan to protect mankind by ruling over them. Meanwhile, in El Dorado, Demon Lord Leon works toward goals of his own. The awakening of a new Hero draws near! " />
 
-                                <com.google.android.material.card.MaterialCardView
-                                    android:id="@+id/favoriteButtonAnime"
+                                <LinearLayout
                                     android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_gravity="bottom"
-                                    android:clickable="true"
-                                    android:focusable="true"
-                                    app:cardBackgroundColor="#40FFFFFF"
-                                    app:cardCornerRadius="9dp"
-                                    app:cardElevation="0dp"
-                                    app:strokeColor="@color/card_stroke"
-                                    app:strokeWidth="2dp"
-                                    tools:ignore="TouchTargetSizeCheck,SpeakableTextPresentCheck">
+                                    android:layout_height="wrap_content">
 
 
-                                    <ImageView
-                                        android:id="@+id/favoriteButtonImg"
-                                        android:layout_width="24dp"
-                                        android:layout_height="34dp"
-                                        android:layout_marginHorizontal="14dp"
-                                        android:background="@android:color/transparent"
-                                        android:src="@drawable/ic_addfave"
-                                        android:textAllCaps="false"
-                                        android:textColor="?attr/FG_color"
-                                        android:tooltipText="Add to Favorites"
-                                        app:tint="#FFFFFF"
-                                        tools:ignore="ContentDescription,UnusedAttribute" />
+
+                                        <com.google.android.material.card.MaterialCardView
+                                            android:id="@+id/favoriteButtonAnime"
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:layout_gravity="bottom"
+                                            android:clickable="true"
+                                            android:focusable="true"
+                                            app:cardBackgroundColor="#40FFFFFF"
+                                            app:cardCornerRadius="9dp"
+                                            app:cardElevation="0dp"
+                                            app:strokeColor="@color/card_stroke"
+                                            app:strokeWidth="2dp"
+                                            tools:ignore="TouchTargetSizeCheck,SpeakableTextPresentCheck">
 
 
-                                </com.google.android.material.card.MaterialCardView>
+                                            <ImageView
+                                                android:id="@+id/favoriteButtonImg"
+                                                android:layout_width="24dp"
+                                                android:layout_height="34dp"
+                                                android:layout_marginHorizontal="14dp"
+                                                android:background="@android:color/transparent"
+                                                android:src="@drawable/ic_addfave"
+                                                android:textAllCaps="false"
+                                                android:textColor="?attr/FG_color"
+                                                android:tooltipText="Add to Favorites"
+                                                app:tint="#FFFFFF"
+                                                tools:ignore="ContentDescription,UnusedAttribute" />
+
+                                        </com.google.android.material.card.MaterialCardView>
+
+                                        <LinearLayout
+                                            android:id="@+id/TrailerButton"
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:gravity="center_vertical"
+                                            android:layout_marginStart="10dp"
+                                            android:background="@drawable/watch_button"
+                                            android:focusableInTouchMode="true"
+                                            android:focusable="true"
+                                            android:clickable="true"
+                                            android:paddingVertical="8dp"
+                                            android:paddingHorizontal="8dp"
+                                            android:nextFocusLeft="@+id/watchNowButton"
+                                            android:nextFocusRight="@+id/favoriteButton"
+                                            android:layout_marginEnd="10dp"
+                                            android:elevation="2dp">
+
+                                            <ImageView
+                                                android:layout_width="22dp"
+                                                android:layout_height="22dp"
+                                                android:layout_marginEnd="4dp"
+                                                android:background="@android:color/transparent"
+                                                android:src="@drawable/ic_trailer"
+                                                android:focusable="false"
+                                                android:focusableInTouchMode="false"
+                                                android:clickable="false"
+                                                app:tint="#FFFFFF"
+                                                android:textSize="14sp"
+                                                android:textAllCaps="false"
+                                                android:elevation="2dp"
+                                                tools:ignore="ContentDescription,UnusedAttribute"/>
+
+                                            <TextView
+                                                android:id="@+id/TrailerText"
+                                                android:layout_width="wrap_content"
+                                                android:layout_height="wrap_content"
+                                                android:text="Trailer"
+                                                android:textSize="15sp"
+                                                android:fontFamily="@font/o"
+                                                android:textColor="#FFFFFF"
+                                                tools:ignore="HardcodedText" />
+                                        </LinearLayout>
+                                </LinearLayout>
+
+
+
                             </LinearLayout>
                         </LinearLayout>
 
