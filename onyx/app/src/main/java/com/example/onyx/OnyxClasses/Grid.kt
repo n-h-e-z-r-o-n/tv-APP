@@ -5,6 +5,7 @@ import android.content.Intent
 import android.graphics.Color
 import android.graphics.ColorMatrix
 import android.graphics.Rect
+import android.graphics.drawable.Drawable
 import android.text.format.DateUtils
 import android.util.Log
 import android.view.KeyEvent
@@ -24,7 +25,10 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.DataSource
 import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.bumptech.glide.load.engine.GlideException
+import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.target.Target
 import com.example.onyx.Actor_Page
 import com.example.onyx.Anime_Video_Player
@@ -1251,6 +1255,34 @@ class FavAdapter(
     companion object {
         private var lastKeyTime = 0L
         private const val KEY_DEBOUNCE_DELAY = 300L // ms - Tweak this number to feel faster or slower
+        private const val FAVORITE_MIN_WIDTH_DP = 100
+        private const val FAVORITE_RESERVED_MAX_WIDTH_DP = 420
+    }
+
+    private fun requestFlexboxRelayout(itemView: View) {
+        itemView.post {
+            itemView.requestLayout()
+            (itemView.parent as? RecyclerView)?.let { recyclerView ->
+                recyclerView.post {
+                    recyclerView.invalidateItemDecorations()
+                    recyclerView.requestLayout()
+                }
+            }
+        }
+    }
+
+    private fun dpToPx(view: View, dp: Int): Int {
+        return (dp * view.resources.displayMetrics.density).toInt()
+    }
+
+    private fun reserveFavoriteWidth(itemView: View, imageView: ImageView) {
+        imageView.maxWidth = dpToPx(itemView, FAVORITE_RESERVED_MAX_WIDTH_DP)
+        itemView.minimumWidth = dpToPx(itemView, FAVORITE_RESERVED_MAX_WIDTH_DP)
+    }
+
+    private fun releaseFavoriteWidth(itemView: View, imageView: ImageView) {
+        imageView.maxWidth = dpToPx(itemView, FAVORITE_RESERVED_MAX_WIDTH_DP)
+        itemView.minimumWidth = dpToPx(itemView, FAVORITE_MIN_WIDTH_DP)
     }
 
     inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -1350,10 +1382,35 @@ class FavAdapter(
         val type = currentItem.showType
 
         holder.itemText?.text = currentItem.title
+        reserveFavoriteWidth(holder.itemView, holder.Movie_image)
 
         Glide.with(holder.itemView.context)
             .load(backdropUrl)
             .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.ALL)
+            .listener(object : RequestListener<Drawable> {
+                override fun onLoadFailed(
+                    e: GlideException?,
+                    model: Any?,
+                    target: Target<Drawable>,
+                    isFirstResource: Boolean
+                ): Boolean {
+                    releaseFavoriteWidth(holder.itemView, holder.Movie_image)
+                    requestFlexboxRelayout(holder.itemView)
+                    return false
+                }
+
+                override fun onResourceReady(
+                    resource: Drawable,
+                    model: Any,
+                    target: Target<Drawable>?,
+                    dataSource: DataSource,
+                    isFirstResource: Boolean
+                ): Boolean {
+                    releaseFavoriteWidth(holder.itemView, holder.Movie_image)
+                    requestFlexboxRelayout(holder.itemView)
+                    return false
+                }
+            })
             .centerInside()
             .into(holder.Movie_image)
 

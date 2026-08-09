@@ -1,20 +1,21 @@
 package com.example.onyx
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
+import android.view.ViewGroup
+import android.widget.ImageView
+import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.example.onyx.Database.AppDatabase
 import com.example.onyx.Database.SessionManger
-import com.example.onyx.OnyxClasses.FavAdapter
 import com.example.onyx.OnyxClasses.FavItem
 import com.example.onyx.OnyxObjects.GlobalUtils
 import com.example.onyx.databinding.FragmentFavoritesBinding
-import com.google.android.flexbox.AlignItems
-import com.google.android.flexbox.FlexDirection
-import com.google.android.flexbox.FlexWrap
-import com.google.android.flexbox.FlexboxLayoutManager
-import com.google.android.flexbox.JustifyContent
+import com.google.android.flexbox.FlexboxLayout
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -24,35 +25,20 @@ class FavoritesFragment : Fragment(R.layout.fragment_favorites) {
     private var _binding: FragmentFavoritesBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var favoritesAdapter: FavAdapter
     private lateinit var db: AppDatabase
     private lateinit var sm: SessionManger
     private var userId: Int = -1
 
-    private var lastFocusedView: View? = null
+    private var lastFocusedFavoriteKey: String? = null
     private var favoritesLoaded = false
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentFavoritesBinding.bind(view)
 
-        view.viewTreeObserver.addOnGlobalFocusChangeListener { _, newFocus ->
-            if (newFocus != null && view.findViewById<View>(newFocus.id) != null) {
-                lastFocusedView = newFocus
-            }
-        }
-
         db = AppDatabase(requireActivity())
         sm = SessionManger(requireActivity())
         userId = sm.getUserId()
-
-        binding.favoritesRecycler.layoutManager = FlexboxLayoutManager(requireContext()).apply {
-            flexDirection = FlexDirection.ROW
-            flexWrap = FlexWrap.WRAP
-            justifyContent = JustifyContent.FLEX_START
-            alignItems = AlignItems.FLEX_START
-        }
-        binding.favoritesRecycler.isNestedScrollingEnabled = false
 
         loadFavorites()
     }
@@ -120,13 +106,7 @@ class FavoritesFragment : Fragment(R.layout.fragment_favorites) {
                 binding.emptyStateText.visibility = View.GONE
                 binding.favoritesSection.visibility = View.VISIBLE
                 binding.favoritesCount.text = items.size.toString()
-
-                if (!::favoritesAdapter.isInitialized) {
-                    favoritesAdapter = FavAdapter(items.toMutableList(), R.layout.square_card)
-                    binding.favoritesRecycler.adapter = favoritesAdapter
-                } else {
-                    favoritesAdapter.updateItems(items)
-                }
+                renderFavorites(items)
             }
 
             favoritesLoaded = true
@@ -134,24 +114,90 @@ class FavoritesFragment : Fragment(R.layout.fragment_favorites) {
         }
     }
 
-    private fun restoreFavoriteFocus() {
-        val previousFocus = lastFocusedView
+    private fun renderFavorites(items: List<FavItem>) {
+        binding.favoritesFlexbox.removeAllViews()
 
-        if (
-            previousFocus != null &&
-            previousFocus.isAttachedToWindow &&
-            previousFocus.isShown &&
-            previousFocus.isFocusable
-        ) {
-            previousFocus.requestFocus()
-            return
+        items.forEach { item ->
+            val cardView = layoutInflater.inflate(
+                R.layout.square_card,
+                binding.favoritesFlexbox,
+                false
+            )
+
+            val imageView = cardView.findViewById<ImageView>(R.id.itemImage)
+            val titleView = cardView.findViewById<TextView>(R.id.itemText)
+            val favoriteKey = "${item.showType}:${item.imdbCode}"
+
+            titleView.text = item.title
+            cardView.tag = favoriteKey
+
+            Glide.with(cardView.context)
+                .load(item.backdropUrl)
+                .diskCacheStrategy(DiskCacheStrategy.ALL)
+                .centerInside()
+                .into(imageView)
+
+            cardView.setOnFocusChangeListener { _, hasFocus ->
+                if (hasFocus) {
+                    lastFocusedFavoriteKey = favoriteKey
+                }
+            }
+
+            cardView.setOnClickListener {
+                openFavorite(item)
+            }
+
+            val layoutParams = cardView.layoutParams
+            if (layoutParams is FlexboxLayout.LayoutParams) {
+                layoutParams.flexShrink = 1f
+                layoutParams.flexGrow = 0f
+                cardView.layoutParams = layoutParams
+            } else {
+                cardView.layoutParams = FlexboxLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    flexShrink = 1f
+                    flexGrow = 0f
+                }
+            }
+
+            binding.favoritesFlexbox.addView(cardView)
+        }
+    }
+
+    private fun openFavorite(item: FavItem) {
+        val context = requireActivity()
+        if (item.showType == "anime") {
+            val args = Bundle().apply {
+                putString("anime_code", item.imdbCode)
+                putString("anime_poster", item.posterUrl)
+            }
+            (context as HomeActivity).navigateToFragment(WatchAnimeFragment(), args)
+        } else {
+            val intent = Intent(context, Watch_Page::class.java).apply {
+                putExtra("imdb_code", item.imdbCode)
+                putExtra("type", item.showType)
+            }
+            context.startActivity(intent)
+        }
+    }
+
+    private fun restoreFavoriteFocus() {
+        val favoriteKey = lastFocusedFavoriteKey
+        if (favoriteKey != null) {
+            for (index in 0 until binding.favoritesFlexbox.childCount) {
+                val child = binding.favoritesFlexbox.getChildAt(index)
+                if (favoriteKey == child.tag && child.isFocusable) {
+                    child.requestFocus()
+                    return
+                }
+            }
         }
 
-        val firstChild = binding.favoritesRecycler.layoutManager?.findViewByPosition(0)
+        val firstChild = binding.favoritesFlexbox.getChildAt(0)
         if (firstChild != null && firstChild.isFocusable) {
             firstChild.requestFocus()
-        } else {
-            binding.favoritesRecycler.requestFocus()
         }
     }
 

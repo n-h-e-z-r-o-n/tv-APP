@@ -10,29 +10,30 @@
         android:id="@+id/favoritesSection"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="?attr/transparentEffect">
+        android:background="?attr/transparentEffect"
+        android:fillViewport="true">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:background="?attr/transparentEffect">
+            android:background="?attr/transparentEffect"
+            android:orientation="vertical">
 
             <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
                 <TextView
-                android:id="@+id/favoritesTitle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
-                android:layout_marginVertical="10dp"
-                android:fontFamily="@font/q"
-                android:text="My Favorites"
-                android:textColor="?attr/FG_color"
-                android:textSize="28sp"
-                tools:ignore="HardcodedText" />
+                    android:id="@+id/favoritesTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginVertical="10dp"
+                    android:fontFamily="@font/q"
+                    android:text="My Favorites"
+                    android:textColor="?attr/FG_color"
+                    android:textSize="28sp"
+                    tools:ignore="HardcodedText" />
 
 
                 <TextView
@@ -43,27 +44,28 @@
                     android:layout_marginEnd="10dp"
                     android:layout_marginVertical="10dp"
                     android:fontFamily="@font/o"
-                    tools:text="22"
                     android:shadowColor="?attr/AccentColor"
-                    android:shadowRadius="1"
                     android:shadowDx="1"
                     android:shadowDy="1"
+                    android:shadowRadius="1"
                     android:textColor="?attr/FG_color"
                     android:textSize="28sp"
-                    tools:ignore="HardcodedText" />
+                    tools:ignore="HardcodedText"
+                    tools:text="22" />
 
             </FrameLayout>
 
-
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/favoritesRecycler"
-                android:layout_marginHorizontal="0dp"
-                android:layout_height="wrap_content"
+            <com.google.android.flexbox.FlexboxLayout
+                android:id="@+id/favoritesFlexbox"
                 android:layout_width="match_parent"
-                android:clipToPadding="true"
-                android:scrollbars="none"
-                tools:ignore="RtlSymmetry"/>
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="5dp"
+                android:clipToPadding="false"
+                app:alignItems="flex_start"
+                app:flexDirection="row"
+                app:flexWrap="wrap"
+                app:justifyContent="flex_start"
+                tools:ignore="RtlSymmetry" />
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
