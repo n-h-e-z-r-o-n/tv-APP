@@ -61,15 +61,15 @@ tools:context=".Anime_Video_Player">
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:orientation="vertical"
-            >
+            android:orientation="vertical">
 
 
             <HorizontalScrollView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:scrollbars="none"
-                android:layout_marginTop="10dp">
+                android:layout_marginTop="10dp"
+                android:layout_marginHorizontal="20dp">
                 <LinearLayout
                     android:id="@+id/SeasonsContainer"
                     android:layout_width="wrap_content"
@@ -85,6 +85,7 @@ tools:context=".Anime_Video_Player">
                 tools:text="That time i got reincanedted as a lime"
                 android:fontFamily="@font/q"
                 android:layout_marginTop="10dp"
+                android:layout_marginStart="20dp"
                 android:textColor="@android:color/white"
                 android:textSize="20sp"
                 android:gravity="left"
@@ -96,8 +97,11 @@ tools:context=".Anime_Video_Player">
                 tools:ignore="HardcodedText,RtlHardcoded" />
 
             <ScrollView
+                android:id="@+id/moreSectionScrollView"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent">
+                android:layout_height="match_parent"
+                android:scrollbars="none"
+                >
                 <LinearLayout
                     android:id="@+id/EpisodeContiner"
                     android:layout_width="match_parent"

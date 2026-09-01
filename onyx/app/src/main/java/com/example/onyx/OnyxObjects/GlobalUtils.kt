@@ -1057,6 +1057,51 @@ object GlobalUtils {
         }
     }
 
+    fun centerChildOnFocus(
+        scrollView: ScrollView,
+        childView: View
+    ) {
+        childView.setOnFocusChangeListener { _, hasFocus ->
+
+            if (hasFocus) {
+                scrollView.post {
+
+                    // Child's Y position relative to the ScrollView
+                    val relativeTop = getRelativeTop(childView, scrollView)
+
+                    // Position child center at ScrollView center
+                    val targetY =
+                        relativeTop -
+                                (scrollView.height / 2) +
+                                (childView.height / 2)
+
+                    animateScrollTo(
+                        scrollView,
+                        targetY.coerceAtLeast(0)
+                    )
+                }
+            }
+        }
+    }
+    fun centerChild(
+        scrollView: ScrollView,
+        childView: View
+    ) {
+        scrollView.post {
+            val relativeTop = getRelativeTop(childView, scrollView)
+
+            val targetY =
+                relativeTop +
+                        (childView.height / 2) -
+                        (scrollView.height / 2)
+
+            animateScrollTo(
+                scrollView,
+                targetY.coerceAtLeast(0)
+            )
+        }
+    }
+
     // Helper to get the absolute Top of a view relative to a specific ancestor
     private  fun getRelativeTop(child: View, ancestor: ViewGroup): Int {
         var top = child.top

@@ -2,6 +2,7 @@
 
 package com.example.onyx
 
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
@@ -30,6 +31,7 @@ import android.view.animation.Animation
 import android.widget.*
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
@@ -102,6 +104,7 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
     private lateinit var overlayContainer: View
     private lateinit var bottomBar: LinearLayout
     private lateinit var moreSectionMenu: FrameLayout
+    private lateinit var moreSectionScrollView: ScrollView
     private lateinit var centerOverlay: FrameLayout
 
     // Control buttons
@@ -148,6 +151,58 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
     // Player management variables (merged from PlayerManager)
     private var currentVideoUrl: String? = null
     private var availableQualities: List<String> = listOf("Auto")
+    private var pendingEmbedSource: StreamSource? = null
+    private val animeStreamResolverLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            val pendingSource = pendingEmbedSource
+            pendingEmbedSource = null
+
+            if (result.resultCode != Activity.RESULT_OK) {
+                val failureMessage = result.data
+                    ?.getStringExtra(AnimeStreamResolver.EXTRA_ERROR_MESSAGE)
+                    ?.takeIf { it.isNotBlank() }
+                    ?: "Could not resolve embed stream"
+                Toast.makeText(this, failureMessage, Toast.LENGTH_SHORT).show()
+                if (pendingSource != null) {
+                    Log.e(
+                        "ANIME_PLAYER",
+                        "Embed resolver failed for ${pendingSource.serverName}: $failureMessage"
+                    )
+                }
+                return@registerForActivityResult
+            }
+
+            val data = result.data
+            val resolvedUrl = data?.getStringExtra(AnimeStreamResolver.EXTRA_RESOLVED_URL).orEmpty()
+            if (resolvedUrl.isBlank()) {
+                Toast.makeText(this, "Embed resolver returned no stream", Toast.LENGTH_SHORT).show()
+                return@registerForActivityResult
+            }
+
+            val resolvedEpisodeId = data?.getStringExtra(AnimeStreamResolver.EXTRA_EPISODE_ID)
+                ?: pendingSource?.episodeId
+                ?: currentEpisodeId
+            val resolvedServerName = data?.getStringExtra(AnimeStreamResolver.EXTRA_SERVER_NAME)
+                ?: pendingSource?.serverName
+                ?: ""
+            val resolvedCategory = data?.getStringExtra(AnimeStreamResolver.EXTRA_CATEGORY)
+                ?: pendingSource?.category
+                ?: "sub"
+            val resolvedReferer = data?.getStringExtra(AnimeStreamResolver.EXTRA_REFERER)
+            val resolvedOrigin = data?.getStringExtra(AnimeStreamResolver.EXTRA_ORIGIN)
+            val resolvedUserAgent = data?.getStringExtra(AnimeStreamResolver.EXTRA_USER_AGENT)
+
+            fetchServerSources(
+                resolvedEpisodeId,
+                resolvedServerName,
+                resolvedCategory,
+                resolvedUrl,
+                resolvedReferer,
+                resolvedOrigin,
+                resolvedUserAgent,
+                sourceType = "resolved"
+            )
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         GlobalUtils.applyTheme(this)
@@ -229,6 +284,7 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
         txtDuration = findViewById(R.id.txt_duration)
 
         moreSectionMenu = findViewById(R.id.MoreSection)
+        moreSectionScrollView = findViewById(R.id.moreSectionScrollView)
         seasonTitleWidget = findViewById(R.id.PlayingSeasonTitle)
         SeasonsContainer = findViewById(R.id.SeasonsContainer)
         EpisodeContiner = findViewById(R.id.EpisodeContiner)
@@ -386,6 +442,24 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
                     epTitleWidget.text = eTitle
                     epNumberWidget.text = "$eNumber: "
 
+                    episodeBtn.setOnFocusChangeListener { view, hasFocus ->
+
+                        view.animate()
+                            .scaleX(if (hasFocus) 1.08f else 1.0f)
+                            .scaleY(if (hasFocus) 1.08f else 1.0f)
+                            .setDuration(150)
+                            .start()
+
+                        view.elevation = if (hasFocus) 12f else 0f
+
+                        if (hasFocus) {
+                            GlobalUtils.centerChild(
+                                moreSectionScrollView,
+                                view
+                            )
+                        }
+                    }
+
                     try{
                         Glide.with(this)
                             .load(eImageUrl)
@@ -492,7 +566,7 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
                             
                             val isSupported = link.contains(".m3u8") || link.contains(".mp4") || link.contains(".mkv") || link.contains(".mpd")
 
-                            if (type != "embed" && isSupported) {
+                            if (type == "embed" || isSupported) {
                                 result.put(obj)
                             }
                         }
@@ -521,7 +595,8 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
                                             videoLink = server.getString("link"),
                                             referer = server.optJSONObject("headers")?.optString("Referer"),
                                             origin = server.optJSONObject("headers")?.optString("Origin"),
-                                            userAgent = server.optJSONObject("headers")?.optString("User-Agent")
+                                            userAgent = server.optJSONObject("headers")?.optString("User-Agent"),
+                                            sourceType = server.optString("type")
                                         )
                                         break
                                     }
@@ -535,7 +610,8 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
                                     videoLink = server.getString("link"),
                                     referer = server.optJSONObject("headers")?.optString("Referer"),
                                     origin = server.optJSONObject("headers")?.optString("Origin"),
-                                    userAgent = server.optJSONObject("headers")?.optString("User-Agent")
+                                    userAgent = server.optJSONObject("headers")?.optString("User-Agent"),
+                                    sourceType = server.optString("type")
                                 )
                             }
                         }
@@ -551,7 +627,8 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
                                 videoLink = server.getString("link"),
                                 referer = server.optJSONObject("headers")?.optString("Referer"),
                                 origin = server.optJSONObject("headers")?.optString("Origin"),
-                                userAgent = server.optJSONObject("headers")?.optString("User-Agent")
+                                userAgent = server.optJSONObject("headers")?.optString("User-Agent"),
+                                sourceType = server.optString("type")
                             )
                         }
 
@@ -563,7 +640,8 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
                                 videoLink = server.getString("link"),
                                 referer = server.optJSONObject("headers")?.optString("Referer"),
                                 origin = server.optJSONObject("headers")?.optString("Origin"),
-                                userAgent = server.optJSONObject("headers")?.optString("User-Agent")
+                                userAgent = server.optJSONObject("headers")?.optString("User-Agent"),
+                                sourceType = server.optString("type")
                             )
                         }
                         else -> return@launch
@@ -578,7 +656,8 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
                         defaultSource.videoLink,
                         referer =  defaultSource.referer, // Make sure to pass this!
                         origin = defaultSource.origin,
-                        userAgent = defaultSource.userAgent
+                        userAgent = defaultSource.userAgent,
+                        sourceType = defaultSource.sourceType
                     )
 
                     val btnServer = findViewById<TextView>(R.id.btn_server)
@@ -614,7 +693,9 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
 
                             for (i in 0 until servers.length()) {
                                 val server = servers.getJSONObject(i)
-                                val serverName = server.getString("server")
+                                val rawServerName = server.getString("server")
+                                val sourceType = server.optString("type")
+                                val serverName = "$rawServerName ($sourceType)"
                                 val vlink = server.getString("link")
                                 val referer = server.getJSONObject("headers").optString("Referer")
                                 val orign = server.getJSONObject("headers").optString("Origin")
@@ -646,9 +727,9 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
                                             val prefs = getSharedPreferences("AnimePrefs", Context.MODE_PRIVATE)
                                             prefs.edit()
                                                 .putString("pref_server_category", title)
-                                                .putString("pref_server_name", serverName)
+                                                .putString("pref_server_name", rawServerName)
                                                 .apply()
-                                            fetchServerSources(episodeId, serverName, title, vlink, referer,  orign, userAgent)
+                                            fetchServerSources(episodeId, rawServerName, title, vlink, referer,  orign, userAgent, sourceType)
                                         }
                                     }
                                 }
@@ -751,7 +832,8 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
                                             videoLink = server["link"] as? String ?: "",
                                             referer = headers?.get("Referer") as? String ?: "",
                                             origin = headers?.get("Origin") as? String ?: "",
-                                            userAgent = headers?.get("User-Agent") as? String ?: ""
+                                            userAgent = headers?.get("User-Agent") as? String ?: "",
+                                            sourceType = server["type"] as? String ?: ""
                                         )
                                         break
                                     }
@@ -766,7 +848,8 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
                                     videoLink = server["link"] as? String ?: "",
                                     referer = headers?.get("Referer") as? String ?: "",
                                     origin = headers?.get("Origin") as? String ?: "",
-                                    userAgent = headers?.get("User-Agent") as? String ?: ""
+                                    userAgent = headers?.get("User-Agent") as? String ?: "",
+                                    sourceType = server["type"] as? String ?: ""
                                 )
                             }
                         }
@@ -783,7 +866,8 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
                                 videoLink = server["link"] as? String ?: "",
                                 referer = headers?.get("Referer") as? String ?: "",
                                 origin = headers?.get("Origin") as? String ?: "",
-                                userAgent = headers?.get("User-Agent") as? String ?: ""
+                                userAgent = headers?.get("User-Agent") as? String ?: "",
+                                sourceType = server["type"] as? String ?: ""
                             )
                         }
 
@@ -796,7 +880,8 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
                                 videoLink = server["link"] as? String ?: "",
                                 referer = headers?.get("Referer") as? String ?: "",
                                 origin = headers?.get("Origin") as? String ?: "",
-                                userAgent = headers?.get("User-Agent") as? String ?: ""
+                                userAgent = headers?.get("User-Agent") as? String ?: "",
+                                sourceType = server["type"] as? String ?: ""
                             )
                         }
 
@@ -810,7 +895,8 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
                         defaultSource.videoLink,
                         referer = defaultSource.referer,
                         origin = defaultSource.origin,
-                        userAgent = defaultSource.userAgent
+                        userAgent = defaultSource.userAgent,
+                        sourceType = defaultSource.sourceType
                     )
 
                     val btnServer = findViewById<TextView>(R.id.btn_server)
@@ -848,7 +934,9 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
                             container.addView(label)
 
                             for (server in servers) {
-                                val serverName = "${server["server"].toString().uppercase()} (${server["type"]})"
+                                val rawServerName = server["server"] as? String ?: ""
+                                val sourceType = server["type"] as? String ?: ""
+                                val serverName = "${rawServerName.uppercase()} ($sourceType)"
                                 val vlink = server["link"] as? String ?: ""
                                 val headers = server["headers"] as? Map<*, *>
 
@@ -882,9 +970,9 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
                                             val prefs = getSharedPreferences("AnimePrefs", Context.MODE_PRIVATE)
                                             prefs.edit()
                                                 .putString("pref_server_category", title)
-                                                .putString("pref_server_name", serverName)
+                                                .putString("pref_server_name", rawServerName)
                                                 .apply()
-                                            fetchServerSources(episodeId, serverName, title, vlink, referer, origin, userAgent)
+                                            fetchServerSources(episodeId, rawServerName, title, vlink, referer, origin, userAgent, sourceType)
                                         }
                                     }
                                 }
@@ -919,12 +1007,21 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
         }
     }
 
-    private fun fetchServerSources(episodeId: String, serverName: String, category: String, vidUrl: String , referer: String?, origin:String?, userAgent:String?) {
+    private fun fetchServerSources(
+        episodeId: String,
+        serverName: String,
+        category: String,
+        vidUrl: String,
+        referer: String?,
+        origin: String?,
+        userAgent: String?,
+        sourceType: String? = null
+    ) {
         lifecycleScope.launch(Dispatchers.Main) {
 
                     Log.e(
                         "ANIME_PLAYER",
-                        "PlAYER STARTED: $episodeId  , \nserverName: $serverName , \ncategory: $category, \nvidUrl: $vidUrl , \nReferer: $referer , \norigin: $origin, userAgent: $userAgent\n\n"
+                        "PlAYER STARTED: $episodeId  , \nserverName: $serverName , \ncategory: $category, \nsourceType: $sourceType, \nvidUrl: $vidUrl , \nReferer: $referer , \norigin: $origin, userAgent: $userAgent\n\n"
                     )
 
 
@@ -947,6 +1044,37 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
 
                     val btnServer = findViewById<TextView>(R.id.btn_server)
                     btnServer.text = "$category: $serverName"
+
+                    if (sourceType.equals("embed", ignoreCase = true)) {
+                        pendingEmbedSource = StreamSource(
+                            episodeId = episodeId,
+                            serverName = serverName,
+                            category = category,
+                            videoLink = vidUrl,
+                            referer = referer,
+                            origin = origin,
+                            userAgent = userAgent,
+                            sourceType = sourceType
+                        )
+                        Toast.makeText(
+                            this@Anime_Video_Player,
+                            "Resolving $serverName stream...",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        animeStreamResolverLauncher.launch(
+                            AnimeStreamResolver.createIntent(
+                                context = this@Anime_Video_Player,
+                                episodeId = episodeId,
+                                serverName = serverName,
+                                category = category,
+                                embedUrl = vidUrl,
+                                referer = referer,
+                                origin = origin,
+                                userAgent = userAgent
+                            )
+                        )
+                        return@launch
+                    }
 
                     resumePosition =
                         fetchResumePosition() //db.getResumePosition(userId, currentEpisodeId, "anime").toLong()
@@ -1878,10 +2006,12 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
 }
 
 data class StreamSource(
+    val episodeId: String = "",
     val serverName: String,
     val category: String,
     val videoLink: String,
     val referer: String?,
     val origin: String?,
-    val userAgent: String?
+    val userAgent: String?,
+    val sourceType: String? = null
 )

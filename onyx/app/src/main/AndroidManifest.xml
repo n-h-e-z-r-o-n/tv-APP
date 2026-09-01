@@ -49,6 +49,10 @@
         <activity
             android:name=".Anime_Video_Player"
             android:exported="false" />
+        <activity
+            android:name=".AnimeStreamResolver"
+            android:exported="false"
+            android:launchMode="singleTop" />
 
 
         <activity
