@@ -8,6 +8,7 @@ import android.content.pm.ActivityInfo
 import android.graphics.Color
 import android.graphics.Typeface
 import android.media.AudioManager
+import android.net.Uri
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
@@ -34,16 +35,20 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
+import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.Tracks
+import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.exoplayer.DefaultRenderersFactory
+import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
+import androidx.media3.exoplayer.upstream.DefaultLoadErrorHandlingPolicy
 import androidx.media3.ui.PlayerView
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DefaultHttpDataSource
-import androidx.media3.exoplayer.hls.HlsMediaSource
-import androidx.media3.exoplayer.source.ProgressiveMediaSource
+import androidx.media3.datasource.HttpDataSource
 import com.bumptech.glide.Glide
 import org.json.JSONArray
 
@@ -696,6 +701,7 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
                     }
                 } catch (e: Exception) {
                     Log.e("ANIME_PLAYER", "Error fetching streaming links", e)
+
                 }
 
                 // Check if we got valid data back
@@ -703,8 +709,12 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
 
                     Log.d("ANIME_PLAYER", "StreamingLinks=$episodeId FETCHED")
 
+
                     val subServersRaw = streamData["sub"] ?: emptyList()
                     val dubServersRaw = streamData["dub"] ?: emptyList()
+
+                    Log.d("ANIME_PLAYER", "\n\nsubServersRaw=$subServersRaw \n\n")
+                    Log.d("ANIME_PLAYER", "\n\ndubServersRaw=$dubServersRaw \n\n")
 
                     // Replaced cleanArray with a clean native Kotlin list filter
                     fun cleanList(input: List<Map<String, Any>>): List<Map<String, Any>> {
@@ -1417,6 +1427,22 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
         }
     }
 
+    override fun onPlayerError(error: PlaybackException) {
+        Log.e(
+            "ANIME_PLAYER",
+            "Playback failed code=${error.errorCodeName} message=${error.message}",
+            error
+        )
+
+        val httpError = error.cause as? HttpDataSource.InvalidResponseCodeException
+        if (httpError != null) {
+            Log.e(
+                "ANIME_PLAYER",
+                "HTTP ${httpError.responseCode} for ${httpError.dataSpec.uri} headers=${httpError.headerFields}"
+            )
+        }
+    }
+
     private fun startProgressTracking() {
         stopProgressTracking() // Stop any existing tracking
         progressUpdateCount = 0
@@ -1568,46 +1594,57 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
             setParameters(
                 buildUponParameters()
                     .setMaxVideoSize(1920, 1080)
-                    .setPreferredVideoMimeType("video/mp4")
                     .setAllowVideoMixedMimeTypeAdaptiveness(true)
                     .setAllowVideoNonSeamlessAdaptiveness(true)
                     .setMaxAudioChannelCount(2)
                     .setPreferredAudioLanguage("en")
                     .setSelectUndeterminedTextLanguage(true)
-                    .setForceHighestSupportedBitrate(true)
+                    .setForceHighestSupportedBitrate(false)
             )
         }
 
-        // ✅ Add headers here
-        val headers = mutableMapOf<String, String>()
-        //headers["User-Agent"] = userAgent.toString()
-        userAgent?.let { headers["User-Agent"] = it }
-        referer?.let { headers["Referer"] = it }
-        origin?.let { headers["Origin"] = it }
-        //headers["Origin"] = origin.toString()
+        val sanitizedReferer = referer?.trim().takeUnless { it.isNullOrEmpty() }
+        val sanitizedUserAgent = userAgent?.trim().takeUnless { it.isNullOrEmpty() }
+        val sanitizedOrigin = origin?.trim().takeUnless { it.isNullOrEmpty() }
+            ?: sanitizedReferer?.let(::deriveOriginFromReferer)
 
-        val dataSourceFactory = DefaultHttpDataSource.Factory()
+        val headers = buildMap<String, String> {
+            sanitizedUserAgent?.let { put("User-Agent", it) }
+            sanitizedReferer?.let { put("Referer", it) }
+            sanitizedOrigin?.let { put("Origin", it) }
+        }
+
+        Log.d(
+            "ANIME_PLAYER",
+            "Initializing player url=$videoUrl referer=$sanitizedReferer origin=$sanitizedOrigin ua=$sanitizedUserAgent"
+        )
+
+        val httpDataSourceFactory = DefaultHttpDataSource.Factory()
             .setDefaultRequestProperties(headers)
+            .setAllowCrossProtocolRedirects(true)
+            .setConnectTimeoutMs(15_000)
+            .setReadTimeoutMs(30_000)
 
         val renderersFactory = DefaultRenderersFactory(this)
             .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER)
+            .setEnableDecoderFallback(true)
 
-        val mediaItem = MediaItem.fromUri(videoUrl)
+        val mediaSourceFactory = DefaultMediaSourceFactory(
+            DefaultDataSource.Factory(this, httpDataSourceFactory)
+        ).setLoadErrorHandlingPolicy(DefaultLoadErrorHandlingPolicy(6))
 
-        // ✅ Use HlsMediaSource if it's an .m3u8 link
-        val mediaSourceFactory = if (videoUrl.endsWith(".m3u8")) {
-            HlsMediaSource.Factory(dataSourceFactory)
-        } else {
-            ProgressiveMediaSource.Factory(dataSourceFactory)
-        }
+        val loadControl = DefaultLoadControl.Builder()
+            .setPrioritizeTimeOverSizeThresholds(true)
+            .build()
 
         val player = ExoPlayer.Builder(this)
             .setRenderersFactory(renderersFactory)
             .setTrackSelector(trackSelector)
+            .setMediaSourceFactory(mediaSourceFactory)
+            .setLoadControl(loadControl)
             .build()
             .apply {
-                val mediaSource = mediaSourceFactory.createMediaSource(mediaItem)
-                setMediaSource(mediaSource)
+                setMediaItem(MediaItem.fromUri(videoUrl))
                 prepare()
                 playWhenReady = true
                 addListener(object : Player.Listener {
@@ -1619,6 +1656,19 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
 
         currentVideoUrl = videoUrl
         return player
+    }
+
+    private fun deriveOriginFromReferer(referer: String): String? {
+        return runCatching {
+            val uri = Uri.parse(referer)
+            val scheme = uri.scheme
+            val host = uri.host
+            if (scheme.isNullOrBlank() || host.isNullOrBlank()) {
+                null
+            } else {
+                "$scheme://$host"
+            }
+        }.getOrNull()
     }
 
 
