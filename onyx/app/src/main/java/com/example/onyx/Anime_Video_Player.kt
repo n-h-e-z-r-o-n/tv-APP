@@ -726,8 +726,11 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
                         }
                     }
 
-                    val subServers = cleanList(subServersRaw)
-                    val dubServers = cleanList(dubServersRaw)
+                    //val subServers = cleanList(subServersRaw)
+                    //val dubServers = cleanList(dubServersRaw)
+
+                    val subServers = subServersRaw
+                    val dubServers = dubServersRaw
 
                     val prefs = getSharedPreferences("AnimePrefs", Context.MODE_PRIVATE)
                     val prefCategory = prefs.getString("pref_server_category", null)

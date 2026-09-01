@@ -1,5 +1,6 @@
 package com.example.onyx.OnyxObjects
 
+import android.net.Uri
 import android.util.Base64
 import android.util.Log
 import com.google.gson.Gson
@@ -7,6 +8,7 @@ import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.*
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.Response
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.nio.charset.StandardCharsets
@@ -25,7 +27,7 @@ object MiruroScraper {
         .readTimeout(15, TimeUnit.SECONDS)
         .build()
 
-    private val headers = mapOf(
+    private val pipeHeaders = mapOf(
         "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36",
         "Referer" to "https://www.miruro.tv/",
         "Origin" to "https://www.miruro.tv",
@@ -98,7 +100,7 @@ object MiruroScraper {
         for (attempt in 0 until retries) {
             try {
                 val requestBuilder = Request.Builder().url(url)
-                headers.forEach { (k, v) -> requestBuilder.addHeader(k, v) }
+                pipeHeaders.forEach { (k, v) -> requestBuilder.addHeader(k, v) }
 
                 client.newCall(requestBuilder.build()).execute().use { response ->
                     if (response.code == 429) {
@@ -121,6 +123,154 @@ object MiruroScraper {
             }
         }
         throw lastException ?: Exception("Unknown network error")
+    }
+
+    private fun deriveRefererFromStreamUrl(streamUrl: String): String? {
+        return try {
+            val parsed = Uri.parse(streamUrl)
+            val scheme = parsed.scheme
+            val authority = parsed.encodedAuthority
+            val path = parsed.encodedPath ?: "/"
+            if (scheme.isNullOrBlank() || authority.isNullOrBlank()) return null
+
+            val lastSlash = path.lastIndexOf('/')
+            val basePath = if (lastSlash >= 0) path.substring(0, lastSlash + 1) else "/"
+            "$scheme://$authority$basePath"
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    private fun deriveOrigin(url: String?): String? {
+        if (url.isNullOrBlank()) return null
+        return try {
+            val parsed = Uri.parse(url)
+            val scheme = parsed.scheme
+            val authority = parsed.encodedAuthority
+            if (scheme.isNullOrBlank() || authority.isNullOrBlank()) null else "$scheme://$authority"
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    private fun normalizeHeaders(rawHeaders: Map<*, *>?): Map<String, String> {
+        if (rawHeaders == null) return emptyMap()
+        val normalized = linkedMapOf<String, String>()
+        for ((key, value) in rawHeaders) {
+            val headerName = key as? String ?: continue
+            val headerValue = value as? String ?: continue
+            if (headerName.isBlank() || headerValue.isBlank()) continue
+            normalized[headerName] = headerValue.trim()
+        }
+        return normalized
+    }
+
+    private fun buildOutputHeaders(streamUrl: String, sourceHeaders: Map<*, *>?): Map<String, String> {
+        val normalized = normalizeHeaders(sourceHeaders)
+
+        var existingReferer: String? = null
+        var existingOrigin: String? = null
+        var existingUserAgent: String? = null
+        val passthroughHeaders = linkedMapOf<String, String>()
+
+        for ((key, value) in normalized) {
+            when (key.lowercase()) {
+                "referer" -> existingReferer = value
+                "origin" -> existingOrigin = value
+                "user-agent" -> existingUserAgent = value
+                else -> passthroughHeaders[key] = value
+            }
+        }
+
+        val referer = existingReferer
+            ?: deriveRefererFromStreamUrl(streamUrl)
+            ?: pipeHeaders["Referer"]
+            ?: ""
+
+        val origin = existingOrigin
+            ?: deriveOrigin(referer)
+            ?: deriveOrigin(streamUrl)
+
+        return buildMap {
+            putAll(passthroughHeaders)
+            put("Referer", referer)
+            if (!origin.isNullOrBlank()) {
+                put("Origin", origin)
+            }
+            put("User-Agent", existingUserAgent ?: (pipeHeaders["User-Agent"] ?: ""))
+        }
+    }
+
+    private fun buildPlayableProbeHeaders(headers: Map<String, String>): Map<String, String> {
+        return buildMap {
+            put("User-Agent", headers["User-Agent"] ?: (pipeHeaders["User-Agent"] ?: ""))
+            put("Referer", headers["Referer"] ?: (pipeHeaders["Referer"] ?: ""))
+            put("Range", "bytes=0-1024")
+            headers["Origin"]?.takeIf { it.isNotBlank() }?.let { put("Origin", it) }
+        }
+    }
+
+    private fun getCandidateStreams(sources: Map<String, Any>): List<Map<*, *>> {
+        val streams = sources["streams"] as? List<*> ?: return emptyList()
+
+        return streams
+            .filterIsInstance<Map<*, *>>()
+            .mapNotNull { stream ->
+                val url = (stream["url"] as? String)?.trim().orEmpty()
+                if (url.isBlank()) null else stream
+            }
+            .sortedBy { stream ->
+                val type = (stream["type"] as? String)?.lowercase().orEmpty()
+                when {
+                    "hls" in type -> 0
+                    "mp4" in type -> 1
+                    "embed" in type -> 3
+                    else -> 2
+                }
+            }
+    }
+
+    private fun isStreamPlayable(streamUrl: String, headers: Map<String, String>): Boolean {
+        return try {
+            val requestBuilder = Request.Builder().url(streamUrl)
+            buildPlayableProbeHeaders(headers).forEach { (key, value) ->
+                requestBuilder.header(key, value)
+            }
+
+            client.newCall(requestBuilder.build()).execute().use { response ->
+                response.isSuccessful || response.isRedirect
+            }
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+    private fun Response.isRedirect(): Boolean {
+        return code in 300..399
+    }
+
+    private fun selectPlayableStream(sources: Map<String, Any>): Pair<Map<*, *>, Map<String, String>>? {
+        val candidates = getCandidateStreams(sources)
+        if (candidates.isEmpty()) return null
+
+        for (candidate in candidates) {
+            val streamUrl = (candidate["url"] as? String)?.trim().orEmpty()
+            if (streamUrl.isBlank()) continue
+
+            val candidateHeaders = (candidate["headers"] as? Map<*, *>)
+                ?: (sources["headers"] as? Map<*, *>)
+            val outputHeaders = buildOutputHeaders(streamUrl, candidateHeaders)
+
+            if (isStreamPlayable(streamUrl, outputHeaders)) {
+                return candidate to outputHeaders
+            }
+        }
+
+        val fallback = candidates.first()
+        val fallbackUrl = (fallback["url"] as? String)?.trim().orEmpty()
+        val fallbackHeaders = (fallback["headers"] as? Map<*, *>)
+            ?: (sources["headers"] as? Map<*, *>)
+        return fallback to buildOutputHeaders(fallbackUrl, fallbackHeaders)
     }
 
     suspend fun fetchMiruroStreamingLinks(animeEpisodeId: String): Map<String, List<Map<String, Any>>> = withContext(Dispatchers.IO) {
@@ -227,23 +377,24 @@ object MiruroScraper {
             )
 
             val sources = fetchFromPipe(sourcesPayload)
-            val streams = sources["streams"] as? List<*> ?: emptyList<Any>()
-            if (streams.isEmpty()) return null
-
-            val firstStream = streams.firstOrNull() as? Map<*, *> ?: return null
+            val selected = selectPlayableStream(sources) ?: return null
+            val selectedStream = selected.first
+            val selectedHeaders = selected.second
 
             mapOf(
                 "server" to providerName,
-                "link" to (firstStream["url"] as? String ?: ""),
-                "type" to (firstStream["type"] as? String ?: "hls"),
-                "quality" to (firstStream["quality"] as? String ?: "auto"),
-                "subtitles" to (sources["subtitles"] as? List<*> ?: emptyList<Any>()),
-                "headers" to mapOf(
-                    "Referer" to (headers["Referer"] ?: ""),
-                    "User-Agent" to (headers["User-Agent"] ?: "")
-                )
+                "link" to ((selectedStream["url"] as? String)?.trim().orEmpty()),
+                "type" to (selectedStream["type"] as? String ?: "hls"),
+                "quality" to (selectedStream["quality"] as? String ?: "auto"),
+                "subtitles" to if (category == "sub") {
+                    sources["subtitles"] as? List<*> ?: emptyList<Any>()
+                } else {
+                    emptyList<Any>()
+                },
+                "headers" to selectedHeaders
             )
         } catch (e: Exception) {
+            Log.e("MiruroScraper", "Error processing $providerName ($category): ${e.message}", e)
             null
         }
     }
