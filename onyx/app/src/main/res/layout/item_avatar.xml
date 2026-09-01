@@ -1,29 +1,25 @@
-<!-- res/layout/item_grid.xml -->
+<?xml version="1.0" encoding="utf-8"?>
 <androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:card_view="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/avatarCardView"
-    android:layout_width="90dp"
-    android:layout_height="90dp"
+    android:layout_width="86dp"
+    android:layout_height="86dp"
+    android:layout_margin="6dp"
     android:clickable="true"
-    android:layout_margin="4dp"
     android:focusable="true"
-    android:foreground="@drawable/card_focus"
-    android:gravity="center"
-    android:orientation="vertical"
-    card_view:cardBackgroundColor="?attr/BG_color_up"
-    card_view:cardCornerRadius="102dp"
-    card_view:cardElevation="3dp"
+    android:foreground="@drawable/login_avatar_focus"
+    card_view:cardBackgroundColor="#221A2027"
+    card_view:cardCornerRadius="43dp"
+    card_view:cardElevation="0dp"
     tools:ignore="SpeakableTextPresentCheck">
 
-
-        <ImageView
-            android:id="@+id/avatarImage"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background ="?attr/BG_color_up"
-            android:scaleType="fitXY"
-            tools:ignore="ContentDescription" />
-
+    <ImageView
+        android:id="@+id/avatarImage"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="2dp"
+        android:scaleType="centerCrop"
+        tools:ignore="ContentDescription" />
 
 </androidx.cardview.widget.CardView>

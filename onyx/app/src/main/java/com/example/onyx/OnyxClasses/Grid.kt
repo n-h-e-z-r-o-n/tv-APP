@@ -1042,19 +1042,28 @@ class ProfileAdapter (
         val CardViewcontiner: CardView = view.findViewById(R.id.profileCardContiner)
         val profileImageWidget: ImageView = view.findViewById(R.id.itemUserAvatar)
         val usernameWidget: TextView = view.findViewById(R.id.itemUsername)
-
-
+        val profileMetaWidget: TextView = view.findViewById(R.id.itemProfileMeta)
+        val profileCaptionWidget: TextView = view.findViewById(R.id.itemProfileCaption)
 
         init {
-
-            itemView.setOnFocusChangeListener { v, hasFocus ->
-                // Scale animation
-                v.animate()
-                    .scaleX(if (hasFocus) 1.02f else 1f)
-                    .scaleY(if (hasFocus) 1.02f else 1f)
-                    .setDuration(150)
+            CardViewcontiner.setOnFocusChangeListener { _, hasFocus ->
+                CardViewcontiner.animate()
+                    .scaleX(if (hasFocus) 1.05f else 1f)
+                    .scaleY(if (hasFocus) 1.05f else 1f)
+                    .translationY(if (hasFocus) -10f else 0f)
+                    .setDuration(160)
                     .start()
 
+                usernameWidget.animate()
+                    .alpha(if (hasFocus) 1f else 0.88f)
+                    .translationY(if (hasFocus) -4f else 0f)
+                    .setDuration(160)
+                    .start()
+
+                profileCaptionWidget.animate()
+                    .alpha(if (hasFocus) 1f else 0.74f)
+                    .setDuration(160)
+                    .start()
             }
         }
 
@@ -1081,13 +1090,15 @@ class ProfileAdapter (
         if (userid == "CREATE") {
             holder.profileImageWidget.setImageResource(R.drawable.ic_account)
             holder.profileImageWidget.scaleType = ImageView.ScaleType.CENTER_INSIDE
-            holder.profileImageWidget.setBackgroundColor(Color.parseColor("#00000000"))
-
+            holder.profileImageWidget.setPadding(36, 36, 36, 36)
+            holder.profileImageWidget.setBackgroundColor(Color.TRANSPARENT)
+            holder.profileImageWidget.setColorFilter(Color.parseColor("#FFF8EE"))
+            holder.profileMetaWidget.text = "NEW"
+            holder.profileCaptionWidget.text = "Add a viewer"
 
         } else {
             // Handle avatar loading - if empty, use placeholder
             if (avatarImg.isNotEmpty()) {
-
                 val assetPath = "file:///android_asset/$avatarImg"
                 Glide.with(holder.itemView.context)
                     .load(assetPath)
@@ -1098,6 +1109,10 @@ class ProfileAdapter (
             } else {
                 holder.profileImageWidget.setImageResource(android.R.drawable.ic_menu_gallery)
             }
+            holder.profileImageWidget.setPadding(0, 0, 0, 0)
+            holder.profileImageWidget.clearColorFilter()
+            holder.profileMetaWidget.text = "PROFILE"
+            holder.profileCaptionWidget.text = "Continue"
         }
 
         holder.CardViewcontiner.setOnClickListener {
@@ -1168,11 +1183,12 @@ class AvatarAdapter(
         val avatarCardView: CardView = view.findViewById(R.id.avatarCardView)
 
         init {
-            itemView.setOnFocusChangeListener { v, hasFocus ->
-                // Scale animation on focus
-                v.animate()
-                    .scaleX(if (hasFocus) 1.05f else 1f)
-                    .scaleY(if (hasFocus) 1.05f else 1f)
+            avatarCardView.setOnFocusChangeListener { _, hasFocus ->
+                avatarCardView.animate()
+                    .scaleX(if (hasFocus) 1.08f else 1f)
+                    .scaleY(if (hasFocus) 1.08f else 1f)
+                    .translationY(if (hasFocus) -6f else 0f)
+                    .alpha(if (hasFocus || avatarCardView.isSelected) 1f else 0.88f)
                     .setDuration(150)
                     .start()
             }
@@ -1204,15 +1220,9 @@ class AvatarAdapter(
         }
 
         // Highlight selected avatar
-        if (position == selectedPosition) {
-            holder.avatarCardView.setCardBackgroundColor(
-                Color.parseColor("#4CAF50")
-            )
-        } else {
-            holder.avatarCardView.setCardBackgroundColor(
-                Color.TRANSPARENT
-            )
-        }
+        val isSelected = position == selectedPosition
+        holder.avatarCardView.isSelected = isSelected
+        holder.avatarCardView.alpha = if (isSelected) 1f else 0.88f
 
         // Handle click
         holder.avatarCardView.setOnClickListener {
@@ -1220,8 +1230,12 @@ class AvatarAdapter(
             selectedPosition = holder.adapterPosition
             
             // Notify changes for selection highlight
-            notifyItemChanged(previousPosition)
-            notifyItemChanged(selectedPosition)
+            if (previousPosition != RecyclerView.NO_POSITION && previousPosition >= 0) {
+                notifyItemChanged(previousPosition)
+            }
+            if (selectedPosition != RecyclerView.NO_POSITION) {
+                notifyItemChanged(selectedPosition)
+            }
             
             // Invoke callback
             onAvatarSelected?.invoke(avatarPath)
@@ -1233,6 +1247,14 @@ class AvatarAdapter(
     }
 
     override fun getItemCount() = avatarPaths.size
+
+    fun clearSelection() {
+        val previousPosition = selectedPosition
+        selectedPosition = RecyclerView.NO_POSITION
+        if (previousPosition != RecyclerView.NO_POSITION && previousPosition >= 0) {
+            notifyItemChanged(previousPosition)
+        }
+    }
 }
 
 
