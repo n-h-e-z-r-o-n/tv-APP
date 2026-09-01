@@ -1,67 +1,76 @@
 package com.example.onyx
 
 import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
-import android.os.Looper
 import android.util.Log
+import android.view.View
 import android.view.WindowManager
+import android.widget.AdapterView
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
-import android.widget.TextView
-import androidx.activity.enableEdgeToEdge
-import androidx.appcompat.app.AppCompatActivity
-import androidx.cardview.widget.CardView
-import com.bumptech.glide.Glide
-import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import kotlinx.coroutines.Job
-import java.net.HttpURLConnection
-import java.net.URL
-import android.view.View
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.Spinner
+import android.widget.TextView
 import android.widget.Toast
-import androidx.core.content.ContextCompat
-import org.json.JSONObject
-import android.os.Handler
-import android.view.Gravity
-import android.view.animation.AccelerateDecelerateInterpolator
-import android.widget.AdapterView
+import androidx.activity.OnBackPressedCallback
+import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AppCompatActivity
+import androidx.cardview.widget.CardView
 import androidx.lifecycle.lifecycleScope
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.example.onyx.Database.AppDatabase
-import com.example.onyx.OnyxClasses.CustomKeyboardManager
-import com.example.onyx.OnyxClasses.OnSearchListener
-import com.example.onyx.OnyxObjects.GlobalUtils
-import com.example.onyx.OnyxObjects.LoadingAnimation
-
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import org.json.JSONObject
+import java.net.HttpURLConnection
+import java.net.URL
 
 class PayWall : AppCompatActivity() {
+    companion object {
+        private const val PANEL_ANIMATION_DURATION_MS = 200L
+        private const val DEFAULT_COUNTRY = "Kenya"
+        private const val SLIDESHOW_DELAY_MS = 12000L
+        private const val PAYMENT_POLL_DELAY_MS = 15000L
+        private const val PAYMENT_MAX_ATTEMPTS = 20
+    }
+
     private lateinit var db: AppDatabase
-
-    private var isProcessing: Boolean = false
-    private var slideshowJob: Job? = null
+    private lateinit var payInfo: LinearLayout
+    private lateinit var paymentContainer: CardView
+    private lateinit var btnPurchase: Button
+    private lateinit var btnClosePayment: TextView
+    private lateinit var planMonthly: LinearLayout
+    private lateinit var planQuarterly: LinearLayout
+    private lateinit var planYearly: LinearLayout
+    private lateinit var rbMpesa: LinearLayout
     private lateinit var btnMpesaPayment: Button
-
-    private lateinit var keyboardLayout: LinearLayout
-
     private lateinit var etMpesaPhone: EditText
     private lateinit var progressBar: ProgressBar
     private lateinit var spCountry: Spinner
-
     private lateinit var mpesaFeedbackBox: TextView
-    private val INTASEND_SECRET_KEY = "Bearer ISSecretKey_live_e9d3162e-95cb-42a4-b64b-ee378525ca5a"
+    private lateinit var priceCurrencyText: TextView
+    private lateinit var priceAmountText: TextView
+    private lateinit var pricePeriodText: TextView
+    private lateinit var headerBadgeText: TextView
+    private lateinit var paywallShow: ImageView
+
+    private var isProcessing = false
+    private var slideshowJob: Job? = null
+    private var paymentStatusJob: Job? = null
+
+    private val INTASEND_SECRET_KEY =
+        "Bearer ISSecretKey_live_e9d3162e-95cb-42a4-b64b-ee378525ca5a"
 
     private enum class Plan { MONTHLY, QUARTERLY, YEARLY }
     private var selectedPlan: Plan = Plan.MONTHLY
-
-
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         setTheme(R.style.Theme_Onyx_Ghost)
@@ -70,231 +79,237 @@ class PayWall : AppCompatActivity() {
         setContentView(R.layout.activity_pay_wall)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
-
-        loadTrendingMovies()
         db = AppDatabase(this)
+        bindViews()
+        configureScreen()
+        loadTrendingMovies()
+        setupBackPressedCallback()
+    }
 
-        ////////////////////////////////////////////////////////////////////////////////////////////
+    private fun bindViews() {
+        payInfo = findViewById(R.id.payInfo)
+        paymentContainer = findViewById(R.id.PaymentContainer)
+        btnPurchase = findViewById(R.id.btnPurchase)
+        btnClosePayment = findViewById(R.id.btnClosePayment)
+        planMonthly = findViewById(R.id.planMonthly)
+        planQuarterly = findViewById(R.id.planQuarterly)
+        planYearly = findViewById(R.id.planYearly)
+        rbMpesa = findViewById(R.id.rbMpesa)
+        btnMpesaPayment = findViewById(R.id.btnMpesaPayment)
+        etMpesaPhone = findViewById(R.id.etMpesaPhone)
+        progressBar = findViewById(R.id.MpesaProgressBar)
+        spCountry = findViewById(R.id.spCountry)
+        mpesaFeedbackBox = findViewById(R.id.mpesaFeedbackBox)
+        priceCurrencyText = findViewById(R.id.priceCurrencyText)
+        priceAmountText = findViewById(R.id.priceAmountText)
+        pricePeriodText = findViewById(R.id.pricePeriodText)
+        headerBadgeText = findViewById(R.id.headerBadgeText)
+        paywallShow = findViewById(R.id.paywallShow)
+    }
 
-        progressBar =  findViewById<ProgressBar>(R.id.MpesaProgressBar)
-        mpesaFeedbackBox = findViewById<TextView>(R.id.mpesaFeedbackBox)
-        ////////////////////////////////////////////////////////////////////////////////////////////
+    private fun configureScreen() {
+        spCountry.setSelection(0)
+        updateDisplayedPrice(resolveSelectedCountry())
+        updatePlanSelectionUI()
+        updatePaymentMethodUI()
+        attachFocusLift(btnPurchase, btnClosePayment, planMonthly, planQuarterly, planYearly, rbMpesa, btnMpesaPayment)
 
-        val PaymentContainer = findViewById<CardView>(R.id.PaymentContainer)
-        val btnPurchase = findViewById<Button>(R.id.btnPurchase)
-        val btnClosePayment = findViewById<TextView>(R.id.btnClosePayment)
-        val payInfo = findViewById<LinearLayout>(R.id.payInfo)
-        val termsText = findViewById<TextView>(R.id.termsText)
-        val planMonthly = findViewById<LinearLayout>(R.id.planMonthly)
-        val planQuarterly = findViewById<LinearLayout>(R.id.planQuarterly)
-        val planYearly = findViewById<LinearLayout>(R.id.planYearly)
-        val priceCurrencyText = findViewById<TextView>(R.id.priceCurrencyText)
-        val priceAmountText = findViewById<TextView>(R.id.priceAmountText)
-        val pricePeriodText = findViewById<TextView>(R.id.pricePeriodText)
-        val headerBadgeText = findViewById<TextView>(R.id.headerBadgeText)
-
-        // Initialize payment method views and country spinner early (used below)
-        val rbMpesa = findViewById<LinearLayout>(R.id.rbMpesa)
-        val rbCard = findViewById<LinearLayout>(R.id.rbCard)
-        val rbGooglePay = findViewById<LinearLayout>(R.id.rbGooglePay)
-        val mpesaSection = findViewById<LinearLayout>(R.id.mpesaSection)
-        val cardSection = findViewById<LinearLayout>(R.id.cardSection)
-        btnMpesaPayment = findViewById<Button>(R.id.btnMpesaPayment)
-        etMpesaPhone  = findViewById<EditText>(R.id.etMpesaPhone)
-        spCountry  = findViewById<Spinner>(R.id.spCountry)
-
-        /*
-        animateCardViewScale(PaymentContainer, 0.6f, 0.6f)
-        val params = btnPurchase.layoutParams as LinearLayout.LayoutParams
-        params.gravity = Gravity.CENTER_HORIZONTAL
-        btnPurchase.layoutParams = params
-         */
-
-        PaymentContainer.post {
-            PaymentContainer.pivotX = PaymentContainer.width / 2f
-            PaymentContainer.pivotY = 0f
-        }
-
-
-        btnPurchase.setOnClickListener {
-            PaymentContainer.visibility = View.VISIBLE
-            payInfo.visibility = View.GONE
-
-        }
-
-        fun updateDisplayedPrice(country: String) {
-            // Currency label
-            val currencyLabel = when {
-                country.contains("Uganda", true) -> "UGX"
-                country.contains("Tanzania", true) -> "TZS"
-                else -> "KSh"
-            }
-            priceCurrencyText.text = currencyLabel
-
-            // Amount and period by plan
-            priceAmountText.text = getPriceAmount(country, selectedPlan)
-            pricePeriodText.text = when (selectedPlan) {
-                Plan.MONTHLY -> "/ month"
-                Plan.QUARTERLY -> "/ 3 months"
-                Plan.YEARLY -> "/ year"
-            }
-
-            // Mirror selected plan on header badge
-            headerBadgeText.text = when (selectedPlan) {
-                Plan.MONTHLY -> "MONTHLY"
-                Plan.QUARTERLY -> "QUARTERLY • SAVE 17%"
-                Plan.YEARLY -> "YEARLY • SAVE 17%"
-            }
-        }
-
-        // Reflect price when country changes
-        spCountry.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                val country = spCountry.selectedItem?.toString() ?: return
-                updateDisplayedPrice(country)
-            }
-            override fun onNothingSelected(parent: AdapterView<*>?) { }
-        }
-        btnClosePayment.setOnClickListener {
-            PaymentContainer.visibility = View.GONE
-            payInfo.visibility = View.VISIBLE
-
-        }
-        termsText.setOnClickListener {
+        btnPurchase.setOnClickListener { showPaymentSheet() }
+        btnClosePayment.setOnClickListener { hidePaymentSheet(restoreFocus = true) }
+        findViewById<TextView>(R.id.termsText).setOnClickListener {
             try {
                 startActivity(Intent(this, TermsAndConditionsActivity::class.java))
-            } catch (_: Exception) { }
-        }
-
-        fun updatePlanSelectionUI() {
-            // Visual selection: stronger outline for selected, normal selector for others
-            fun applySelected(v: LinearLayout, selected: Boolean) {
-                v.isSelected = selected
-                if (selected) {
-                    v.background = ContextCompat.getDrawable(this, R.drawable.episode_selected)
-                    v.elevation = 4f
-                    v.alpha = 1f
-                } else {
-                    v.background = ContextCompat.getDrawable(this, R.drawable.tv_button_selector)
-                    v.elevation = 0f
-                    v.alpha = 0.95f
-                }
+            } catch (_: Exception) {
             }
-
-            applySelected(planMonthly, selectedPlan == Plan.MONTHLY)
-            applySelected(planQuarterly, selectedPlan == Plan.QUARTERLY)
-            applySelected(planYearly, selectedPlan == Plan.YEARLY)
-
-            // Reflect price on main card based on current country selection
-            val country = spCountry.selectedItem?.toString() ?: "Kenya"
-            updateDisplayedPrice(country)
         }
 
         planMonthly.setOnClickListener {
-            if (isProcessing) return@setOnClickListener
-            selectedPlan = Plan.MONTHLY
-            updatePlanSelectionUI()
+            if (!isProcessing) {
+                selectedPlan = Plan.MONTHLY
+                updatePlanSelectionUI()
+            }
         }
         planQuarterly.setOnClickListener {
-            if (isProcessing) return@setOnClickListener
-            selectedPlan = Plan.QUARTERLY
-            updatePlanSelectionUI()
+            if (!isProcessing) {
+                selectedPlan = Plan.QUARTERLY
+                updatePlanSelectionUI()
+            }
         }
         planYearly.setOnClickListener {
-            if (isProcessing) return@setOnClickListener
-            selectedPlan = Plan.YEARLY
-            updatePlanSelectionUI()
-        }
-        // Initialize selection visuals
-        updatePlanSelectionUI()
-        ////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-
-
-
-        
-
-
-        rbMpesa.setOnClickListener() {
-                mpesaSection.visibility = View.VISIBLE
-                cardSection.visibility = View.GONE
-
+            if (!isProcessing) {
+                selectedPlan = Plan.YEARLY
+                updatePlanSelectionUI()
+            }
         }
 
-        rbCard.setOnClickListener() {
-                cardSection.visibility = View.VISIBLE
-                mpesaSection.visibility = View.GONE
-
+        rbMpesa.setOnClickListener {
+            if (!isProcessing) {
+                updatePaymentMethodUI()
+                etMpesaPhone.requestFocus()
+            }
         }
 
-        rbGooglePay.setOnClickListener() {
-                mpesaSection.visibility = View.GONE
-                cardSection.visibility = View.GONE
+        spCountry.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                updateDisplayedPrice(resolveSelectedCountry())
+            }
 
+            override fun onNothingSelected(parent: AdapterView<*>?) = Unit
         }
-
-
-
-        
 
         btnMpesaPayment.setOnClickListener {
             if (isProcessing) return@setOnClickListener
-            showLoading(true)
+
             val phone = etMpesaPhone.text.toString().trim()
-            val country = spCountry.selectedItem.toString()
+            val country = resolveSelectedCountry()
             val amount = getPriceAmount(country, selectedPlan)
 
             if (phone.isEmpty() || phone.length < 10) {
-                Toast.makeText(this, "Enter a valid phone number", Toast.LENGTH_SHORT).show()
-                showLoading(false)
+                setPaymentFeedback("Enter a valid phone number.", FeedbackTone.ERROR)
+                etMpesaPhone.requestFocus()
                 return@setOnClickListener
             }
 
-            if(phone == "0000000000"){
+            showLoading(true)
+
+            if (phone == "0000000000") {
                 navigateToHome()
+                return@setOnClickListener
             }
 
             when {
-                country.contains("Kenya", ignoreCase = true) -> {
-                    sendStkPush(amount, phone)
-                }
-
+                country.contains("Kenya", ignoreCase = true) -> sendStkPush(amount, phone)
                 else -> {
-                    Toast.makeText(this, "Please select a valid country", Toast.LENGTH_SHORT).show()
+                    setPaymentFeedback("This payment flow is currently available for Kenya only.", FeedbackTone.ERROR)
                     showLoading(false)
                 }
             }
         }
 
-
+        payInfo.post { btnPurchase.requestFocus() }
     }
 
-
-
-    
-
-
-
-    private fun getPriceAmount(country: String, plan: Plan): String {
-        val isKenya = country.contains("Kenya", true)
-
-        return when {
-            isKenya -> when (plan) { Plan.MONTHLY -> "15"; Plan.QUARTERLY -> "35"; Plan.YEARLY -> "150" }
-            else -> when (plan) { Plan.MONTHLY -> "15"; Plan.QUARTERLY -> "35"; Plan.YEARLY -> "150" }
+    private fun updateDisplayedPrice(country: String) {
+        priceCurrencyText.text = when {
+            country.contains("Uganda", true) -> "UGX"
+            country.contains("Tanzania", true) -> "TZS"
+            else -> "KSh"
+        }
+        priceAmountText.text = getPriceAmount(country, selectedPlan)
+        pricePeriodText.text = when (selectedPlan) {
+            Plan.MONTHLY -> "/ month"
+            Plan.QUARTERLY -> "/ 3 months"
+            Plan.YEARLY -> "/ year"
+        }
+        headerBadgeText.text = when (selectedPlan) {
+            Plan.MONTHLY -> "MONTHLY"
+            Plan.QUARTERLY -> "QUARTERLY | SAVE 22%"
+            Plan.YEARLY -> "YEARLY | SAVE 17%"
         }
     }
 
+    private fun updatePlanSelectionUI() {
+        applyPlanState(planMonthly, selectedPlan == Plan.MONTHLY)
+        applyPlanState(planQuarterly, selectedPlan == Plan.QUARTERLY)
+        applyPlanState(planYearly, selectedPlan == Plan.YEARLY)
+        updateDisplayedPrice(resolveSelectedCountry())
+    }
 
+    private fun applyPlanState(view: LinearLayout, selected: Boolean) {
+        view.isSelected = selected
+        view.background = getDrawable(
+            if (selected) R.drawable.paywall_option_selected else R.drawable.paywall_option_default
+        )
+        view.alpha = if (selected) 1f else 0.9f
+    }
 
+    private fun updatePaymentMethodUI() {
+        rbMpesa.isSelected = true
+        rbMpesa.background = getDrawable(R.drawable.paywall_option_selected)
+    }
 
-    private fun   loadTrendingMovies() {
+    private fun showPaymentSheet() {
+        if (paymentContainer.visibility == View.VISIBLE) return
 
-        CoroutineScope(Dispatchers.IO).launch {
+        setPaymentFeedback("", FeedbackTone.INFO)
+
+        paymentContainer.visibility = View.VISIBLE
+        paymentContainer.alpha = 0f
+        paymentContainer.translationX = dpToPx(32).toFloat()
+
+        payInfo.animate()
+            .alpha(0f)
+            .translationX(-dpToPx(18).toFloat())
+            .setDuration(PANEL_ANIMATION_DURATION_MS)
+            .withEndAction {
+                payInfo.visibility = View.GONE
+                payInfo.translationX = 0f
+                payInfo.alpha = 1f
+            }
+            .start()
+
+        paymentContainer.animate()
+            .alpha(1f)
+            .translationX(0f)
+            .setDuration(PANEL_ANIMATION_DURATION_MS)
+            .withEndAction { planMonthly.requestFocus() }
+            .start()
+    }
+
+    private fun hidePaymentSheet(restoreFocus: Boolean) {
+        if (paymentContainer.visibility != View.VISIBLE) return
+
+        paymentContainer.animate()
+            .alpha(0f)
+            .translationX(dpToPx(32).toFloat())
+            .setDuration(PANEL_ANIMATION_DURATION_MS)
+            .withEndAction {
+                paymentContainer.visibility = View.GONE
+                paymentContainer.translationX = dpToPx(32).toFloat()
+            }
+            .start()
+
+        payInfo.visibility = View.VISIBLE
+        payInfo.alpha = 0f
+        payInfo.translationX = -dpToPx(18).toFloat()
+        payInfo.animate()
+            .alpha(1f)
+            .translationX(0f)
+            .setDuration(PANEL_ANIMATION_DURATION_MS)
+            .withEndAction {
+                if (restoreFocus) {
+                    btnPurchase.requestFocus()
+                }
+            }
+            .start()
+    }
+
+    private fun getPriceAmount(country: String, plan: Plan): String {
+        val isKenya = country.contains("Kenya", true)
+        return when {
+            isKenya -> when (plan) {
+                Plan.MONTHLY -> "15"
+                Plan.QUARTERLY -> "35"
+                Plan.YEARLY -> "150"
+            }
+
+            else -> when (plan) {
+                Plan.MONTHLY -> "15"
+                Plan.QUARTERLY -> "35"
+                Plan.YEARLY -> "150"
+            }
+        }
+    }
+
+    private fun resolveSelectedCountry(): String {
+        return spCountry.selectedItem?.toString()?.takeIf { it.isNotBlank() } ?: DEFAULT_COUNTRY
+    }
+
+    private fun loadTrendingMovies() {
+        slideshowJob?.cancel()
+        slideshowJob = lifecycleScope.launch(Dispatchers.IO) {
             try {
-                val url = "https://api.themoviedb.org/3/trending/all/day"
-                val connection = URL(url).openConnection() as HttpURLConnection
+                val connection = URL("https://api.themoviedb.org/3/trending/all/day").openConnection() as HttpURLConnection
                 connection.requestMethod = "GET"
                 connection.connectTimeout = 15000
                 connection.readTimeout = 15000
@@ -305,126 +320,106 @@ class PayWall : AppCompatActivity() {
                 )
 
                 val response = connection.inputStream.bufferedReader().use { it.readText() }
-                val jsonObject = org.json.JSONObject(response)
-                val moviesArray = jsonObject.getJSONArray("results")
+                connection.disconnect()
 
-                val outputList = mutableListOf<String>()
-
-
-
-                for (i in 0 until moviesArray.length()) {
-                    val current = moviesArray.getJSONObject(i)
-                    val poster = current.optString("poster_path", "")
-                    val backdrop_path = current.optString("backdrop_path", "")
-
-                    if (poster.isNotBlank() && !poster.endsWith("null")) {
-                        val imgUrl = "https://image.tmdb.org/t/p/original$poster"
-                        val imgUrls = "https://image.tmdb.org/t/p/original$backdrop_path"
-                        outputList.add(imgUrls)
+                val results = JSONObject(response).getJSONArray("results")
+                val images = mutableListOf<String>()
+                for (index in 0 until results.length()) {
+                    val current = results.getJSONObject(index)
+                    val backdropPath = current.optString("backdrop_path", "")
+                    if (backdropPath.isNotBlank() && backdropPath != "null") {
+                        images.add("https://image.tmdb.org/t/p/original$backdropPath")
                     }
                 }
 
-                val displaySection = findViewById<ImageView>(R.id.paywallShow)
+                if (images.isEmpty()) return@launch
 
-                // Loop posters like a slideshow
-                slideshowJob = CoroutineScope(Dispatchers.Main).launch {
-                    while (true) {
-                        try {
-                                for (imgUrl in outputList) {
-                                    Glide.with(this@PayWall)
-                                        .load(imgUrl)
-                                        .centerCrop()
-                                        .transition(DrawableTransitionOptions.withCrossFade(500))
-                                        .into(displaySection)
+                withContext(Dispatchers.Main) {
+                    if (images.isNotEmpty()) {
+                        Glide.with(this@PayWall)
+                            .load(images.first())
+                            .centerCrop()
+                            .transition(DrawableTransitionOptions.withCrossFade(400))
+                            .into(paywallShow)
+                    }
+                }
 
-                                    delay(20500)
-                                }
-                        } catch (e: Exception ){
-                            break
+                while (isActive) {
+                    for (imageUrl in images) {
+                        withContext(Dispatchers.Main) {
+                            Glide.with(this@PayWall)
+                                .load(imageUrl)
+                                .centerCrop()
+                                .transition(DrawableTransitionOptions.withCrossFade(650))
+                                .into(paywallShow)
                         }
+                        delay(SLIDESHOW_DELAY_MS)
+                        if (!isActive) break
                     }
                 }
-
             } catch (e: Exception) {
                 Log.e("PayWall", "Error loading trending movies", e)
             }
         }
     }
 
-
-
-
     private fun sendStkPush(amount: String, phone: String) {
-        CoroutineScope(Dispatchers.IO).launch {
+        lifecycleScope.launch(Dispatchers.IO) {
             try {
-                // Prepare the URL and connection
-                val url = URL("https://api.intasend.com/api/v1/payment/mpesa-stk-push/")
-                val connection = url.openConnection() as HttpURLConnection
+                val connection = URL("https://api.intasend.com/api/v1/payment/mpesa-stk-push/").openConnection() as HttpURLConnection
                 connection.requestMethod = "POST"
                 connection.connectTimeout = 15000
                 connection.readTimeout = 15000
                 connection.setRequestProperty("accept", "application/json")
                 connection.setRequestProperty("Content-Type", "application/json")
-                connection.setRequestProperty( "Authorization", INTASEND_SECRET_KEY  )
+                connection.setRequestProperty("Authorization", INTASEND_SECRET_KEY)
                 connection.doOutput = true
 
-                // Create JSON body
                 val jsonBody = """
-                {
-                    "amount": "$amount",
-                    "phone_number": "$phone"
-                }
-                  """.trimIndent()
+                    {
+                        "amount": "$amount",
+                        "phone_number": "$phone"
+                    }
+                """.trimIndent()
 
-                // Send request body
-                connection.outputStream.use { os ->
-                    val input = jsonBody.toByteArray(Charsets.UTF_8)
-                    os.write(input, 0, input.size)
+                connection.outputStream.use { output ->
+                    output.write(jsonBody.toByteArray(Charsets.UTF_8))
                 }
 
-                // Read response
                 val responseCode = connection.responseCode
                 val response = if (responseCode in 200..299) {
                     connection.inputStream.bufferedReader().use { it.readText() }
                 } else {
-                    connection.errorStream?.bufferedReader()?.use { it.readText() } ?: "Error"
+                    connection.errorStream?.bufferedReader()?.use { it.readText() } ?: "Payment request failed."
                 }
+                connection.disconnect()
 
                 withContext(Dispatchers.Main) {
                     if (responseCode == 200) {
-                        Log.d("MPESA_STK_PUSH 1", "Response: $response")
-                        mpesaFeedbackBox.text =  "STK Push sent! Check your phone."
-
-                        val json = JSONObject(response)
-                        val invoiceId = json.getJSONObject("invoice").getString("invoice_id")
+                        setPaymentFeedback("Payment prompt sent. Check your phone.", FeedbackTone.INFO)
+                        val invoiceId = JSONObject(response).getJSONObject("invoice").getString("invoice_id")
                         checkPaymentStatus(invoiceId)
                     } else {
-                        //Toast.makeText(this@PayWall, "Failed: $response", Toast.LENGTH_LONG).show()
-                        mpesaFeedbackBox.text = response.toString()
+                        setPaymentFeedback(response, FeedbackTone.ERROR)
                         showLoading(false)
                     }
                 }
-
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(this@PayWall, "Error: ${e.message}", Toast.LENGTH_LONG).show()
+                    setPaymentFeedback("Payment request failed. ${e.message ?: ""}".trim(), FeedbackTone.ERROR)
                     showLoading(false)
                 }
             }
         }
     }
 
-
-
-
     private fun checkPaymentStatus(invoiceId: String) {
-        CoroutineScope(Dispatchers.IO).launch {
+        paymentStatusJob?.cancel()
+        paymentStatusJob = lifecycleScope.launch(Dispatchers.IO) {
             var attempts = 0
-            val maxAttempts = 20
-            while (attempts < maxAttempts) {
+            while (attempts < PAYMENT_MAX_ATTEMPTS && isActive) {
                 try {
-                    val url = URL("https://api.intasend.com/api/v1/payment/status/")
-                    val connection = url.openConnection() as HttpURLConnection
+                    val connection = URL("https://api.intasend.com/api/v1/payment/status/").openConnection() as HttpURLConnection
                     connection.requestMethod = "POST"
                     connection.connectTimeout = 15000
                     connection.readTimeout = 15000
@@ -434,108 +429,140 @@ class PayWall : AppCompatActivity() {
                     connection.doOutput = true
 
                     val jsonBody = """{ "invoice_id": "$invoiceId" }"""
-
-                    connection.outputStream.use { os ->
-                        os.write(jsonBody.toByteArray(Charsets.UTF_8))
+                    connection.outputStream.use { output ->
+                        output.write(jsonBody.toByteArray(Charsets.UTF_8))
                     }
 
                     val responseCode = connection.responseCode
                     val response = if (responseCode in 200..299) {
                         connection.inputStream.bufferedReader().use { it.readText() }
                     } else {
-                        connection.errorStream?.bufferedReader()?.use { it.readText() } ?: "Error"
+                        connection.errorStream?.bufferedReader()?.use { it.readText() } ?: "Payment status failed."
                     }
-                    Log.d("MPESA_STK_PUSH 2", "Response: $response")
+                    connection.disconnect()
 
                     if (responseCode == 200) {
-                        val json = JSONObject(response)
-                        val state = json.getJSONObject("invoice").getString("state")
-
+                        val state = JSONObject(response).getJSONObject("invoice").getString("state")
                         withContext(Dispatchers.Main) {
-
-                            if (state == "COMPLETE") {
-                                mpesaFeedbackBox.text = "✅ Payment successful!"
-                                navigateToHome()
-                            } else if (state == "FAILED") {
-                                mpesaFeedbackBox.text =
-                                    "❌ Payment failed or cancelled. Restart again"
-                                showLoading(false)
-
-                            } else if (state == "PENDING") {
-                                Log.d("INTASEND_STATUS", "Payment still pending...")
-                                mpesaFeedbackBox.text = "Payment still pending..."
-                            } else {
-                                Log.d("INTASEND_STATUS", "Still pending...")
-                                mpesaFeedbackBox.text = "Payment still pending..."
+                            when (state) {
+                                "COMPLETE" -> {
+                                    setPaymentFeedback("Payment successful.", FeedbackTone.SUCCESS)
+                                    navigateToHome()
+                                }
+                                "FAILED" -> {
+                                    setPaymentFeedback("Payment failed or was cancelled. Try again.", FeedbackTone.ERROR)
+                                    showLoading(false)
+                                }
+                                "PENDING" -> setPaymentFeedback("Waiting for payment confirmation...", FeedbackTone.INFO)
+                                else -> setPaymentFeedback("Payment is still processing...", FeedbackTone.INFO)
                             }
                         }
-                        if (state == "COMPLETE" || state == "FAILED") break
+                        if (state == "COMPLETE" || state == "FAILED") {
+                            break
+                        }
+                    } else {
+                        withContext(Dispatchers.Main) {
+                            setPaymentFeedback(response, FeedbackTone.ERROR)
+                            showLoading(false)
+                        }
+                        break
                     }
-                    delay(15000)
+
+                    delay(PAYMENT_POLL_DELAY_MS)
                     attempts++
                 } catch (e: Exception) {
-                    mpesaFeedbackBox.text = e.message
-                    showLoading(false)
+                    withContext(Dispatchers.Main) {
+                        setPaymentFeedback("Could not verify payment status. ${e.message ?: ""}".trim(), FeedbackTone.ERROR)
+                        showLoading(false)
+                    }
                     break
                 }
             }
-            if (attempts >= maxAttempts) {
+
+            if (attempts >= PAYMENT_MAX_ATTEMPTS) {
                 withContext(Dispatchers.Main) {
-                    mpesaFeedbackBox.text = "Payment status timeout. Try again."
+                    setPaymentFeedback("Payment status timed out. Try again.", FeedbackTone.ERROR)
                     showLoading(false)
                 }
             }
         }
     }
 
-    private fun showLoading(show: Boolean) {
-        if (Looper.myLooper() == Looper.getMainLooper()) {
-            // Already on main thread
-            isProcessing = show
-            btnMpesaPayment.isEnabled = !show
-            btnMpesaPayment.text = if (show) "Processing..." else "Initiate payment"
-            progressBar.visibility = if (show) View.VISIBLE else View.GONE
-            // Disable plan changes while processing
-            findViewById<LinearLayout>(R.id.planMonthly)?.isEnabled = !show
-            findViewById<LinearLayout>(R.id.planQuarterly)?.isEnabled = !show
-            findViewById<LinearLayout>(R.id.planYearly)?.isEnabled = !show
-            // Disable country spinner as well
-            spCountry.isEnabled = !show
-        } else {
-            // Switch to main thread
-            Handler(Looper.getMainLooper()).post {
-                showLoading(show)
+    private enum class FeedbackTone { INFO, SUCCESS, ERROR }
+
+    private fun setPaymentFeedback(message: String, tone: FeedbackTone) {
+        mpesaFeedbackBox.text = message
+        mpesaFeedbackBox.setTextColor(
+            when (tone) {
+                FeedbackTone.INFO -> Color.parseColor("#FFF4E6")
+                FeedbackTone.SUCCESS -> Color.parseColor("#D7F8B7")
+                FeedbackTone.ERROR -> Color.parseColor("#FFB3A7")
             }
-        }
+        )
+    }
+
+    private fun showLoading(show: Boolean) {
+        isProcessing = show
+        btnMpesaPayment.isEnabled = !show
+        btnMpesaPayment.text = if (show) "Processing..." else "Send M-Pesa prompt"
+        progressBar.visibility = if (show) View.VISIBLE else View.GONE
+        planMonthly.isEnabled = !show
+        planQuarterly.isEnabled = !show
+        planYearly.isEnabled = !show
+        rbMpesa.isEnabled = !show
+        etMpesaPhone.isEnabled = !show
     }
 
     override fun onDestroy() {
         super.onDestroy()
         slideshowJob?.cancel()
+        paymentStatusJob?.cancel()
     }
-
 
     private fun navigateToHome() {
         showLoading(false)
-        // compute expiry based on selected plan
         val subType = when (selectedPlan) {
             Plan.MONTHLY -> "MONTHLY"
             Plan.QUARTERLY -> "3MONTH"
             Plan.YEARLY -> "YEARLY"
         }
 
-        // Save subscription using your function
-        lifecycleScope.launch(Dispatchers.IO) {
-            db.setSubscription(
-                type = subType,
-                paymentRef = ""
-            )
+        lifecycleScope.launch {
+            withContext(Dispatchers.IO) {
+                db.setSubscription(type = subType, paymentRef = "")
+            }
+            startActivity(Intent(this@PayWall, Login_Page::class.java))
+            finish()
         }
-
-        val intent = Intent(this, Login_Page::class.java)
-        startActivity(intent)
-        finish()
     }
 
+    private fun attachFocusLift(vararg views: View) {
+        val lift = dpToPx(4).toFloat()
+        views.forEach { view ->
+            view.setOnFocusChangeListener { target, hasFocus ->
+                target.animate()
+                    .scaleX(if (hasFocus) 1.03f else 1f)
+                    .scaleY(if (hasFocus) 1.03f else 1f)
+                    .translationY(if (hasFocus) -lift else 0f)
+                    .setDuration(140L)
+                    .start()
+            }
+        }
+    }
 
+    private fun dpToPx(value: Int): Int {
+        return (value * resources.displayMetrics.density).toInt()
+    }
+
+    private fun setupBackPressedCallback() {
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (paymentContainer.visibility == View.VISIBLE) {
+                    hidePaymentSheet(restoreFocus = true)
+                } else {
+                    finish()
+                }
+            }
+        })
+    }
 }
