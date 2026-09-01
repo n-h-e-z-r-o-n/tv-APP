@@ -17,10 +17,33 @@ class FocusOverlay<T> (
         private val projectItemAction: (T) -> Unit
     ) {
 
+        companion object {
+            private const val FOCUSED_ITEM_ALPHA = 0.12f
+            private const val UNFOCUSED_ITEM_ALPHA = 1f
+            private const val ITEM_ALPHA_DURATION_MS = 180L
+            private const val HERO_UPDATE_DEBOUNCE_MS = 180L
+            private const val MIN_SCROLL_DELTA_PX = 4
+            private const val MAX_SCROLL_DURATION_MS = 180
+            private const val SIBLING_TRANSLATION_DURATION_MS = 180L
+        }
+
         var embeddedFocusedView: View? = null
         private var initialHeroPopulated = false
         private var selectRetryCount = 0
+        private var overlayAnchorX: Int? = null
+        private var pendingProjection: Runnable? = null
+
         init {
+            overlay.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
+                updateOverlayAnchor()
+            }
+            recyclerView.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
+                updateOverlayAnchor()
+                if (embeddedFocusedView?.isAttachedToWindow == true) {
+                    updateVisibleChildTranslations(animate = false)
+                }
+            }
+            overlay.post { updateOverlayAnchor() }
 
             recyclerView.layoutManager =  object : LinearLayoutManager(
                 recyclerView.context,
@@ -41,17 +64,43 @@ class FocusOverlay<T> (
             recyclerView.addOnChildAttachStateChangeListener(object : RecyclerView.OnChildAttachStateChangeListener {
                 override fun onChildViewAttachedToWindow(view: View) {
                     view.foreground = null
+                    if (view !== embeddedFocusedView) {
+                        view.animate().cancel()
+                        view.alpha = UNFOCUSED_ITEM_ALPHA
+                    }
+                    if (view !== embeddedFocusedView) {
+                        view.translationX = 0f
+                    }
+                    if (embeddedFocusedView?.isAttachedToWindow == true) {
+                        recyclerView.post { updateVisibleChildTranslations(animate = false) }
+                    }
                 }
                 override fun onChildViewDetachedFromWindow(view: View) {
+                    view.animate().cancel()
+                    view.alpha = UNFOCUSED_ITEM_ALPHA
+                    view.translationX = 0f
+                    if (embeddedFocusedView === view) {
+                        embeddedFocusedView = null
+                    }
+                }
+            })
+            recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+                override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                    if (embeddedFocusedView?.isAttachedToWindow == true) {
+                        updateVisibleChildTranslations(animate = false)
+                    }
                 }
             })
 
 
             val focusDataObserver = object : RecyclerView.AdapterDataObserver() {
-                override fun onChanged() = enforceFirstItemFocusIfNeeded(recyclerView)
+                override fun onChanged() {
+                    if (!initialHeroPopulated && !recyclerView.hasFocus()) {
+                        enforceFirstItemFocusIfNeeded(recyclerView)
+                    }
+                }
                 override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
-                    if (positionStart == 0) {
-                        //enforceFirstItemFocusIfNeeded(movieRecyclerView)
+                    if (!initialHeroPopulated && positionStart == 0) {
                         selectFirstItemSilently()
                     }
                 }
@@ -70,44 +119,28 @@ class FocusOverlay<T> (
 
                     embeddedFocusedView?.let { previous ->
                         if (previous !== view) {
-                            val oldLp = previous.layoutParams as RecyclerView.LayoutParams
-                            oldLp.marginStart = 0
-                            oldLp.marginEnd = 0
-                            oldLp.topMargin = 0
-                            oldLp.bottomMargin = 0
-                            previous.layoutParams = oldLp
-                            previous.requestLayout()
-                            previous.animate()
-                                .alpha(1f)
-                                .setDuration(300L)
-                                .start()
+                            resetItemVisualState(previous, animate = true)
                         }
                     }
-
-                    val lp = view.layoutParams as RecyclerView.LayoutParams
-                    val focusedMargin = (overlay.width * 0.3f).toInt()
-                    lp.marginStart = focusedMargin
-                    lp.marginEnd = focusedMargin
-                    view.layoutParams = lp
-                    view.requestLayout()
 
                     embeddedFocusedView = view
-                    view.animate()
-                        .alpha(0.03f)
-                        .setDuration(300L)
-                        .start()
+                    applyFocusedVisualState(view, animate = true)
+                    updateVisibleChildTranslations(animate = true)
 
                     view.post {
-                        if (embeddedFocusedView == view) {
+                        if (embeddedFocusedView === view && view.isAttachedToWindow) {
                             centerChildUnderFixedFocus(recyclerView, overlay, view)
-
-
                         }
-                        projectItemAction(item)
                     }
+                    scheduleProjection(view, item)
                 }
                 val focusLostAction: () -> Unit = {
-                    overlay.strokeWidth = 0
+                    recyclerView.post {
+                        if (!recyclerView.hasFocus() && embeddedFocusedView?.hasFocus() != true) {
+                            overlay.strokeWidth = 0
+                            resetVisibleChildTranslations(animate = true)
+                        }
+                    }
                 }
                 if (adapter is FocusableAdapter<*>) {
                     @Suppress("UNCHECKED_CAST")
@@ -148,33 +181,16 @@ class FocusOverlay<T> (
 
                     if (firstItem == null) return@post
 
-                    // 2. Protect against overlay not being measured yet
-                    val actualOverlayWidth = if (overlay.width == 0) {
-                        (110f * overlay.resources.displayMetrics.density).roundToInt()
-                    } else {
-                        overlay.width
-                    }
+                    applyFocusedVisualState(firstView, animate = false)
 
-                    // 3. Apply the visual state manually
-                    val lp = firstView.layoutParams as RecyclerView.LayoutParams
-                    val focusedMargin = (actualOverlayWidth * 0.3f).toInt()
-                    lp.marginStart = focusedMargin
-                    lp.marginEnd = focusedMargin
-                    firstView.layoutParams = lp
-
-                    firstView.alpha = 0.03f
-
-                    // 4. Center it instantly (smooth = false so it doesn't visibly slide in on launch)
                     centerChildUnderFixedFocus(recyclerView, overlay, firstView, smooth = false)
 
-                    // 5. Project the data to the background hero
                     projectItemAction(firstItem)
 
-                    // 6. Track this view so when the user actually starts scrolling, it resets properly!
                     embeddedFocusedView = firstView
+                    updateVisibleChildTranslations(animate = false)
 
                 } else {
-                    // If the view isn't physically laid out on the screen yet, check again in 50ms.
                     if (selectRetryCount < 20) {
                         selectRetryCount++
                         recyclerView.postDelayed({ selectFirstItemSilently() }, 50)
@@ -190,32 +206,19 @@ class FocusOverlay<T> (
             child: View,
             smooth: Boolean = true
         ) {
-            if (recyclerView.width == 0) return
+            if (recyclerView.width == 0 || !child.isAttachedToWindow) return
 
-            // Calculate the overlay anchor X directly within the function
-            val viewportCenterX = if (overlay.width == 0) {
-                val fallbackWidth = (110f * overlay.resources.displayMetrics.density).roundToInt()
-                val lp = overlay.layoutParams as? FrameLayout.LayoutParams
-                val startMargin = lp?.marginStart ?: 0
-                (startMargin + fallbackWidth / 2).coerceIn(0, recyclerView.width)
-            } else {
-                val recyclerLocation = IntArray(2)
-                val overlayLocation = IntArray(2)
-                recyclerView.getLocationInWindow(recyclerLocation)
-                overlay.getLocationInWindow(overlayLocation)
-
-                val overlayCenterX = overlayLocation[0] - recyclerLocation[0] + (overlay.width / 2)
-                overlayCenterX.coerceIn(0, recyclerView.width)
-            }
+            val viewportCenterX = overlayAnchorX ?: calculateOverlayAnchorX()
 
             val childCenterX = child.left + (child.width / 2)
             val distanceToCenter = childCenterX - viewportCenterX
-            if (distanceToCenter == 0) return
+            if (abs(distanceToCenter) <= MIN_SCROLL_DELTA_PX) return
 
             if (smooth) {
-                val duration = (110 + abs(distanceToCenter) * 0.20f)
+                recyclerView.stopScroll()
+                val duration = (140 + abs(distanceToCenter) * 0.05f)
                     .roundToInt()
-                    .coerceIn(110, 260)
+                    .coerceAtMost(MAX_SCROLL_DURATION_MS)
                 recyclerView.smoothScrollBy(
                     distanceToCenter,
                     0,
@@ -239,6 +242,164 @@ class FocusOverlay<T> (
                 val firstItem = recyclerView.findViewHolderForAdapterPosition(0)?.itemView
                 firstItem?.requestFocus()
             }
+        }
+
+        private fun applyFocusedVisualState(view: View, animate: Boolean) {
+            view.animate().cancel()
+            if (animate) {
+                view.animate()
+                    .alpha(FOCUSED_ITEM_ALPHA)
+                    .setDuration(ITEM_ALPHA_DURATION_MS)
+                    .start()
+            } else {
+                view.alpha = FOCUSED_ITEM_ALPHA
+            }
+        }
+
+        private fun resetItemVisualState(view: View, animate: Boolean) {
+            view.animate().cancel()
+            if (animate) {
+                view.animate()
+                    .alpha(UNFOCUSED_ITEM_ALPHA)
+                    .setDuration(ITEM_ALPHA_DURATION_MS)
+                    .start()
+            } else {
+                view.alpha = UNFOCUSED_ITEM_ALPHA
+            }
+        }
+
+        private fun scheduleProjection(view: View, item: T) {
+            pendingProjection?.let(recyclerView::removeCallbacks)
+            pendingProjection = Runnable {
+                if (embeddedFocusedView === view && view.isAttachedToWindow) {
+                    projectItemAction(item)
+                }
+                pendingProjection = null
+            }
+            recyclerView.postDelayed(pendingProjection, HERO_UPDATE_DEBOUNCE_MS)
+        }
+
+        private fun updateOverlayAnchor() {
+            if (recyclerView.width == 0) return
+            overlayAnchorX = calculateOverlayAnchorX()
+        }
+
+        private fun updateVisibleChildTranslations(animate: Boolean) {
+            val focusedView = embeddedFocusedView?.takeIf { it.isAttachedToWindow } ?: run {
+                resetVisibleChildTranslations(animate)
+                return
+            }
+            val overlayBounds = calculateOverlayBounds() ?: return
+            val gapPx = calculateSiblingGapPx()
+
+            val visibleChildren = buildList {
+                for (index in 0 until recyclerView.childCount) {
+                    add(recyclerView.getChildAt(index))
+                }
+            }.sortedBy { it.left }
+
+            val focusedIndex = visibleChildren.indexOf(focusedView)
+            if (focusedIndex == -1) {
+                resetVisibleChildTranslations(animate)
+                return
+            }
+
+            applyChildTranslation(focusedView, 0f, animate)
+
+            var previousOriginalRight = focusedView.right
+            var previousFinalRight = overlayBounds.second + gapPx
+            for (index in focusedIndex + 1 until visibleChildren.size) {
+                val child = visibleChildren[index]
+                val originalGap = (child.left - previousOriginalRight).coerceAtLeast(0)
+                val targetLeft = maxOf(child.left, previousFinalRight + originalGap)
+                val translation = (targetLeft - child.left).toFloat()
+                applyChildTranslation(child, translation, animate)
+                previousOriginalRight = child.right
+                previousFinalRight = child.right + translation.toInt()
+            }
+
+            var nextOriginalLeft = focusedView.left
+            var nextFinalLeft = overlayBounds.first - gapPx
+            for (index in focusedIndex - 1 downTo 0) {
+                val child = visibleChildren[index]
+                val originalGap = (nextOriginalLeft - child.right).coerceAtLeast(0)
+                val targetRight = minOf(child.right, nextFinalLeft - originalGap)
+                val translation = (targetRight - child.right).toFloat()
+                applyChildTranslation(child, translation, animate)
+                nextOriginalLeft = child.left
+                nextFinalLeft = child.left + translation.toInt()
+            }
+        }
+
+        private fun resetVisibleChildTranslations(animate: Boolean) {
+            for (index in 0 until recyclerView.childCount) {
+                applyChildTranslation(recyclerView.getChildAt(index), 0f, animate)
+            }
+        }
+
+        private fun applyChildTranslation(view: View, translationX: Float, animate: Boolean) {
+            if (kotlin.math.abs(view.translationX - translationX) < 0.5f) return
+            if (animate) {
+                view.animate()
+                    .translationX(translationX)
+                    .setDuration(SIBLING_TRANSLATION_DURATION_MS)
+                    .setInterpolator(AccelerateDecelerateInterpolator())
+                    .start()
+            } else {
+                view.translationX = translationX
+            }
+        }
+
+        private fun calculateOverlayBounds(): Pair<Int, Int>? {
+            if (recyclerView.width == 0) return null
+
+            val layoutWidth = overlay.layoutParams?.width ?: 0
+            val overlayWidth = when {
+                overlay.width > 0 -> overlay.width
+                layoutWidth > 0 -> layoutWidth
+                else -> (110f * overlay.resources.displayMetrics.density).roundToInt()
+            }
+
+            if (overlay.width > 0) {
+                val recyclerLocation = IntArray(2)
+                val overlayLocation = IntArray(2)
+                recyclerView.getLocationInWindow(recyclerLocation)
+                overlay.getLocationInWindow(overlayLocation)
+
+                val left = (overlayLocation[0] - recyclerLocation[0]).coerceIn(0, recyclerView.width)
+                val right = (left + overlayWidth).coerceIn(0, recyclerView.width)
+                return left to right
+            }
+
+            val centerX = overlayAnchorX ?: calculateOverlayAnchorX()
+            val halfWidth = overlayWidth / 2
+            return (centerX - halfWidth).coerceIn(0, recyclerView.width) to
+                (centerX + halfWidth).coerceIn(0, recyclerView.width)
+        }
+
+        private fun calculateSiblingGapPx(): Int {
+            return (12f * recyclerView.resources.displayMetrics.density).roundToInt()
+        }
+
+        private fun calculateOverlayAnchorX(): Int {
+            if (overlay.width == 0) {
+                val layoutWidth = overlay.layoutParams?.width ?: 0
+                val fallbackWidth = when {
+                    layoutWidth > 0 -> layoutWidth
+                    else -> (110f * overlay.resources.displayMetrics.density).roundToInt()
+                }
+                val lp = overlay.layoutParams as? FrameLayout.LayoutParams
+                val startMargin = lp?.marginStart ?: 0
+                return (startMargin + fallbackWidth / 2).coerceIn(0, recyclerView.width)
+            }
+
+            val recyclerLocation = IntArray(2)
+            val overlayLocation = IntArray(2)
+            recyclerView.getLocationInWindow(recyclerLocation)
+            overlay.getLocationInWindow(overlayLocation)
+
+            val overlayCenterX = overlayLocation[0] - recyclerLocation[0] + (overlay.width / 2)
+            return overlayCenterX.coerceIn(0, recyclerView.width)
         }
 
 }
