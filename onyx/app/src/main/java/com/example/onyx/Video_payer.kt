@@ -41,6 +41,7 @@ import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.exoplayer.upstream.DefaultLoadErrorHandlingPolicy
 import com.example.onyx.Database.AppDatabase
 import com.example.onyx.Database.SessionManger
+import com.example.onyx.FetchData.TMDBapi
 import com.example.onyx.OnyxObjects.GlobalUtils
 import com.google.android.material.card.MaterialCardView
 import kotlinx.coroutines.Dispatchers
@@ -48,6 +49,8 @@ import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import androidx.media3.datasource.HttpDataSource
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 @UnstableApi
 class Video_payer : AppCompatActivity(), Player.Listener {
@@ -55,6 +58,7 @@ class Video_payer : AppCompatActivity(), Player.Listener {
     // ── Show metadata ──────────────────────────────────────────────────────────
     private lateinit var db: AppDatabase
     private lateinit var sm: SessionManger
+    private lateinit var fetch: TMDBapi
     private var userId = -1
     private var resumePosition: Long = 0L
     private var showId: String = ""
@@ -67,6 +71,8 @@ class Video_payer : AppCompatActivity(), Player.Listener {
     private var videoUrl: String = ""
     private var userAgent: String = ""
     private var referer: String = ""
+    private var isAutoNextEnabled = true
+    private var isAutoNextLaunching = false
 
     // ── Views ──────────────────────────────────────────────────────────────────
     private lateinit var playerView: PlayerView
@@ -82,6 +88,7 @@ class Video_payer : AppCompatActivity(), Player.Listener {
 
     private lateinit var btn_speed_text: TextView
     private lateinit var btnSubtitles: ImageButton
+    private lateinit var btnAutoNext: TextView
     private lateinit var btnQuality: TextView
     private lateinit var btnRefresh: ImageButton
     private lateinit var btnSettings: ImageButton
@@ -188,6 +195,7 @@ class Video_payer : AppCompatActivity(), Player.Listener {
         connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         db = AppDatabase(this)
         sm = SessionManger(this)
+        fetch = TMDBapi(this)
         userId = sm.getUserId()
 
         initializeViews()
@@ -264,6 +272,7 @@ class Video_payer : AppCompatActivity(), Player.Listener {
         btnSpeed         = findViewById(R.id.btn_speed)
         btn_speed_text   = findViewById(R.id.btn_speed_text)
         btnSubtitles     = findViewById(R.id.btn_subtitles)
+        btnAutoNext      = findViewById(R.id.btn_autoNext)
         btnQuality       = findViewById(R.id.btn_quality)
         btnRefresh       = findViewById(R.id.btn_refresh)
         btnSettings      = findViewById(R.id.btn_settings)
@@ -285,6 +294,7 @@ class Video_payer : AppCompatActivity(), Player.Listener {
         showBackdrop = intent.getStringExtra("showBackdrop")?: ""
         showSNo      = intent.getStringExtra("showSNo")     ?: ""
         showENo      = intent.getStringExtra("showENo")     ?: ""
+        isAutoNextEnabled = getAutoNextPreference()
 
         if (BuildConfig.DEBUG) {
             Log.d("Video_payer", "videoUrl=$videoUrl")
@@ -295,6 +305,7 @@ class Video_payer : AppCompatActivity(), Player.Listener {
             Log.d("Video_payer", "showTitle=$showTitle")
             Log.d("Video_payer", "showSNo=$showSNo")
             Log.d("Video_payer", "showENo=$showENo")
+            Log.d("Video_payer", "autoNext=$isAutoNextEnabled")
         }
 
         if (videoUrl.isEmpty()) {
@@ -327,11 +338,14 @@ class Video_payer : AppCompatActivity(), Player.Listener {
         btnPlayPause.setOnClickListener { togglePlayPause() }
         btnMute.setOnClickListener      { toggleMute() }
         btnSpeed.setOnClickListener     { showSpeedDialog() }
+        btnAutoNext.setOnClickListener  { toggleAutoNext() }
         btnQuality.setOnClickListener   { showQualityDialog() }
         btnRefresh.setOnClickListener   { refreshVideo(resetAutoRefreshAttempts = true) }
         btnSettings.setOnClickListener  { showSettingsDialog() }
         btnClose.setOnClickListener     { finish() }
         btnFullscreen.setOnClickListener{ toggleFullscreen() }
+
+        updateAutoNextButton()
 
         // Touch taps for FF/rewind, in addition to the existing D-pad support below,
         // so this also works on non-remote (phone/tablet) layouts.
@@ -694,7 +708,12 @@ class Video_payer : AppCompatActivity(), Player.Listener {
                 waitingForNetworkRecovery = false
                 shouldResumeAfterNetworkRecovery = false
                 stopProgressTracking()
-                Toast.makeText(this, "Video ended", Toast.LENGTH_SHORT).show()
+                saveContinueWatching()
+                if (shouldAutoPlayNextEpisode()) {
+                    tryAutoPlayNextEpisode()
+                } else {
+                    Toast.makeText(this, "Video ended", Toast.LENGTH_SHORT).show()
+                }
             }
             Player.STATE_IDLE -> {
                 stopBufferingWatchdog()
@@ -1057,6 +1076,154 @@ class Video_payer : AppCompatActivity(), Player.Listener {
     }
 
     // ──────────────────────────────────────────────────────────────────────────
+    private fun getAutoNextPreference(): Boolean {
+        val prefs = getSharedPreferences("video_player_prefs", Context.MODE_PRIVATE)
+        return prefs.getBoolean("auto_next_enabled", true)
+    }
+
+    private fun setAutoNextPreference(enabled: Boolean) {
+        val prefs = getSharedPreferences("video_player_prefs", Context.MODE_PRIVATE)
+        prefs.edit().putBoolean("auto_next_enabled", enabled).apply()
+    }
+
+    private fun isShowEpisode(): Boolean {
+        if (!showType.equals("tv", ignoreCase = true)) return false
+        val seasonNumber = showSNo.toIntOrNull() ?: return false
+        val episodeNumber = showENo.toIntOrNull() ?: return false
+        return seasonNumber > 0 && episodeNumber > 0
+    }
+
+    private fun shouldAutoPlayNextEpisode(): Boolean {
+        return isShowEpisode() && isAutoNextEnabled && !isAutoNextLaunching
+    }
+
+    private fun toggleAutoNext() {
+        if (!isShowEpisode()) return
+        isAutoNextEnabled = !isAutoNextEnabled
+        setAutoNextPreference(isAutoNextEnabled)
+        updateAutoNextButton()
+        Toast.makeText(
+            this,
+            if (isAutoNextEnabled) "Auto-next enabled" else "Auto-next disabled",
+            Toast.LENGTH_SHORT
+        ).show()
+    }
+
+    private fun updateAutoNextButton() {
+        if (!isShowEpisode()) {
+            btnAutoNext.visibility = View.GONE
+            return
+        }
+
+        btnAutoNext.visibility = View.VISIBLE
+        btnAutoNext.text = if (isAutoNextEnabled) "Auto-next: On" else "Auto-next: Off"
+    }
+
+    private fun tryAutoPlayNextEpisode() {
+        if (isAutoNextLaunching) return
+        isAutoNextLaunching = true
+        progressBar.visibility = View.VISIBLE
+
+        lifecycleScope.launch(Dispatchers.Main) {
+            val nextEpisode = withContext(Dispatchers.IO) { findNextEpisodeTarget() }
+
+            if (isDestroyed || isFinishing) return@launch
+
+            if (nextEpisode == null) {
+                isAutoNextLaunching = false
+                progressBar.visibility = View.GONE
+                Toast.makeText(this@Video_payer, "No next episode available", Toast.LENGTH_SHORT).show()
+                return@launch
+            }
+
+            Toast.makeText(
+                this@Video_payer,
+                "Playing S${nextEpisode.seasonNumber} E${nextEpisode.episodeNumber}",
+                Toast.LENGTH_SHORT
+            ).show()
+            launchPlayForEpisode(nextEpisode)
+        }
+    }
+
+    private fun findNextEpisodeTarget(): NextEpisodeTarget? {
+        val currentSeason = showSNo.toIntOrNull() ?: return null
+        val currentEpisode = showENo.toIntOrNull() ?: return null
+        val today = LocalDate.now()
+        val formatter = DateTimeFormatter.ISO_LOCAL_DATE
+
+        fun findFirstAiredEpisode(seasonNo: Int, afterEpisode: Int = 0): Int? {
+            val seasonInfo = fetch.fetchSeasonInfo(showId, seasonNo.toString()) ?: return null
+            val episodes = seasonInfo.optJSONArray("episodes") ?: return null
+
+            var bestEpisodeNumber: Int? = null
+            for (index in 0 until episodes.length()) {
+                val episode = episodes.optJSONObject(index) ?: continue
+                val episodeNumber = episode.optInt("episode_number", 0)
+                if (episodeNumber <= afterEpisode) continue
+                if (!isEpisodeAired(episode.optString("air_date", ""), today, formatter)) continue
+
+                if (bestEpisodeNumber == null || episodeNumber < bestEpisodeNumber) {
+                    bestEpisodeNumber = episodeNumber
+                }
+            }
+            return bestEpisodeNumber
+        }
+
+        findFirstAiredEpisode(currentSeason, currentEpisode)?.let { nextEpisode ->
+            return NextEpisodeTarget(currentSeason, nextEpisode)
+        }
+
+        val showData = fetch.fetchShowData(showId, "tv") ?: return null
+        val seasons = showData.optJSONArray("seasons") ?: return null
+        val nextSeasons = mutableListOf<Int>()
+
+        for (index in 0 until seasons.length()) {
+            val season = seasons.optJSONObject(index) ?: continue
+            val seasonNumber = season.optInt("season_number", -1)
+            if (seasonNumber > currentSeason) {
+                nextSeasons.add(seasonNumber)
+            }
+        }
+
+        nextSeasons.sorted().forEach { seasonNumber ->
+            val nextEpisode = findFirstAiredEpisode(seasonNumber)
+            if (nextEpisode != null) {
+                return NextEpisodeTarget(seasonNumber, nextEpisode)
+            }
+        }
+
+        return null
+    }
+
+    private fun isEpisodeAired(
+        airDate: String,
+        today: LocalDate,
+        formatter: DateTimeFormatter
+    ): Boolean {
+        if (airDate.isBlank() || airDate == "null") return true
+        return try {
+            !LocalDate.parse(airDate, formatter).isAfter(today)
+        } catch (_: Exception) {
+            true
+        }
+    }
+
+    private fun launchPlayForEpisode(nextEpisode: NextEpisodeTarget) {
+        shouldResumePlaybackWhenReady = false
+        val intent = Intent(this, Play::class.java).apply {
+            putExtra("imdb_code", showId)
+            putExtra("type", "tv")
+            putExtra("title", showTitle)
+            putExtra("poster", showPoster)
+            putExtra("backdrop", showBackdrop)
+            putExtra("showBackdrop", showBackdrop)
+            putExtra("seasonNo", nextEpisode.seasonNumber.toString())
+            putExtra("episodeNo", nextEpisode.episodeNumber.toString())
+        }
+        startActivity(intent)
+        finish()
+    }
+
     // UI helpers
     // ──────────────────────────────────────────────────────────────────────────
 
@@ -1362,3 +1529,8 @@ class Video_payer : AppCompatActivity(), Player.Listener {
         }
     }
 }
+
+private data class NextEpisodeTarget(
+    val seasonNumber: Int,
+    val episodeNumber: Int
+)
