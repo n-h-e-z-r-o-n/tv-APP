@@ -312,7 +312,7 @@ class Watch_Page : AppCompatActivity() {
             val poster_widget = findViewById<ImageView>(R.id.posterImageView)
             val backdrop_Widget = findViewById<ImageView>(R.id.backdropImageView)
 
-            extractAndApplyDynamicColor(posterUrl)
+            extractAndApplyDynamicColor(showBackdrop)
 
             Glide.with(this@Watch_Page)
                 .load(GlobalUtils.getOptimizedBackdropUrl(backdropUrl))
@@ -339,7 +339,7 @@ class Watch_Page : AppCompatActivity() {
                 animator.start()
             }
             
-            extractAndApplyDynamicColor(posterUrl)
+            //extractAndApplyDynamicColor(posterUrl)
 
             Glide.with(this@Watch_Page)
                 .load(GlobalUtils.getOptimizedPosterUrl(posterUrl))

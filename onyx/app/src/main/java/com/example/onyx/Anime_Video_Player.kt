@@ -835,7 +835,7 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
                             container.addView(label)
 
                             for (server in servers) {
-                                val serverName = server["server"] as? String ?: ""
+                                val serverName = "${server["server"].toString().uppercase()} (${server["type"]})"
                                 val vlink = server["link"] as? String ?: ""
                                 val headers = server["headers"] as? Map<*, *>
 

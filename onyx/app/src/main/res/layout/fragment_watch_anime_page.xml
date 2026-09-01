@@ -431,6 +431,8 @@
 
                                 <LinearLayout
                                     android:layout_width="wrap_content"
+                                    android:gravity="center_vertical"
+                                    android:orientation="horizontal"
                                     android:layout_height="wrap_content">
 
 
@@ -439,9 +441,9 @@
                                             android:id="@+id/favoriteButtonAnime"
                                             android:layout_width="wrap_content"
                                             android:layout_height="wrap_content"
-                                            android:layout_gravity="bottom"
                                             android:clickable="true"
                                             android:focusable="true"
+                                            android:layout_gravity = "center_vertical"
                                             app:cardBackgroundColor="#40FFFFFF"
                                             app:cardCornerRadius="9dp"
                                             app:cardElevation="0dp"
