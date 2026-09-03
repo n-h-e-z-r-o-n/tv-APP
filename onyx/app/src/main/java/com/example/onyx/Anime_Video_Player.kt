@@ -152,10 +152,14 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
     private var currentVideoUrl: String? = null
     private var availableQualities: List<String> = listOf("Auto")
     private var pendingEmbedSource: StreamSource? = null
+    private var activePlaybackContext: EpisodePlaybackContext? = null
+    private var pendingPlaybackContext: EpisodePlaybackContext? = null
     private val animeStreamResolverLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             val pendingSource = pendingEmbedSource
+            val pendingContext = pendingPlaybackContext
             pendingEmbedSource = null
+            pendingPlaybackContext = null
 
             if (result.resultCode != Activity.RESULT_OK) {
                 val failureMessage = result.data
@@ -200,7 +204,8 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
                 resolvedReferer,
                 resolvedOrigin,
                 resolvedUserAgent,
-                sourceType = "resolved"
+                sourceType = "resolved",
+                playbackContext = pendingContext
             )
         }
 
@@ -249,11 +254,42 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
         }
     }
 
-    private suspend fun fetchResumePosition(): Long = withContext(Dispatchers.IO) {
-        if (currentEpisodeId.isNotBlank()) {
-            db.getResumePosition(userId, currentEpisodeId.toString(), "anime").toLong()
+    private suspend fun fetchResumePosition(episodeId: String = currentEpisodeId): Long = withContext(Dispatchers.IO) {
+        if (episodeId.isNotBlank()) {
+            db.getResumePosition(userId, episodeId, "anime").toLong()
         } else {
             0L
+        }
+    }
+
+    private fun buildPlaybackContext(episodeId: String): EpisodePlaybackContext {
+        return EpisodePlaybackContext(
+            episodeId = episodeId,
+            episodeNumber = holdEpisodeNo.ifBlank { currentEpisodeNumber },
+            seasonId = holdSeasonId.ifBlank { currentSeasonId },
+            seasonTitle = holdSeasonTitle.ifBlank { currentSeasonTitle },
+            poster = holdPoster.ifBlank { currentPoster }
+        )
+    }
+
+    private fun applyPlaybackContext(context: EpisodePlaybackContext) {
+        currentEpisodeId = context.episodeId
+        currentEpisodeNumber = context.episodeNumber
+        currentSeasonId = context.seasonId
+        currentSeasonTitle = context.seasonTitle
+        currentPoster = context.poster
+    }
+
+    private fun clearSavedProgressForContext(context: EpisodePlaybackContext?) {
+        val playbackContext = context ?: return
+        if (userId <= 0 || playbackContext.episodeId.isBlank()) return
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                db.removeContinueWatching(userId, playbackContext.episodeId, "anime")
+            } catch (e: Exception) {
+                Log.e("ANIME_PLAYER", "Error clearing progress for ended episode", e)
+            }
         }
     }
 
@@ -1015,9 +1051,13 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
         referer: String?,
         origin: String?,
         userAgent: String?,
-        sourceType: String? = null
+        sourceType: String? = null,
+        playbackContext: EpisodePlaybackContext? = null
     ) {
         lifecycleScope.launch(Dispatchers.Main) {
+                    val targetPlaybackContext = playbackContext
+                        ?: pendingPlaybackContext?.takeIf { it.episodeId == episodeId }
+                        ?: buildPlaybackContext(episodeId)
 
                     Log.e(
                         "ANIME_PLAYER",
@@ -1026,13 +1066,11 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
 
 
                     saveContinueWatching()  // SAVE CURRENT PROGRESS BEFORE SWITCHING
+                    stopProgressTracking()
+                    exoPlayer?.pause()
 
 
-                    currentEpisodeId = episodeId
-                    currentSeasonId = holdSeasonId
-                    currentPoster = holdPoster
-                    currentSeasonTitle = holdSeasonTitle
-                    currentEpisodeNumber = holdEpisodeNo
+                    applyPlaybackContext(targetPlaybackContext)
 
 
 
@@ -1046,6 +1084,7 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
                     btnServer.text = "$category: $serverName"
 
                     if (sourceType.equals("embed", ignoreCase = true)) {
+                        pendingPlaybackContext = targetPlaybackContext
                         pendingEmbedSource = StreamSource(
                             episodeId = episodeId,
                             serverName = serverName,
@@ -1077,11 +1116,13 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
                     }
 
                     resumePosition =
-                        fetchResumePosition() //db.getResumePosition(userId, currentEpisodeId, "anime").toLong()
+                        fetchResumePosition(targetPlaybackContext.episodeId)
                     hasAppliedResumePosition = false
+                    pendingPlaybackContext = null
                     // (Re)initialize player with new stream
                     exoPlayer?.release()
                     exoPlayer = initializePlayer(vidUrl, referer, origin, userAgent)
+                    activePlaybackContext = targetPlaybackContext
                     //exoPlayer = initializePlayer(vidUrl)
                     exoPlayer?.let { player ->
                         playerView.player = player
@@ -1509,10 +1550,18 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
                     // Update quality display when video is ready
                     updateQualityButton()
 
-                    if (resumePosition > 0 && !hasAppliedResumePosition) {
+                    val resumeThreshold = (duration / 100).coerceAtLeast(5_000L).coerceAtMost(30_000L)
+                    val hasValidResumePosition =
+                        resumePosition > 0 &&
+                            duration > resumeThreshold &&
+                            resumePosition < duration - resumeThreshold
+
+                    if (hasValidResumePosition && !hasAppliedResumePosition) {
                         exoPlayer?.seekTo(resumePosition)
                         hasAppliedResumePosition = true
                         Log.d("ANIME_PLAYER", "Applied resume position: $resumePosition")
+                    } else if (!hasAppliedResumePosition) {
+                        resumePosition = 0L
                     }
 
                     if (exoPlayer?.isPlaying == true) {
@@ -1523,6 +1572,8 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
                 Player.STATE_ENDED -> {
                     // Video ended, could restart or show next video
                     stopProgressTracking()
+                    clearSavedProgressForContext(activePlaybackContext)
+                    resumePosition = 0L
                     if (isAutoNextEnabled) {
                         playNextEpisode()
                     } else {
@@ -1612,14 +1663,15 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
         exoPlayer?.let { player ->
             val duration = player.duration.toInt()
             val lastPosition = player.currentPosition.toInt()
+            val playbackContext = activePlaybackContext ?: return@let
 
             // Capture all necessary values immediately to avoid race conditions
             val savedUserId = userId
-            val savedEpisodeId = currentEpisodeId
-            val savedSeasonTitle = currentSeasonTitle
-            val savedPoster = currentPoster
-            val savedSeasonId = currentSeasonId
-            val savedEpisodeNumber = currentEpisodeNumber
+            val savedEpisodeId = playbackContext.episodeId
+            val savedSeasonTitle = playbackContext.seasonTitle
+            val savedPoster = playbackContext.poster
+            val savedSeasonId = playbackContext.seasonId
+            val savedEpisodeNumber = playbackContext.episodeNumber
 
             if (duration > 0 && lastPosition >= 5000 && savedUserId != 0 && savedEpisodeId.isNotBlank()) {
                 // Run in background thread using independent scope to prevent cancellation when activity dies
@@ -1810,6 +1862,7 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
             currentVideoUrl = null
             availableQualities = listOf("Auto")
         }
+        activePlaybackContext = null
     }
 
     private fun releasePlayerWithAudioFocus() {
@@ -1819,6 +1872,7 @@ class Anime_Video_Player : AppCompatActivity(), Player.Listener {
             currentVideoUrl = null
             availableQualities = listOf("Auto")
         }
+        activePlaybackContext = null
 
         // Abandon audio focus when releasing player
         val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
@@ -2014,4 +2068,12 @@ data class StreamSource(
     val origin: String?,
     val userAgent: String?,
     val sourceType: String? = null
+)
+
+data class EpisodePlaybackContext(
+    val episodeId: String,
+    val episodeNumber: String,
+    val seasonId: String,
+    val seasonTitle: String,
+    val poster: String
 )

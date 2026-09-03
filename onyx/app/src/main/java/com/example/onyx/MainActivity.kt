@@ -64,7 +64,7 @@ class MainActivity : AppCompatActivity() {
         val destination = if (hasSession) {
             HomeActivity::class.java
         } else {
-            PayWall::class.java
+            Login_Page::class.java
         }
 
         startActivity(Intent(this, destination))
